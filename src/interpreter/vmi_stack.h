@@ -3,32 +3,13 @@
 
 #include "../vm_config.h"
 
-// A block of memory stored on the stack
+// A block of memory stored on the stack. Every block is guaranteed to allow 8 bytes of memory
 struct vmi_stack_block
 {
-#if defined(VM_32BIT)
-	union
-	{
-		vm_int32 i32;
-		void* addr;
-		struct
-		{
-			vm_int8 i8;
-			vm_int8 i8_1;
-			vm_int8 i8_2;
-			vm_int8 i8_3;
-		};
-		struct
-		{
-			vm_int16 i16;
-			vm_int16 i16_1;
-		};
-	};
-#else
 	union
 	{
 		vm_int64 i64;
-		void* addr;
+		void* value;
 		struct
 		{
 			vm_int8 i8;
@@ -46,14 +27,13 @@ struct vmi_stack_block
 			vm_int16 i16_1;
 			vm_int16 i16_2;
 			vm_int16 i16_3;
-		};
+};
 		struct
 		{
 			vm_int32 i32;
 			vm_int32 i32_1;
 		};
 	};
-#endif
 };
 typedef struct vmi_stack_block vmi_stack_block;
 
@@ -96,21 +76,5 @@ inline static int vmi_stack_count(const vmi_stack* s)
 {
 	return (vm_int32)(s->top - s->blocks);
 }
-
-#ifndef VMI_STACK_BLOCK_TOLOCAL
-#	if defined(VM_32BIT)
-#		define VMI_STACK_BLOCK_TOLOCAL(DEST, SRC) DEST.i32 = SRC->i32
-#	else
-#		define VMI_STACK_BLOCK_TOLOCAL(DEST, SRC) DEST.i64 = SRC->i64
-#	endif
-#endif
-
-#ifndef VMI_STACK_BLOCK_FROMLOCAL
-#	if defined(VM_32BIT)
-#		define VMI_STACK_BLOCK_FROMLOCAL(DEST, SRC) DEST->i32 = SRC.i32
-#	else
-#		define VMI_STACK_BLOCK_FROMLOCAL(DEST, SRC) DEST->i64 = SRC.i64
-#	endif
-#endif
 
 #endif

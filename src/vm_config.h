@@ -32,11 +32,7 @@ typedef unsigned long long vm_uint64;
 
 // Default the initial stack stack size in bytes
 #if !defined(VM_STACK_DEFAULT_SIZE)
-#	if defined(VM_32BIT)
-#		define VM_STACK_DEFAULT_SIZE (32768)
-#	else
-#		define VM_STACK_DEFAULT_SIZE (65536)
-#	endif
+#	define VM_STACK_DEFAULT_SIZE (32768)
 #endif
 
 // Enable memory tracking. This is enabled by default when compiling in debug mode

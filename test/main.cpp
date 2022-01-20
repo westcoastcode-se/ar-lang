@@ -16,6 +16,6 @@ int main()
 		cerr << "One or more tests failed" << endl;
 		return 1;
 	}
-	cout << "All tests succeeeded" << endl;
+	cout << "All tests succeeeded " << sizeof(float) << " " << sizeof(double) << endl;
 	return 0;
 }
