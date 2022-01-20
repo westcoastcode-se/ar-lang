@@ -21,6 +21,9 @@ enum vmi_icodes
 	// Load a local variable to the stack
 	VMI_LOAD,
 
+	// Store a value from the top of the stack into a variable
+	VMI_STORE,
+
 	// End-of-execution. This will forcefully stop the execution of the virtual machine. Normally used
 	// when calling a function from an unmanaged source, such as when used as a scripting language
 	VMI_EOE = 255
@@ -35,7 +38,16 @@ enum vmi_ocodes
 	VMI_OP_LOAD4 = (VMI_LOAD | VMI_PROPS1_OPCODE(4)),
 	VMI_OP_LOAD5 = (VMI_LOAD | VMI_PROPS1_OPCODE(5)),
 	VMI_OP_LOAD6 = (VMI_LOAD | VMI_PROPS1_OPCODE(6)),
-	VMI_OP_LOADX = (VMI_LOAD | VMI_PROPS1_OPCODE(0xFF))
+	VMI_OP_LOADX = (VMI_LOAD | VMI_PROPS1_OPCODE(0xFF)),
+
+	VMI_OP_STORE0 = (VMI_STORE | VMI_PROPS1_OPCODE(0)),
+	VMI_OP_STORE1 = (VMI_STORE | VMI_PROPS1_OPCODE(1)),
+	VMI_OP_STORE2 = (VMI_STORE | VMI_PROPS1_OPCODE(2)),
+	VMI_OP_STORE3 = (VMI_STORE | VMI_PROPS1_OPCODE(3)),
+	VMI_OP_STORE4 = (VMI_STORE | VMI_PROPS1_OPCODE(4)),
+	VMI_OP_STORE5 = (VMI_STORE | VMI_PROPS1_OPCODE(5)),
+	VMI_OP_STORE6 = (VMI_STORE | VMI_PROPS1_OPCODE(6)),
+	VMI_OP_STOREX = (VMI_STORE | VMI_PROPS1_OPCODE(0xFF)),
 };
 
 // A code processed by the process
@@ -94,6 +106,21 @@ struct vmi_instr_loadx
 	vm_int16 block_index;
 };
 typedef struct vmi_instr_loadx vmi_instr_loadx;
+
+// Pop a value from the stack and put the result into a local variable
+struct vmi_instr_store
+{
+	OPCODE_HEADER;
+};
+typedef struct vmi_instr_store vmi_instr_store;
+
+// Pop a value from the stack and put the result into a generic local variable block
+struct vmi_instr_storex
+{
+	OPCODE_HEADER;
+	vm_int16 block_index;
+};
+typedef struct vmi_instr_storex vmi_instr_storex;
 
 // End-of-execution instruction. The execution will be halted when when this operation is reached
 struct vmi_instr_eoe

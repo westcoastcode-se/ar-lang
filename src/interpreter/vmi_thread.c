@@ -33,7 +33,7 @@ inline const vm_byte* _vmi_thread_load(vmi_thread* t, const vm_byte* ip, vm_uint
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
 	block->i32 = t->locals[block_index].i32;
-	return ip + sizeof(vmi_instr_vars);
+	return ip + sizeof(vmi_instr_load);
 }
 
 const vm_byte* _vmi_thread_loadx(vmi_thread* t, const vm_byte* ip)
@@ -43,7 +43,26 @@ const vm_byte* _vmi_thread_loadx(vmi_thread* t, const vm_byte* ip)
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
 	block->i32 = t->locals[instr->block_index].i32;
-	return ip + sizeof(vmi_instr_vars);
+	return ip + sizeof(vmi_instr_loadx);
+}
+
+inline const vm_byte* _vmi_thread_store(vmi_thread* t, const vm_byte* ip, vm_uint32 block_index)
+{
+	const vmi_stack_block* const block = vmi_stack_pop(&t->stack, 1);
+	if (block == NULL)
+		return _vmi_thread_stack_out_of_memory(t, ip);
+	t->locals[block_index].i32 = block->i32;
+	return ip + sizeof(vmi_instr_store);
+}
+
+const vm_byte* _vmi_thread_storex(vmi_thread* t, const vm_byte* ip)
+{
+	const vmi_instr_storex* const instr = (const vmi_instr_storex*)ip;
+	const vmi_stack_block* const block = vmi_stack_pop(&t->stack, 1);
+	if (block == NULL)
+		return _vmi_thread_stack_out_of_memory(t, ip);
+	t->locals[instr->block_index].i32 = block->i32;
+	return ip + sizeof(vmi_instr_storex);
 }
 
 vm_int32 _vmi_thread_exec(vmi_thread* t, const vm_byte* ip)
@@ -80,6 +99,30 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, const vm_byte* ip)
 			break;
 		case VMI_OP_LOADX:
 			ip = _vmi_thread_loadx(t, ip);
+			break;
+		case VMI_OP_STORE0:
+			ip = _vmi_thread_store(t, ip, 0);
+			break;
+		case VMI_OP_STORE1:
+			ip = _vmi_thread_store(t, ip, 1);
+			break;
+		case VMI_OP_STORE2:
+			ip = _vmi_thread_store(t, ip, 2);
+			break;
+		case VMI_OP_STORE3:
+			ip = _vmi_thread_store(t, ip, 3);
+			break;
+		case VMI_OP_STORE4:
+			ip = _vmi_thread_store(t, ip, 4);
+			break;
+		case VMI_OP_STORE5:
+			ip = _vmi_thread_store(t, ip, 5);
+			break;
+		case VMI_OP_STORE6:
+			ip = _vmi_thread_store(t, ip, 6);
+			break;
+		case VMI_OP_STOREX:
+			ip = _vmi_thread_storex(t, ip);
 			break;
 		default:
 			t->flags |= VMI_THREAD_FLAG_UNKNOWN_INSTRUCTION;

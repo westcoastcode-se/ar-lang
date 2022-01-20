@@ -31,5 +31,12 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_OPTS_GCC}")
 endif()
 
-# Add source to this project's executable.
-add_executable (vm "vm.cpp" "vm.h" "src/vm.h" "src/lexer/vml.h" "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h" "src/vm_config.h" "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c")
+# VM library files
+set(VM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
+add_library(vm "src/vm.h" "src/lexer/vml.h" "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h" "src/vm_config.h" "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c")
+
+# VM tests. Let's use C++ for test cases to make it easier to develop ;)
+set(CMAKE_CXX_STANDARD 17)
+include_directories("${VM_INCLUDE_DIRS}")
+add_executable(test "test/main.cpp" "test/test.hpp"  "test/suite_vm.cpp")
+target_link_libraries(test vm)
