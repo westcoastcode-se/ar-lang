@@ -22,9 +22,21 @@ typedef unsigned long long vm_uint64;
 #	define VM_VERSION 1
 #endif
 
-// Default the initial stack size is 32kb
+#if defined(_WIN64)
+#	define VM_64BIT
+#elif defined(_WIN32)
+#	define VM_32BIT
+#else
+#	error "No valid CPU target is set"
+#endif
+
+// Default the initial stack stack size in bytes
 #if !defined(VM_STACK_DEFAULT_SIZE)
-#	define VM_STACK_DEFAULT_SIZE (32768)
+#	if defined(VM_32BIT)
+#		define VM_STACK_DEFAULT_SIZE (32768)
+#	else
+#		define VM_STACK_DEFAULT_SIZE (65536)
+#	endif
 #endif
 
 // Enable memory tracking. This is enabled by default when compiling in debug mode
@@ -34,14 +46,6 @@ typedef unsigned long long vm_uint64;
 #	else
 #		define VM_MEMORY_TRACKING 0
 #	endif
-#endif
-
-#if defined(_WIN64)
-#	define VM_64BIT
-#elif defined(_WIN32)
-#	define VM_32BIT
-#else
-#	error "No valid CPU target is set"
 #endif
 
 #ifndef NULL

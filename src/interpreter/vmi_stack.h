@@ -58,14 +58,14 @@ struct vmi_stack_block
 typedef struct vmi_stack_block vmi_stack_block;
 
 // Default the initial stack size is 32kb
-#if !defined(VM_STACK_NUM_BLOCKS)
-#	define VM_STACK_NUM_BLOCKS (VM_STACK_DEFAULT_SIZE / sizeof(vmi_stack_block))
+#if !defined(VMI_STACK_NUM_BLOCKS)
+#	define VMI_STACK_NUM_BLOCKS (VM_STACK_DEFAULT_SIZE / sizeof(vmi_stack_block))
 #endif
 
 // Manages the memory on the stack
 struct vmi_stack
 {
-	vmi_stack_block blocks[VM_STACK_NUM_BLOCKS];
+	vmi_stack_block blocks[VMI_STACK_NUM_BLOCKS];
 	vmi_stack_block* top;
 	const vmi_stack_block* end;
 };
@@ -96,5 +96,21 @@ inline static int vmi_stack_count(const vmi_stack* s)
 {
 	return (vm_int32)(s->top - s->blocks);
 }
+
+#ifndef VMI_STACK_BLOCK_TOLOCAL
+#	if defined(VM_32BIT)
+#		define VMI_STACK_BLOCK_TOLOCAL(DEST, SRC) DEST.i32 = SRC->i32
+#	else
+#		define VMI_STACK_BLOCK_TOLOCAL(DEST, SRC) DEST.i64 = SRC->i64
+#	endif
+#endif
+
+#ifndef VMI_STACK_BLOCK_FROMLOCAL
+#	if defined(VM_32BIT)
+#		define VMI_STACK_BLOCK_FROMLOCAL(DEST, SRC) DEST->i32 = SRC.i32
+#	else
+#		define VMI_STACK_BLOCK_FROMLOCAL(DEST, SRC) DEST->i64 = SRC.i64
+#	endif
+#endif
 
 #endif

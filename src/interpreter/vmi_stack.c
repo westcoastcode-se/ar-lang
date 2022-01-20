@@ -3,9 +3,9 @@
 void vmi_stack_init(vmi_stack* s)
 {
 	s->top = s->blocks;
-	s->end = s->blocks + VM_STACK_NUM_BLOCKS;
+	s->end = s->blocks + VMI_STACK_NUM_BLOCKS;
 #ifndef NDEBUG
-	memset(s->blocks, 0xFFFFFFFF, VM_STACK_NUM_BLOCKS * sizeof(vmi_stack_block));
+	memset(s->blocks, 0xFFFFFFFF, VMI_STACK_NUM_BLOCKS * sizeof(vmi_stack_block));
 #endif
 }
 

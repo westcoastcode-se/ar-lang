@@ -27,12 +27,12 @@ const vm_byte* _vmi_thread_vars(vmi_thread* t, const vm_byte* ip)
 	return ip + sizeof(vmi_instr_vars);
 }
 
-inline const vm_byte* _vmi_thread_load(vmi_thread* t, const vm_byte* ip, vm_uint32 block_index)
+inline const vm_byte* _vmi_thread_load(vmi_thread* t, const vm_byte* ip, const vm_uint32 block_index)
 {
 	vmi_stack_block* const block = vmi_stack_push(&t->stack, 1);
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	block->i32 = t->locals[block_index].i32;
+	VMI_STACK_BLOCK_FROMLOCAL(block, t->locals[block_index]);
 	return ip + sizeof(vmi_instr_load);
 }
 
@@ -42,16 +42,16 @@ const vm_byte* _vmi_thread_loadx(vmi_thread* t, const vm_byte* ip)
 	vmi_stack_block* const block = vmi_stack_push(&t->stack, 1);
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	block->i32 = t->locals[instr->block_index].i32;
+	VMI_STACK_BLOCK_FROMLOCAL(block, t->locals[instr->block_index]);
 	return ip + sizeof(vmi_instr_loadx);
 }
 
-inline const vm_byte* _vmi_thread_store(vmi_thread* t, const vm_byte* ip, vm_uint32 block_index)
+inline const vm_byte* _vmi_thread_store(vmi_thread* t, const vm_byte* ip, const vm_uint32 block_index)
 {
 	const vmi_stack_block* const block = vmi_stack_pop(&t->stack, 1);
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	t->locals[block_index].i32 = block->i32;
+	VMI_STACK_BLOCK_TOLOCAL(t->locals[block_index], block);
 	return ip + sizeof(vmi_instr_store);
 }
 
@@ -61,7 +61,7 @@ const vm_byte* _vmi_thread_storex(vmi_thread* t, const vm_byte* ip)
 	const vmi_stack_block* const block = vmi_stack_pop(&t->stack, 1);
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	t->locals[instr->block_index].i32 = block->i32;
+	VMI_STACK_BLOCK_TOLOCAL(t->locals[instr->block_index], block);
 	return ip + sizeof(vmi_instr_storex);
 }
 
