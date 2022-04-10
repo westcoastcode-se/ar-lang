@@ -41,7 +41,7 @@ typedef struct vmi_process vmi_process;
 extern vmi_process* vmi_process_new();
 
 // Delete the supplied process
-extern void vmi_process_delete(vmi_process* p);
+extern void vmi_process_destroy(vmi_process* p);
 
 // Load process
 extern vm_int32 vmi_process_load(vmi_process* p, const vm_byte* bytecode);

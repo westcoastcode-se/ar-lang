@@ -14,7 +14,7 @@ using namespace std;
 
 extern bool _tests_success;
 
-struct error_string_stream : std::stringstream
+struct error_string_stream : public std::stringstream
 {
 	void throw_() const
 	{

@@ -1,6 +1,7 @@
 #include "vmi_thread.h"
 #include "vmi_ops.h"
 #include <string.h>
+#include <stdarg.h>
 
 // Value that forces the virtual machine to perform an eoe, resulting in the application quitting
 const vmi_instr_eoe _vmi_force_eoe = {
@@ -9,9 +10,8 @@ const vmi_instr_eoe _vmi_force_eoe = {
 
 const vm_byte* _vmi_thread_halt(vmi_thread* t, const vm_byte* ip, vm_int32 flags, const char* message)
 {
+	vmi_thread_halti(t, flags, message);
 	t->halt_pos = ip;
-	t->flags |= flags;
-	strcpy(t->exit_reason, message);
 	return (const vm_byte*)&_vmi_force_eoe;
 }
 
@@ -29,7 +29,7 @@ const vm_byte* _vmi_thread_vars(vmi_thread* t, const vm_byte* ip)
 
 inline const vm_byte* _vmi_thread_load(vmi_thread* t, const vm_byte* ip, const vm_uint32 block_index)
 {
-	vmi_stack_block* const block = vmi_stack_push(&t->stack, 1);
+	vmi_stack_block* const block = vmi_stack_push(&t->stack, 1 * sizeof(vmi_stack_block));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
 	block->value = t->locals[block_index].value;
@@ -108,6 +108,8 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, const vm_byte* ip)
 	const vmi_opcode_header* header;
 	while (1)
 	{
+		if (t->flags != 0)
+			return t->flags;
 		header = (const vmi_opcode_header*)ip;
 		switch (header->opcode)
 		{
@@ -216,7 +218,7 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, const vm_byte* ip)
 			break;
 
 		default:
-			t->flags |= VMI_THREAD_FLAG_UNKNOWN_INSTRUCTION;
+			vmi_thread_shalti(t, VMI_THREAD_FLAG_UNKNOWN_INSTRUCTION, "unknown instruction %d", header->opcode);
 		case VMI_EOE:
 			return t->flags;
 		}
@@ -246,10 +248,36 @@ vm_int32 vmi_thread_exec(vmi_thread* t, const vm_byte* ip)
 	return _vmi_thread_exec(t, ip);
 }
 
-void vmi_thread_delete(vmi_thread* t)
+void vmi_thread_destroy(vmi_thread* t)
 {
 	// TODO: Add support for multiple threads
 	t->process->first_thread = NULL;
 	vmi_stack_release(&t->stack);
 	free(t);
+}
+
+void vmi_thread_halt(vmi_thread* t, const char* message)
+{
+	vmi_thread_halti(t, VMI_THREAD_FLAG_MANUAL_HALT, message);
+}
+
+void vmi_thread_halti(vmi_thread* t, vm_int32 flags, const char* message)
+{
+	t->halt_pos = t->ip;
+	t->flags |= flags;
+	t->ip = (const char*)&_vmi_force_eoe;
+	strcpy(t->exit_reason, message);
+}
+
+void vmi_thread_shalti(vmi_thread* t, vm_int32 flags, const char* format, ...)
+{
+	va_list argptr;
+
+	t->halt_pos = t->ip;
+	t->flags |= flags;
+	t->ip = (const char*)&_vmi_force_eoe;
+
+	va_start(argptr, format);
+	vsprintf(t->exit_reason, format, argptr);
+	va_end(argptr);
 }

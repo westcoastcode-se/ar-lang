@@ -10,7 +10,7 @@ vmi_process* vmi_process_new()
 	return p;
 }
 
-void vmi_process_delete(vmi_process* p)
+void vmi_process_destroy(vmi_process* p)
 {
 	ASSERT_NOT_NULL(p);
 	free(p);
@@ -35,6 +35,7 @@ vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t)
 {
 	vm_int32 result;
 	// TODO: Add support for multiple threads
+	// TODO: Add support for routines/light-weight threads
 	p->current_thread = t;
 	result = vmi_thread_exec(t, p->bytecode + p->header.code_offset);
 	p->current_thread = NULL;

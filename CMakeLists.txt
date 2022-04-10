@@ -31,11 +31,17 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_OPTS_GCC}")
 endif()
 
-# VM library files
+# Lexer
 set(VM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
-add_library(vm "src/vm.h" "src/lexer/vml.h" "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h" "src/vm_config.h" "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c")
+add_library(vm "src/vm_config.h"
+     "src/compiler/vm_lexer.h" "src/compiler/vm_lexer.c"
+    "src/compiler/vm_compiler.h" "src/vm_bytestream.h" "src/vm_bytestream.c" "src/compiler/vm_compiler.c" 
+      "src/vm_string.h" "src/vm_string.c"
+    "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
+    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c"
+    "src/compiler/vm_error.h"  "src/compiler/vm_lexer_math.h" "src/compiler/vm_lexer_logic.h")
 
-# VM tests. Let's use C++ for test cases to make it easier to develop ;)
+# Tests
 set(CMAKE_CXX_STANDARD 17)
 include_directories("${VM_INCLUDE_DIRS}")
 add_executable(test "test/main.cpp" "test/test.hpp"  "test/suite_vm.cpp")

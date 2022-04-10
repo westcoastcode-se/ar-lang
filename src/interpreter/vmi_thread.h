@@ -9,7 +9,8 @@ enum vmi_thread_flags
 {
 	VMI_THREAD_FLAG_UNKNOWN_INSTRUCTION = 1,
 	VMI_THREAD_FLAG_STACK_OUT_OF_MEMORY = 2,
-	VMI_THREAD_FLAG_INVALID_LOCAL = 4
+	VMI_THREAD_FLAG_INVALID_LOCAL = 4,
+	VMI_THREAD_FLAG_MANUAL_HALT = 8
 };
 
 //
@@ -53,6 +54,15 @@ extern vmi_thread* vmi_thread_new(vmi_process* process);
 extern vm_int32 vmi_thread_exec(vmi_thread* t, const vm_byte* ip);
 
 // Destroy the supplied thread
-extern void vmi_thread_delete(vmi_thread* t);
+extern void vmi_thread_destroy(vmi_thread* t);
+
+// Manually halt the supplied thread
+extern void vmi_thread_halt(vmi_thread* t, const char* message);
+
+// Manually halt the supplied thread with a flag
+extern void vmi_thread_halti(vmi_thread* t, vm_int32 flags, const char* message);
+
+// Manually halt the supplied thread with a flag
+extern void vmi_thread_shalti(vmi_thread* t, vm_int32 flags, const char* format, ...);
 
 #endif
