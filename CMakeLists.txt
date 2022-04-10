@@ -39,7 +39,7 @@ add_library(vm "src/vm_config.h"
       "src/vm_string.h" "src/vm_string.c"
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
     "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c"
-    "src/compiler/vm_error.h"  "src/compiler/vm_lexer_math.h" "src/compiler/vm_lexer_logic.h")
+    "src/compiler/vm_error.h"  "src/compiler/vm_lexer_math.h" "src/compiler/vm_lexer_logic.h" "src/compiler/eoe.h")
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)

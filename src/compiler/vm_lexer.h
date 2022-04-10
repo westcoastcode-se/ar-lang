@@ -83,23 +83,22 @@ struct vml_message
 };
 
 // Lexer
-struct vm_lexer
+struct vmc_lexer
 {
 	const vm_byte* source;
 };
-typedef struct vm_lexer vm_lexer;
-typedef struct vm_lexer vml_lexer;
+typedef struct vmc_lexer vmc_lexer;
 
 // Parse the supplied source code and return byte code as the result.
-extern vm_lexer* vml_lexer_parse(const vm_byte* source);
+extern vmc_lexer* vmc_lexer_parse(const vm_byte* source);
 
 // Delete the supplied lexer
-extern void vml_lexer_delete(vm_lexer* l);
+extern void vmc_lexer_destroy(vmc_lexer* l);
 
 // Get next token
-extern void vml_lexer_next(vm_lexer* l, vml_token* token);
+extern void vmc_lexer_next(vmc_lexer* l, vml_token* token);
 
 // Parse the next token and return TRUE if the supplied token is the supplied type
-extern BOOL vml_lexer_next_type(vm_lexer* l, vml_type type, vml_token* token);
+extern BOOL vmc_lexer_next_type(vmc_lexer* l, vml_type type, vml_token* token);
 
 #endif

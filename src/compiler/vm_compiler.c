@@ -1,6 +1,7 @@
 #include "vm_compiler.h"
 #include "../interpreter/vmi_ops.h"
 #include "../interpreter/vmi_process.h"
+#include "eoe.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -38,11 +39,36 @@ void _vmc_append_header(vmc_compiler* c)
 	vmc_write(c, &header, sizeof(header));
 }
 
+void _vmc_append_lex(vmc_compiler* c, vmc_lexer* l)
+{
+	vml_token token;
+
+	// Ignore all newlines at the start of the content
+	vmc_lexer_next(l, &token);
+	while (token.type == VML_TYPE_NEWLINE) vmc_lexer_next(l, &token);
+
+	// Compile each instruction
+	while (1)
+	{
+		switch (token.type)
+		{
+		case VML_TYPE_NEWLINE:
+		case VML_TYPE_COMMENT:
+			break;
+		case VML_TYPE_EOF:
+		default:
+			vmc_write_eoe(c);
+			return;
+		}
+		vmc_lexer_next(l, &token);
+	}
+}
+
 //
 /////////////////////////////////////////////////////////////////////////////
 // 
 
-vmc_compiler* vmc_compiler_new(vm_lexer* l)
+vmc_compiler* vmc_compiler_new(vmc_lexer* l)
 {
 	vmc_compiler* c = (vmc_compiler*)malloc(sizeof(vmc_compiler));
 	if (c == NULL)
@@ -56,15 +82,16 @@ vmc_compiler* vmc_compiler_new(vm_lexer* l)
 BOOL vmc_compiler_compile(vmc_compiler* c)
 {
 	_vmc_append_header(c);
+	_vmc_append_lex(c, c->lexer);
 	return vmc_compiler_success(c);
 }
 
 vmc_compiler* vmc_compiler_compile_string(const vm_byte* src)
 {
-	vml_lexer* l = vml_lexer_parse(src);
+	vmc_lexer* l = vmc_lexer_parse(src);
 	vmc_compiler* c = vmc_compiler_new(l);
 	vmc_compiler_compile(c);
-	vml_lexer_delete(l);
+	vmc_lexer_destroy(l);
 	return c;
 }
 

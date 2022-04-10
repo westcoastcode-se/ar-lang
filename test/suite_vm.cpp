@@ -74,6 +74,7 @@ struct suite_vm_tests : suite_vm_utils
 	void instantly_return()
 	{
 		const auto source = R"(
+.fn 
 	ret # Jump back to caller instruction
 )";
 		auto c = compile(source);
@@ -126,38 +127,6 @@ func hello(name string, age int32) string {
 	return name + string(age)
 }
 )";
-		// Namespaces are not unique. They are a way for source codes in the same "scope" to be categorized together.
-		// Namespaces are only used when linking. Functions are not.
-		// Function names are 
-		vm_lexer* l = vml_lexer_parse(source);
-		vmc_compiler* c = vmc_compiler_new(l);
-		if (!vmc_compiler_compile(c))
-			throw_(error() << "Failed to compile source code");
-
-		/*
-		vmc_namespace* ns = vmc_new_namespace("main", 4);
-
-		vmc_def_func func;
-		vmc_func_start(c, &func, "name", 4, {}, {});
-		vmc_func_emit(&func, (VMC_EMIT_LDARG | VMC_PROPS1_OPCODE(0)));
-		vmc_func_emit(&func, (VMC_EMIT_CONV | VMC_PROPS1_OPCODE(VMC_EMIT_TYPE_I32)));
-		vmc_func_emit(&func, (VMC_EMIT_LDARG | VMC_PROPS1_OPCODE(1)));
-		vmc_func_emit(&func, (VMC_EMIT_ADD));
-		vmc_func_emit(&func, (VMC_EMIT_CONV | VMC_PROPS1_OPCODE(VMC_EMIT_TYPE_I8)));
-		vmc_func_emit(&func, (VMC_EMIT_RET));
-		vmc_func_end(&func);
-
-		vmc_func_start(c, &func, "main", 4, {}, {});
-		vmc_func_emit(&func, (VMC_EMIT_VARS));
-		vmc_func_emit_ldconst_i8(&func, VMC_EMIT_TYPE_I8);
-		vmc_func_emit(&func, (VMC_EMIT_LDARG | VMC_PROPS1_OPCODE(1)));
-		vmc_func_emit(&func, (VMC_EMIT_ADD));
-		vmc_func_emit(&func, (VMC_EMIT_CONV | VMC_PROPS1_OPCODE(VMC_EMIT_CONV_I8)));
-		vmc_func_emit(&func, (VMC_EMIT_RET));
-		vmc_func_end(&func);
-		*/
-		vmc_compiler_destroy(c);
-		vml_lexer_delete(l);
 	}
 
 	void operator()()

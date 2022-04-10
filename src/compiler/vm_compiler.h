@@ -152,7 +152,7 @@ typedef struct vmc_def_arg vmc_def_arg;
 
 struct vmc_compiler
 {
-	vm_lexer* lexer;
+	vmc_lexer* lexer;
 
 	// Where compiled bytecode is put into
 	vm_bytestream bytecode;
@@ -164,7 +164,7 @@ struct vmc_compiler
 typedef struct vmc_compiler vmc_compiler;
 
 // Create a new compiler
-extern vmc_compiler* vmc_compiler_new(vm_lexer* l);
+extern vmc_compiler* vmc_compiler_new(vmc_lexer* l);
 
 // Compile 
 extern BOOL vmc_compiler_compile(vmc_compiler* c);

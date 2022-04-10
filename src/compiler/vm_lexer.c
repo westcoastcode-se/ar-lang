@@ -1,21 +1,21 @@
 #include "vm_lexer.h"
 #include "vm_lexer_logic.h"
 
-void _vml_lexer_atom(vm_lexer* l, vml_type type, vml_token* token)
+void _vml_lexer_atom(vmc_lexer* l, vml_type type, vml_token* token)
 {
 	token->string.start = l->source;
 	token->string.end = ++l->source;
 	token->type = type;
 }
 
-void _vml_lexer_eof(vm_lexer* l, vml_token* token)
+void _vml_lexer_eof(vmc_lexer* l, vml_token* token)
 {
 	token->string.start = l->source;
 	token->string.end = l->source;
 	token->type = VML_TYPE_EOF;
 }
 
-void _vml_lexer_comment(vm_lexer* lexer, vml_token* token)
+void _vml_lexer_comment(vmc_lexer* lexer, vml_token* token)
 {
 	const char* comment_start = lexer->source;
 	char c = *lexer->source;
@@ -29,7 +29,7 @@ void _vml_lexer_comment(vm_lexer* lexer, vml_token* token)
 	token->type = VML_TYPE_COMMENT;
 }
 
-void _vml_lexer_ins(vm_lexer* l, vml_token* token)
+void _vml_lexer_ins(vmc_lexer* l, vml_token* token)
 {
 	// Remember the first character and step to next char
 	const char* start = l->source;
@@ -43,7 +43,7 @@ void _vml_lexer_ins(vm_lexer* l, vml_token* token)
 	token->string.end = l->source;
 }
 
-void _vml_lexer_argindex(vm_lexer* l, vml_token* token)
+void _vml_lexer_argindex(vmc_lexer* l, vml_token* token)
 {
 	// Remember the first character and step to next char
 	const char* start = l->source;
@@ -57,7 +57,7 @@ void _vml_lexer_argindex(vm_lexer* l, vml_token* token)
 	token->string.end = l->source;
 }
 
-void _vml_lexer_single_line_string(vm_lexer* l, vml_token* token)
+void _vml_lexer_single_line_string(vmc_lexer* l, vml_token* token)
 {
 	BOOL escaped = FALSE;
 	const char* start = ++l->source;
@@ -76,7 +76,7 @@ void _vml_lexer_single_line_string(vm_lexer* l, vml_token* token)
 		l->source++;
 }
 
-void _vml_lexer_number(vm_lexer* l, vml_token* token)
+void _vml_lexer_number(vmc_lexer* l, vml_token* token)
 {
 	// Remember the first character and step to next char
 	const char* start = l->source;
@@ -126,21 +126,21 @@ void _vml_lexer_number(vm_lexer* l, vml_token* token)
 /////////////////////////////////////////////////////////////////////////////
 // 
 
-vm_lexer* vml_lexer_parse(const vm_byte* source)
+vmc_lexer* vmc_lexer_parse(const vm_byte* source)
 {
-	vm_lexer* l = (vm_lexer*)malloc(sizeof(vm_lexer));
+	vmc_lexer* l = (vmc_lexer*)malloc(sizeof(vmc_lexer));
 	if (l == NULL)
 		return NULL;
 	l->source = source;
 	return l;
 }
 
-void vml_lexer_delete(vm_lexer* l)
+void vmc_lexer_destroy(vmc_lexer* l)
 {
 	free(l);
 }
 
-void vml_lexer_next(vm_lexer* l, vml_token* token)
+void vmc_lexer_next(vmc_lexer* l, vml_token* token)
 {
 	char ch = *l->source;
 
@@ -194,8 +194,8 @@ void vml_lexer_next(vm_lexer* l, vml_token* token)
 	}
 }
 
-BOOL vml_lexer_next_type(vm_lexer* l, vml_type type, vml_token* token)
+BOOL vmc_lexer_next_type(vmc_lexer* l, vml_type type, vml_token* token)
 {
-	vml_lexer_next(l, token);
+	vmc_lexer_next(l, token);
 	return token->type == type;
 }
