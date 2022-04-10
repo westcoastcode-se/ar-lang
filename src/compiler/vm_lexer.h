@@ -48,7 +48,10 @@ enum vml_type
 	VML_TYPE_RSQUARE,
 
 	// end-of-file
-	VML_TYPE_EOF
+	VML_TYPE_EOF,
+
+	// Represents an unknown token type
+	VML_TYPE_UNKNOWN
 };
 typedef enum vml_type vml_type;
 
@@ -67,25 +70,17 @@ typedef struct
 	vm_string string;
 } vml_token;
 
-// Message raised by the lexer, for example if an error has occurred
-struct vml_message
-{
-	int code;
-
-	// The line where the message originates
-	int line;
-
-	// The horizontal offset where the message originated
-	int line_offset;
-
-	// The offset on in the bytestream where the message originates
-	int offset;
-};
-
 // Lexer
 struct vmc_lexer
 {
+	const vm_byte* source_start;
 	const vm_byte* source;
+
+	// The current line in the source code
+	int line;
+	
+	// Where the line starts
+	vm_byte* line_offset;
 };
 typedef struct vmc_lexer vmc_lexer;
 
@@ -100,5 +95,13 @@ extern void vmc_lexer_next(vmc_lexer* l, vml_token* token);
 
 // Parse the next token and return TRUE if the supplied token is the supplied type
 extern BOOL vmc_lexer_next_type(vmc_lexer* l, vml_type type, vml_token* token);
+
+// Get metadata where we are
+inline static void vmc_lexer_get_metadata(vmc_lexer* l, int* line, int* line_offset, int* offset)
+{
+	*line = l->line;
+	*line_offset = (int)(l->source - l->line_offset);
+	*offset = (int)(l->source - l->source_start);
+}
 
 #endif

@@ -6,9 +6,21 @@
 // Structure containing the actual message
 struct vm_message
 {
+	// Unique code
 	int code;
+
+	// Message text
 	char message[4096];
-	
+
+	// The line where the message originates
+	int line;
+
+	// The horizontal offset where the message originated
+	int line_offset;
+
+	// The offset on in the bytestream where the message originates
+	int offset;
+
 	// The next message
 	struct vm_message* next;
 };

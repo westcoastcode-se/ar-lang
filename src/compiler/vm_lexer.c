@@ -8,6 +8,13 @@ void _vml_lexer_atom(vmc_lexer* l, vml_type type, vml_token* token)
 	token->type = type;
 }
 
+void _vml_lexer_unknown(vmc_lexer* l, vml_token* token)
+{
+	token->string.start = l->source;
+	token->string.end = l->source;
+	token->type = VML_TYPE_UNKNOWN;
+}
+
 void _vml_lexer_eof(vmc_lexer* l, vml_token* token)
 {
 	token->string.start = l->source;
@@ -131,7 +138,8 @@ vmc_lexer* vmc_lexer_parse(const vm_byte* source)
 	vmc_lexer* l = (vmc_lexer*)malloc(sizeof(vmc_lexer));
 	if (l == NULL)
 		return NULL;
-	l->source = source;
+	l->source_start = l->source = source;
+	l->line = l->line_offset = 0;
 	return l;
 }
 
@@ -163,6 +171,8 @@ void vmc_lexer_next(vmc_lexer* l, vml_token* token)
 	{
 	case '\n':
 		_vml_lexer_atom(l, VML_TYPE_NEWLINE, token);
+		l->line++;
+		l->line_offset = l->source;
 		return;
 	case '#':
 		_vml_lexer_comment(l, token);
@@ -188,8 +198,11 @@ void vmc_lexer_next(vmc_lexer* l, vml_token* token)
 	case '"':
 		_vml_lexer_single_line_string(l, token);
 		return;
-	default:
+	case 0:
 		_vml_lexer_eof(l, token);
+		return;
+	default:
+		_vml_lexer_unknown(l, token);
 		return;
 	}
 }

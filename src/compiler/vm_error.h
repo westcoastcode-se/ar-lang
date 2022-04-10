@@ -14,8 +14,16 @@ enum vmc_error_code
 
 	VMC_LERR_START,
 	VMC_LERR_MISSING_LABEL,
+
+	VMC_ERROR_CODE_UNKNOWN_TOKEN
 };
 typedef enum vmc_error_code vmc_error_code;
+
+// Set error where comma is missing
+static inline BOOL vmc_error_unknown_token(vm_message* err)
+{
+	return vm_message_set(err, VMC_ERROR_CODE_UNKNOWN_TOKEN, "use comma as a delimiter between mutliple args");
+}
 
 // Set error where comma is missing
 static inline BOOL vmc_error_set_comma(vm_message* err)
