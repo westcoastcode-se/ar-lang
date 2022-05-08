@@ -117,6 +117,41 @@ fn Get () (int32) {
 		destroy(c);
 	}
 
+	void calculate_return_constant2() {
+		/*
+fn Get() (int32, int32) {
+	return 12
+}
+*/
+		const auto source = R"(
+fn Get () (int32, int32) {
+	const int32 123	// Push a constant
+	save_r 0		// Pop the top stack value and put it into the first return value	
+	const int32 456	// Push a constant
+	save_r 1		// Pop the top stack value and put it into the second return value
+	ret				// Return
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// begin_
+		vmi_thread_push_i32(t, 88); // return value here (can be done by the API)
+		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
+		invoke(p, t, "Get()(int32,int32)");
+
+		if (vmi_stack_count(&t->stack) != 8) {
+			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
+		}
+		verify_stack(t, 0, 123);
+		verify_stack(t, 4, 456);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void calculate_two_i32()
 	{
 /*
@@ -214,6 +249,7 @@ fn AddTwoInts() (int32) {
 	void operator()()
 	{
 		TEST(calculate_return_constant1);
+		TEST(calculate_return_constant2);
 		TEST(calculate_two_i32);
 		//TEST(calculate_two_int32_inner);
 	}
