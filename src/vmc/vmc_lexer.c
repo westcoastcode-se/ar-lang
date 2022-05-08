@@ -500,8 +500,10 @@ void vmc_lexer_destroy(vmc_lexer* l)
 void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token)
 {
 	char ch = *l->source;
-	if (ch == 0)
+	if (ch == 0) {
+		_vmc_lexer_eof(l, token);
 		return;
+	}
 	while (vmc_lexer_test_whitespace(ch)) ch = *++l->source;
 	_vmc_lexer_next(l, token);
 }
@@ -509,8 +511,10 @@ void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token)
 void vmc_lexer_next_newline(vmc_lexer* l, vmc_lexer_token* token)
 {
 	char ch = *l->source;
-	if (ch == 0)
+	if (ch == 0) {
+		_vmc_lexer_eof(l, token);
 		return;
+	}
 	while (vmc_lexer_test_whitespace_ignore_nl(ch)) ch = *++l->source;
 	_vmc_lexer_next(l, token);
 }
@@ -524,11 +528,4 @@ BOOL vmc_lexer_next_type(vmc_lexer* l, vmc_lexer_token_type type, vmc_lexer_toke
 char vmc_lexer_peek(vmc_lexer* l)
 {
 	return *(l->source + 1);
-}
-
-BOOL vmc_lexer_next_ignore_ws_until(vmc_lexer* l, vmc_lexer_token_type type, vmc_lexer_token* token)
-{
-	vmc_lexer_next(l, token);
-	while (token->type == VMC_LEXER_TYPE_NEWLINE) vmc_lexer_next(l, token);
-	return token->type == type;
 }

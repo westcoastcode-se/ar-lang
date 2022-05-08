@@ -185,9 +185,6 @@ extern BOOL vmc_lexer_next_type(vmc_lexer* l, vmc_lexer_token_modifier type, vmc
 // Peek at the next character
 extern char vmc_lexer_peek(vmc_lexer* l);
 
-// Parse white-space tokens until the supplied type is found. 
-extern BOOL vmc_lexer_next_ignore_ws_until(vmc_lexer* l, vmc_lexer_token_type type, vmc_lexer_token* token);
-
 // Get metadata where we are
 inline static void vmc_lexer_get_metadata(vmc_lexer* l, int* line, int* line_offset, int* offset)
 {

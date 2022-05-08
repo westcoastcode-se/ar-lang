@@ -4,13 +4,13 @@
 struct suite_lexer_utils : test_utils
 {
 	void verify_token(vmc_lexer& lexer, vmc_lexer_token& token, vmc_lexer_token_type type) {
-		vmc_lexer_next(&lexer, &token);
+		vmc_lexer_next_newline(&lexer, &token);
 		if (type != token.type)
 			throw_(error() << "error token: " << type << " but was : " << token.type);
 	}
 
 	void verify_token(vmc_lexer& lexer, vmc_lexer_token& token, vmc_lexer_token_type type, const char* str) {
-		vmc_lexer_next(&lexer, &token);
+		vmc_lexer_next_newline(&lexer, &token);
 		if (type != token.type)
 			throw_(error() << "error token: " << type << " but was : " << token.type);
 		if (!vm_string_cmpsz(&token.string, str, strlen(str)))
@@ -20,9 +20,9 @@ struct suite_lexer_utils : test_utils
 	}
 
 	void verify_whitespace_until_eof(vmc_lexer& lexer, vmc_lexer_token& token) {
-		vmc_lexer_next(&lexer, &token);
+		vmc_lexer_next_newline(&lexer, &token);
 		while(token.type == VMC_LEXER_TYPE_NEWLINE)
-			vmc_lexer_next(&lexer, &token);
+			vmc_lexer_next_newline(&lexer, &token);
 
 		if (token.type != VMC_LEXER_TYPE_EOF)
 			throw_(error() << "expected eof but was " << token.type);
