@@ -4,11 +4,12 @@
 #include "vm_config.h"
 
 // Represents a string
-typedef struct
+struct vm_string
 {
 	const char* start;
 	const char* end;
-} vm_string;
+};
+typedef struct vm_string vm_string;
 
 // Compare two strings
 static inline BOOL vm_str_cmp(const char* s1, int l1, const char* s2, int l2)
@@ -41,5 +42,16 @@ extern BOOL vm_string_ends_with(const vm_string* s, char c);
 
 // Length of the supplied string
 extern int vm_string_length(const vm_string* s);
+
+// Define a constant vm_string
+#define VM_STRING_CONST(name, value, len) \
+	const char _const_C##name[] = value; \
+	const vm_string _const_S##name = { \
+		_const_C##name, \
+		_const_C##name + len \
+	}
+
+// Get the address for a constant vm_string
+#define VM_STRING_CONST_GET(name) (&_const_S##name)
 
 #endif

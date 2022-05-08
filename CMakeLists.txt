@@ -34,15 +34,18 @@ endif()
 # Lexer
 set(VM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
 add_library(vm "src/vm_config.h"
-     "src/compiler/vm_lexer.h" "src/compiler/vm_lexer.c"
-    "src/compiler/vm_compiler.h" "src/vm_bytestream.h" "src/vm_bytestream.c" "src/compiler/vm_compiler.c" 
-      "src/vm_string.h" "src/vm_string.c"
+    "src/vm_string.h" "src/vm_string.c"
+    "src/vm_bytestream.h" "src/vm_bytestream.c"
+
+    "src/vmc/vmc_compiler.h" "src/vmc/vmc_compiler.c" "src/vmc/vmc_error.h"
+    "src/vmc/vmc_lexer.c" "src/vmc/vmc_lexer.h" "src/vmc/vmc_lexer_logic.h" "src/vmc/vmc_lexer_math.h"
+            
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
-    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c"
-    "src/compiler/vm_error.h"  "src/compiler/vm_lexer_math.h" "src/compiler/vm_lexer_logic.h" "src/compiler/eoe.h")
+    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c")
+
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)
 include_directories("${VM_INCLUDE_DIRS}")
-add_executable(test "test/main.cpp" "test/test.hpp"  "test/suite_vm.cpp")
+add_executable(test "test/main.cpp" "test/test.hpp"  "test/suite_vm.cpp" "test/suite_lexer.cpp")
 target_link_libraries(test vm)

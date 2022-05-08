@@ -20,7 +20,7 @@ vm_int32 vmi_process_load(vmi_process* p, const vm_byte* bytecode)
 {
 	// Validate the bytecode
 	const vmi_process_header* header = (const vmi_process_header*)bytecode;
-	if (header->header[0] != 'S' || header->header[1] != 'C' || header->header[2] != 'R')
+	if (header->header[0] != 'V' || header->header[1] != 'M' || header->header[2] != '0')
 		return -1;
 	if (header->version != VM_VERSION)
 		return -1;

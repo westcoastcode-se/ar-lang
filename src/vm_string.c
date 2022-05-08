@@ -2,7 +2,7 @@
 
 BOOL vm_string_cmpsz(const vm_string* s, const char* other_string, int length)
 {
-	return vm_str_cmp(s->start, vml_string_length(s), other_string, length);
+	return vm_str_cmp(s->start, vm_string_length(s), other_string, length);
 }
 
 BOOL vm_string_cmp(const vm_string* s1, const vm_string* s2)
@@ -12,7 +12,7 @@ BOOL vm_string_cmp(const vm_string* s1, const vm_string* s2)
 
 BOOL vm_string_cmp_char(const vm_string* s, char c)
 {
-	if (vml_string_length(s) != 1)
+	if (vm_string_length(s) != 1)
 		return FALSE;
 	return *s->start == c;
 }
@@ -20,7 +20,7 @@ BOOL vm_string_cmp_char(const vm_string* s, char c)
 BOOL vm_string_starts_with(const vm_string* s, const char* other_string, int length)
 {
 	int i;
-	if (vml_string_length(s) < length)
+	if (vm_string_length(s) < length)
 		return FALSE;
 	for (i = 0; i < length; ++i)
 	{

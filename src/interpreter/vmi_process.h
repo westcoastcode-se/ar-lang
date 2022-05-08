@@ -6,7 +6,7 @@
 // Header that describes where the bytecode can be found for each
 struct vmi_process_header
 {
-	// "SCR"
+	// "VM0"
 	char header[3];
 
 	// Compatibility version

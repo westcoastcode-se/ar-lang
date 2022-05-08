@@ -2,13 +2,16 @@
 
 bool _tests_success = true;
 
-// Verify virtual machine operators
+// Verify virtual machine
 extern void suite_vm();
+// Verify lexer
+extern void suite_lexer();
 
 int main()
 {
 	// Suites
 	suite_vm();
+	suite_lexer();
 
 	// Verify result
 	if (!_tests_success)

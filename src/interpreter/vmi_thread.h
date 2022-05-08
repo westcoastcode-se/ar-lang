@@ -10,8 +10,65 @@ enum vmi_thread_flags
 	VMI_THREAD_FLAG_UNKNOWN_INSTRUCTION = 1,
 	VMI_THREAD_FLAG_STACK_OUT_OF_MEMORY = 2,
 	VMI_THREAD_FLAG_INVALID_LOCAL = 4,
-	VMI_THREAD_FLAG_MANUAL_HALT = 8
+	VMI_THREAD_FLAG_NOT_IMPLEMENTED = 8,
+	VMI_THREAD_FLAG_MANUAL_HALT = 16
 };
+
+// A block of memory stored on the stack. Every block is guaranteed to allow 8 bytes of memory
+struct vmi_thread_vars_block
+{
+	union
+	{
+		vm_int64 i64;
+		vm_float64 f64;
+		vm_float32 f32;
+		void* value;
+		struct
+		{
+			vm_int8 i8;
+			vm_int8 i8_1;
+			vm_int8 i8_2;
+			vm_int8 i8_3;
+			vm_int8 i8_4;
+			vm_int8 i8_5;
+			vm_int8 i8_6;
+			vm_int8 i8_7;
+		};
+
+		struct
+		{
+			vm_int16 i16;
+			vm_int16 i16_1;
+			vm_int16 i16_2;
+			vm_int16 i16_3;
+		};
+
+		struct
+		{
+			vm_int32 i32;
+			vm_int32 i32_1;
+		};
+	};
+};
+typedef struct vmi_thread_vars_block vmi_thread_vars_block;
+
+// Represents a type for position, in memory, where the virtual machine is processing instructions
+typedef const vm_byte* vmi_ip;
+
+// Call frame
+struct vmi_thread_call_frame
+{
+	// Blocks that can be used to access local memory. The actual location where the memory can be found
+	// is on the stack. But can be, using shorthand access, used here
+	vmi_thread_vars_block* locals;
+
+	// Where argument memory start
+	vm_byte* stack_arguments;
+
+	// Stack position where return values are located
+	vm_byte* stack_returns;
+};
+typedef struct vmi_thread_call_frame vmi_thread_call_frame;
 
 //
 // A thread is the actual type which runs the actual bytecode
@@ -24,14 +81,13 @@ struct vmi_thread
 	const vm_byte* bytecode;
 
 	// The current position where bytecode is being processed (Instruction pointer)
-	const vm_byte* ip;
+	vmi_ip ip;
 
 	// Flags used to keep track of how this thread feels
 	vm_int32 flags;
 
-	// Blocks that can be used to access local memory. The actual location where the memory can be found
-	// is on the stack. But can be, using shorthand access, used here
-	vmi_stack_block* locals;
+	// Call frame
+	vmi_thread_call_frame* call_frame;
 
 	// Stack
 	vmi_stack stack;
@@ -50,8 +106,12 @@ typedef struct vmi_thread vmi_thread;
 // Create a new thread
 extern vmi_thread* vmi_thread_new(vmi_process* process);
 
-// Start executing at the start of the bytecode segment
-extern vm_int32 vmi_thread_exec(vmi_thread* t, const vm_byte* ip);
+// Push a 32 bit integer to the stack of the supplied thread. Returns non-zero if an error has occurred
+extern vm_int32 vmi_thread_push_i32(vmi_thread* t, vm_int32 value);
+
+// Start executing at the start of the supplied bytecode segment. It is assumed that any arguments are already pushed
+// to the stack. If the execution is successful then the return code should be 0
+extern vm_int32 vmi_thread_exec(vmi_thread* t, vmi_ip ip);
 
 // Destroy the supplied thread
 extern void vmi_thread_destroy(vmi_thread* t);

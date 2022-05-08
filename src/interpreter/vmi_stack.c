@@ -16,7 +16,7 @@ void vmi_stack_release(vmi_stack* s)
 
 char* vmi_stack_push(vmi_stack* s, vm_int32 size)
 {
-	vmi_stack_block* top = s->top;
+	char* top = s->top;
 	if (top + size >= s->end)
 		return NULL;
 	s->top += size;

@@ -15,7 +15,7 @@
 #define FALSE 0
 #endif
 
-static inline BOOL vml_test_instruction_start(vm_byte c)
+static inline BOOL vmc_lexer_test_keyword(vm_byte c)
 {
 	switch (c) {
 	case 'a':
@@ -77,7 +77,42 @@ static inline BOOL vml_test_instruction_start(vm_byte c)
 	}
 }
 
-static inline BOOL vml_test_number(vm_byte c)
+static inline BOOL vmc_lexer_test_uppercase(vm_byte c)
+{
+	switch (c) {
+	case 'A':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'E':
+	case 'F':
+	case 'G':
+	case 'H':
+	case 'I':
+	case 'J':
+	case 'K':
+	case 'L':
+	case 'M':
+	case 'N':
+	case 'O':
+	case 'P':
+	case 'Q':
+	case 'R':
+	case 'S':
+	case 'T':
+	case 'U':
+	case 'V':
+	case 'W':
+	case 'X':
+	case 'Y':
+	case 'Z':
+		return TRUE;
+	default:
+		return FALSE;
+	}
+}
+
+static inline BOOL vmc_lexer_test_number(vm_byte c)
 {
 	switch (c) {
 	case '0':
@@ -127,12 +162,13 @@ static inline BOOL vml_test_hex(vm_byte c)
 	}
 }
 
-static inline BOOL vml_test_char(vm_byte c)
+static inline BOOL vmc_lexer_test_char(vm_byte c)
 {
-	return vml_test_instruction_start(c) || vml_test_number(c);
+	return vmc_lexer_test_keyword(c) || vmc_lexer_test_number(c);
 }
 
-static inline BOOL vml_test_space(vm_byte c)
+// Test if rune is a whitespace. Newlines are not considered white-space in this function
+static inline BOOL vmc_lexer_test_whitespace_ignore_nl(vm_byte c)
 {
 	switch (c) {
 	case ' ':
@@ -144,9 +180,42 @@ static inline BOOL vml_test_space(vm_byte c)
 	}
 }
 
+// Test if rune is a whitespace
+static inline BOOL vmc_lexer_test_whitespace(vm_byte c)
+{
+	switch (c) {
+	case ' ':
+	case '\t':
+	case '\r':
+	case '\n':
+		return TRUE;
+	default:
+		return FALSE;
+	}
+}
+
 static inline BOOL vml_test_newline(vm_byte c)
 {
 	return c == '\n';
+}
+
+// Check to see if the supplied byte is escapable
+static inline BOOL vmc_lexer_test_escapeable(vm_byte c)
+{
+	switch (c)
+	{
+	case '\\':
+	case 't':
+	case 'n':
+	case 'r':
+	case '0':
+	case '\'':
+	case '"':
+	case '`':
+		return TRUE;
+	default:
+		return FALSE;
+	}
 }
 
 #endif
