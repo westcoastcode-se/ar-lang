@@ -58,6 +58,10 @@ struct suite_vm_utils : test_utils
 
 	void invoke(vmi_process* p, vmi_thread* t, const char* entry_point)
 	{
+		vmi_package package;
+		//if (!vmi_process_find_package(p, "main", 4, &package))
+		//	throw_(error() << "expected 'main' package but was not found");
+
 		const auto result = vmi_process_exec(p, t);
 		if (result != 0)
 			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << t->exit_reason);

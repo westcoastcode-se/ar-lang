@@ -41,3 +41,18 @@ vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t)
 	p->current_thread = NULL;
 	return result;
 }
+
+BOOL vmi_process_find_package(vmi_process* p, const char* name, int len, vmi_package* result)
+{
+	// Metadata starts directly after the header
+	int i = 0;
+	const vm_byte* first_package_bytes = (p->bytecode + p->header.first_package_offset);
+	const vmi_package_bytecode_header* package_header = (const vmi_package_bytecode_header*)(first_package_bytes);
+	for (int i = 0; i < p->header.packages_count; ++i) {
+
+		first_package_bytes += sizeof(vmi_package_bytecode_header) + package_header->name_length;
+		package_header = (const vmi_package_bytecode_header*)(first_package_bytes);
+	}
+
+	return FALSE;
+}

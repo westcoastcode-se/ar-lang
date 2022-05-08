@@ -225,7 +225,10 @@ vmc_package* _vmc_package_malloc(const char* name, int length)
 	p->name.end = name + length;
 	p->full_name = p->name;
 	p->func_first = p->func_last = NULL;
+	p->func_count = 0;
 	p->type_first = p->type_last = NULL;
+	p->type_count = 0;
+	p->data_offset = 0;
 	p->root_package = NULL;
 	p->next = NULL;
 	return p;
@@ -240,6 +243,8 @@ void _vmc_append_header(vmc_compiler* c)
 	header.version = VM_VERSION;
 	header.data_offset = 0;
 	header.code_offset = sizeof(vmi_process_header);
+	header.packages_count = 0;
+	header.first_package_offset = 0;
 	vmc_write(c, &header, sizeof(header));
 }
 
@@ -683,7 +688,55 @@ void _vmc_compiler_register_builtins(vmc_compiler* c)
 {
 	// Register the "vm" package and all type definitions
 	c->package_first = c->package_last = _vmc_package_malloc("vm", 2);
+	c->package_count++;
 	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int32), sizeof(vm_int32));
+}
+
+// Append bytecode with package, types and function information
+void _vmc_append_package_info(vmc_compiler* c)
+{
+	vmc_package* p = c->package_first;
+
+	// Set how many packages compiled into the bytecode
+	((vmi_process_header*)vm_bytestream_get(&c->bytecode, 0))->packages_count =
+		c->package_count;
+	// Set the actual offset of where the package information is found
+	((vmi_process_header*)vm_bytestream_get(&c->bytecode, 0))->first_package_offset = 
+		vm_bytestream_get_size(&c->bytecode);
+
+	// Memory structure for package information:
+	// int32	| name length
+	// int32	| num functions
+	// int32	| num types
+	// int32	| type offset
+	// int32    | function offset
+	// char[]	| name bytes
+	// 
+	// Memory structure for function information:
+	// int32	| name length
+	// char[]	| name bytes
+	// 
+	// Memory structure for type information:
+	// int32	| name length
+	// char[]	| name bytes
+
+	while (p != NULL) {
+		vmi_package_bytecode_header package_header = {
+			vm_string_length(&p->name),
+			p->func_count,
+			p->type_count,
+			0,
+			0
+		};
+		vmc_write(c, &package_header, sizeof(vmi_package_bytecode_header));
+		vmc_write(c, (void*)p->name.start, vm_string_length(&p->name)); // name bytes
+		p = p->next;
+	}
+}
+
+// Link
+void _vmc_link(vmc_compiler* c)
+{
 }
 
 //
@@ -703,6 +756,7 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	c->messages_first = c->messages_last = NULL;
 	c->scope_first = c->scope_last = NULL;
 	c->package_first = c->package_last = NULL;
+	c->package_count = 0;
 	_vmc_compiler_register_builtins(c);
 	vmc_package_new(c, "main", 4);
 	return c;
@@ -778,7 +832,14 @@ BOOL vmc_compiler_compile(vmc_compiler* c, const vm_byte* src)
 	_vmc_parse(c, &l, c->package_first->next);
 	_vmc_take_messages(c, &l);
 	vmc_lexer_release(&l);
-	return vmc_compiler_success(c);
+	if (vmc_compiler_success(c)) {
+		_vmc_append_package_info(c);
+		_vmc_link(c);
+		// We might have gotten link errors, so let's verify success again
+		return vmc_compiler_success(c);
+	}
+	else
+		return FALSE;
 }
 
 vmc_scope* vmc_scope_push(vmc_compiler* c, vmc_scope* parent_scope)
@@ -825,6 +886,7 @@ vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length)
 	p->root_package = c->package_first;
 	c->package_last->next = p;
 	c->package_last = p;
+	c->package_count++;
 	return p;
 }
 
@@ -887,6 +949,7 @@ vmc_func* vmc_func_new(vmc_package* p, const vm_string* name, vm_int32 offset)
 		p->func_last->next = func;
 		p->func_last = func;
 	}
+	p->func_count++;
 	return func;
 }
 
@@ -906,5 +969,6 @@ vmc_type_definition* vmc_type_definition_new(vmc_package* p, const vm_string* na
 		p->type_last->next = type;
 		p->type_last = type;
 	}
+	p->type_count++;
 	return type;
 }

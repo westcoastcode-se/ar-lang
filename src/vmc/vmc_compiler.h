@@ -119,9 +119,18 @@ struct vmc_package
 	vmc_func* func_first;
 	vmc_func* func_last;
 
+	// Number of functions
+	vm_int32 func_count;
+
 	// Linked list types
 	vmc_type_definition* type_first;
 	vmc_type_definition* type_last;
+
+	// Number of types
+	vm_int32 type_count;
+
+	// Offset where the data information for this package can be found
+	vm_uint32 data_offset;
 
 	// Root package, useful for searching for built-in types
 	struct vmc_package* root_package;
@@ -163,6 +172,9 @@ struct vmc_compiler
 	// Packages
 	vmc_package* package_first;
 	vmc_package* package_last;
+
+	// Number of packages collected
+	vm_int32 package_count;
 };
 typedef struct vmc_compiler vmc_compiler;
 
@@ -193,6 +205,12 @@ inline static vm_byte* vmc_write(vmc_compiler* c, void* bytes, vm_int32 size)
 inline static void vmc_write_null(vmc_compiler* c)
 {
 	vm_bytestream_write_null(&c->bytecode);
+}
+
+// Write an integer to the memory stream used by the compiler
+inline static void vmc_write_int32(vmc_compiler* c, vm_int32 value)
+{
+	vm_bytestream_write(&c->bytecode, &value, sizeof(vm_int32));
 }
 
 // Check to see if the compiler has compiled successfully
