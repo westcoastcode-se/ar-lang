@@ -18,9 +18,11 @@ VM_STRING_CONST(int32, "int32", 5);
 VM_STRING_CONST(int64, "int64", 5);
 
 VM_STRING_CONST(load_a, "load_a", 6);
+VM_STRING_CONST(const, "const", 5);
 VM_STRING_CONST(save_r, "save_r", 6);
 VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(add, "add", 3);
+VM_STRING_CONST(call, "call", 4);
 
 const vmc_compiler_config _vmc_compiler_config_default = {
 	NULL,
@@ -89,6 +91,15 @@ BOOL _vmc_add_error_expected_index(vmc_compiler* c, vmc_lexer* l, vmc_lexer_toke
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
 	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_INDEX, "expected index but was '%.*s' at %d:%d",
+		vm_string_length(&token->string), token->string.start,
+		line, line_offset);
+}
+
+BOOL _vmc_add_error_expected_integer(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
+{
+	int line, line_offset, offset;
+	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
+	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_INTEGER, "expected integer but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -348,6 +359,7 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		// Reset masks
 		var->type.masks = 0;
+		var->type.offset = _vmc_calculate_var_offset(func->returns, func->returns_count);
 
 		// We might've prefixed the type with a modifier, such as a pointer
 		if (t->type == VMC_LEXER_TYPE_PTR) {
@@ -425,12 +437,12 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		}
 
 		// Verify that a keyword is being processed
-		if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+		if (!vmc_lexer_type_is_keyword(t->type)) {
 			return _vmc_add_error_expected_keyword(c, l, t);
 		}
 
 		if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(load_a))) {
-			// ldarg <i32>
+			// load_a <i32>
 
 			vmi_instr_load_a instr;
 			vm_int32 index;
@@ -449,7 +461,27 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.size = func->args[index].type.size;
 			instr.offset = func->args[index].type.offset;
 			vmc_write(c, &instr, sizeof(vmi_instr_load_a));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(const))) {
+			// const <type> <value>
 
+			vmc_lexer_next(l, t);
+			if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+				return _vmc_add_error_expected_index(c, l, t);
+			}
+
+			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32))) {
+				vmi_instr_const_int32 instr;
+				vmc_lexer_next(l, t);
+				if (t->type != VMC_LEXER_TYPE_INT)
+					return _vmc_add_error_expected_integer(c, l, t);
+				instr.value = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+				instr.opcode = 0;
+				instr.icode = VMI_CONST;
+				vmc_write(c, &instr, sizeof(vmi_instr_const_int32));
+			}
+			else
+				return _vmc_add_error_not_implemented_yet(c, l, t);			
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(add))) {
 			// add <type>
@@ -475,13 +507,13 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			}
 
 			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (func->args_count <= index) {
-				return _vmc_add_error_invalid_arg(c, l, index, func->args_count);
+			if (func->returns_count <= index) {
+				return _vmc_add_error_invalid_arg(c, l, index, func->returns_count);
 			}
 			instr.opcode = 0;
 			instr.icode = VMI_SAVE_R;
-			instr.size = func->args[index].type.size;
-			instr.offset = func->args[index].type.offset;
+			instr.size = func->returns[index].type.size;
+			instr.offset = func->returns[index].type.offset;
 			vmc_write(c, &instr, sizeof(vmi_instr_save_r));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(ret))) {
@@ -491,6 +523,11 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.opcode = 0;
 			instr.icode = VMI_RET;
 			vmc_write(c, &instr, sizeof(vmi_instr_ret));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
+			// call <definition>
+
+			return _vmc_add_error_not_implemented_yet(c, l, t);
 		}
 
 		vmc_lexer_next(l, t);
@@ -621,6 +658,7 @@ void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 			if (!_vmc_parse_keyword(c, l, p, &token)) {
 				break;
 			}
+			continue;
 		}
 
 		// 
@@ -838,6 +876,8 @@ vmc_func* vmc_func_new(vmc_package* p, const vm_string* name, vm_int32 offset)
 	func->next = NULL;
 	func->is_extern = FALSE;
 	func->is_public = vmc_lexer_test_uppercase(*name->start); // TODO: A function should not be public 
+	func->complexity = 0;
+	func->complexity_components = 0;
 	func->args_count = 0;
 	func->returns_count = 0;
 	if (p->func_last == NULL) {

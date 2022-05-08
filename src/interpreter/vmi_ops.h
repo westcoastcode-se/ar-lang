@@ -20,9 +20,12 @@ enum vmi_icodes
 
 	// Load argument to the stack
 	VMI_LOAD_A,
-
+	
 	// Save stack value to return target
 	VMI_SAVE_R,
+
+	// Load constant value to the stack
+	VMI_CONST,
 
 	// Load a local variable to the stack
 	VMI_LOAD,
@@ -123,6 +126,14 @@ struct vmi_instr_load_a
 };
 typedef struct vmi_instr_load_a vmi_instr_load_a;
 
+// A const(ant) int32 instruction
+struct vmi_instr_const_int32
+{
+	OPCODE_HEADER;
+	vm_int32 value;
+};
+typedef struct vmi_instr_const_int32 vmi_instr_const_int32;
+
 // A save_r(eturn) instruction
 struct vmi_instr_save_r
 {
@@ -168,6 +179,8 @@ typedef vmi_instr_single_instruction vmi_instr_eoe;
 
 enum vmi_ocodes
 {
+	VMI_OP_CONST_INT32 = (VMI_CONST | VMI_PROPS1_OPCODE(0)),
+
 	VMI_OP_LOAD0 = (VMI_LOAD | VMI_PROPS1_OPCODE(0)),
 	VMI_OP_LOAD1 = (VMI_LOAD | VMI_PROPS1_OPCODE(1)),
 	VMI_OP_LOAD2 = (VMI_LOAD | VMI_PROPS1_OPCODE(2)),

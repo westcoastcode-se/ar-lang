@@ -66,6 +66,11 @@ struct vmc_func
 	// Offset where the bytecode for this function is found
 	vm_int32 offset;
 
+	// How complex is this function. Complexity is normally used during the optimization
+	// step of the machine code generation
+	vm_int32 complexity;
+	vm_int32 complexity_components;
+
 	// Arguments
 	vmc_var_definition args[9];
 	vm_int32 args_count;

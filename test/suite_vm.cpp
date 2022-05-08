@@ -29,8 +29,7 @@ struct suite_vm_utils : test_utils
 	vmc_compiler* compile(const vm_byte* src)
 	{
 		auto const compiler = vmc_compiler_new(NULL);
-		if (!vmc_compiler_compile(compiler, src))
-			throw_(error() << "failed to compile source code");
+		vmc_compiler_compile(compiler, src);
 		verify_compiler(compiler);
 		return compiler;
 	}
@@ -87,15 +86,42 @@ struct suite_vm_utils : test_utils
 // All test functions
 struct suite_vm_tests : suite_vm_utils
 {
+	void calculate_return_constant1() {
+		/*
+fn Get() (int32) {
+	return 12
+}
+*/
+		const auto source = R"(
+fn Get () (int32) {
+	const int32 123	// Push a constant
+	save_r 0		// Pop the top stack value and put it into the first return value
+	ret				// Return
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// begin_
+		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
+		invoke(p, t, "Get()(int32)");
+
+		if (vmi_stack_count(&t->stack) != 4) {
+			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
+		}
+		verify_stack(t, 0, 123);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void calculate_two_i32()
 	{
 /*
 fn Add(lhs int32, rhs int32) (int32) {
 	return lhs + rhs
-}
-
-fn AddTwoInts() (int32) {
-	return Add(10, 20)
 }
 */	
 		const auto source = R"(
@@ -106,17 +132,6 @@ fn Add (lhs int32, rhs int32) (int32) {
 	save_r 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
 }
-/*
-fn AddTwoInts() (int32) {
-	ldc int32 10	// Argument 1
-	ldc int32 20	// Argument 2
-	alloc_s 4		// Return value sizeof(int32)
-	call Add(int32, int32) (int32)
-	save_l 			// Pop the top most value and store it into the first local memory block
-	free_s 8		// Release 8 bytes from the stack
-	ret
-}
-*/
 )";
 		auto c = compile(source);
 		auto p = process(c);
@@ -127,13 +142,6 @@ fn AddTwoInts() (int32) {
 		vmi_thread_push_i32(t, 20);
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
 		
-		// Stack:
-		// 10, 20, _ret1
-		//		Add
-		//			10, 20, _ret1, <IP>
-		// Stack:
-		// 10, 20, 30
-
 		invoke(p, t, "Add(int32,int32)(int32)");
 
 		if (vmi_stack_count(&t->stack) != 12) {
@@ -146,136 +154,68 @@ fn AddTwoInts() (int32) {
 		destroy(t);
 		destroy(p);
 		destroy(c);
-
 	}
 
-	void instantly_return()
-	{
-// Script Source Code:
-/*
-package stdio
-
-extern fn Printf(value string) (void)
-
-package main
-
-import "stdio"
-
-fn Calc(s int16, lhs int32) (int64) {
-	return (int64)(s + lhs)
+	void calculate_two_int32_inner() {
+		/*
+fn Add(lhs int32, rhs int32) (int32) {
+	return lhs + rhs
 }
 
-fn Main() int {
-	stdio.Printf("Hello World!")
-	var i2 = 10
-	stdio.Printf(string(Calc(32766, i2))
-	return 0
+fn AddTwoInts() (int32) {
+	return Add(10, 20)
 }
 */
 		const auto source = R"(
-# package main
-.pkg stdio
-.extern fn Print (str) void
-.fn Printf (str) void
-	
+fn Add (lhs int32, rhs int32) (int32) {
+	load_a 0	// Push first arg (4 bytes) to the stack (esp + 0)
+	load_a 1	// Push second arg (4 bytes) to the stack (esp + 4)
+	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
+	save_r 0	// Pop the top stack value and put it into the first return value
+	ret			// Return to the caller address (assume return value is on the top of the stack)
+}
 
-.pkg main
-.import "stdio"
-
-.fn Stuff (i16, i32) (i64)
-	ldarg 0			# Push first arg (2 bytes) to the stack
-	conv i32		# Convert it into a 4 byte integer
-	ldarg 1			# Push second arg (4 bytes) to the stack
-	add i32			# Pop the two top-most i32 values and push the sum of those values to the stack
-	conv i64		# Convert the top-most stack value into 8 bytes (64 bit integer)
-	ret				# Jump back to caller
-
-# fn Main() int
-.fn Main () (i32)
-	var (i32) # Prepare stack for "i2" value (4 bytes)
-
-	#stdio.Printf("Hello World!")
-	ldc str "Hello World!"
-	invoke stdio.Printf(string) (void)
-	
-	# i2 = 10
-	ldc i32 10
-	stl 0
-
-	# stdio.Printf(string(Stuff(32766, i2))
-	ldc i16 32766				# Push 16 bit integer value
-	ldl 0						# Push the value found in local variable container 0 (32 bits)
-	invoke Stuff(i16,i32) (i64)	# Invoke function "Stuff"
-	invoke String(i64) (string) # Invoke "String", which converts the 64 bit integer into a string
-	invoke stdio.Printf(string) (void)
-
-	const 0
+fn AddTwoInts() (int32) {
+	alloc_s 4		// Allocate memory for return value of sizeof(int32)
+	load_c int32 10	// Load constant int32 10
+	load_c int32 20	// Load constant int32 20
+	call Add(int32, int32) (int32)
+	free_s 8		// Release 8 bytes from the stack
+	save_r 0		// Save the value to the return position
 	ret
+}
 )";
-/*
-	Instructions:
-	ldc <type> <value> = load constant
-	ldl <index> = load local value
-	stl <index> = store local value (figures out the stack size based on type on index)
-
-*/
-		/*auto c = compile(source);
+		auto c = compile(source);
 		auto p = process(c);
 		auto t = thread(p);
 
-		invoke(p, t);
+		// begin_
+		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
+
+		// Stack:
+		// 10, 20, _ret1
+		//		Add
+		//			10, 20, _ret1, <IP>
+		// Stack:
+		// 10, 20, 30
+
+		invoke(p, t, "AddTwoInts()(int32)");
+
+		if (vmi_stack_count(&t->stack) != 4) {
+			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
+		}
+		verify_stack(t, 0, 30);
 
 		destroy(t);
 		destroy(p);
-		destroy(c);*/
-	}
-
-	void reserve_var_memory()
-	{
-		const auto source = R"(
-.fn name (i8,i32) (i8):
-	ldarg $0			# Push 1 byte
-	conv i32			# Pop 1 byte and push 4 bytes
-	ldarg $1			# Push 4 bytes
-	add i32				# Add two i32
-	conv i8				# Pop 4 bytes and push 1 byte
-	ret					# Jump back to caller instruction
-
-.fn main () ():
-	var (i8)			# Allocate 1 byte on the stack; S=1
-	ldc i8 10			# Push 1 byte					S=2
-	ldc i32 -100		# Push 4 bytes					S=6
-	invoke name			# Call "name"					S=7
-	pop 5												S=2
-	starg $0			# Pop 1 byte to the first var	S=1
-	ret
-
-package game
-
-type GameObject struct {
-	ID int32
-}
-
-type Player struct {
-	GameObject
-	Identity string
-}
-
-func (p Player) Hello(name string) {
-	stdio.Println(string(p.ID) + " Hello " + name)
-}
-
-func hello(name string, age int32) string {
-	return name + string(age)
-}
-)";
+		destroy(c);
 	}
 
 	void operator()()
 	{
+		TEST(calculate_return_constant1);
 		TEST(calculate_two_i32);
-		//TEST(instantly_return);
-		//TEST(reserve_var_memory);
+		//TEST(calculate_two_int32_inner);
 	}
 };
 

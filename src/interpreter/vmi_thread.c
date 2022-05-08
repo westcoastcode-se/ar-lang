@@ -162,9 +162,17 @@ vmi_ip _vmi_thread_addi32(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int32 rhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
 	const vm_int32 lhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
-	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, 4);
+	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
 	*result = (lhs + rhs);
 	return ip + sizeof(vmi_instr_single_instruction);
+}
+
+vmi_ip _vmi_thread_const_int32(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_const_int32* instr = (const vmi_instr_const_int32*)ip;
+	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
+	*result = instr->value;
+	return ip + sizeof(vmi_instr_const_int32);
 }
 
 vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
@@ -281,6 +289,10 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 
 		case VMI_OP_ADD_I32:
 			ip = _vmi_thread_addi32(t, ip);
+			continue;
+
+		case VMI_OP_CONST_INT32:
+			ip = _vmi_thread_const_int32(t, ip);
 			continue;
 
 		default:
