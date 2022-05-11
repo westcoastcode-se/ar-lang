@@ -51,9 +51,7 @@ struct suite_vm_utils : test_utils
 
 	void invoke(vmi_process* p, vmi_thread* t)
 	{
-		const auto result = vmi_process_exec(p, t);
-		if (result != 0)
-			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << t->exit_reason);
+		invoke(p, t, "Main");
 	}
 
 	void invoke(vmi_process* p, vmi_thread* t, const char* entry_point)
@@ -62,9 +60,11 @@ struct suite_vm_utils : test_utils
 		if (package == NULL)
 			throw_(error() << "expected 'main' package but was not found");
 
-		const vmi_package_func* func = vmi_package_find_function_by_name(package, "Get", 3);
+		const vmi_package_func* func = vmi_package_find_function_by_name(package, entry_point, strlen(entry_point));
+		if (func == NULL)
+			throw_(error() << "could not find function '" << entry_point << "'");
 
-		const auto result = vmi_process_exec(p, t);
+		const auto result = vmi_process_exec(p, t, func);
 		if (result != 0)
 			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << t->exit_reason);
 	}
@@ -111,7 +111,7 @@ fn Get () (int32) {
 
 		// begin_
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
-		invoke(p, t, "Get()(int32)");
+		invoke(p, t, "Get");
 
 		if (vmi_stack_count(&t->stack) != 4) {
 			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
@@ -145,7 +145,7 @@ fn Get () (int32, int32) {
 		// begin_
 		vmi_thread_push_i32(t, 88); // return value here (can be done by the API)
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
-		invoke(p, t, "Get()(int32,int32)");
+		invoke(p, t, "Get");
 
 		if (vmi_stack_count(&t->stack) != 8) {
 			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
@@ -183,7 +183,57 @@ fn Add (lhs int32, rhs int32) (int32) {
 		vmi_thread_push_i32(t, 20);
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
 		
-		invoke(p, t, "Add(int32,int32)(int32)");
+		invoke(p, t, "Add");
+
+		if (vmi_stack_count(&t->stack) != 12) {
+			throw_(error() << "expected stack size 12 but was " << vmi_stack_count(&t->stack));
+		}
+		verify_stack(t, 0, 10);
+		verify_stack(t, 4, 20);
+		verify_stack(t, 8, 30);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+	
+	void calculate_multiple_funcs() {
+		/*
+fn Add1(lhs int32, rhs int32) (int32) {
+	return lhs + rhs
+}
+
+fn Add2(lhs int32, rhs int32) (int32) {
+	return lhs + rhs
+}
+*/
+		const auto source = R"(
+fn Add1 (lhs int32, rhs int32) (int32) {
+	load_a 0	// Push first arg (4 bytes) to the stack (esp + 0)
+	load_a 1	// Push second arg (4 bytes) to the stack (esp + 4)
+	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
+	save_r 0	// Pop the top stack value and put it into the first return value
+	ret			// Return to the caller address (assume return value is on the top of the stack)
+}
+
+fn Add2 (lhs int32, rhs int32) (int32) {
+	load_a 0	// Push first arg (4 bytes) to the stack (esp + 0)
+	load_a 1	// Push second arg (4 bytes) to the stack (esp + 4)
+	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
+	save_r 0	// Pop the top stack value and put it into the first return value
+	ret			// Return to the caller address (assume return value is on the top of the stack)
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// begin_
+		vmi_thread_push_i32(t, 10);
+		vmi_thread_push_i32(t, 20);
+		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
+
+		invoke(p, t, "Add2");
 
 		if (vmi_stack_count(&t->stack) != 12) {
 			throw_(error() << "expected stack size 12 but was " << vmi_stack_count(&t->stack));
@@ -240,7 +290,7 @@ fn AddTwoInts() (int32) {
 		// Stack:
 		// 10, 20, 30
 
-		invoke(p, t, "AddTwoInts()(int32)");
+		invoke(p, t, "AddTwoInts");
 
 		if (vmi_stack_count(&t->stack) != 4) {
 			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
@@ -257,6 +307,7 @@ fn AddTwoInts() (int32) {
 		TEST(calculate_return_constant1);
 		TEST(calculate_return_constant2);
 		TEST(calculate_two_i32);
+		TEST(calculate_multiple_funcs);
 		//TEST(calculate_two_int32_inner);
 	}
 };

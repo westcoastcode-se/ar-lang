@@ -100,13 +100,13 @@ vm_int32 vmi_process_load(vmi_process* p, const vm_byte* bytecode)
 	return 0;
 }
 
-vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t)
+vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t, const vmi_package_func* func)
 {
 	vm_int32 result;
 	// TODO: Add support for multiple threads
 	// TODO: Add support for routines/light-weight threads
 	p->current_thread = t;
-	result = vmi_thread_exec(t, p->bytecode + p->header.code_offset);
+	result = vmi_thread_exec(t, func->ptr);
 	p->current_thread = NULL;
 	return result;
 }

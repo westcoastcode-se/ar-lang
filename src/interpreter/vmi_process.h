@@ -122,7 +122,7 @@ extern void vmi_process_destroy(vmi_process* p);
 extern vm_int32 vmi_process_load(vmi_process* p, const vm_byte* bytecode);
 
 // Execute the supplied thread
-extern vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t);
+extern vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t, const vmi_package_func* func);
 
 // Search for a package with the supplied name
 extern const vmi_package* vmi_process_find_package_by_name(const vmi_process* p, const char* name, int len);
