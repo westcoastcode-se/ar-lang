@@ -504,7 +504,13 @@ void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token)
 		_vmc_lexer_eof(l, token);
 		return;
 	}
-	while (vmc_lexer_test_whitespace(ch)) ch = *++l->source;
+	while (vmc_lexer_test_whitespace(ch)) {
+		if (ch == '\n') {
+			l->line++;
+			l->line_offset = l->source;
+		}
+		ch = *++l->source;
+	}
 	_vmc_lexer_next(l, token);
 }
 
