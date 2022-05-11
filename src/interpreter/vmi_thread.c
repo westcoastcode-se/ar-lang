@@ -35,6 +35,20 @@ vmi_ip _vmi_thread_begin(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_begin);
 }
 
+vmi_ip _vmi_thread_alloc_s(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_alloc_s* instr = (const vmi_instr_alloc_s*)ip;
+	vmi_stack_push(&t->stack, instr->size);
+	return ip + sizeof(vmi_instr_alloc_s);
+}
+
+vmi_ip _vmi_thread_free_s(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_free_s* instr = (const vmi_instr_free_s*)ip;
+	vmi_stack_pop(&t->stack, instr->size);
+	return ip + sizeof(vmi_instr_free_s);
+}
+
 vmi_ip _vmi_thread_load_a(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_load_a* instr = (const vmi_instr_load_a*)ip;
@@ -308,6 +322,12 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		//case VMI_VARS:
 		//	ip = _vmi_thread_vars(t, ip);
 		//	continue;
+		case VMI_ALLOC_S:
+			ip = _vmi_thread_alloc_s(t, ip);
+			continue;
+		case VMI_FREE_S:
+			ip = _vmi_thread_free_s(t, ip);
+			continue;
 		case VMI_LOAD_A:
 			ip = _vmi_thread_load_a(t, ip);
 			continue;

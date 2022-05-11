@@ -27,6 +27,12 @@ enum vmi_icodes
 	// Load constant value to the stack
 	VMI_CONST,
 
+	// Allocate memory on the stack
+	VMI_ALLOC_S,
+
+	// Free memory from the stack
+	VMI_FREE_S,
+
 	// Load a local variable to the stack
 	VMI_LOAD,
 
@@ -126,14 +132,6 @@ struct vmi_instr_load_a
 };
 typedef struct vmi_instr_load_a vmi_instr_load_a;
 
-// A const(ant) int32 instruction
-struct vmi_instr_const_int32
-{
-	OPCODE_HEADER;
-	vm_int32 value;
-};
-typedef struct vmi_instr_const_int32 vmi_instr_const_int32;
-
 // A save_r(eturn) instruction
 struct vmi_instr_save_r
 {
@@ -151,6 +149,48 @@ struct vmi_instr_save_r
 	};
 };
 typedef struct vmi_instr_save_r vmi_instr_save_r;
+
+// A const(ant) int32 instruction
+struct vmi_instr_const_int32
+{
+	OPCODE_HEADER;
+	vm_int32 value;
+};
+typedef struct vmi_instr_const_int32 vmi_instr_const_int32;
+
+// A alloc_s(tack) instruction
+struct vmi_instr_alloc_s
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+			vm_uint16 size;
+		};
+	};
+};
+typedef struct vmi_instr_alloc_s vmi_instr_alloc_s;
+
+// A free_s(tack) instruction
+struct vmi_instr_free_s
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+			vm_uint16 size;
+		};
+	};
+};
+typedef struct vmi_instr_free_s vmi_instr_free_s;
 
 // Load a generic 1 block item to the stack
 struct vmi_instr_loadx

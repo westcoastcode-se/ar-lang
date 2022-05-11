@@ -18,8 +18,10 @@ VM_STRING_CONST(int32, "int32", 5);
 VM_STRING_CONST(int64, "int64", 5);
 
 VM_STRING_CONST(load_a, "load_a", 6);
-VM_STRING_CONST(const, "const", 5);
 VM_STRING_CONST(save_r, "save_r", 6);
+VM_STRING_CONST(const, "const", 5);
+VM_STRING_CONST(alloc_s, "alloc_s", 7);
+VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(add, "add", 3);
 VM_STRING_CONST(call, "call", 4);
@@ -503,14 +505,14 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			_vmc_emit_opcode(c, opcode);
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(save_r))) {
-			// saver <i32>
+			// save_r <i32>
 
 			vmi_instr_save_r instr;
 			vm_int32 index;
 
 			vmc_lexer_next(l, t);
 			if (t->type != VMC_LEXER_TYPE_INT) {
-				return _vmc_add_error_expected_index(c, l, t);
+				return _vmc_add_error_expected_integer(c, l, t);
 			}
 
 			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
@@ -522,6 +524,52 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.size = func->returns[index].type.size;
 			instr.offset = func->returns[index].type.offset;
 			vmc_write(c, &instr, sizeof(vmi_instr_save_r));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(alloc_s))) {
+			// alloc_s <i32>
+
+			vmi_instr_alloc_s instr;
+			vm_int32 num_bytes;
+
+			vmc_lexer_next(l, t);
+			if (t->type != VMC_LEXER_TYPE_INT) {
+				return _vmc_add_error_expected_integer(c, l, t);
+			}
+
+			num_bytes = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+			if (num_bytes < 0) {
+				return _vmc_add_error_expected_integer(c, l, t);
+			}
+			else if (num_bytes > UINT16_MAX) {
+				return _vmc_add_error_not_implemented_yet(c, l, t);
+			}
+			instr.opcode = 0;
+			instr.icode = VMI_ALLOC_S;
+			instr.size = num_bytes;
+			vmc_write(c, &instr, sizeof(vmi_instr_alloc_s));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(free_s))) {
+			// free_s <i32>
+
+			vmi_instr_free_s instr;
+			vm_int32 num_bytes;
+
+			vmc_lexer_next(l, t);
+			if (t->type != VMC_LEXER_TYPE_INT) {
+				return _vmc_add_error_expected_integer(c, l, t);
+			}
+
+			num_bytes = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+			if (num_bytes < 0) {
+				return _vmc_add_error_expected_integer(c, l, t);
+			}
+			else if (num_bytes > UINT16_MAX) {
+				return _vmc_add_error_not_implemented_yet(c, l, t);
+			}
+			instr.opcode = 0;
+			instr.icode = VMI_FREE_S;
+			instr.size = num_bytes;
+			vmc_write(c, &instr, sizeof(vmi_instr_free_s));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(ret))) {
 			// ret
