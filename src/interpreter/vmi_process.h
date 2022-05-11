@@ -4,6 +4,7 @@
 #include "../vm_config.h"
 #include "../vm_string.h"
 
+// Metadata of the package saved in the bytecode
 struct vmi_package_bytecode_header
 {
 	vm_int32 name_length;
@@ -18,6 +19,9 @@ typedef struct vmi_package_bytecode_header vmi_package_bytecode_header;
 // Package information
 struct vmi_package
 {
+	// Unique id for this package
+	vm_uint32 id;
+
 	// Name of the package
 	vm_string name;
 };
@@ -55,6 +59,9 @@ struct vmi_process
 	// Header
 	vmi_process_header header;
 
+	// All packages (number of packages can be found in the header)
+	vmi_package* packages;
+
 	// The first thread managed by this process
 	struct vmi_thread* first_thread;
 
@@ -76,6 +83,9 @@ extern vm_int32 vmi_process_load(vmi_process* p, const vm_byte* bytecode);
 extern vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t);
 
 // Search for a package with the supplied name
-extern BOOL vmi_process_find_package(vmi_process* p, const char* name, int len, vmi_package* result);
+extern const vmi_package* vmi_process_find_package_by_name(vmi_process* p, const char* name, int len);
+
+// Search for a package with the supplied name
+extern const vmi_package* vmi_process_find_package_by_id(vmi_process* p, vm_uint32 id);
 
 #endif

@@ -109,6 +109,9 @@ extern const vmc_compiler_config* vmc_compiler_config_default;
 // A package containing functions and variables
 struct vmc_package
 {
+	// Unique ID for this package
+	vm_uint32 id;
+
 	// The short name of this package
 	vm_string name;
 

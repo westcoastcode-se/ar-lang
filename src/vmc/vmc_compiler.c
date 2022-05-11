@@ -221,6 +221,7 @@ vmc_package* _vmc_package_malloc(const char* name, int length)
 	vmc_package* p = (vmc_package*)malloc(sizeof(vmc_package));
 	if (p == NULL)
 		return NULL;
+	p->id = 0;
 	p->name.start = name;
 	p->name.end = name + length;
 	p->full_name = p->name;
@@ -688,7 +689,7 @@ void _vmc_compiler_register_builtins(vmc_compiler* c)
 {
 	// Register the "vm" package and all type definitions
 	c->package_first = c->package_last = _vmc_package_malloc("vm", 2);
-	c->package_count++;
+	c->package_first->id = c->package_count++;
 	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int32), sizeof(vm_int32));
 }
 
@@ -886,7 +887,7 @@ vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length)
 	p->root_package = c->package_first;
 	c->package_last->next = p;
 	c->package_last = p;
-	c->package_count++;
+	p->id = c->package_count++;
 	return p;
 }
 
