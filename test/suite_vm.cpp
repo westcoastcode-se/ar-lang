@@ -62,6 +62,8 @@ struct suite_vm_utils : test_utils
 		if (package == NULL)
 			throw_(error() << "expected 'main' package but was not found");
 
+		const vmi_package_func* func = vmi_package_find_function_by_name(package, "Get", 3);
+
 		const auto result = vmi_process_exec(p, t);
 		if (result != 0)
 			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << t->exit_reason);

@@ -4,17 +4,44 @@
 #include "../vm_config.h"
 #include "../vm_string.h"
 
+// Represents a type for position, in memory, where the virtual machine is processing instructions
+typedef const vm_byte* vmi_ip;
+
+struct vmi_package_func_bytecode_header
+{
+	// Length of the name
+	vm_uint32 name_length;
+
+	// Offset where the function starts (in relation to the start of the bytecode)
+	vm_uint32 ptr_start;
+};
+typedef struct vmi_package_func_bytecode_header vmi_package_func_bytecode_header;
+
 // Metadata of the package saved in the bytecode
 struct vmi_package_bytecode_header
 {
-	vm_int32 name_length;
-	vm_int32 num_functions;
-	vm_int32 num_types;
-	vm_int32 type_offset;
-	vm_int32 function_offset;
+	vm_uint32 name_length;
+	vm_uint32 functions_count;
+	vm_uint32 types_count;
+	vm_uint32 type_offset;
+	vm_uint32 function_offset;
 	// char* name
 };
 typedef struct vmi_package_bytecode_header vmi_package_bytecode_header;
+
+// Information of a function inside a package
+struct vmi_package_func
+{
+	// Unique id for this function
+	vm_uint32 id;
+
+	// Name of the function
+	vm_string name;
+
+	// Pointer to where the function is located
+	vmi_ip ptr;
+};
+typedef struct vmi_package_func vmi_package_func;
 
 // Package information
 struct vmi_package
@@ -24,6 +51,15 @@ struct vmi_package
 
 	// Name of the package
 	vm_string name;
+
+	// Start index where the first function is found in the entire function blob
+	vm_uint32 functions_start_index;
+	
+	// Number of functions in this package
+	vm_uint32 functions_count;
+
+	// Process this package is part of
+	struct vmi_process* process;
 };
 typedef struct vmi_package vmi_package;
 
@@ -47,6 +83,9 @@ struct vmi_process_header
 
 	// Offset where the first package is found
 	vm_uint32 first_package_offset;
+
+	// Number of functions in total
+	vm_uint32 functions_count;
 };
 typedef struct vmi_process_header vmi_process_header;
 
@@ -61,6 +100,9 @@ struct vmi_process
 
 	// All packages (number of packages can be found in the header)
 	vmi_package* packages;
+
+	// All functions
+	vmi_package_func* functions;
 
 	// The first thread managed by this process
 	struct vmi_thread* first_thread;
@@ -83,9 +125,15 @@ extern vm_int32 vmi_process_load(vmi_process* p, const vm_byte* bytecode);
 extern vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t);
 
 // Search for a package with the supplied name
-extern const vmi_package* vmi_process_find_package_by_name(vmi_process* p, const char* name, int len);
+extern const vmi_package* vmi_process_find_package_by_name(const vmi_process* p, const char* name, int len);
 
-// Search for a package with the supplied name
-extern const vmi_package* vmi_process_find_package_by_id(vmi_process* p, vm_uint32 id);
+// Search for a function with the supplied name
+extern const vmi_package_func* vmi_package_find_function_by_name(const vmi_package* p, const char* name, int len);
+
+// Search for a package with the supplied unique id
+extern const vmi_package* vmi_process_find_package_by_id(const vmi_process* p, vm_uint32 id);
+
+// Search for a function with the supplied unique id
+extern const vmi_package_func* vmi_process_find_function_by_id(const vmi_process* p, vm_uint32 id);
 
 #endif

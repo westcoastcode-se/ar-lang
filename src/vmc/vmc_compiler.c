@@ -245,6 +245,7 @@ void _vmc_append_header(vmc_compiler* c)
 	header.data_offset = 0;
 	header.code_offset = sizeof(vmi_process_header);
 	header.packages_count = 0;
+	header.functions_count = 0;
 	header.first_package_offset = 0;
 	vmc_write(c, &header, sizeof(header));
 }
@@ -568,6 +569,7 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 	default:
 		break;
 	}
+	func->id = c->functions_count++;
 	func->is_extern = is_extern;
 
 	// Parse args
@@ -689,8 +691,13 @@ void _vmc_compiler_register_builtins(vmc_compiler* c)
 {
 	// Register the "vm" package and all type definitions
 	c->package_first = c->package_last = _vmc_package_malloc("vm", 2);
-	c->package_first->id = c->package_count++;
+	c->package_first->id = c->packages_count++;
 	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int32), sizeof(vm_int32));
+}
+
+vmi_process_header* _vmc_compiler_get_header(vmc_compiler* c)
+{
+	return ((vmi_process_header*)vm_bytestream_get(&c->bytecode, 0));
 }
 
 // Append bytecode with package, types and function information
@@ -699,28 +706,16 @@ void _vmc_append_package_info(vmc_compiler* c)
 	vmc_package* p = c->package_first;
 
 	// Set how many packages compiled into the bytecode
-	((vmi_process_header*)vm_bytestream_get(&c->bytecode, 0))->packages_count =
-		c->package_count;
+	_vmc_compiler_get_header(c)->packages_count = c->packages_count;
+	// Set how many functions compiled into the bytecode
+	_vmc_compiler_get_header(c)->functions_count = c->functions_count;
 	// Set the actual offset of where the package information is found
-	((vmi_process_header*)vm_bytestream_get(&c->bytecode, 0))->first_package_offset = 
-		vm_bytestream_get_size(&c->bytecode);
+	_vmc_compiler_get_header(c)->first_package_offset = vm_bytestream_get_size(&c->bytecode);
 
 	// Memory structure for package information:
-	// int32	| name length
-	// int32	| num functions
-	// int32	| num types
-	// int32	| type offset
-	// int32    | function offset
+	// <Package Header>
 	// char[]	| name bytes
-	// 
-	// Memory structure for function information:
-	// int32	| name length
-	// char[]	| name bytes
-	// 
-	// Memory structure for type information:
-	// int32	| name length
-	// char[]	| name bytes
-
+	
 	while (p != NULL) {
 		vmi_package_bytecode_header package_header = {
 			vm_string_length(&p->name),
@@ -731,6 +726,29 @@ void _vmc_append_package_info(vmc_compiler* c)
 		};
 		vmc_write(c, &package_header, sizeof(vmi_package_bytecode_header));
 		vmc_write(c, (void*)p->name.start, vm_string_length(&p->name)); // name bytes
+		p = p->next;
+	}
+
+	// Memory structure for function information:
+	// int32	| name length
+	// char[]	| name bytes
+	// 
+	// Memory structure for type information:
+	// int32	| name length
+	// char[]	| name bytes
+
+	p = c->package_first;
+	while (p != NULL) {
+		vmc_func* f = p->func_first;
+		while (f != NULL) {
+			vmi_package_func_bytecode_header func_header = {
+				vm_string_length(&f->name),
+				f->offset
+			};
+			vmc_write(c, &func_header, sizeof(vmi_package_func_bytecode_header));
+			vmc_write(c, (void*)f->name.start, vm_string_length(&f->name)); // name bytes
+			f = f->next;
+		}
 		p = p->next;
 	}
 }
@@ -757,7 +775,8 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	c->messages_first = c->messages_last = NULL;
 	c->scope_first = c->scope_last = NULL;
 	c->package_first = c->package_last = NULL;
-	c->package_count = 0;
+	c->packages_count = 0;
+	c->functions_count = 0;
 	_vmc_compiler_register_builtins(c);
 	vmc_package_new(c, "main", 4);
 	return c;
@@ -887,7 +906,7 @@ vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length)
 	p->root_package = c->package_first;
 	c->package_last->next = p;
 	c->package_last = p;
-	p->id = c->package_count++;
+	p->id = c->packages_count++;
 	return p;
 }
 
@@ -933,6 +952,7 @@ vmc_func* vmc_func_new(vmc_package* p, const vm_string* name, vm_int32 offset)
 	vmc_func* func = (vmc_func*)malloc(sizeof(vmc_func));
 	if (func == NULL)
 		return NULL;
+	func->id = 0;
 	func->package = p;
 	func->name = *name;
 	func->offset = offset;

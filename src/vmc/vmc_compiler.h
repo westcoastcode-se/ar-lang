@@ -54,6 +54,9 @@ typedef struct vmc_var_definition vmc_var_definition;
 // Information of a function
 struct vmc_func
 {
+	// Unique ID for this function
+	vm_uint32 id;
+
 	// Name of the function
 	vm_string name;
 
@@ -123,14 +126,14 @@ struct vmc_package
 	vmc_func* func_last;
 
 	// Number of functions
-	vm_int32 func_count;
+	vm_uint32 func_count;
 
 	// Linked list types
 	vmc_type_definition* type_first;
 	vmc_type_definition* type_last;
 
 	// Number of types
-	vm_int32 type_count;
+	vm_uint32 type_count;
 
 	// Offset where the data information for this package can be found
 	vm_uint32 data_offset;
@@ -177,7 +180,10 @@ struct vmc_compiler
 	vmc_package* package_last;
 
 	// Number of packages collected
-	vm_int32 package_count;
+	vm_uint32 packages_count;
+
+	// Number of functions, in total
+	vm_uint32 functions_count;
 };
 typedef struct vmc_compiler vmc_compiler;
 

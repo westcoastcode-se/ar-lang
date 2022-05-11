@@ -8,8 +8,8 @@
 BOOL _vmi_process_load_package_info(vmi_process* p, const vm_byte* bytecode)
 {
 	vm_uint32 i;
+	vm_uint32 functions_start_index = 0;
 	const vm_byte* first_package_bytes = (p->bytecode + p->header.first_package_offset);
-	const vmi_package_bytecode_header* package_header = (const vmi_package_bytecode_header*)(first_package_bytes);
 
 	// Create an array containing information on all packages
 	p->packages = (vmi_package*)malloc(sizeof(vmi_package) * p->header.packages_count);
@@ -17,17 +17,41 @@ BOOL _vmi_process_load_package_info(vmi_process* p, const vm_byte* bytecode)
 		return FALSE;
 	}
 
+	// Create memory for all functions
+	p->functions = (vmi_package_func*)malloc(sizeof(vmi_package_func) * p->header.functions_count);
+	if (p->functions == NULL) {
+		return FALSE;
+	}
+
 	// Prepare each package
 	for (i = 0; i < p->header.packages_count; ++i) {
+		const vmi_package_bytecode_header* header = (const vmi_package_bytecode_header*)(first_package_bytes);
 		const char* const name_start = first_package_bytes + sizeof(vmi_package_bytecode_header);
 		vmi_package* const current_package = &p->packages[i];
-
+		
 		current_package->id = i;
 		current_package->name.start = name_start;
-		current_package->name.end = name_start + package_header->name_length;
+		current_package->name.end = name_start + header->name_length;
+		current_package->functions_start_index = functions_start_index;
+		current_package->functions_count = header->functions_count;
+		current_package->process = p;
 
-		first_package_bytes += sizeof(vmi_package_bytecode_header) + package_header->name_length;
-		package_header = (const vmi_package_bytecode_header*)(first_package_bytes);
+		first_package_bytes += sizeof(vmi_package_bytecode_header) + header->name_length;
+		functions_start_index += header->functions_count;
+	}
+
+	// Prepare each function
+	for (i = 0; i < p->header.functions_count; ++i) {
+		const vmi_package_func_bytecode_header* header = (const vmi_package_func_bytecode_header*)(first_package_bytes);
+		const char* const name_start = first_package_bytes + sizeof(vmi_package_func_bytecode_header);
+		vmi_package_func* const current_func = &p->functions[i];
+
+		current_func->id = i;
+		current_func->name.start = name_start;
+		current_func->name.end = name_start + header->name_length;
+		current_func->ptr = bytecode + header->ptr_start;
+
+		first_package_bytes += sizeof(vmi_package_func_bytecode_header) + header->name_length;
 	}
 
 	return TRUE;
@@ -87,7 +111,7 @@ vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t)
 	return result;
 }
 
-const vmi_package* vmi_process_find_package_by_name(vmi_process* p, const char* name, int len)
+const vmi_package* vmi_process_find_package_by_name(const vmi_process* p, const char* name, int len)
 {
 	vm_uint32 i = 0;
 	for (i = 0; i < p->header.packages_count; ++i) {
@@ -98,9 +122,30 @@ const vmi_package* vmi_process_find_package_by_name(vmi_process* p, const char* 
 	return NULL;
 }
 
-extern const vmi_package* vmi_process_find_package_by_id(vmi_process* p, vm_uint32 id)
+const vmi_package_func* vmi_package_find_function_by_name(const vmi_package* p, const char* name, int len)
+{
+	vm_uint32 i;
+	const vm_uint32 count = p->functions_count;
+	if (count == 0)
+		return NULL;
+	for (i = p->functions_start_index; i < count; ++i) {
+		if (vm_string_cmpsz(&p->process->functions[i].name, name, len)) {
+			return &p->process->functions[i];
+		}
+	}
+	return NULL;
+}
+
+const vmi_package* vmi_process_find_package_by_id(const vmi_process* p, vm_uint32 id)
 {
 	if (p->header.packages_count >= id)
 		return NULL;
 	return &p->packages[id];
+}
+
+const vmi_package_func* vmi_process_find_function_by_id(const vmi_process* p, vm_uint32 id)
+{
+	if (p->header.functions_count >= id)
+		return NULL;
+	return &p->functions[id];
 }

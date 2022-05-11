@@ -52,9 +52,6 @@ struct vmi_thread_vars_block
 };
 typedef struct vmi_thread_vars_block vmi_thread_vars_block;
 
-// Represents a type for position, in memory, where the virtual machine is processing instructions
-typedef const vm_byte* vmi_ip;
-
 // Call frame
 struct vmi_thread_call_frame
 {
