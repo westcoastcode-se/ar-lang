@@ -51,6 +51,16 @@ struct vmc_var_definition
 };
 typedef struct vmc_var_definition vmc_var_definition;
 
+// Defines a function to be external - i.e. you can link functionality from 
+// your compiled application into the script language
+#define VMC_FUNC_PROPERTY_EXTERN (1 << 0)
+
+// The function is public and can be accessed from outside the package
+#define VMC_FUNC_PROPERTY_PUBLIC (1 << 1)
+
+// The function has a body
+#define VMC_FUNC_PROPERTY_HAS_BODY (1 << 2)
+
 // Information of a function
 struct vmc_func
 {
@@ -60,11 +70,11 @@ struct vmc_func
 	// Name of the function
 	vm_string name;
 
-	// Is this function an external function
-	BOOL is_extern;
+	// The signature of the function
+	vm_string signature;
 
-	// Is this function public
-	BOOL is_public;
+	// Properties
+	vm_uint32 properties;
 
 	// Offset where the bytecode for this function is found
 	vm_int32 offset;
@@ -91,6 +101,24 @@ struct vmc_func
 	struct vmc_func* next;
 };
 typedef struct vmc_func vmc_func;
+
+// Check to see if the supplied function is public
+static inline BOOL vmc_func_is_public(const vmc_func* func)
+{
+	return (func->properties & VMC_FUNC_PROPERTY_PUBLIC) == VMC_FUNC_PROPERTY_PUBLIC;
+}
+
+// Check to see if the supplied function is marked to be external
+static inline BOOL vmc_func_is_extern(const vmc_func* func)
+{
+	return (func->properties & VMC_FUNC_PROPERTY_EXTERN) == VMC_FUNC_PROPERTY_EXTERN;
+}
+
+// Check to see if the supplied function has a body
+static inline BOOL vmc_func_has_body(const vmc_func* func)
+{
+	return (func->properties & VMC_FUNC_PROPERTY_HAS_BODY) == VMC_FUNC_PROPERTY_HAS_BODY;
+}
 
 // Definition for what the import function looks like. Returns a success if the import was successful
 typedef vm_int32(*vmc_compiler_import_fn)(struct vmc_compiler* c, const vm_string* path);
@@ -158,6 +186,22 @@ struct vmc_scope
 };
 typedef struct vmc_scope vmc_scope;
 
+struct vmc_string_pool_entry
+{
+	// The actual string
+	vm_string value;
+
+	// String index
+	vm_uint32 index;
+
+	// Offset where the string starts if all strings are located in the same memory block
+	vm_uint32 offset;
+
+	// Next entry
+	struct vmc_string_pool_entry* next;
+};
+typedef struct vmc_string_pool_entry vmc_string_pool_entry;
+
 // Entry point for the compiler
 struct vmc_compiler
 {
@@ -184,6 +228,10 @@ struct vmc_compiler
 
 	// Number of functions, in total
 	vm_uint32 functions_count;
+
+	// String Pool
+	vmc_string_pool_entry* string_pool_first;
+	vmc_string_pool_entry* string_pool_last;
 };
 typedef struct vmc_compiler vmc_compiler;
 

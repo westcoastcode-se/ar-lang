@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 //
 // PRIVATE ///////////////////////////////////////////////////////////////////////////
@@ -191,6 +192,53 @@ BOOL vmc_error_symbol_already_exists(vmc_compiler* c, vmc_lexer* l, vmc_lexer_to
 	return _vmc_add_message(c, VMC_CERR_SYMBOL_ALREADY_EXIST, "symbol already exists: '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
+}
+
+void _vmc_compiler_string_copy(vm_string* s, const char* src, int len)
+{
+	char* dest = (char*)malloc(len);
+	s->start = dest;
+	s->end = dest + len;
+	for (int i = 0; i < len; ++i) {
+		*dest++ = *src++;
+	}
+}
+
+const vm_string* _vmc_compiler_pool_stringsz(vmc_compiler* c, const char* str, int len)
+{
+	// Try to find an existing string
+	vmc_string_pool_entry* e = c->string_pool_first;
+	while (e != NULL) {
+		if (vm_string_cmpsz(&e->value, str, len)) {
+			return &e->value;
+		}
+		e = e->next;
+	}
+
+	// If not, then add it to the string pool
+	e = (vmc_string_pool_entry*)malloc(sizeof(vmc_string_pool_entry));
+	if (e == NULL) {
+		return NULL;
+	}
+	e->next = NULL;
+	_vmc_compiler_string_copy(&e->value, str, len);
+	if (c->string_pool_last != NULL) {
+		c->string_pool_last->next = e;
+		e->index = c->string_pool_last->index + 1;
+		e->offset = c->string_pool_last->offset + vm_string_length(&c->string_pool_last->value);
+		c->string_pool_last = e;
+	}
+	else {
+		e->index = 0;
+		e->offset = 0;
+		c->string_pool_first = c->string_pool_last = e;
+	}
+	return &e->value;
+}
+
+const vm_string* _vmc_compiler_pool_string(vmc_compiler* c, const vm_string* s)
+{
+	return _vmc_compiler_pool_stringsz(c, s->start, vm_string_length(s));
 }
 
 void _vmc_emit_begin(vmc_compiler* c, vm_int8 argument_total_size, vm_int8 return_total_size)
@@ -417,7 +465,7 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	// If function is external then allow body to be missing.
-	if (func->is_extern && t->type != VMC_LEXER_TYPE_BRACKET_L)
+	if (vmc_func_is_extern(func) && t->type != VMC_LEXER_TYPE_BRACKET_L)
 		return TRUE;
 
 	// The function is actually beginning here
@@ -587,8 +635,42 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		vmc_lexer_next(l, t);
 	}
-
+	func->properties |= VMC_FUNC_PROPERTY_HAS_BODY;
 	vmc_lexer_next(l, t);
+	return TRUE;
+}
+
+BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
+{
+	char memory[2048];
+	char* ptr = memory;
+	strncpy(ptr, func->name.start, vm_string_length(&func->name));
+	ptr += vm_string_length(&func->name);
+	*ptr++ = '(';
+	for (int i = 0; i < func->args_count; ++i) {
+		const vm_int32 len = vm_string_length(&func->args[i].type.definition->name);
+		const vmc_type_info* info = &func->args[i].type;
+		if (i > 0)
+			*ptr++ = ',';
+		if ((info->masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
+			*ptr++ = '*';
+		strncpy(ptr, info->definition->name.start, len);
+		ptr += len;
+	}
+	*ptr++ = ')';
+	*ptr++ = '(';
+	for (int i = 0; i < func->returns_count; ++i) {
+		const vm_int32 len = vm_string_length(&func->returns[i].type.definition->name);
+		const vmc_type_info* info = &func->returns[i].type;
+		if (i > 0)
+			*ptr++ = ',';
+		if ((info->masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
+			*ptr++ = '*';
+		strncpy(ptr, info->definition->name.start, len);
+		ptr += len;
+	}
+	*ptr++ = ')';
+	func->signature = *_vmc_compiler_pool_stringsz(c, memory, (int)(ptr - memory));
 	return TRUE;
 }
 
@@ -618,7 +700,8 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 		break;
 	}
 	func->id = c->functions_count++;
-	func->is_extern = is_extern;
+	if (is_extern)
+		func->properties |= VMC_FUNC_PROPERTY_EXTERN;
 
 	// Parse args
 	if (!_vmc_parse_keyword_fn_args(c, l, p, t, func))
@@ -638,6 +721,10 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 		}
 	}
 	vmc_lexer_next(l, t);
+
+	// Prepare the signature
+	if (!_vmc_prepare_func_signature(c, func))
+		return FALSE;
 	
 	// Parse the function body
 	if (!_vmc_parse_keyword_fn_body(c, l, p, t, func))
@@ -806,6 +893,19 @@ void _vmc_link(vmc_compiler* c)
 {
 }
 
+// Cleanup
+void _vmc_compiler_destroy_string_pool(vmc_compiler* c)
+{
+	vmc_string_pool_entry* e = c->string_pool_first;
+	while (e != NULL) {
+		vmc_string_pool_entry* const next = e->next;
+		free((void*)e->value.start);
+		free(e);
+		e = next;
+	}
+	c->string_pool_first = c->string_pool_last = NULL;
+}
+
 //
 // PUBLIC ///////////////////////////////////////////////////////////////////////////
 // 
@@ -825,6 +925,7 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	c->package_first = c->package_last = NULL;
 	c->packages_count = 0;
 	c->functions_count = 0;
+	c->string_pool_first = c->string_pool_last = NULL;
 	_vmc_compiler_register_builtins(c);
 	vmc_package_new(c, "main", 4);
 	return c;
@@ -887,6 +988,7 @@ void vmc_compiler_destroy(vmc_compiler* c)
 	}
 	c->package_first = NULL;
 
+	_vmc_compiler_destroy_string_pool(c);
 	vm_bytestream_release(&c->bytecode);
 	free(c);
 }
@@ -1005,8 +1107,9 @@ vmc_func* vmc_func_new(vmc_package* p, const vm_string* name, vm_int32 offset)
 	func->name = *name;
 	func->offset = offset;
 	func->next = NULL;
-	func->is_extern = FALSE;
-	func->is_public = vmc_lexer_test_uppercase(*name->start); // TODO: A function should not be public 
+	func->properties = 0;
+	if (vmc_lexer_test_uppercase(*name->start))
+		func->properties |= VMC_FUNC_PROPERTY_PUBLIC;
 	func->complexity = 0;
 	func->complexity_components = 0;
 	func->args_count = 0;
