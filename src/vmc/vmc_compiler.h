@@ -174,18 +174,6 @@ struct vmc_package
 };
 typedef struct vmc_package vmc_package;
 
-// Everything available where the compiler is located right now
-struct vmc_scope
-{
-	// The parent scope
-	struct vmc_scope* parent;
-
-	// Free-scope linked list
-	struct vmc_scope* next;
-	struct vmc_scope* prev;
-};
-typedef struct vmc_scope vmc_scope;
-
 struct vmc_string_pool_entry
 {
 	// The actual string
@@ -215,10 +203,6 @@ struct vmc_compiler
 	vm_message* messages_first;
 	vm_message* messages_last;
 
-	// Scopes
-	vmc_scope* scope_first;
-	vmc_scope* scope_last;
-
 	// Packages
 	vmc_package* package_first;
 	vmc_package* package_last;
@@ -245,12 +229,6 @@ extern void vmc_compiler_destroy(vmc_compiler* c);
 // Compile the supplied source code. The supplied source code is considered the "entry" point
 // of the application
 extern BOOL vmc_compiler_compile(vmc_compiler* c, const vm_byte* src);
-
-// Create a new scope
-extern vmc_scope* vmc_scope_push(vmc_compiler* c, vmc_scope* parent_scope);
-
-// Return the scope to be reused by someone else. Returns the parent
-extern vmc_scope* vmc_scope_pop(vmc_compiler* c, vmc_scope* scope);
 
 // Write data to the memory stream used by the compiler
 inline static vm_byte* vmc_write(vmc_compiler* c, void* bytes, vm_int32 size)

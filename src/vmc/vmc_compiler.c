@@ -300,12 +300,6 @@ void _vmc_append_header(vmc_compiler* c)
 	vmc_write(c, &header, sizeof(header));
 }
 
-void _vmc_compiler_scope_init(vmc_scope* s, vmc_scope* parent)
-{
-	s->parent = parent;
-	s->next = s->prev = NULL;
-}
-
 vm_int32 _vmc_calculate_var_offset(const vmc_var_definition* defs, vm_int32 count) {
 	vm_int32 i, offset = 0;
 	for (i = 0; i < count; ++i) {
@@ -893,7 +887,55 @@ void _vmc_link(vmc_compiler* c)
 {
 }
 
-// Cleanup
+void _vmc_package_destroy(vmc_package* p)
+{
+	vmc_func* f;
+	vmc_type_definition* t;
+
+	// Cleanup functions
+	f = p->func_first;
+	while (f != NULL) {
+		vmc_func* next = f->next;
+		free(f);
+		f = next;
+	}
+
+	// Cleanup types
+	t = p->type_first;
+	while (t != NULL) {
+		vmc_type_definition* next = t->next;
+		free(t);
+		t = next;
+	}
+
+	free(p);
+}
+
+void _vmc_compiler_destroy_messages(vmc_compiler* c)
+{
+	// Cleanup messages
+	vm_message* m = c->messages_first;
+	while (m != NULL) {
+		vm_message* const next = m->next;
+		free(m);
+		m = next;
+	}
+	c->messages_first = c->messages_last = NULL;
+}
+
+// Cleanup all packages
+void _vmc_compiler_destroy_packages(vmc_compiler* c)
+{
+	vmc_package* p = c->package_first;
+	while (p != NULL) {
+		vmc_package* const next = p->next;
+		_vmc_package_destroy(p);
+		p = next;
+	}
+	c->package_first = c->package_last = NULL;
+}
+
+// Cleanup string pool memory
 void _vmc_compiler_destroy_string_pool(vmc_compiler* c)
 {
 	vmc_string_pool_entry* e = c->string_pool_first;
@@ -921,7 +963,6 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	c->config = *config;
 	vm_bytestream_init(&c->bytecode);
 	c->messages_first = c->messages_last = NULL;
-	c->scope_first = c->scope_last = NULL;
 	c->package_first = c->package_last = NULL;
 	c->packages_count = 0;
 	c->functions_count = 0;
@@ -931,63 +972,10 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	return c;
 }
 
-void vmc_package_destroy(vmc_package* p)
-{
-	vmc_func* f;
-	vmc_type_definition* t;
-
-	// Cleanup functions
-	f = p->func_first;
-	while (f != NULL) {
-		vmc_func* next = f->next;
-		free(f);
-		f = next;
-	}
-
-	// Cleanup types
-	t = p->type_first;
-	while (t != NULL) {
-		vmc_type_definition* next = t->next;
-		free(t);
-		t = next;
-	}
-
-	free(p);
-}
-
 void vmc_compiler_destroy(vmc_compiler* c)
 {
-	vm_message* m;
-	vmc_scope* s;
-	vmc_package* p;
-
-	// Cleanup messages
-	m = c->messages_first;
-	while (m != NULL) {
-		vm_message* next = m->next;
-		free(m);
-		m = next;
-	}
-	c->messages_first = NULL;
-
-	// Cleanup scopes
-	s = c->scope_first;
-	while (s != NULL) {
-		vmc_scope* next = s->next;
-		free(s);
-		s = next;
-	}
-	c->scope_first = NULL;
-
-	// Cleanup packages
-	p = c->package_first;
-	while (p != NULL) {
-		vmc_package* next = p->next;
-		vmc_package_destroy(p);
-		p = next;
-	}
-	c->package_first = NULL;
-
+	_vmc_compiler_destroy_messages(c);
+	_vmc_compiler_destroy_packages(c);
 	_vmc_compiler_destroy_string_pool(c);
 	vm_bytestream_release(&c->bytecode);
 	free(c);
@@ -1010,36 +998,6 @@ BOOL vmc_compiler_compile(vmc_compiler* c, const vm_byte* src)
 	}
 	else
 		return FALSE;
-}
-
-vmc_scope* vmc_scope_push(vmc_compiler* c, vmc_scope* parent_scope)
-{
-	vmc_scope* scope;
-
-	// Extract the last scope if one exists
-	if (c->scope_last != NULL) {
-		scope = c->scope_last;
-		c->scope_last = c->scope_last->prev;
-		c->scope_last->next = NULL;
-		_vmc_compiler_scope_init(scope, parent_scope);
-		return scope;
-	}
-
-	scope = (vmc_scope*)malloc(sizeof(vmc_scope));
-	_vmc_compiler_scope_init(scope, parent_scope);
-	return scope;
-}
-
-vmc_scope* vmc_scope_pop(vmc_compiler* c, vmc_scope* scope)
-{
-	if (c->scope_last == NULL) {
-		c->scope_first = c->scope_last = scope;
-		return scope->parent;
-	}
-	c->scope_last->next = scope;
-	scope->prev = c->scope_last;
-	c->scope_last = scope;
-	return scope->parent;
 }
 
 vm_int32 vmc_compiler_config_import(struct vmc_compiler* c, const vm_string* path)
