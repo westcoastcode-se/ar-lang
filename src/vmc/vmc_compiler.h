@@ -4,7 +4,39 @@
 #include "vmc_lexer.h"
 #include "vmc_error.h"
 #include "../vm_bytestream.h"
-#include "../vm_string.h"
+#include "vmc_string_pool.h"
+
+enum vmc_type_header_type
+{
+	// Tells us that a definition is a package
+	VMC_TYPE_HEADER_PACKAGE = 1,
+	// Tells us that a definition is a variable
+	VMC_TYPE_HEADER_VAR,
+	// Tells us that a definition is a structure
+	VMC_TYPE_HEADER_STRUCT,
+	// Tells us that a definition is a interface
+	VMC_TYPE_HEADER_INTERFACE,
+	// Tells us that a definition is a function
+	VMC_TYPE_HEADER_FUNC
+};
+typedef enum vmc_type_header_type vmc_type_header_type;
+
+// Header for all types
+struct vmc_type_header
+{
+	// Tells what type of object this is
+	vmc_type_header_type type;
+
+	// A unique id of the definition
+	vm_uint32 id;
+
+	// Name of the definition
+	vm_string name;
+};
+typedef struct vmc_type_header vmc_type_header;
+
+// Initialize object header
+#define VMC_INIT_TYPE_HEADER(PTR, TYPE) PTR->header.type = TYPE; PTR->header.id = 0;
 
 // Type definition
 struct vmc_type_definition
@@ -64,11 +96,22 @@ typedef struct vmc_var_definition vmc_var_definition;
 // Information of a function
 struct vmc_func
 {
-	// Unique ID for this function
-	vm_uint32 id;
+	// Type header
+	union
+	{
+		vmc_type_header header;
+		struct
+		{
+			// Tells what type of object this is
+			vmc_type_header_type type;
 
-	// Name of the function
-	vm_string name;
+			// A unique id of the definition
+			vm_uint32 id;
+
+			// Name of the definition
+			vm_string name;
+		};
+	};
 
 	// The signature of the function
 	vm_string signature;
@@ -140,11 +183,22 @@ extern const vmc_compiler_config* vmc_compiler_config_default;
 // A package containing functions and variables
 struct vmc_package
 {
-	// Unique ID for this package
-	vm_uint32 id;
+	// Type header
+	union
+	{
+		vmc_type_header header;
+		struct
+		{
+			// Tells what type of object this is
+			vmc_type_header_type type;
 
-	// The short name of this package
-	vm_string name;
+			// A unique id of the definition
+			vm_uint32 id;
+
+			// Name of the definition
+			vm_string name;
+		};
+	};
 
 	// The full name (including parent packages) of this package
 	vm_string full_name;
@@ -174,22 +228,6 @@ struct vmc_package
 };
 typedef struct vmc_package vmc_package;
 
-struct vmc_string_pool_entry
-{
-	// The actual string
-	vm_string value;
-
-	// String index
-	vm_uint32 index;
-
-	// Offset where the string starts if all strings are located in the same memory block
-	vm_uint32 offset;
-
-	// Next entry
-	struct vmc_string_pool_entry* next;
-};
-typedef struct vmc_string_pool_entry vmc_string_pool_entry;
-
 // Entry point for the compiler
 struct vmc_compiler
 {
@@ -213,9 +251,7 @@ struct vmc_compiler
 	// Number of functions, in total
 	vm_uint32 functions_count;
 
-	// String Pool
-	vmc_string_pool_entry* string_pool_first;
-	vmc_string_pool_entry* string_pool_last;
+	vmc_string_pool string_pool;
 };
 typedef struct vmc_compiler vmc_compiler;
 

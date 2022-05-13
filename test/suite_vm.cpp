@@ -268,9 +268,9 @@ fn Add (lhs int32, rhs int32) (int32) {
 
 fn AddTwoInts() (int32) {
 	alloc_s 4		// Allocate memory for return value of sizeof(int32)
-	load_c int32 10	// Load constant int32 10
-	load_c int32 20	// Load constant int32 20
-	call Add(int32, int32) (int32)
+	const int32 10	// Load constant int32 10
+	const int32 20	// Load constant int32 20
+	call Add(int32,int32)(int32)
 	free_s 8		// Release 8 bytes from the stack
 	save_r 0		// Save the value to the return position
 	ret
@@ -286,7 +286,7 @@ fn AddTwoInts() (int32) {
 		// Stack:
 		// 10, 20, _ret1
 		//		Add
-		//			10, 20, _ret1, <IP>
+		//			_ret1, 10, 20, <IP>
 		// Stack:
 		// 10, 20, 30
 
@@ -308,7 +308,7 @@ fn AddTwoInts() (int32) {
 		TEST(calculate_return_constant2);
 		TEST(calculate_two_i32);
 		TEST(calculate_multiple_funcs);
-		//TEST(calculate_two_int32_inner);
+		TEST(calculate_two_int32_inner);
 	}
 };
 

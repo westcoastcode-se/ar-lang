@@ -194,53 +194,6 @@ BOOL vmc_error_symbol_already_exists(vmc_compiler* c, vmc_lexer* l, vmc_lexer_to
 		line, line_offset);
 }
 
-void _vmc_compiler_string_copy(vm_string* s, const char* src, int len)
-{
-	char* dest = (char*)malloc(len);
-	s->start = dest;
-	s->end = dest + len;
-	for (int i = 0; i < len; ++i) {
-		*dest++ = *src++;
-	}
-}
-
-const vm_string* _vmc_compiler_pool_stringsz(vmc_compiler* c, const char* str, int len)
-{
-	// Try to find an existing string
-	vmc_string_pool_entry* e = c->string_pool_first;
-	while (e != NULL) {
-		if (vm_string_cmpsz(&e->value, str, len)) {
-			return &e->value;
-		}
-		e = e->next;
-	}
-
-	// If not, then add it to the string pool
-	e = (vmc_string_pool_entry*)malloc(sizeof(vmc_string_pool_entry));
-	if (e == NULL) {
-		return NULL;
-	}
-	e->next = NULL;
-	_vmc_compiler_string_copy(&e->value, str, len);
-	if (c->string_pool_last != NULL) {
-		c->string_pool_last->next = e;
-		e->index = c->string_pool_last->index + 1;
-		e->offset = c->string_pool_last->offset + vm_string_length(&c->string_pool_last->value);
-		c->string_pool_last = e;
-	}
-	else {
-		e->index = 0;
-		e->offset = 0;
-		c->string_pool_first = c->string_pool_last = e;
-	}
-	return &e->value;
-}
-
-const vm_string* _vmc_compiler_pool_string(vmc_compiler* c, const vm_string* s)
-{
-	return _vmc_compiler_pool_stringsz(c, s->start, vm_string_length(s));
-}
-
 void _vmc_emit_begin(vmc_compiler* c, vm_int8 argument_total_size, vm_int8 return_total_size)
 {
 	vmi_instr_begin instr;
@@ -271,7 +224,7 @@ vmc_package* _vmc_package_malloc(const char* name, int length)
 	vmc_package* p = (vmc_package*)malloc(sizeof(vmc_package));
 	if (p == NULL)
 		return NULL;
-	p->id = 0;
+	VMC_INIT_TYPE_HEADER(p, VMC_TYPE_HEADER_PACKAGE);
 	p->name.start = name;
 	p->name.end = name + length;
 	p->full_name = p->name;
@@ -664,7 +617,7 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 		ptr += len;
 	}
 	*ptr++ = ')';
-	func->signature = *_vmc_compiler_pool_stringsz(c, memory, (int)(ptr - memory));
+	func->signature = *vmc_string_pool_stringsz(&c->string_pool, memory, (int)(ptr - memory));
 	return TRUE;
 }
 
@@ -935,19 +888,6 @@ void _vmc_compiler_destroy_packages(vmc_compiler* c)
 	c->package_first = c->package_last = NULL;
 }
 
-// Cleanup string pool memory
-void _vmc_compiler_destroy_string_pool(vmc_compiler* c)
-{
-	vmc_string_pool_entry* e = c->string_pool_first;
-	while (e != NULL) {
-		vmc_string_pool_entry* const next = e->next;
-		free((void*)e->value.start);
-		free(e);
-		e = next;
-	}
-	c->string_pool_first = c->string_pool_last = NULL;
-}
-
 //
 // PUBLIC ///////////////////////////////////////////////////////////////////////////
 // 
@@ -966,7 +906,8 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	c->package_first = c->package_last = NULL;
 	c->packages_count = 0;
 	c->functions_count = 0;
-	c->string_pool_first = c->string_pool_last = NULL;
+	vmc_string_pool_init(&c->string_pool);
+
 	_vmc_compiler_register_builtins(c);
 	vmc_package_new(c, "main", 4);
 	return c;
@@ -974,9 +915,9 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 
 void vmc_compiler_destroy(vmc_compiler* c)
 {
+	vmc_string_pool_destroy(&c->string_pool);
 	_vmc_compiler_destroy_messages(c);
 	_vmc_compiler_destroy_packages(c);
-	_vmc_compiler_destroy_string_pool(c);
 	vm_bytestream_release(&c->bytecode);
 	free(c);
 }
