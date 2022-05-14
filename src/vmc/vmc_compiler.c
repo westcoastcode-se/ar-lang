@@ -33,39 +33,6 @@ const vmc_compiler_config _vmc_compiler_config_default = {
 	&vmc_compiler_config_import
 };
 
-BOOL _vmc_add_error_expected_parant(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_ERROR_CODE_EXPECTED_PARANT, 
-		"expected paranthesis but was '%.*s' at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
-BOOL _vmc_add_error_extern_unknown(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_ERROR_CODE_EXTERN_UNKNOWN, 
-		"expected fn or type keyword but was '%.*s' at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
-BOOL _vmc_add_error_expected_bracket(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX,
-		VMC_ERROR_CODE_EXPECTED_BRACKET, 
-		"expected bracket start/end but was '%.*s' at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
 BOOL _vmc_add_error_out_of_memory(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
 {
 	int line, line_offset, offset;
@@ -159,7 +126,7 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	// Expected (
 	vmc_lexer_next(l, t);
 	if (t->type != VMC_LEXER_TYPE_PARAN_L)
-		return _vmc_add_error_expected_parant(c, l, t);
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
 	vmc_lexer_next(l, t);
 
 	// Empty arguments
@@ -238,8 +205,9 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	func->returns_count = 0;
 	func->returns_total_size = 0;
 
+	// Expected a '(' token
 	if (t->type != VMC_LEXER_TYPE_PARAN_L)
-		return _vmc_add_error_expected_parant(c, l, t);
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
 	vmc_lexer_next(l, t);
 	
 	// Did we close the opened parantheses immediately?
@@ -319,7 +287,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	while (1) {
 		// Unexpected end of function body
 		if (t->type == VMC_LEXER_TYPE_EOF) {
-			return vmc_compiler_message_incomplete_body(&c->messages, l, t);
+			return vmc_compiler_message_unexpected_eof(&c->messages, l, t);
 		}
 
 		// Break if we've reached the end of the function
@@ -556,7 +524,7 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 			return TRUE;
 		}
 		else {
-			return _vmc_add_error_expected_bracket(c, l, t);
+			return vmc_compiler_message_syntax_error(&c->messages, l, t, '{');
 		}
 	}
 	vmc_lexer_next(l, t);
@@ -579,8 +547,7 @@ BOOL _vmc_parse_keyword_extern(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vm
 	case VMC_LEXER_TYPE_KEYWORD_FN:
 		return _vmc_parse_keyword_fn(c, l, p, t, TRUE);
 	default:
-		_vmc_add_error_extern_unknown(c, l, t);
-		return FALSE;
+		return vmc_compiler_message_unknown_token(&c->messages, l, t);
 	}
 }
 

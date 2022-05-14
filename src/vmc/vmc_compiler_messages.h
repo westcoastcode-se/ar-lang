@@ -41,8 +41,11 @@ enum vmc_compiler_messages
 	// Invalid index normally happens if you refer to an index that doesnt exist
 	VMC_COMPILER_MSG_INVALID_INDEX,
 
-	// Message raised if a function body is not closed correctly
-	VMC_COMPILER_MSG_INCOMPLETE_BODY,
+	// Unexpected end-of-file
+	VMC_COMPILER_MSG_UNEXPECTED_EOF,
+
+	// Generic syntax error
+	VMC_COMPILER_MSG_SYNTAX_ERROR,
 };
 
 #define VMC_COMPILER_MSG_UNKNOWN_TOKEN_STR "unknown token: '%.*s' at %d:%d"
@@ -54,7 +57,8 @@ enum vmc_compiler_messages
 #define VMC_COMPILER_MSG_EXPECTED_INT_STR "expected integer value but was '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_NOT_IMPLEMENTED_STR "keyword '%.*s' is not implemented yet at %d:%d"
 #define VMC_COMPILER_MSG_INVALID_INDEX_STR "supplied index %d but it must be within range [%d,%d] at %d:%d"
-#define VMC_COMPILER_MSG_INCOMPLETE_BODY_STR "body was not closed correctly at %d:%d"
+#define VMC_COMPILER_MSG_UNEXPECTED_EOF_STR "unexpected end of file found at %d:%d"
+#define VMC_COMPILER_MSG_SYNTAX_ERROR_STR "syntax error: missing '%c' before '%.*s' at %d:%d"
 
 // 
 // Functions which helps adding messages to the messages container
@@ -69,7 +73,8 @@ extern BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer* l, vm
 extern BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 index, vm_int32 min, vm_int32 max);
-extern BOOL vmc_compiler_message_incomplete_body(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t, char expected);
 
 #endif
 

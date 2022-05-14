@@ -23,12 +23,6 @@ enum vmc_error_code
 	VMC_WARN_CODE_UNCLOSED_STRING,
 	VMC_WARN_CODE_UNCLOSED_COMMENT,
 
-	// Compiler errors
-
-	VMC_ERROR_CODE_EXPECTED_PARANT,
-	VMC_ERROR_CODE_EXPECTED_BRACKET,
-	VMC_ERROR_CODE_EXTERN_UNKNOWN,
-
 };
 typedef enum vmc_error_code vmc_error_code;
 

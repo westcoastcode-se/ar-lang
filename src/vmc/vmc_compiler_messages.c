@@ -99,13 +99,24 @@ BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 i
 		index, min, max, line, line_offset);
 }
 
-BOOL vmc_compiler_message_incomplete_body(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
-		VMC_COMPILER_MSG_INCOMPLETE_BODY,
-		VMC_COMPILER_MSG_INCOMPLETE_BODY_STR,
+		VMC_COMPILER_MSG_UNEXPECTED_EOF,
+		VMC_COMPILER_MSG_UNEXPECTED_EOF_STR,
 		line, line_offset);
+}
+
+BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t, char expected)
+{
+	int line, line_offset, _;
+	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	return vm_messages_add(m,
+		VMC_COMPILER_MESSAGE_PREFIX,
+		VMC_COMPILER_MSG_SYNTAX_ERROR,
+		VMC_COMPILER_MSG_SYNTAX_ERROR_STR,
+		expected, vm_string_length(&t->string), t->string.start, line, line_offset);
 }
