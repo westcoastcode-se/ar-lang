@@ -6,39 +6,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-BOOL _vmc_add_warn_escape_rune_unknown(vmc_lexer* l, vm_byte rune)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&l->messages,
-		VMC_LEXER_MESSAGE_PREFIX,
-		VMC_WARN_CODE_ESCAPE_RUNE_UNKNOWN, 
-		"escape rune is unknown: '%c' at %d:%d",
-		rune, line, line_offset);
-}
-
-BOOL _vmc_add_warn_unclosed_string(vmc_lexer* l)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&l->messages,
-		VMC_LEXER_MESSAGE_PREFIX, 
-		VMC_WARN_CODE_UNCLOSED_STRING, 
-		"unclosed string at %d:%d",
-		line, line_offset);
-}
-
-BOOL _vmc_add_warn_unclosed_comment(vmc_lexer* l)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&l->messages,
-		VMC_LEXER_MESSAGE_PREFIX, 
-		VMC_WARN_CODE_UNCLOSED_COMMENT, 
-		"unclosed comment at %d:%d",
-		line, line_offset);
-}
-
 void _vmc_lexer_atom(vmc_lexer* l, vmc_lexer_token_type type, vmc_lexer_token* token)
 {
 	token->type = type;
@@ -100,7 +67,7 @@ void _vmc_lexer_multi_line_comment(vmc_lexer* l, vmc_lexer_token* t)
 	while (1) {
 		if (c == 0) {
 			commend_end = l->source;
-			_vmc_add_warn_unclosed_comment(l);
+			vmc_lexer_message_unclosed_comment(l);
 			break;
 		}
 		// If we've reached */
@@ -238,14 +205,14 @@ void _vmc_lexer_single_line_string(vmc_lexer* l, vmc_lexer_token* token)
 
 	while (1) {
 		if (c == 0) {
-			_vmc_add_warn_unclosed_string(l);
+			vmc_lexer_message_unclosed_string(l);
 			break;
 		}
 
 		// Escape the next character
 		if (escaped == TRUE) {
 			if (!vmc_lexer_test_escapeable(c)) {
-				_vmc_add_warn_escape_rune_unknown(l, c);
+				vmc_lexer_message_unknown_escaped_char(l, c);
 			}
 			escaped = FALSE;
 		} else {
@@ -254,7 +221,7 @@ void _vmc_lexer_single_line_string(vmc_lexer* l, vmc_lexer_token* token)
 				break;
 			}
 			else if (c == '\n') {
-				_vmc_add_warn_unclosed_string(l);
+				vmc_lexer_message_unclosed_string(l);
 				break;
 			}
 			else if (c == '\\') {
@@ -283,14 +250,14 @@ void _vmc_lexer_multi_line_string(vmc_lexer* l, vmc_lexer_token* token)
 
 	while (1) {
 		if (c == 0) {
-			_vmc_add_warn_unclosed_string(l);
+			vmc_lexer_message_unclosed_string(l);
 			break;
 		}
 
 		// Escape the next character
 		if (escaped == TRUE) {
 			if (!vmc_lexer_test_escapeable(c)) {
-				_vmc_add_warn_escape_rune_unknown(l, c);
+				vmc_lexer_message_unknown_escaped_char(l, c);
 			}
 			escaped = FALSE;
 		}
