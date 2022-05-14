@@ -33,39 +33,6 @@ const vmc_compiler_config _vmc_compiler_config_default = {
 	&vmc_compiler_config_import
 };
 
-BOOL _vmc_add_error_unknown_token(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_COMPILER_MSG_UNKNOWN_TOKEN, 
-		VMC_COMPILER_MSG_UNKNOWN_TOKEN_STR,
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
-BOOL _vmc_add_error_expected_identifier(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX,
-		VMC_COMPILER_MSG_EXPECTED_IDENTIFIER, 
-		VMC_COMPILER_MSG_EXPECTED_TYPE_STR,
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
-BOOL _vmc_add_error_expected_type(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages,
-		VMC_COMPILER_MESSAGE_PREFIX,
-		VMC_COMPILER_MSG_EXPECTED_TYPE, 
-		VMC_COMPILER_MSG_EXPECTED_TYPE_STR,
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
 BOOL _vmc_add_error_expected_keyword(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
 {
 	int line, line_offset, offset;
@@ -119,17 +86,6 @@ BOOL _vmc_add_error_invalid_arg(vmc_compiler* c, vmc_lexer* l, vm_int32 index, v
 		VMC_ERROR_CODE_INVALID_ARG, 
 		"invalid index %d but the maximum is %d at %d:%d",
 		index, max_index, line, line_offset);
-}
-
-BOOL _vmc_add_error_type_not_found(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX,
-		VMC_COMPILER_MSG_TYPE_NOT_FOUND, 
-		VMC_COMPILER_MSG_TYPE_NOT_FOUND_STR,
-		vm_string_length(&token->string), token->string.start, line, line_offset);
 }
 
 BOOL _vmc_add_error_expected_parant(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
@@ -293,7 +249,7 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		// Read var name
 		if (t->type != VMC_LEXER_TYPE_KEYWORD)
-			return _vmc_add_error_expected_identifier(c, l, t);
+			return vmc_compiler_message_expected_identifier(&c->messages, l, t);
 		var->name = t->string;
 
 		// The type might be a '*', '[]', package or type
@@ -307,7 +263,7 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		// Expected type
 		if (t->type != VMC_LEXER_TYPE_KEYWORD)
-			return _vmc_add_error_expected_type(c, l, t);
+			return vmc_compiler_message_expected_type(&c->messages, l, t);
 
 		// If the next character is a package delimiter than figure out the package
 		//if (vmc_lexer_peek(l) == '.') {
@@ -317,7 +273,7 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		//}
 		type_definition = vmc_package_find_type(type_package, &t->string);
 		if (type_definition == NULL)
-			return _vmc_add_error_type_not_found(c, l, t);
+			return vmc_compiler_message_type_not_found(&c->messages, l, t);
 		var->type.definition = type_definition;
 		
 		// Figure out the size of the variable
@@ -376,7 +332,7 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		// Expected type
 		if (t->type != VMC_LEXER_TYPE_KEYWORD)
-			return _vmc_add_error_expected_type(c, l, t);
+			return vmc_compiler_message_expected_type(&c->messages, l, t);
 
 		// If the next character is a package delimiter than figure out the package
 		//if (vmc_lexer_peek(l) == '.') {
@@ -386,7 +342,7 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		//}
 		type_definition = vmc_package_find_type(type_package, &t->string);
 		if (type_definition == NULL)
-			return _vmc_add_error_type_not_found(c, l, t);
+			return vmc_compiler_message_type_not_found(&c->messages, l, t);
 		var->type.definition = type_definition;
 
 		// Figure out the size of the variable
@@ -497,7 +453,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 			vmc_lexer_next(l, t);
 			if (t->type != VMC_LEXER_TYPE_KEYWORD)
-				return _vmc_add_error_expected_type(c, l, t);
+				return vmc_compiler_message_expected_type(&c->messages, l, t);
 			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
 				opcode |= VMI_PROPS1_OPCODE(0);
 			_vmc_emit_opcode(c, opcode);
@@ -636,7 +592,7 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 	// Expected an function name
 	vmc_lexer_next(l, t);
 	if (t->type != VMC_LEXER_TYPE_KEYWORD)
-		return _vmc_add_error_expected_identifier(c, l, t);
+		return vmc_compiler_message_expected_identifier(&c->messages, l, t);
 
 	// Try to create a new function
 	func_ret = vmc_func_try_create(p, &t->string, vm_bytestream_get_size(&c->bytecode), &func);
@@ -708,7 +664,7 @@ BOOL _vmc_parse_keyword(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer
 		break;
 	}
 
-	_vmc_add_error_unknown_token(c, l, t);
+	vmc_compiler_message_unknown_token(&c->messages, l, t);
 	_vmc_emit_icode(c, VMI_EOE);
 	return FALSE;
 }
@@ -743,7 +699,7 @@ void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 			_vmc_emit_icode(c, VMI_EOE);
 			return;
 		default:
-			_vmc_add_error_unknown_token(c, l, &token);
+			vmc_compiler_message_unknown_token(&c->messages, l, &token);
 			_vmc_emit_icode(c, VMI_EOE);
 			return;
 		}

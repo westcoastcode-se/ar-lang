@@ -1,6 +1,9 @@
 #ifndef _VMC_COMPILER_MESSAGES_H_
 #define _VMC_COMPILER_MESSAGES_H_
 
+#include "../vm_message.h"
+#include "vmc_lexer.h"
+
 // Prefix for all compiler messages
 #define VMC_COMPILER_MESSAGE_PREFIX 'C'
 
@@ -28,6 +31,15 @@ enum vmc_compiler_messages
 #define VMC_COMPILER_MSG_EXPECTED_IDENTIFIER_STR "expected identifier but was: '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_EXPECTED_TYPE_STR "expected type but was: '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_TYPE_NOT_FOUND_STR "type '%.*s' was not found at %d:%d"
+
+// 
+// Functions which helps adding messages to the messages container
+//
+
+extern BOOL vmc_compiler_message_unknown_token(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 
 #endif
 
