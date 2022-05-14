@@ -1,6 +1,7 @@
 #include "vmc_lexer.h"
 #include "vmc_lexer_logic.h"
 #include "vmc_error.h"
+#include "vmc_lexer_messages.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -9,7 +10,10 @@ BOOL _vmc_add_warn_escape_rune_unknown(vmc_lexer* l, vm_byte rune)
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&l->messages, VMC_WARN_CODE_ESCAPE_RUNE_UNKNOWN, "escape rune is unknown: '%c' at %d:%d",
+	return vm_messages_add(&l->messages,
+		VMC_LEXER_MESSAGE_PREFIX,
+		VMC_WARN_CODE_ESCAPE_RUNE_UNKNOWN, 
+		"escape rune is unknown: '%c' at %d:%d",
 		rune, line, line_offset);
 }
 
@@ -17,7 +21,10 @@ BOOL _vmc_add_warn_unclosed_string(vmc_lexer* l)
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&l->messages, VMC_WARN_CODE_UNCLOSED_STRING, "unclosed string at %d:%d",
+	return vm_messages_add(&l->messages,
+		VMC_LEXER_MESSAGE_PREFIX, 
+		VMC_WARN_CODE_UNCLOSED_STRING, 
+		"unclosed string at %d:%d",
 		line, line_offset);
 }
 
@@ -25,7 +32,10 @@ BOOL _vmc_add_warn_unclosed_comment(vmc_lexer* l)
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&l->messages, VMC_WARN_CODE_UNCLOSED_COMMENT, "unclosed comment at %d:%d",
+	return vm_messages_add(&l->messages,
+		VMC_LEXER_MESSAGE_PREFIX, 
+		VMC_WARN_CODE_UNCLOSED_COMMENT, 
+		"unclosed comment at %d:%d",
 		line, line_offset);
 }
 

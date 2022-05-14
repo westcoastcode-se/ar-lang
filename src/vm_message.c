@@ -3,9 +3,12 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-BOOL vm_message_set(vm_message* msg, int error_code, const char* format, ...)
+BOOL vm_message_set(vm_message* msg, char prefix, int error_code, const char* format, ...)
 {
+	msg->prefix = prefix;
 	msg->code = error_code;
+	msg->next = NULL;
+	msg->line = msg->line_offset = msg->offset = 0;
 	va_list argptr;
 	va_start(argptr, format);
 	vsprintf(msg->message, format, argptr);
@@ -50,15 +53,17 @@ void vm_messages_move(vm_messages* src, vm_messages* dest)
 	}
 }
 
-BOOL vm_messages_add(vm_messages* m, int error_code, const char* format, ...)
+BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* format, ...)
 {
 	va_list argptr;
 	vm_message* new_message = (vm_message*)malloc(sizeof(vm_message));
 	if (new_message == NULL)
 		return FALSE;
 
+	new_message->prefix = prefix;
 	new_message->code = error_code;
 	new_message->next = NULL;
+	new_message->line = new_message->line_offset = new_message->offset = 0;
 
 	va_start(argptr, format);
 	vsprintf(new_message->message, format, argptr);

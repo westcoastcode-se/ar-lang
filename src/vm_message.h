@@ -6,6 +6,9 @@
 // Structure containing the actual message
 struct vm_message
 {
+	// Code prefix - used to represent which system this messages is raised from
+	char prefix;
+
 	// Unique code
 	int code;
 
@@ -36,7 +39,7 @@ typedef struct vm_messages vm_messages;
 
 // Set error message and code to body. Will always return FALSE so that it can be part of the
 // call structure.
-extern BOOL vm_message_set(vm_message* msg, int error_code, const char* format, ...);
+extern BOOL vm_message_set(vm_message* msg, char prefix, int error_code, const char* format, ...);
 
 // Initialize the supplied messages object
 extern void vm_messages_init(vm_messages* m);
@@ -54,6 +57,6 @@ inline static BOOL vm_messages_has_messages(vm_messages* m)
 extern void vm_messages_move(vm_messages* src, vm_messages* dest);
 
 // Add a new messages. Returns TRUE if the messages was added successfully
-extern BOOL vm_messages_add(vm_messages* m, int error_code, const char* format, ...);
+extern BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* format, ...);
 
 #endif

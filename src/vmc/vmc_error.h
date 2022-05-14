@@ -25,11 +25,6 @@ enum vmc_error_code
 
 	// Compiler errors
 
-	VMC_ERROR_CODE_UNKNOWN_TOKEN,
-	VMC_ERROR_CODE_INVALID_SEGMENT,
-	VMC_ERROR_CODE_EXPECTED_IDENTIFIER,
-	VMC_ERROR_CODE_EXPECTED_TYPE,
-	VMC_ERROR_CODE_TYPE_NOT_FOUND,
 	VMC_ERROR_CODE_EXPECTED_PARANT,
 	VMC_ERROR_CODE_EXPECTED_BRACKET,
 	VMC_ERROR_CODE_EXPECTED_KEYWORD,
@@ -42,17 +37,5 @@ enum vmc_error_code
 
 };
 typedef enum vmc_error_code vmc_error_code;
-
-// Set error where comma is missing
-static inline BOOL vmc_error_unknown_token(vm_message* err)
-{
-	return vm_message_set(err, VMC_ERROR_CODE_UNKNOWN_TOKEN, "use comma as a delimiter between mutliple args");
-}
-
-// Set error where comma is missing
-static inline BOOL vmc_error_set_comma(vm_message* err)
-{
-	return vm_message_set(err, VMC_CERR_EXPECTED_COMMA, "use comma as a delimiter between mutliple args");
-}
 
 #endif
