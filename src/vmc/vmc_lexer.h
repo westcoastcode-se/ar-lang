@@ -195,7 +195,7 @@ inline static void vmc_lexer_get_metadata(vmc_lexer* l, int* line, int* line_off
 // Check to see if the lexer has compiled successfully
 inline static BOOL vmc_lexer_success(vmc_lexer* l)
 {
-	return vm_messages_has_messages(&l->messages);
+	return vm_messages_has_messages(&l->messages) == FALSE;
 }
 
 #endif

@@ -1,6 +1,5 @@
 #include "vmc_lexer.h"
 #include "vmc_lexer_logic.h"
-#include "vmc_error.h"
 #include "vmc_lexer_messages.h"
 #include <stdlib.h>
 #include <stdarg.h>

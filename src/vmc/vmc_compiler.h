@@ -2,7 +2,6 @@
 #define _VMC_COMPILER_H_
 
 #include "vmc_lexer.h"
-#include "vmc_error.h"
 #include "../vm_bytestream.h"
 #include "vmc_string_pool.h"
 
@@ -249,6 +248,9 @@ struct vmc_compiler
 	// Messages raised by the compiler
 	vm_messages messages;
 
+	// If a panic error has occurred, such as if the computer is out of memory
+	vm_message panic_error_message;
+
 	// Packages
 	vmc_package* package_first;
 	vmc_package* package_last;
@@ -260,6 +262,7 @@ struct vmc_compiler
 	vm_uint32 functions_count;
 
 	vmc_string_pool string_pool;
+
 };
 typedef struct vmc_compiler vmc_compiler;
 
@@ -295,7 +298,7 @@ inline static void vmc_write_int32(vmc_compiler* c, vm_int32 value)
 // Check to see if the compiler has compiled successfully
 inline static BOOL vmc_compiler_success(vmc_compiler* c)
 {
-	return vm_messages_has_messages(&c->messages);
+	return vm_messages_has_messages(&c->messages) == FALSE && c->panic_error_message.code == 0;
 }
 
 // Get the bytecode created by the supplied compiler

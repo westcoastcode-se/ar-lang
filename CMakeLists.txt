@@ -38,12 +38,13 @@ add_library(vm "src/vm_config.h"
     "src/vm_bytestream.h" "src/vm_bytestream.c"
     "src/vm_message.h" "src/vm_message.c"
 
-    "src/vmc/vmc_compiler.h" "src/vmc/vmc_compiler.c" "src/vmc/vmc_error.h"
+    "src/vmc/vmc_compiler.h" "src/vmc/vmc_compiler.c" 
     "src/vmc/vmc_lexer.c" "src/vmc/vmc_lexer.h" "src/vmc/vmc_lexer_logic.h" "src/vmc/vmc_lexer_math.h"
-     "src/vmc/vmc_string_pool.h" "src/vmc/vmc_string_pool.c" "src/vmc/vmc_error.c"
+    "src/vmc/vmc_string_pool.h" "src/vmc/vmc_string_pool.c" 
+    "src/vmc/vmc_compiler_messages.h" "src/vmc/vmc_lexer_messages.h" "src/vmc/vmc_compiler_messages.c" "src/vmc/vmc_lexer_messages.c"
      
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
-    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/vmc/vmc_compiler_messages.h" "src/vmc/vmc_lexer_messages.h" "src/vmc/vmc_compiler_messages.c")
+    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c")
 
 
 # Tests

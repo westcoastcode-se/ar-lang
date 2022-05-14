@@ -33,27 +33,6 @@ const vmc_compiler_config _vmc_compiler_config_default = {
 	&vmc_compiler_config_import
 };
 
-BOOL _vmc_add_error_out_of_memory(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages,
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_CERR_OUT_OF_MEMORY, 
-		"out of memory");
-}
-
-BOOL vmc_error_symbol_already_exists(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_CERR_SYMBOL_ALREADY_EXIST, 
-		"symbol already exists: '%.*s' at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
 void _vmc_emit_begin(vmc_compiler* c, vm_int8 argument_total_size, vm_int8 return_total_size)
 {
 	vmi_instr_begin instr;
@@ -500,9 +479,9 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 	switch (func_ret)
 	{
 	case VMC_FUNC_TRY_CREATE_OOM:
-		return _vmc_add_error_out_of_memory(c, l, t);
+		return vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
 	case VMC_FUNC_TRY_CREATE_ALREADY_EXISTS:
-		return vmc_error_symbol_already_exists(c, l, t);
+		return vmc_compiler_message_func_body_exists(&c->messages, l, &t->string);
 	default:
 		break;
 	}
@@ -729,6 +708,7 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	c->config = *config;
 	vm_bytestream_init(&c->bytecode);
 	vm_messages_init(&c->messages);
+	c->panic_error_message.code = VMC_COMPILER_MSG_NONE;
 	c->package_first = c->package_last = NULL;
 	c->packages_count = 0;
 	c->functions_count = 0;

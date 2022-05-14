@@ -50,7 +50,7 @@ extern void vm_messages_destroy(vm_messages* m);
 // Check to see if the there exists at least one message
 inline static BOOL vm_messages_has_messages(vm_messages* m)
 {
-	return m->first == NULL;
+	return m->first != NULL;
 }
 
 // Move all messages to a new destination

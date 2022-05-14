@@ -10,8 +10,14 @@
 // All messages
 enum vmc_compiler_messages
 {
+	// Represents a non-existing message
+	VMC_COMPILER_MSG_NONE = 0,
+
 	// Messages that's a level 0 message are considered errors
-	VMC_COMPILER_MSG_LEVEL0 = 0,
+	VMC_COMPILER_MSG_LEVEL0,
+
+	// Panic!!!
+	VMC_COMPILER_MSG_PANIC,
 	
 	// Received a token from the lexer which the compiler has no idea
 	// on what to do with
@@ -46,6 +52,9 @@ enum vmc_compiler_messages
 
 	// Generic syntax error
 	VMC_COMPILER_MSG_SYNTAX_ERROR,
+
+	// Function already has a body
+	VMC_COMPILER_MSG_FUNC_BODY_EXISTS,
 };
 
 #define VMC_COMPILER_MSG_UNKNOWN_TOKEN_STR "unknown token: '%.*s' at %d:%d"
@@ -59,11 +68,13 @@ enum vmc_compiler_messages
 #define VMC_COMPILER_MSG_INVALID_INDEX_STR "supplied index %d but it must be within range [%d,%d] at %d:%d"
 #define VMC_COMPILER_MSG_UNEXPECTED_EOF_STR "unexpected end of file found at %d:%d"
 #define VMC_COMPILER_MSG_SYNTAX_ERROR_STR "syntax error: missing '%c' before '%.*s' at %d:%d"
+#define VMC_COMPILER_MSG_FUNC_BODY_EXISTS_STR "function '%.*s' already has a body at %d:%d"
 
 // 
 // Functions which helps adding messages to the messages container
 //
 
+extern BOOL vmc_compiler_message_panic(vm_message* m, const char* str);
 extern BOOL vmc_compiler_message_unknown_token(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
@@ -75,6 +86,7 @@ extern BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer* l, v
 extern BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 index, vm_int32 min, vm_int32 max);
 extern BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t, char expected);
+extern BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer* l, const vm_string* signature);
 
 #endif
 
