@@ -156,8 +156,7 @@ struct vmc_lexer
 	const vm_byte* line_offset;
 
 	// Messages raised by the lexer
-	vm_message* messages_first;
-	vm_message* messages_last;
+	vm_messages messages;
 };
 typedef struct vmc_lexer vmc_lexer;
 
@@ -196,7 +195,7 @@ inline static void vmc_lexer_get_metadata(vmc_lexer* l, int* line, int* line_off
 // Check to see if the lexer has compiled successfully
 inline static BOOL vmc_lexer_success(vmc_lexer* l)
 {
-	return l->messages_first == NULL;
+	return vm_messages_has_messages(&l->messages);
 }
 
 #endif

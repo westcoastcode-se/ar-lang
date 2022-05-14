@@ -32,11 +32,14 @@ struct vmc_type_header
 
 	// Name of the definition
 	vm_string name;
+
+	// Size of this type in memory
+	vm_int32 size;
 };
 typedef struct vmc_type_header vmc_type_header;
 
 // Initialize object header
-#define VMC_INIT_TYPE_HEADER(PTR, TYPE) PTR->header.type = TYPE; PTR->header.id = 0;
+#define VMC_INIT_TYPE_HEADER(PTR, TYPE, SIZE) PTR->header.type = TYPE; PTR->header.id = 0; PTR->size = SIZE
 
 // Type definition
 struct vmc_type_definition
@@ -110,6 +113,9 @@ struct vmc_func
 
 			// Name of the definition
 			vm_string name;
+
+			// Size of this type in memory
+			vm_int32 size;
 		};
 	};
 
@@ -197,6 +203,9 @@ struct vmc_package
 
 			// Name of the definition
 			vm_string name;
+
+			// Size of this type in memory
+			vm_int32 size;
 		};
 	};
 
@@ -238,8 +247,7 @@ struct vmc_compiler
 	vm_bytestream bytecode;
 
 	// Messages raised by the compiler
-	vm_message* messages_first;
-	vm_message* messages_last;
+	vm_messages messages;
 
 	// Packages
 	vmc_package* package_first;
@@ -287,7 +295,7 @@ inline static void vmc_write_int32(vmc_compiler* c, vm_int32 value)
 // Check to see if the compiler has compiled successfully
 inline static BOOL vmc_compiler_success(vmc_compiler* c)
 {
-	return c->messages_first == NULL;
+	return vm_messages_has_messages(&c->messages);
 }
 
 // Get the bytecode created by the supplied compiler

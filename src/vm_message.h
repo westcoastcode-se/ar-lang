@@ -26,8 +26,34 @@ struct vm_message
 };
 typedef struct vm_message vm_message;
 
+// All messages
+struct vm_messages
+{
+	vm_message* first;
+	vm_message* last;
+};
+typedef struct vm_messages vm_messages;
+
 // Set error message and code to body. Will always return FALSE so that it can be part of the
 // call structure.
-BOOL vm_message_set(vm_message* msg, int error_code, const char* format, ...);
+extern BOOL vm_message_set(vm_message* msg, int error_code, const char* format, ...);
+
+// Initialize the supplied messages object
+extern void vm_messages_init(vm_messages* m);
+
+// Destroy the internals of the supplied messages object
+extern void vm_messages_destroy(vm_messages* m);
+
+// Check to see if the there exists at least one message
+inline static BOOL vm_messages_has_messages(vm_messages* m)
+{
+	return m->first == NULL;
+}
+
+// Move all messages to a new destination
+extern void vm_messages_move(vm_messages* src, vm_messages* dest);
+
+// Add a new messages. Returns TRUE if the messages was added successfully
+extern BOOL vm_messages_add(vm_messages* m, int error_code, const char* format, ...);
 
 #endif

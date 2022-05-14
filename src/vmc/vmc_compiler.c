@@ -32,32 +32,11 @@ const vmc_compiler_config _vmc_compiler_config_default = {
 	&vmc_compiler_config_import
 };
 
-BOOL _vmc_add_message(vmc_compiler* c, int error_code, const char* format, ...)
-{
-	va_list argptr;
-	vm_message* m = (vm_message*)malloc(sizeof(vm_message));
-	if (m == NULL)
-		return FALSE;
-
-	m->code = error_code;
-	m->next = NULL;
-
-	va_start(argptr, format);
-	vsprintf(m->message, format, argptr);
-	va_end(argptr);
-
-	if (c->messages_last == NULL)
-		c->messages_last = c->messages_first = m;
-	else
-		c->messages_last->next = m;
-	return FALSE;
-}
-
 BOOL _vmc_add_error_unknown_token(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_UNKNOWN_TOKEN, "unknown symbol: '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_UNKNOWN_TOKEN, "unknown symbol: '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -66,7 +45,7 @@ BOOL _vmc_add_error_expected_identifier(vmc_compiler* c, vmc_lexer* l, vmc_lexer
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_IDENTIFIER, "expected identifier but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_EXPECTED_IDENTIFIER, "expected identifier but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -75,7 +54,7 @@ BOOL _vmc_add_error_expected_type(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_TYPE, "expected type but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_EXPECTED_TYPE, "expected type but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -84,7 +63,7 @@ BOOL _vmc_add_error_expected_keyword(vmc_compiler* c, vmc_lexer* l, vmc_lexer_to
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_KEYWORD, "expected keyword but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_EXPECTED_KEYWORD, "expected keyword but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -93,7 +72,7 @@ BOOL _vmc_add_error_expected_index(vmc_compiler* c, vmc_lexer* l, vmc_lexer_toke
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_INDEX, "expected index but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_EXPECTED_INDEX, "expected index but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -102,7 +81,7 @@ BOOL _vmc_add_error_expected_integer(vmc_compiler* c, vmc_lexer* l, vmc_lexer_to
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_INTEGER, "expected integer but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_EXPECTED_INTEGER, "expected integer but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -111,7 +90,7 @@ BOOL _vmc_add_error_not_implemented_yet(vmc_compiler* c, vmc_lexer* l, vmc_lexer
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_NOT_IMPLEMENTED_YET, "'%.*s' is not implemented yet at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_NOT_IMPLEMENTED_YET, "'%.*s' is not implemented yet at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -120,7 +99,7 @@ BOOL _vmc_add_error_invalid_arg(vmc_compiler* c, vmc_lexer* l, vm_int32 index, v
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_INVALID_ARG, "invalid index %d but the maximum is %d at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_INVALID_ARG, "invalid index %d but the maximum is %d at %d:%d",
 		index, max_index, line, line_offset);
 }
 
@@ -128,7 +107,7 @@ BOOL _vmc_add_error_type_not_found(vmc_compiler* c, vmc_lexer* l, vmc_lexer_toke
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_TYPE_NOT_FOUND, "type '%.*s' was not found at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_TYPE_NOT_FOUND, "type '%.*s' was not found at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -137,7 +116,7 @@ BOOL _vmc_add_error_expected_parant(vmc_compiler* c, vmc_lexer* l, vmc_lexer_tok
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_PARANT, "expected paranthesis but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_EXPECTED_PARANT, "expected paranthesis but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -146,7 +125,7 @@ BOOL _vmc_add_error_extern_unknown(vmc_compiler* c, vmc_lexer* l, vmc_lexer_toke
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_EXTERN_UNKNOWN, "expected fn or type keyword but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_EXTERN_UNKNOWN, "expected fn or type keyword but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -155,7 +134,7 @@ BOOL _vmc_add_error_expected_bracket(vmc_compiler* c, vmc_lexer* l, vmc_lexer_to
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_EXPECTED_BRACKET, "expected bracket start/end but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_EXPECTED_BRACKET, "expected bracket start/end but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -164,7 +143,7 @@ BOOL _vmc_add_error_incomplete_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_lexer_
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_INCOMPLETE_FN_BODY, "incomplete function body but was '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_INCOMPLETE_FN_BODY, "incomplete function body but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -173,7 +152,7 @@ BOOL _vmc_add_error_invalid_segment(vmc_compiler* c, vmc_lexer* l, vmc_lexer_tok
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_ERROR_CODE_INVALID_SEGMENT, "unknown segment type %.*s at %d:%d",
+	return vm_messages_add(&c->messages, VMC_ERROR_CODE_INVALID_SEGMENT, "unknown segment type %.*s at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -182,14 +161,14 @@ BOOL _vmc_add_error_out_of_memory(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_CERR_OUT_OF_MEMORY, "out of memory");
+	return vm_messages_add(&c->messages, VMC_CERR_OUT_OF_MEMORY, "out of memory");
 }
 
 BOOL vmc_error_symbol_already_exists(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_add_message(c, VMC_CERR_SYMBOL_ALREADY_EXIST, "symbol already exists: '%.*s' at %d:%d",
+	return vm_messages_add(&c->messages, VMC_CERR_SYMBOL_ALREADY_EXIST, "symbol already exists: '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start,
 		line, line_offset);
 }
@@ -224,7 +203,7 @@ vmc_package* _vmc_package_malloc(const char* name, int length)
 	vmc_package* p = (vmc_package*)malloc(sizeof(vmc_package));
 	if (p == NULL)
 		return NULL;
-	VMC_INIT_TYPE_HEADER(p, VMC_TYPE_HEADER_PACKAGE);
+	VMC_INIT_TYPE_HEADER(p, VMC_TYPE_HEADER_PACKAGE, sizeof(void*));
 	p->name.start = name;
 	p->name.end = name + length;
 	p->full_name = p->name;
@@ -710,27 +689,6 @@ BOOL _vmc_parse_keyword(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer
 	return FALSE;
 }
 
-// Take all messages from the lexer
-void _vmc_take_messages(vmc_compiler* c, vmc_lexer* l) {
-	vm_message* message_first;
-	vm_message* message_last;
-	if (vmc_lexer_success(l))
-		return;
-
-	message_first = l->messages_first;
-	message_last = l->messages_last;
-	l->messages_first = l->messages_last = NULL;
-	
-	if (c->messages_last == NULL) {
-		c->messages_first = message_first;
-		c->messages_last = message_last;
-	}
-	else {
-		c->messages_last->next = message_first;
-		c->messages_last = message_last;
-	}
-}
-
 // Parse the current lexers content and put the compiled byte-code into the compiler and put the metadata into the supplied package
 void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 {
@@ -864,18 +822,6 @@ void _vmc_package_destroy(vmc_package* p)
 	free(p);
 }
 
-void _vmc_compiler_destroy_messages(vmc_compiler* c)
-{
-	// Cleanup messages
-	vm_message* m = c->messages_first;
-	while (m != NULL) {
-		vm_message* const next = m->next;
-		free(m);
-		m = next;
-	}
-	c->messages_first = c->messages_last = NULL;
-}
-
 // Cleanup all packages
 void _vmc_compiler_destroy_packages(vmc_compiler* c)
 {
@@ -902,7 +848,7 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 		config = vmc_compiler_config_default;
 	c->config = *config;
 	vm_bytestream_init(&c->bytecode);
-	c->messages_first = c->messages_last = NULL;
+	vm_messages_init(&c->messages);
 	c->package_first = c->package_last = NULL;
 	c->packages_count = 0;
 	c->functions_count = 0;
@@ -916,7 +862,7 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 void vmc_compiler_destroy(vmc_compiler* c)
 {
 	vmc_string_pool_destroy(&c->string_pool);
-	_vmc_compiler_destroy_messages(c);
+	vm_messages_destroy(&c->messages);
 	_vmc_compiler_destroy_packages(c);
 	vm_bytestream_release(&c->bytecode);
 	free(c);
@@ -929,7 +875,7 @@ BOOL vmc_compiler_compile(vmc_compiler* c, const vm_byte* src)
 	_vmc_append_header(c);
 	// Main package is the second package
 	_vmc_parse(c, &l, c->package_first->next);
-	_vmc_take_messages(c, &l);
+	vm_messages_move(&l.messages, &c->messages);
 	vmc_lexer_release(&l);
 	if (vmc_compiler_success(c)) {
 		_vmc_append_package_info(c);
@@ -1001,6 +947,7 @@ vmc_func* vmc_func_new(vmc_package* p, const vm_string* name, vm_int32 offset)
 	vmc_func* func = (vmc_func*)malloc(sizeof(vmc_func));
 	if (func == NULL)
 		return NULL;
+	VMC_INIT_TYPE_HEADER(func, VMC_TYPE_HEADER_FUNC, sizeof(void*));
 	func->id = 0;
 	func->package = p;
 	func->name = *name;

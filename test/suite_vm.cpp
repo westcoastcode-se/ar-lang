@@ -8,7 +8,7 @@ struct suite_vm_utils : test_utils
 		if (!vmc_compiler_success(c)) {
 			error_string_stream e;
 			e << "could not compile source code: [";
-			auto message = c->messages_first;
+			auto message = c->messages.first;
 			while (message != nullptr) {
 				e << "\n" << message->message;
 				message = message->next;

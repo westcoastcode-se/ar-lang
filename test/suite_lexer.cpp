@@ -38,7 +38,7 @@ struct suite_lexer_utils : test_utils
 			return;
 		error_string_stream e;
 		e << "could parse source code: [";
-		auto message = l.messages_first;
+		auto message = l.messages.first;
 		while (message != nullptr) {
 			e << "\n" << message->message;
 			message = message->next;

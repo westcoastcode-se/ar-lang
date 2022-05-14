@@ -5,32 +5,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-BOOL _vmc_lexer_add_message(vmc_lexer* l, int error_code, const char* format, ...)
-{
-	va_list argptr;
-	vm_message* m = (vm_message*)malloc(sizeof(vm_message));
-	if (m == NULL)
-		return FALSE;
-
-	m->code = error_code;
-	m->next = NULL;
-
-	va_start(argptr, format);
-	vsprintf(m->message, format, argptr);
-	va_end(argptr);
-
-	if (l->messages_last == NULL)
-		l->messages_last = l->messages_first = m;
-	else
-		l->messages_last->next = m;
-	return FALSE;
-}
-
 BOOL _vmc_add_warn_escape_rune_unknown(vmc_lexer* l, vm_byte rune)
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_lexer_add_message(l, VMC_WARN_CODE_ESCAPE_RUNE_UNKNOWN, "escape rune is unknown: '%c' at %d:%d",
+	return vm_messages_add(&l->messages, VMC_WARN_CODE_ESCAPE_RUNE_UNKNOWN, "escape rune is unknown: '%c' at %d:%d",
 		rune, line, line_offset);
 }
 
@@ -38,7 +17,7 @@ BOOL _vmc_add_warn_unclosed_string(vmc_lexer* l)
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_lexer_add_message(l, VMC_WARN_CODE_UNCLOSED_STRING, "unclosed string at %d:%d",
+	return vm_messages_add(&l->messages, VMC_WARN_CODE_UNCLOSED_STRING, "unclosed string at %d:%d",
 		line, line_offset);
 }
 
@@ -46,7 +25,7 @@ BOOL _vmc_add_warn_unclosed_comment(vmc_lexer* l)
 {
 	int line, line_offset, offset;
 	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return _vmc_lexer_add_message(l, VMC_WARN_CODE_UNCLOSED_COMMENT, "unclosed comment at %d:%d",
+	return vm_messages_add(&l->messages, VMC_WARN_CODE_UNCLOSED_COMMENT, "unclosed comment at %d:%d",
 		line, line_offset);
 }
 
@@ -465,7 +444,7 @@ void vmc_lexer_init(vmc_lexer* l, const vm_byte* source)
 	l->source_start = l->source = source;
 	l->line = 0;
 	l->line_offset = NULL;
-	l->messages_first = l->messages_last = NULL;
+	vm_messages_init(&l->messages);
 }
 
 vmc_lexer* vmc_lexer_parse(const vm_byte* source)
@@ -479,16 +458,7 @@ vmc_lexer* vmc_lexer_parse(const vm_byte* source)
 
 void vmc_lexer_release(vmc_lexer* l)
 {
-	vm_message* m;
-
-	// Cleanup messages
-	m = l->messages_first;
-	while (m != NULL) {
-		vm_message* next = m->next;
-		free(m);
-		m = next;
-	}
-	l->messages_first = NULL;
+	vm_messages_destroy(&l->messages);
 }
 
 void vmc_lexer_destroy(vmc_lexer* l)
