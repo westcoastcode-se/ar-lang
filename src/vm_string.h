@@ -25,6 +25,9 @@ static inline BOOL vm_str_cmp(const char* s1, int l1, const char* s2, int l2)
 	return TRUE;
 }
 
+// Initialize the supplied string to zero
+extern void vm_string_zero(vm_string* s);
+
 // Compare two strings
 extern BOOL vm_string_cmpsz(const vm_string* s, const char* other_string, int length);
 

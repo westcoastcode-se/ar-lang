@@ -58,6 +58,32 @@ void _vmc_emit_icode(vmc_compiler* c, vm_int8 icode)
 	vmc_write(c, &instr, sizeof(vmi_instr_single_instruction));
 }
 
+// Allocate new memory for a potential function. Will return NULL if the system is out of memory
+vmc_func* _vmc_func_malloc()
+{
+	vmc_func* func = (vmc_func*)malloc(sizeof(vmc_func));
+	if (func == NULL)
+		return NULL;
+	VMC_INIT_TYPE_HEADER(func, VMC_TYPE_HEADER_FUNC, sizeof(void*));
+	func->id = 0;
+	func->package = NULL;
+	vm_string_zero(&func->name);
+	func->offset = -1;
+	func->next = NULL;
+	func->modifiers = 0;
+	func->complexity = 0;
+	func->complexity_components = 0;
+	func->args_count = 0;
+	func->returns_count = 0;
+	return func;
+}
+
+// Destroy memory allocated for the supplied function
+void _vmc_func_free(vmc_func* func)
+{
+	free(func);
+}
+
 vmc_package* _vmc_package_malloc(const char* name, int length)
 {
 	vmc_package* p = (vmc_package*)malloc(sizeof(vmc_package));
@@ -77,6 +103,30 @@ vmc_package* _vmc_package_malloc(const char* name, int length)
 	return p;
 }
 
+void _vmc_package_free(vmc_package* p)
+{
+	vmc_func* f;
+	vmc_type_definition* t;
+
+	// Cleanup functions
+	f = p->func_first;
+	while (f != NULL) {
+		vmc_func* next = f->next;
+		_vmc_func_free(f);
+		f = next;
+	}
+
+	// Cleanup types
+	t = p->type_first;
+	while (t != NULL) {
+		vmc_type_definition* next = t->next;
+		free(t);
+		t = next;
+	}
+
+	free(p);
+}
+
 void _vmc_append_header(vmc_compiler* c)
 {
 	vmi_process_header header;
@@ -90,6 +140,19 @@ void _vmc_append_header(vmc_compiler* c)
 	header.functions_count = 0;
 	header.first_package_offset = 0;
 	vmc_write(c, &header, sizeof(header));
+}
+
+// Add the supplied function to the supplied package
+void _vmc_package_add_func(vmc_package* p, vmc_func* f)
+{
+	if (p->func_last == NULL) {
+		p->func_first = p->func_last = f;
+	}
+	else {
+		p->func_last->next = f;
+		p->func_last = f;
+	}
+	p->func_count++;
 }
 
 vm_int32 _vmc_calculate_var_offset(const vmc_var_definition* defs, vm_int32 count) {
@@ -254,6 +317,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	// If function is external then allow body to be missing.
 	if (vmc_func_is_extern(func) && t->type != VMC_LEXER_TYPE_BRACKET_L)
 		return TRUE;
+	func->offset = vm_bytestream_get_size(&c->bytecode);
 
 	// The function is actually beginning here
 	// TODO: Add support for reserving memory for local variables
@@ -421,7 +485,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		vmc_lexer_next(l, t);
 	}
-	func->properties |= VMC_FUNC_PROPERTY_HAS_BODY;
+	func->modifiers |= VMC_FUNC_MODIFIER_HAS_BODY;
 	vmc_lexer_next(l, t);
 	return TRUE;
 }
@@ -460,46 +524,61 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 	return TRUE;
 }
 
+// Parse the function signature:
+// [name:keyword]([arg1:keyword] [type1:keyword],...)([type1:keyword])
+vmc_func* _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t)
+{
+	vmc_func* func;
+
+	// 1. Function name
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+		vmc_compiler_message_expected_identifier(&c->messages, l, t);
+		return NULL;
+	}
+
+	func = _vmc_func_malloc();
+	if (func == NULL) {
+		vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+		return NULL;
+	}
+	func->name = t->string;
+	if (vmc_lexer_test_uppercase(*func->name.start))
+		func->modifiers |= VMC_FUNC_MODIFIER_PUBLIC;
+
+	// Parse args
+	if (!_vmc_parse_keyword_fn_args(c, l, p, t, func))
+		return NULL;
+
+	// Parse return types
+	if (!_vmc_parse_keyword_fn_rets(c, l, p, t, func))
+		return NULL;
+
+	// Build the signature string
+	if (!_vmc_prepare_func_signature(c, func))
+		return NULL;
+	return func;
+}
+
 // Append a new function to the current package. The syntax is:
 // [extern] fn name (arg1 [modifier][package.]type1, arg2 [modifier][package.]type2, ...) ([modifier][package.]ret1, [modifier][package.]ret2, ...)
 //
 // If the function is external then a body is not required. You are allowed to have a body if you want to override the 
-BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, BOOL is_extern)
+BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vm_bits32 modifiers)
 {
 	vmc_func* func;
-	int func_ret;
 
-	// Expected an function name
-	vmc_lexer_next(l, t);
-	if (t->type != VMC_LEXER_TYPE_KEYWORD)
-		return vmc_compiler_message_expected_identifier(&c->messages, l, t);
-
-	// Try to create a new function
-	func_ret = vmc_func_try_create(p, &t->string, vm_bytestream_get_size(&c->bytecode), &func);
-	switch (func_ret)
-	{
-	case VMC_FUNC_TRY_CREATE_OOM:
-		return vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
-	case VMC_FUNC_TRY_CREATE_ALREADY_EXISTS:
-		return vmc_compiler_message_func_body_exists(&c->messages, l, &t->string);
-	default:
-		break;
+	func = _vmc_parse_func_signature(c, l, p, t);
+	if (func == NULL) {
+		return FALSE;
 	}
+	_vmc_package_add_func(p, func);
 	func->id = c->functions_count++;
-	if (is_extern)
-		func->properties |= VMC_FUNC_PROPERTY_EXTERN;
-
-	// Parse args
-	if (!_vmc_parse_keyword_fn_args(c, l, p, t, func))
-		return FALSE;
-	
-	// Parse return types
-	if (!_vmc_parse_keyword_fn_rets(c, l, p, t, func))
-		return FALSE;
+	func->modifiers |= modifiers;
 
 	if (t->type != VMC_LEXER_TYPE_BRACKET_L) {
 		// The next token is assumed to not be part of the function if it's modified with an "extern" modifier
-		if (is_extern) {
+		if (vmc_func_is_extern(func)) {
 			return TRUE;
 		}
 		else {
@@ -524,7 +603,7 @@ BOOL _vmc_parse_keyword_extern(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vm
 	switch (t->type)
 	{
 	case VMC_LEXER_TYPE_KEYWORD_FN:
-		return _vmc_parse_keyword_fn(c, l, p, t, TRUE);
+		return _vmc_parse_keyword_fn(c, l, p, t, VMC_FUNC_MODIFIER_EXTERN);
 	default:
 		return vmc_compiler_message_unknown_token(&c->messages, l, t);
 	}
@@ -537,7 +616,7 @@ BOOL _vmc_parse_keyword(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer
 	case VMC_LEXER_TYPE_KEYWORD_EXTERN:
 		return _vmc_parse_keyword_extern(c, l, p, t);
 	case VMC_LEXER_TYPE_KEYWORD_FN:
-		return _vmc_parse_keyword_fn(c, l, p, t, FALSE);
+		return _vmc_parse_keyword_fn(c, l, p, t, 0);
 	case VMC_LEXER_TYPE_KEYWORD_CONST:
 	default:
 		break;
@@ -657,37 +736,13 @@ void _vmc_link(vmc_compiler* c)
 {
 }
 
-void _vmc_package_destroy(vmc_package* p)
-{
-	vmc_func* f;
-	vmc_type_definition* t;
-
-	// Cleanup functions
-	f = p->func_first;
-	while (f != NULL) {
-		vmc_func* next = f->next;
-		free(f);
-		f = next;
-	}
-
-	// Cleanup types
-	t = p->type_first;
-	while (t != NULL) {
-		vmc_type_definition* next = t->next;
-		free(t);
-		t = next;
-	}
-
-	free(p);
-}
-
 // Cleanup all packages
 void _vmc_compiler_destroy_packages(vmc_compiler* c)
 {
 	vmc_package* p = c->package_first;
 	while (p != NULL) {
 		vmc_package* const next = p->next;
-		_vmc_package_destroy(p);
+		_vmc_package_free(p);
 		p = next;
 	}
 	c->package_first = c->package_last = NULL;
@@ -779,56 +834,16 @@ vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name
 	return NULL;
 }
 
-int vmc_func_try_create(vmc_package* p, const vm_string* name, vm_int32 offset, vmc_func** func)
-{
-	*func = vmc_func_find(p, name);
-	if (*func != NULL)
-		return VMC_FUNC_TRY_CREATE_ALREADY_EXISTS;
-	*func = vmc_func_new(p, name, offset);
-	if (*func == NULL)
-		return VMC_FUNC_TRY_CREATE_OOM;
-	return VMC_FUNC_TRY_CREATE_OK;
-}
-
-vmc_func* vmc_func_find(vmc_package* p, const vm_string* name)
+vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature)
 {
 	vmc_func* func = p->func_first;
 	while (func != NULL) {
-		if (vm_string_cmp(&func->name, name)) {
+		if (vm_string_cmp(&func->signature, signature)) {
 			return func;
 		}
 		func = func->next;
 	}
 	return NULL;
-}
-
-vmc_func* vmc_func_new(vmc_package* p, const vm_string* name, vm_int32 offset)
-{
-	vmc_func* func = (vmc_func*)malloc(sizeof(vmc_func));
-	if (func == NULL)
-		return NULL;
-	VMC_INIT_TYPE_HEADER(func, VMC_TYPE_HEADER_FUNC, sizeof(void*));
-	func->id = 0;
-	func->package = p;
-	func->name = *name;
-	func->offset = offset;
-	func->next = NULL;
-	func->properties = 0;
-	if (vmc_lexer_test_uppercase(*name->start))
-		func->properties |= VMC_FUNC_PROPERTY_PUBLIC;
-	func->complexity = 0;
-	func->complexity_components = 0;
-	func->args_count = 0;
-	func->returns_count = 0;
-	if (p->func_last == NULL) {
-		p->func_first = p->func_last = func;
-	}
-	else {
-		p->func_last->next = func;
-		p->func_last = func;
-	}
-	p->func_count++;
-	return func;
 }
 
 vmc_type_definition* vmc_type_definition_new(vmc_package* p, const vm_string* name, vm_int32 size)

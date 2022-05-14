@@ -69,7 +69,7 @@ struct vmc_type_info
 	// The size this type takes in memory
 	vm_int32 size;
 
-	// The offset, from the start, where this var can be found
+	// The offset, from the start, where this var can be found on the stack
 	vm_int32 offset;
 };
 typedef struct vmc_type_info vmc_type_info;
@@ -87,13 +87,13 @@ typedef struct vmc_var_definition vmc_var_definition;
 
 // Defines a function to be external - i.e. you can link functionality from 
 // your compiled application into the script language
-#define VMC_FUNC_PROPERTY_EXTERN (1 << 0)
+#define VMC_FUNC_MODIFIER_EXTERN (1 << 0)
 
 // The function is public and can be accessed from outside the package
-#define VMC_FUNC_PROPERTY_PUBLIC (1 << 1)
+#define VMC_FUNC_MODIFIER_PUBLIC (1 << 1)
 
 // The function has a body
-#define VMC_FUNC_PROPERTY_HAS_BODY (1 << 2)
+#define VMC_FUNC_MODIFIER_HAS_BODY (1 << 2)
 
 // Information of a function
 struct vmc_func
@@ -122,9 +122,11 @@ struct vmc_func
 	vm_string signature;
 
 	// Properties
-	vm_uint32 properties;
+	vm_bits32 modifiers;
 
-	// Offset where the bytecode for this function is found
+	// Offset where the bytecode for this function is found. Will be -1 if the offset
+	// is now known yet. The compiler will try to resolve the offset during the
+	// link step
 	vm_int32 offset;
 
 	// How complex is this function. Complexity is normally used during the optimization
@@ -153,19 +155,19 @@ typedef struct vmc_func vmc_func;
 // Check to see if the supplied function is public
 static inline BOOL vmc_func_is_public(const vmc_func* func)
 {
-	return (func->properties & VMC_FUNC_PROPERTY_PUBLIC) == VMC_FUNC_PROPERTY_PUBLIC;
+	return (func->modifiers & VMC_FUNC_MODIFIER_PUBLIC) == VMC_FUNC_MODIFIER_PUBLIC;
 }
 
 // Check to see if the supplied function is marked to be external
 static inline BOOL vmc_func_is_extern(const vmc_func* func)
 {
-	return (func->properties & VMC_FUNC_PROPERTY_EXTERN) == VMC_FUNC_PROPERTY_EXTERN;
+	return (func->modifiers & VMC_FUNC_MODIFIER_EXTERN) == VMC_FUNC_MODIFIER_EXTERN;
 }
 
 // Check to see if the supplied function has a body
 static inline BOOL vmc_func_has_body(const vmc_func* func)
 {
-	return (func->properties & VMC_FUNC_PROPERTY_HAS_BODY) == VMC_FUNC_PROPERTY_HAS_BODY;
+	return (func->modifiers & VMC_FUNC_MODIFIER_HAS_BODY) == VMC_FUNC_MODIFIER_HAS_BODY;
 }
 
 // Definition for what the import function looks like. Returns a success if the import was successful
@@ -316,17 +318,8 @@ extern vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int lengt
 // Search for a type
 extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name);
 
-// Try to create a new function. Returns a code that tells us if it was successful or not
-#define VMC_FUNC_TRY_CREATE_OK (0)
-#define VMC_FUNC_TRY_CREATE_OOM (1)
-#define VMC_FUNC_TRY_CREATE_ALREADY_EXISTS (2)
-extern int vmc_func_try_create(vmc_package* p, const vm_string* name, vm_int32 offset, vmc_func** func);
-
-// Try to func a function in the supplied package
-extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* name);
-
-// Create a new function
-extern vmc_func* vmc_func_new(vmc_package* p, const vm_string* name, vm_int32 offset);
+// Try to func a function in the supplied package with a specific signature
+extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature);
 
 // Add a new type to a package
 extern vmc_type_definition* vmc_type_definition_new(vmc_package* p, const vm_string* name, vm_int32 size);
