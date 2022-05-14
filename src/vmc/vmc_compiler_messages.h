@@ -34,6 +34,15 @@ enum vmc_compiler_messages
 
 	// Expected an integer value. This is normally raised if you have a constant int value but with no integer as a value
 	VMC_COMPILER_MSG_EXPECTED_INT,
+
+	// Message raised if a compiler feature is not implemented yet
+	VMC_COMPILER_MSG_NOT_IMPLEMENTED,
+
+	// Invalid index normally happens if you refer to an index that doesnt exist
+	VMC_COMPILER_MSG_INVALID_INDEX,
+
+	// Message raised if a function body is not closed correctly
+	VMC_COMPILER_MSG_INCOMPLETE_BODY,
 };
 
 #define VMC_COMPILER_MSG_UNKNOWN_TOKEN_STR "unknown token: '%.*s' at %d:%d"
@@ -43,6 +52,9 @@ enum vmc_compiler_messages
 #define VMC_COMPILER_MSG_EXPECTED_KEYWORD_STR "expected keyword but was '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_EXPECTED_INDEX_STR "expected index but was '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_EXPECTED_INT_STR "expected integer value but was '%.*s' at %d:%d"
+#define VMC_COMPILER_MSG_NOT_IMPLEMENTED_STR "keyword '%.*s' is not implemented yet at %d:%d"
+#define VMC_COMPILER_MSG_INVALID_INDEX_STR "supplied index %d but it must be within range [%d,%d] at %d:%d"
+#define VMC_COMPILER_MSG_INCOMPLETE_BODY_STR "body was not closed correctly at %d:%d"
 
 // 
 // Functions which helps adding messages to the messages container
@@ -55,6 +67,9 @@ extern BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer* l, vm
 extern BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 index, vm_int32 min, vm_int32 max);
+extern BOOL vmc_compiler_message_incomplete_body(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 
 #endif
 

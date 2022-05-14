@@ -33,28 +33,6 @@ const vmc_compiler_config _vmc_compiler_config_default = {
 	&vmc_compiler_config_import
 };
 
-BOOL _vmc_add_error_not_implemented_yet(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_ERROR_CODE_NOT_IMPLEMENTED_YET, 
-		"'%.*s' is not implemented yet at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
-BOOL _vmc_add_error_invalid_arg(vmc_compiler* c, vmc_lexer* l, vm_int32 index, vm_int32 max_index)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_ERROR_CODE_INVALID_ARG, 
-		"invalid index %d but the maximum is %d at %d:%d",
-		index, max_index, line, line_offset);
-}
-
 BOOL _vmc_add_error_expected_parant(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
 {
 	int line, line_offset, offset;
@@ -85,17 +63,6 @@ BOOL _vmc_add_error_expected_bracket(vmc_compiler* c, vmc_lexer* l, vmc_lexer_to
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_ERROR_CODE_EXPECTED_BRACKET, 
 		"expected bracket start/end but was '%.*s' at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
-BOOL _vmc_add_error_incomplete_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX,
-		VMC_ERROR_CODE_INCOMPLETE_FN_BODY, 
-		"incomplete function body but was '%.*s' at %d:%d",
 		vm_string_length(&token->string), token->string.start, line, line_offset);
 }
 
@@ -344,15 +311,15 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	// The function is actually beginning here
 	// TODO: Add support for reserving memory for local variables
 	if (func->args_total_size > INT8_MAX)
-		return _vmc_add_error_not_implemented_yet(c, l, t);
+		return vmc_compiler_message_not_implemented(&c->messages, l, t);
 	if (func->returns_total_size > INT8_MAX)
-		return _vmc_add_error_not_implemented_yet(c, l, t);
+		return vmc_compiler_message_not_implemented(&c->messages, l, t);
 	_vmc_emit_begin(c, func->args_total_size, func->returns_total_size);
 
 	while (1) {
 		// Unexpected end of function body
 		if (t->type == VMC_LEXER_TYPE_EOF) {
-			return _vmc_add_error_incomplete_fn_body(c, l, t);
+			return vmc_compiler_message_incomplete_body(&c->messages, l, t);
 		}
 
 		// Break if we've reached the end of the function
@@ -383,8 +350,8 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			}
 
 			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (func->args_count <= index) {
-				return _vmc_add_error_invalid_arg(c, l, index, func->args_count);
+			if (func->args_count == 0 || func->args_count <= index) {
+				return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->args_count - 1);
 			}
 			instr.opcode = 0;
 			instr.icode = VMI_LOAD_A;
@@ -410,7 +377,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 				vmc_write(c, &instr, sizeof(vmi_instr_const_int32));
 			}
 			else
-				return _vmc_add_error_not_implemented_yet(c, l, t);			
+				return vmc_compiler_message_not_implemented(&c->messages, l, t);
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(add))) {
 			// add <type>
@@ -436,8 +403,8 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			}
 
 			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (func->returns_count <= index) {
-				return _vmc_add_error_invalid_arg(c, l, index, func->returns_count);
+			if (func->returns_count == 0 || func->returns_count <= index) {
+				return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->returns_count - 1);
 			}
 			instr.opcode = 0;
 			instr.icode = VMI_SAVE_R;
@@ -461,7 +428,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 				return vmc_compiler_message_expected_int(&c->messages, l, t);
 			}
 			else if (num_bytes > UINT16_MAX) {
-				return _vmc_add_error_not_implemented_yet(c, l, t);
+				return vmc_compiler_message_not_implemented(&c->messages, l, t);
 			}
 			instr.opcode = 0;
 			instr.icode = VMI_ALLOC_S;
@@ -484,7 +451,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 				return vmc_compiler_message_expected_int(&c->messages, l, t);
 			}
 			else if (num_bytes > UINT16_MAX) {
-				return _vmc_add_error_not_implemented_yet(c, l, t);
+				return vmc_compiler_message_not_implemented(&c->messages, l, t);
 			}
 			instr.opcode = 0;
 			instr.icode = VMI_FREE_S;
@@ -502,7 +469,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
 			// call <definition>
 
-			return _vmc_add_error_not_implemented_yet(c, l, t);
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
 		}
 
 		vmc_lexer_next(l, t);

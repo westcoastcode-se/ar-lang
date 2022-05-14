@@ -26,10 +26,11 @@ void vm_messages_destroy(vm_messages* m)
 	vm_message* message = m->first;
 	while (message != NULL) {
 		vm_message* const next = message->next;
-		free(m);
+		free(message);
 		message = next;
 	}
 	m->first = m->last = NULL;
+
 }
 
 void vm_messages_move(vm_messages* src, vm_messages* dest)
@@ -55,10 +56,14 @@ void vm_messages_move(vm_messages* src, vm_messages* dest)
 
 BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* format, ...)
 {
+	char* buffer;
 	va_list argptr;
 	vm_message* new_message = (vm_message*)malloc(sizeof(vm_message));
 	if (new_message == NULL)
 		return FALSE;
+
+	buffer = new_message->message;
+	buffer += sprintf(buffer, "%c%.3d: ", prefix, error_code);
 
 	new_message->prefix = prefix;
 	new_message->code = error_code;
@@ -66,7 +71,7 @@ BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* fo
 	new_message->line = new_message->line_offset = new_message->offset = 0;
 
 	va_start(argptr, format);
-	vsprintf(new_message->message, format, argptr);
+	vsprintf(buffer, format, argptr);
 	va_end(argptr);
 
 	if (m->last == NULL)
