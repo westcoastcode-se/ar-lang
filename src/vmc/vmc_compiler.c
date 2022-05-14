@@ -33,39 +33,6 @@ const vmc_compiler_config _vmc_compiler_config_default = {
 	&vmc_compiler_config_import
 };
 
-BOOL _vmc_add_error_expected_keyword(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_ERROR_CODE_EXPECTED_KEYWORD, 
-		"expected keyword but was '%.*s' at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
-BOOL _vmc_add_error_expected_index(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_ERROR_CODE_EXPECTED_INDEX, 
-		"expected index but was '%.*s' at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
-BOOL _vmc_add_error_expected_integer(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
-{
-	int line, line_offset, offset;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &offset);
-	return vm_messages_add(&c->messages, 
-		VMC_COMPILER_MESSAGE_PREFIX, 
-		VMC_ERROR_CODE_EXPECTED_INTEGER, 
-		"expected integer but was '%.*s' at %d:%d",
-		vm_string_length(&token->string), token->string.start, line, line_offset);
-}
-
 BOOL _vmc_add_error_not_implemented_yet(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* token)
 {
 	int line, line_offset, offset;
@@ -401,7 +368,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		// Verify that a keyword is being processed
 		if (!vmc_lexer_type_is_keyword(t->type)) {
-			return _vmc_add_error_expected_keyword(c, l, t);
+			return vmc_compiler_message_expected_keyword(&c->messages, l, t);
 		}
 
 		if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(load_a))) {
@@ -412,7 +379,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 			vmc_lexer_next(l, t);
 			if (t->type != VMC_LEXER_TYPE_INT) {
-				return _vmc_add_error_expected_index(c, l, t);
+				return vmc_compiler_message_expected_index(&c->messages, l, t);
 			}
 
 			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
@@ -430,14 +397,13 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 			vmc_lexer_next(l, t);
 			if (t->type != VMC_LEXER_TYPE_KEYWORD) {
-				return _vmc_add_error_expected_index(c, l, t);
+				return vmc_compiler_message_expected_type(&c->messages, l, t);
 			}
-
 			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32))) {
 				vmi_instr_const_int32 instr;
 				vmc_lexer_next(l, t);
 				if (t->type != VMC_LEXER_TYPE_INT)
-					return _vmc_add_error_expected_integer(c, l, t);
+					return vmc_compiler_message_expected_int(&c->messages, l, t);
 				instr.value = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 				instr.opcode = 0;
 				instr.icode = VMI_CONST;
@@ -466,7 +432,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 			vmc_lexer_next(l, t);
 			if (t->type != VMC_LEXER_TYPE_INT) {
-				return _vmc_add_error_expected_integer(c, l, t);
+				return vmc_compiler_message_expected_index(&c->messages, l, t);
 			}
 
 			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
@@ -487,12 +453,12 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 			vmc_lexer_next(l, t);
 			if (t->type != VMC_LEXER_TYPE_INT) {
-				return _vmc_add_error_expected_integer(c, l, t);
+				return vmc_compiler_message_expected_int(&c->messages, l, t);
 			}
 
 			num_bytes = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 			if (num_bytes < 0) {
-				return _vmc_add_error_expected_integer(c, l, t);
+				return vmc_compiler_message_expected_int(&c->messages, l, t);
 			}
 			else if (num_bytes > UINT16_MAX) {
 				return _vmc_add_error_not_implemented_yet(c, l, t);
@@ -510,12 +476,12 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 			vmc_lexer_next(l, t);
 			if (t->type != VMC_LEXER_TYPE_INT) {
-				return _vmc_add_error_expected_integer(c, l, t);
+				return vmc_compiler_message_expected_int(&c->messages, l, t);
 			}
 
 			num_bytes = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 			if (num_bytes < 0) {
-				return _vmc_add_error_expected_integer(c, l, t);
+				return vmc_compiler_message_expected_int(&c->messages, l, t);
 			}
 			else if (num_bytes > UINT16_MAX) {
 				return _vmc_add_error_not_implemented_yet(c, l, t);
