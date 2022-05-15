@@ -25,6 +25,16 @@ static inline BOOL vm_str_cmp(const char* s1, int l1, const char* s2, int l2)
 	return TRUE;
 }
 
+// Copy the content of a string into a new memory location
+static inline char* vm_str_cpy(char* dest, const char* src, int len)
+{
+	int i = 0;
+	for (; i < len; ++i) {
+		*dest++ = *src++;
+	}
+	return dest;
+}
+
 // Initialize the supplied string with the soruce string
 extern void vm_string_setsz(vm_string* s, const char* src, int len);
 

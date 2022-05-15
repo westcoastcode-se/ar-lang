@@ -501,9 +501,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 {
 	char memory[2048];
-	char* ptr = memory;
-	strncpy(ptr, func->name.start, vm_string_length(&func->name));
-	ptr += vm_string_length(&func->name);
+	char* ptr = vm_str_cpy(memory, func->name.start, vm_string_length(&func->name));
 	*ptr++ = '(';
 	for (int i = 0; i < func->args_count; ++i) {
 		const vm_int32 len = vm_string_length(&func->args[i].type.definition->name);
@@ -512,8 +510,7 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 			*ptr++ = ',';
 		if ((info->masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
 			*ptr++ = '*';
-		strncpy(ptr, info->definition->name.start, len);
-		ptr += len;
+		ptr = vm_str_cpy(ptr, info->definition->name.start, len);
 	}
 	*ptr++ = ')';
 	*ptr++ = '(';
@@ -524,8 +521,7 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 			*ptr++ = ',';
 		if ((info->masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
 			*ptr++ = '*';
-		strncpy(ptr, info->definition->name.start, len);
-		ptr += len;
+		ptr = vm_str_cpy(ptr, info->definition->name.start, len);
 	}
 	*ptr++ = ')';
 	func->signature = *vmc_string_pool_stringsz(&c->string_pool, memory, (int)(ptr - memory));
