@@ -173,7 +173,7 @@ extern void vmc_lexer_release(vmc_lexer* l);
 extern void vmc_lexer_destroy(vmc_lexer* l);
 
 // Get next non-whitespace token
-extern void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token);
+extern void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* t);
 
 // Get the next non-whitespace token. A newline is not considered whitespace when calling this function
 extern void vmc_lexer_next_newline(vmc_lexer* l, vmc_lexer_token* token);

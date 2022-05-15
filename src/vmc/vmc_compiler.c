@@ -306,7 +306,6 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			vmc_lexer_next(l, t);
 		}
 		else if (t->type == VMC_LEXER_TYPE_PARAN_R) {
-			vmc_lexer_next(l, t);
 			break;
 		}
 	}
@@ -316,9 +315,16 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
-	// If function is external then allow body to be missing.
-	if (vmc_func_is_extern(func) && t->type != VMC_LEXER_TYPE_BRACKET_L)
+	// External functions are not allowed to have a body
+	if (vmc_func_is_extern(func))
 		return TRUE;
+
+	// Expected a {
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_BRACKET_L))
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, '{');
+	vmc_lexer_next(l, t);
+
+	// Body is now definde and we know where the body bytecode starts
 	func->offset = vm_bytestream_get_size(&c->bytecode);
 
 	// The function is actually beginning here
@@ -577,16 +583,9 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 	func->id = c->functions_count++;
 	func->modifiers |= modifiers;
 
-	if (t->type != VMC_LEXER_TYPE_BRACKET_L) {
-		// The next token is assumed to not be part of the function if it's modified with an "extern" modifier
-		if (vmc_func_is_extern(func)) {
-			return TRUE;
-		}
-		else {
-			return vmc_compiler_message_syntax_error(&c->messages, l, t, '{');
-		}
-	}
-	vmc_lexer_next(l, t);
+	// External functions do not have a body
+	if (vmc_func_is_extern(func))
+		return TRUE;
 
 	// Parse the function body
 	if (!_vmc_parse_keyword_fn_body(c, l, p, t, func))

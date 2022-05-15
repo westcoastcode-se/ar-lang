@@ -443,11 +443,11 @@ void vmc_lexer_destroy(vmc_lexer* l)
 	free(l);
 }
 
-void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token)
+void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* t)
 {
 	char ch = *l->source;
 	if (ch == 0) {
-		_vmc_lexer_eof(l, token);
+		_vmc_lexer_eof(l, t);
 		return;
 	}
 	while (vmc_lexer_test_whitespace(ch)) {
@@ -457,7 +457,7 @@ void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token)
 		}
 		ch = *++l->source;
 	}
-	_vmc_lexer_next(l, token);
+	_vmc_lexer_next(l, t);
 }
 
 void vmc_lexer_next_newline(vmc_lexer* l, vmc_lexer_token* token)
