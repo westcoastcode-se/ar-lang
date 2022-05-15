@@ -297,10 +297,16 @@ inline static void vmc_write_int32(vmc_compiler* c, vm_int32 value)
 	vm_bytestream_write(&c->bytecode, &value, sizeof(vm_int32));
 }
 
+// Check to see if the compiler is panicing
+inline static BOOL vmc_compiler_is_panicing(vmc_compiler* c)
+{
+	return c->panic_error_message.code != 0;
+}
+
 // Check to see if the compiler has compiled successfully
 inline static BOOL vmc_compiler_success(vmc_compiler* c)
 {
-	return vm_messages_has_messages(&c->messages) == FALSE && c->panic_error_message.code == 0;
+	return !vm_messages_has_messages(&c->messages) && !vmc_compiler_is_panicing(c);
 }
 
 // Get the bytecode created by the supplied compiler

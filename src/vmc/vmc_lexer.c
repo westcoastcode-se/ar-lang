@@ -471,7 +471,7 @@ void vmc_lexer_next_newline(vmc_lexer* l, vmc_lexer_token* token)
 	_vmc_lexer_next(l, token);
 }
 
-BOOL vmc_lexer_next_type(vmc_lexer* l, vmc_lexer_token_type type, vmc_lexer_token* token)
+BOOL vmc_lexer_next_type(vmc_lexer* l, vmc_lexer_token* token, vmc_lexer_token_type type)
 {
 	vmc_lexer_next(l, token);
 	return token->type == type;

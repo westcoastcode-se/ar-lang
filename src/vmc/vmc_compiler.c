@@ -159,6 +159,7 @@ void _vmc_package_add_func(vmc_package* p, vmc_func* f)
 	p->func_count++;
 }
 
+// Calculate the offset, on the stack, where the next variable can be found
 vm_int32 _vmc_calculate_var_offset(const vmc_var_definition* defs, vm_int32 count) {
 	vm_int32 i, offset = 0;
 	for (i = 0; i < count; ++i) {
@@ -170,14 +171,12 @@ vm_int32 _vmc_calculate_var_offset(const vmc_var_definition* defs, vm_int32 coun
 BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	// Expected (
-	vmc_lexer_next(l, t);
-	if (t->type != VMC_LEXER_TYPE_PARAN_L)
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
 		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
 	vmc_lexer_next(l, t);
 
 	// Empty arguments
 	if (t->type == VMC_LEXER_TYPE_PARAN_R) {
-		vmc_lexer_next(l, t);
 		return TRUE;
 	}
 
@@ -238,7 +237,6 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			vmc_lexer_next(l, t);
 		}
 		else if (t->type == VMC_LEXER_TYPE_PARAN_R) {
-			vmc_lexer_next(l, t);
 			break;
 		}
 	}
@@ -252,7 +250,7 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	func->returns_total_size = 0;
 
 	// Expected a '(' token
-	if (t->type != VMC_LEXER_TYPE_PARAN_L)
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
 		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
 	vmc_lexer_next(l, t);
 	
@@ -535,8 +533,7 @@ vmc_func* _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* 
 	vmc_func* func;
 
 	// 1. Function name
-	vmc_lexer_next(l, t);
-	if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD)) {
 		vmc_compiler_message_expected_identifier(&c->messages, l, t);
 		return NULL;
 	}
@@ -591,10 +588,6 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 	}
 	vmc_lexer_next(l, t);
 
-	// Prepare the signature
-	if (!_vmc_prepare_func_signature(c, func))
-		return FALSE;
-	
 	// Parse the function body
 	if (!_vmc_parse_keyword_fn_body(c, l, p, t, func))
 		return FALSE;
