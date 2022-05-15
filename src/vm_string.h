@@ -25,6 +25,9 @@ static inline BOOL vm_str_cmp(const char* s1, int l1, const char* s2, int l2)
 	return TRUE;
 }
 
+// Initialize the supplied string with the soruce string
+extern void vm_string_setsz(vm_string* s, const char* src, int len);
+
 // Initialize the supplied string to zero
 extern void vm_string_zero(vm_string* s);
 

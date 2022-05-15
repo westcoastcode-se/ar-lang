@@ -16,6 +16,7 @@ typedef unsigned short vm_uint16;
 typedef int vm_int32;
 typedef unsigned int vm_uint32;
 typedef unsigned int vm_bits32;
+typedef unsigned int vm_hash32;
 typedef long long vm_int64;
 typedef unsigned long long vm_uint64;
 

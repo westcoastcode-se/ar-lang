@@ -29,11 +29,11 @@ struct vmc_type_header
 	// A unique id of the definition
 	vm_uint32 id;
 
-	// Name of the definition
-	vm_string name;
-
 	// Size of this type in memory
 	vm_int32 size;
+
+	// Name of the definition
+	vm_string name;
 };
 typedef struct vmc_type_header vmc_type_header;
 
@@ -110,11 +110,11 @@ struct vmc_func
 			// A unique id of the definition
 			vm_uint32 id;
 
-			// Name of the definition
-			vm_string name;
-
 			// Size of this type in memory
 			vm_int32 size;
+
+			// Name of the definition
+			vm_string name;
 		};
 	};
 
@@ -202,11 +202,11 @@ struct vmc_package
 			// A unique id of the definition
 			vm_uint32 id;
 
-			// Name of the definition
-			vm_string name;
-
 			// Size of this type in memory
 			vm_int32 size;
+
+			// Name of the definition
+			vm_string name;
 		};
 	};
 

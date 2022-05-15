@@ -1,5 +1,11 @@
 #include "vm_string.h"
 
+void vm_string_setsz(vm_string* s, const char* src, int len)
+{
+	s->start = src;
+	s->end = src + len;
+}
+
 void vm_string_zero(vm_string* s)
 {
 	s->start = s->end = NULL;

@@ -58,14 +58,10 @@ void _vmc_emit_icode(vmc_compiler* c, vm_int8 icode)
 	vmc_write(c, &instr, sizeof(vmi_instr_single_instruction));
 }
 
-// Allocate new memory for a potential function. Will return NULL if the system is out of memory
-vmc_func* _vmc_func_malloc()
+// Initialize the function memory
+void _vmc_func_init(vmc_func* func)
 {
-	vmc_func* func = (vmc_func*)malloc(sizeof(vmc_func));
-	if (func == NULL)
-		return NULL;
 	VMC_INIT_TYPE_HEADER(func, VMC_TYPE_HEADER_FUNC, sizeof(void*));
-	func->id = 0;
 	func->package = NULL;
 	vm_string_zero(&func->name);
 	func->offset = -1;
@@ -75,6 +71,15 @@ vmc_func* _vmc_func_malloc()
 	func->complexity_components = 0;
 	func->args_count = 0;
 	func->returns_count = 0;
+}
+
+// Allocate new memory for a potential function. Will return NULL if the system is out of memory
+vmc_func* _vmc_func_malloc()
+{
+	vmc_func* func = (vmc_func*)malloc(sizeof(vmc_func));
+	if (func == NULL)
+		return NULL;
+	_vmc_func_init(func);
 	return func;
 }
 
@@ -90,8 +95,7 @@ vmc_package* _vmc_package_malloc(const char* name, int length)
 	if (p == NULL)
 		return NULL;
 	VMC_INIT_TYPE_HEADER(p, VMC_TYPE_HEADER_PACKAGE, sizeof(void*));
-	p->name.start = name;
-	p->name.end = name + length;
+	vm_string_setsz(&p->name, name, length);
 	p->full_name = p->name;
 	p->func_first = p->func_last = NULL;
 	p->func_count = 0;
