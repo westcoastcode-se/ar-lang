@@ -170,20 +170,16 @@ vm_int32 _vmc_calculate_var_offset(const vmc_var_definition* defs, vm_int32 coun
 
 BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
+	func->args_count = 0;
+	func->args_total_size = 0;
+
 	// Expected (
 	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
 		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
 	vmc_lexer_next(l, t);
 
-	// Empty arguments
-	if (t->type == VMC_LEXER_TYPE_PARAN_R) {
-		return TRUE;
-	}
-
-	// Collect information of all arguments
-	func->args_count = 0;
-	func->args_total_size = 0;
-	while (1)
+	// Parse each argument until we reach the end ')' token
+	while (t->type != VMC_LEXER_TYPE_PARAN_R)
 	{
 		vmc_package* type_package = p;
 		vmc_var_definition* var = &func->args[func->args_count];
@@ -232,12 +228,10 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		func->args_count++;
 		func->args_total_size += var->type.size;
 
+		// Skip comma
 		vmc_lexer_next(l, t);
 		if (t->type == VMC_LEXER_TYPE_COMMA) {
 			vmc_lexer_next(l, t);
-		}
-		else if (t->type == VMC_LEXER_TYPE_PARAN_R) {
-			break;
 		}
 	}
 
@@ -254,14 +248,8 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
 	vmc_lexer_next(l, t);
 	
-	// Did we close the opened parantheses immediately?
-	if (t->type == VMC_LEXER_TYPE_PARAN_R) {	
-		vmc_lexer_next(l, t);
-		return TRUE;
-	}
-
-	// Parse each return type 
-	while (1) {
+	// Parse each return type until we reach that end ')' token
+	while (t->type != VMC_LEXER_TYPE_PARAN_R) {
 		vmc_package* type_package = p;
 		vmc_var_definition* var = &func->returns[func->returns_count];
 		vmc_type_definition* type_definition;
@@ -301,12 +289,10 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		func->returns_count++;
 		func->returns_total_size += var->type.size;
 
+		// Skip comma
 		vmc_lexer_next(l, t);
 		if (t->type == VMC_LEXER_TYPE_COMMA) {
 			vmc_lexer_next(l, t);
-		}
-		else if (t->type == VMC_LEXER_TYPE_PARAN_R) {
-			break;
 		}
 	}
 
