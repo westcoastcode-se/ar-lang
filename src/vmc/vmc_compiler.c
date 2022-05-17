@@ -28,6 +28,30 @@ VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(add, "add", 3);
 VM_STRING_CONST(call, "call", 4);
 
+VM_STRING_CONST(_0, "_0", 2);
+VM_STRING_CONST(_1, "_1", 2);
+VM_STRING_CONST(_2, "_2", 2);
+VM_STRING_CONST(_3, "_3", 2);
+VM_STRING_CONST(_4, "_4", 2);
+VM_STRING_CONST(_5, "_5", 2);
+VM_STRING_CONST(_6, "_6", 2);
+VM_STRING_CONST(_7, "_7", 2);
+VM_STRING_CONST(_8, "_8", 2);
+VM_STRING_CONST(_9, "_9", 2);
+
+const vm_string* _vm_string_const_anon_names[10] = {
+	VM_STRING_CONST_GET(_0),
+	VM_STRING_CONST_GET(_1),
+	VM_STRING_CONST_GET(_2),
+	VM_STRING_CONST_GET(_3),
+	VM_STRING_CONST_GET(_4),
+	VM_STRING_CONST_GET(_5),
+	VM_STRING_CONST_GET(_6),
+	VM_STRING_CONST_GET(_7),
+	VM_STRING_CONST_GET(_8),
+	VM_STRING_CONST_GET(_9)
+};
+
 const vmc_compiler_config _vmc_compiler_config_default = {
 	NULL,
 	&vmc_compiler_config_import
@@ -38,8 +62,7 @@ void _vmc_emit_begin(vmc_compiler* c, vm_int8 argument_total_size, vm_int8 retur
 	vmi_instr_begin instr;
 	instr.opcode = 0;
 	instr.icode = VMI_BEGIN;
-	instr.argument_total_size = argument_total_size;
-	instr.return_total_size = return_total_size;
+	instr.expected_stack_size = argument_total_size + return_total_size;
 	vmc_write(c, &instr, sizeof(vmi_instr_begin));
 }
 
@@ -168,22 +191,129 @@ vm_int32 _vmc_calculate_var_offset(const vmc_var_definition* defs, vm_int32 coun
 	return offset;
 }
 
+const vm_string* _vmc_prepare_func_get_signature(vmc_compiler* c, vm_string name, 
+	vmc_var_definition* args, vm_int32 args_count, 
+	vmc_var_definition* returns, vm_int32 returns_count)
+{
+	char memory[2048];
+	char* ptr = vm_str_cpy(memory, name.start, vm_string_length(&name));
+	*ptr++ = '(';
+	for (int i = 0; i < args_count; ++i) {
+		const vm_int32 len = vm_string_length(&args[i].type.definition->name);
+		const vmc_type_info* info = &args[i].type;
+		if (i > 0)
+			*ptr++ = ',';
+		if ((info->masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
+			*ptr++ = '*';
+		ptr = vm_str_cpy(ptr, info->definition->name.start, len);
+	}
+	*ptr++ = ')';
+	*ptr++ = '(';
+	for (int i = 0; i < returns_count; ++i) {
+		const vm_int32 len = vm_string_length(&returns[i].type.definition->name);
+		const vmc_type_info* info = &returns[i].type;
+		if (i > 0)
+			*ptr++ = ',';
+		if ((info->masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
+			*ptr++ = '*';
+		ptr = vm_str_cpy(ptr, info->definition->name.start, len);
+	}
+	*ptr++ = ')';
+	return vmc_string_pool_stringsz(&c->string_pool, memory, (int)(ptr - memory));
+}
+
+BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
+{
+	func->signature = *_vmc_prepare_func_get_signature(c, func->name, func->args, func->args_count,
+		func->returns, func->returns_count);
+	return TRUE;
+}
+
+BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t,
+	vmc_var_definition* vars, vm_int32* out_count, vm_int32* out_total_size)
+{
+	vm_int32 count = 0;
+	vm_int32 total_size = 0;
+	vmc_package* type_package;
+	vmc_type_definition* type_definition;
+
+	// Expected a '(' token
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
+
+	// Parse until we reach that end ')' token
+	while (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_R)) {
+		vmc_var_definition* const var = &vars[count];
+		type_package = p;
+
+		// Ignore comma
+		if (t->type == VMC_LEXER_TYPE_COMMA) {
+			vmc_lexer_next(l, t);
+		}
+
+		// Reset masks
+		var->type.masks = 0;
+		var->type.offset = _vmc_calculate_var_offset(vars, count);
+		var->name = *_vm_string_const_anon_names[count];
+
+		// types can be:
+		// KEYWORD
+		// *KEYWORD
+		// [INT]KEYWORD
+		// KEYWPORD<TYPE>
+
+		// We can, quickly figure out if this is a type if the keyword is:
+		// '[' or '*' since those are part of the type
+		if (t->type == VMC_LEXER_TYPE_SQUARE_L || t->type == VMC_LEXER_TYPE_PTR) {
+			// These types of types are not supported yet!
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		}
+
+		// Expected type
+		if (t->type != VMC_LEXER_TYPE_KEYWORD)
+			return vmc_compiler_message_expected_type(&c->messages, l, t);
+
+		type_definition = vmc_package_find_type(type_package, &t->string);
+		if (type_definition == NULL)
+			return vmc_compiler_message_type_not_found(&c->messages, l, t);
+		var->type.definition = type_definition;
+
+		// Figure out the size of the variable
+		if ((var->type.masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
+			var->type.size = sizeof(void*);
+		else
+			var->type.size = type_definition->size;
+
+		// Argument now loaded
+		count++;
+		total_size += var->type.size;
+	}
+
+	*out_count = count;
+	*out_total_size = total_size;
+	return TRUE;
+}
+
 BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	func->args_count = 0;
 	func->args_total_size = 0;
+	vmc_package* type_package;
+	vmc_type_definition* type_definition;
 
-	// Expected (
+	// Expected a '(' token
 	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
 		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
-	vmc_lexer_next(l, t);
 
-	// Parse each argument until we reach the end ')' token
-	while (t->type != VMC_LEXER_TYPE_PARAN_R)
-	{
-		vmc_package* type_package = p;
-		vmc_var_definition* var = &func->args[func->args_count];
-		vmc_type_definition* type_definition;
+	// Parse until we reach that end ')' token
+	while (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_R)) {
+		vmc_var_definition* const var = &func->args[func->args_count];
+		type_package = p;
+
+		// Ignore comma
+		if (t->type == VMC_LEXER_TYPE_COMMA) {
+			vmc_lexer_next(l, t);
+		}
 
 		// Reset masks
 		var->type.masks = 0;
@@ -193,31 +323,32 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		if (t->type != VMC_LEXER_TYPE_KEYWORD)
 			return vmc_compiler_message_expected_identifier(&c->messages, l, t);
 		var->name = t->string;
-
-		// The type might be a '*', '[]', package or type
 		vmc_lexer_next(l, t);
 
-		// * (memory address)
-		if (t->type == VMC_LEXER_TYPE_PTR) {
-			var->type.masks |= VMC_TYPE_INFO_MASK_ADDR;
-			vmc_lexer_next(l, t);
+		// The first part can be a name OR a type
+		// names are guaranteed to be a KEYWORD
+		// vars can be:
+		// KEYWORD
+		// *KEYWORD
+		// [INT]KEYWORD
+		// KEYWPORD<TYPE>
+
+		// We can, quickly figure out if this is a type if the keyword is:
+		// '[' or '*' since those are part of the type
+		if (t->type == VMC_LEXER_TYPE_SQUARE_L || t->type == VMC_LEXER_TYPE_PTR) {
+			// These types of types are not supported yet!
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
 		}
 
 		// Expected type
 		if (t->type != VMC_LEXER_TYPE_KEYWORD)
 			return vmc_compiler_message_expected_type(&c->messages, l, t);
 
-		// If the next character is a package delimiter than figure out the package
-		//if (vmc_lexer_peek(l) == '.') {
-		//	vmc_lexer_next(l, t);
-		//	vmc_lexer_next(l, t);
-			//type_package = find_package_among_imports(...);
-		//}
 		type_definition = vmc_package_find_type(type_package, &t->string);
 		if (type_definition == NULL)
 			return vmc_compiler_message_type_not_found(&c->messages, l, t);
 		var->type.definition = type_definition;
-		
+
 		// Figure out the size of the variable
 		if ((var->type.masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
 			var->type.size = sizeof(void*);
@@ -227,12 +358,6 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		// Argument now loaded
 		func->args_count++;
 		func->args_total_size += var->type.size;
-
-		// Skip comma
-		vmc_lexer_next(l, t);
-		if (t->type == VMC_LEXER_TYPE_COMMA) {
-			vmc_lexer_next(l, t);
-		}
 	}
 
 	return TRUE;
@@ -240,63 +365,8 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
-	func->returns_count = 0;
-	func->returns_total_size = 0;
-
-	// Expected a '(' token
-	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
-		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
-	vmc_lexer_next(l, t);
-	
-	// Parse each return type until we reach that end ')' token
-	while (t->type != VMC_LEXER_TYPE_PARAN_R) {
-		vmc_package* type_package = p;
-		vmc_var_definition* var = &func->returns[func->returns_count];
-		vmc_type_definition* type_definition;
-
-		// Reset masks
-		var->type.masks = 0;
-		var->type.offset = _vmc_calculate_var_offset(func->returns, func->returns_count);
-
-		// We might've prefixed the type with a modifier, such as a pointer
-		if (t->type == VMC_LEXER_TYPE_PTR) {
-			var->type.masks |= VMC_TYPE_INFO_MASK_ADDR;
-			vmc_lexer_next(l, t);
-		}
-
-		// Expected type
-		if (t->type != VMC_LEXER_TYPE_KEYWORD)
-			return vmc_compiler_message_expected_type(&c->messages, l, t);
-
-		// If the next character is a package delimiter than figure out the package
-		//if (vmc_lexer_peek(l) == '.') {
-		//	vmc_lexer_next(l, t);
-		//	vmc_lexer_next(l, t);
-			//type_package = find_package_among_imports(...);
-		//}
-		type_definition = vmc_package_find_type(type_package, &t->string);
-		if (type_definition == NULL)
-			return vmc_compiler_message_type_not_found(&c->messages, l, t);
-		var->type.definition = type_definition;
-
-		// Figure out the size of the variable
-		if ((var->type.masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
-			var->type.size = sizeof(void*);
-		else
-			var->type.size = type_definition->size;
-
-		// Argument now loaded
-		func->returns_count++;
-		func->returns_total_size += var->type.size;
-
-		// Skip comma
-		vmc_lexer_next(l, t);
-		if (t->type == VMC_LEXER_TYPE_COMMA) {
-			vmc_lexer_next(l, t);
-		}
-	}
-
-	return TRUE;
+	return _vmc_compiler_parse_type_decl_without_name(c, l, p, t,
+		func->returns, &func->returns_count, &func->returns_total_size);
 }
 
 BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
@@ -414,7 +484,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.opcode = 0;
 			instr.icode = VMI_SAVE_R;
 			instr.size = func->returns[index].type.size;
-			instr.offset = func->returns[index].type.offset;
+			instr.offset = func->args_total_size + func->returns[index].type.offset;
 			vmc_write(c, &instr, sizeof(vmi_instr_save_r));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(alloc_s))) {
@@ -473,44 +543,42 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
 			// call <definition>
+			vm_string name;
+			vmc_var_definition args[9];
+			vm_int32 args_count;
+			vmc_var_definition returns[9];
+			vm_int32 returns_count;
+			vm_int32 _;
+			vmc_func* func;
+			vmi_instr_call instr;
+			
+			// Name of the function
+			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD))
+				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
+			name = t->string;
 
-			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+			// Fetch arguments
+			if (!_vmc_compiler_parse_type_decl_without_name(c, l, p, t, args, &args_count, &_))
+				return FALSE;
+
+			// Fetch returns
+			if (!_vmc_compiler_parse_type_decl_without_name(c, l, p, t, returns, &returns_count, &_))
+				return FALSE;
+
+			func = vmc_func_find(p, _vmc_prepare_func_get_signature(c, name, args, args_count, returns, returns_count));
+			if (func == NULL) {
+				return vmc_compiler_message_not_implemented(&c->messages, l, t);
+			}
+			instr.header.opcode = 0;
+			instr.header.icode = VMI_CALL;
+			instr.addr = (vmi_ip)func->offset;
+			vmc_write(c, &instr, sizeof(vmi_instr_call));
 		}
 
 		vmc_lexer_next(l, t);
 	}
 	func->modifiers |= VMC_FUNC_MODIFIER_HAS_BODY;
 	vmc_lexer_next(l, t);
-	return TRUE;
-}
-
-BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
-{
-	char memory[2048];
-	char* ptr = vm_str_cpy(memory, func->name.start, vm_string_length(&func->name));
-	*ptr++ = '(';
-	for (int i = 0; i < func->args_count; ++i) {
-		const vm_int32 len = vm_string_length(&func->args[i].type.definition->name);
-		const vmc_type_info* info = &func->args[i].type;
-		if (i > 0)
-			*ptr++ = ',';
-		if ((info->masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
-			*ptr++ = '*';
-		ptr = vm_str_cpy(ptr, info->definition->name.start, len);
-	}
-	*ptr++ = ')';
-	*ptr++ = '(';
-	for (int i = 0; i < func->returns_count; ++i) {
-		const vm_int32 len = vm_string_length(&func->returns[i].type.definition->name);
-		const vmc_type_info* info = &func->returns[i].type;
-		if (i > 0)
-			*ptr++ = ',';
-		if ((info->masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
-			*ptr++ = '*';
-		ptr = vm_str_cpy(ptr, info->definition->name.start, len);
-	}
-	*ptr++ = ')';
-	func->signature = *vmc_string_pool_stringsz(&c->string_pool, memory, (int)(ptr - memory));
 	return TRUE;
 }
 

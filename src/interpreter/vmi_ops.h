@@ -1,7 +1,7 @@
 #ifndef _VMI_OPS_H_
 #define _VMI_OPS_H_
 
-#include "../vm_config.h"
+#include "vmi_config.h"
 
 // High INT8 (the four last bits)
 #define VMI_PROPS_HIGH(P) ((P) << 4)
@@ -32,6 +32,9 @@ enum vmi_icodes
 
 	// Free memory from the stack
 	VMI_FREE_S,
+
+	// Call a function
+	VMI_CALL,
 
 	// Load a local variable to the stack
 	VMI_LOAD,
@@ -107,8 +110,7 @@ struct vmi_instr_begin
 		{
 			vm_uint8 icode;
 			vm_uint8 props1;
-			vm_uint8 argument_total_size;
-			vm_uint8 return_total_size;
+			vm_uint16 expected_stack_size;
 		};
 	};
 };
@@ -191,6 +193,14 @@ struct vmi_instr_free_s
 	};
 };
 typedef struct vmi_instr_free_s vmi_instr_free_s;
+
+// A call instruction
+struct vmi_instr_call
+{
+	OPCODE_HEADER;
+	vmi_ip addr;
+};
+typedef struct vmi_instr_call vmi_instr_call;
 
 // Load a generic 1 block item to the stack
 struct vmi_instr_loadx

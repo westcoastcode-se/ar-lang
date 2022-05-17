@@ -55,15 +55,15 @@ typedef struct vmi_thread_vars_block vmi_thread_vars_block;
 // Call frame
 struct vmi_thread_call_frame
 {
-	// Blocks that can be used to access local memory. The actual location where the memory can be found
-	// is on the stack. But can be, using shorthand access, used here
-	vmi_thread_vars_block* locals;
-
 	// Where argument memory start
 	vm_byte* stack_arguments;
 
 	// Stack position where return values are located
 	vm_byte* stack_returns;
+
+	// Blocks that can be used to access local memory. The actual location where the memory can be found
+	// is on the stack. But can be, using shorthand access, used here
+	vmi_thread_vars_block* locals;
 };
 typedef struct vmi_thread_call_frame vmi_thread_call_frame;
 
@@ -83,8 +83,8 @@ struct vmi_thread
 	// Flags used to keep track of how this thread feels
 	vm_int32 flags;
 
-	// Call frame
-	vmi_thread_call_frame* call_frame;
+	// Pointer which can be used to refer to the position on the stack when the current function was called
+	vm_byte* ebp;
 
 	// Stack
 	vmi_stack stack;

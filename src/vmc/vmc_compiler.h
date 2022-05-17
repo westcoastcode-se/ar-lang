@@ -95,6 +95,9 @@ typedef struct vmc_var_definition vmc_var_definition;
 // The function has a body
 #define VMC_FUNC_MODIFIER_HAS_BODY (1 << 2)
 
+#define VMC_FUNC_MAX_ARGS 9
+#define VMC_FUNC_MAX_RETURNS 9
+
 // Information of a function
 struct vmc_func
 {
@@ -135,12 +138,12 @@ struct vmc_func
 	vm_int32 complexity_components;
 
 	// Arguments
-	vmc_var_definition args[9];
+	vmc_var_definition args[VMC_FUNC_MAX_ARGS];
 	vm_int32 args_count;
 	vm_int32 args_total_size;
 
 	// Returns
-	vmc_var_definition returns[9];
+	vmc_var_definition returns[VMC_FUNC_MAX_RETURNS];
 	vm_int32 returns_count;
 	vm_int32 returns_total_size;
 

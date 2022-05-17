@@ -26,6 +26,14 @@ struct suite_vm_utils : test_utils
 		}
 	}
 
+	void verify_stack_size(vmi_thread* t, size_t expected_size)
+	{
+		const size_t size = (size_t)(t->stack.top - t->stack.blocks);
+		if (expected_size != size) {
+			throw_(error() << "expected stack size to be " << expected_size << " but was " << size);
+		}
+	}
+
 	vmc_compiler* compile(const vm_byte* src)
 	{
 		auto const compiler = vmc_compiler_new(NULL);
@@ -92,8 +100,9 @@ struct suite_vm_utils : test_utils
 // All test functions
 struct suite_vm_tests : suite_vm_utils
 {
-	void calculate_return_constant1() {
-		/*
+	void calculate_return_constant1()
+	{
+/*
 fn Get() (int32) {
 	return 12
 }
@@ -116,6 +125,7 @@ fn Get () (int32) {
 		if (vmi_stack_count(&t->stack) != 4) {
 			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
 		}
+		verify_stack_size(t, sizeof(vm_int32));
 		verify_stack(t, 0, 123);
 
 		destroy(t);
@@ -123,10 +133,11 @@ fn Get () (int32) {
 		destroy(c);
 	}
 
-	void calculate_return_constant2() {
-		/*
+	void calculate_return_constant2()
+	{
+/*
 fn Get() (int32, int32) {
-	return 12
+	return 123, 456
 }
 */
 		const auto source = R"(
@@ -150,6 +161,7 @@ fn Get () (int32, int32) {
 		if (vmi_stack_count(&t->stack) != 8) {
 			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
 		}
+		verify_stack_size(t, sizeof(vm_int32) * 2);
 		verify_stack(t, 0, 123);
 		verify_stack(t, 4, 456);
 
@@ -188,6 +200,7 @@ fn Add (lhs int32, rhs int32) (int32) {
 		if (vmi_stack_count(&t->stack) != 12) {
 			throw_(error() << "expected stack size 12 but was " << vmi_stack_count(&t->stack));
 		}
+		verify_stack_size(t, sizeof(vm_int32) * 3);
 		verify_stack(t, 0, 10);
 		verify_stack(t, 4, 20);
 		verify_stack(t, 8, 30);
@@ -238,6 +251,7 @@ fn Add2 (lhs int32, rhs int32) (int32) {
 		if (vmi_stack_count(&t->stack) != 12) {
 			throw_(error() << "expected stack size 12 but was " << vmi_stack_count(&t->stack));
 		}
+		verify_stack_size(t, sizeof(vm_int32) * 3);
 		verify_stack(t, 0, 10);
 		verify_stack(t, 4, 20);
 		verify_stack(t, 8, 30);
@@ -267,12 +281,12 @@ fn Add (lhs int32, rhs int32) (int32) {
 }
 
 fn AddTwoInts() (int32) {
-	alloc_s 4		// Allocate memory for return value of sizeof(int32)
 	const int32 10	// Load constant int32 10
 	const int32 20	// Load constant int32 20
+	alloc_s 4		// Allocate memory for return value of sizeof(int32)
 	call Add(int32,int32)(int32)
-	free_s 8		// Release 8 bytes from the stack
 	save_r 0		// Save the value to the return position
+	free_s 8		// Release 8 bytes from the stack
 	ret
 }
 )";
@@ -295,6 +309,7 @@ fn AddTwoInts() (int32) {
 		if (vmi_stack_count(&t->stack) != 4) {
 			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
 		}
+		verify_stack_size(t, sizeof(vm_int32));
 		verify_stack(t, 0, 30);
 
 		destroy(t);

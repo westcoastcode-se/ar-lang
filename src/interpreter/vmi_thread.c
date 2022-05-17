@@ -25,13 +25,26 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 	return _vmi_thread_halt(t, ip, VMI_THREAD_FLAG_NOT_IMPLEMENTED, "not implemented");
 }
 
+vmi_ip _vmi_thread_call(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_call* instr = (const vmi_instr_call*)ip;
+	// Push the address where the application should continue executing when the function returns
+	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (ip + sizeof(vmi_instr_call));
+	// Return the functions start position.
+	// TODO: Is it possible to make address be the actual bytecode address?
+	return t->bytecode + (vm_int32)instr->addr;
+}
+
 vmi_ip _vmi_thread_begin(vmi_thread* t, vmi_ip ip)
 {
-	const vmi_instr_begin* instr = (const vmi_instr_begin*)ip;
-	t->call_frame = (vmi_thread_call_frame*)vmi_stack_push(&t->stack, sizeof(vmi_thread_call_frame));
-	t->call_frame->stack_arguments = t->stack.top - instr->return_total_size - instr->argument_total_size - sizeof(vmi_thread_call_frame) - sizeof(vmi_ip);
-	t->call_frame->stack_returns = t->stack.top - instr->return_total_size - sizeof(vmi_thread_call_frame) - sizeof(vmi_ip);
-	t->call_frame->locals = (vmi_thread_vars_block*)&t->stack.top;
+	// TODO: The problem is that call_frame points to the wrong frame when poping from the stack
+	const vmi_instr_begin* const instr = (const vmi_instr_begin*)ip;
+
+	// Push the previous stack pointer and set where arguments and 
+	// return value slots are located on the stack
+	*(vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*)) = t->ebp;
+	t->ebp = t->stack.top - sizeof(vmi_ip) - instr->expected_stack_size - sizeof(vm_byte*);
+
 	return ip + sizeof(vmi_instr_begin);
 }
 
@@ -59,7 +72,7 @@ vmi_ip _vmi_thread_load_a(vmi_thread* t, vmi_ip ip)
 	// TODO: Add support for different sizes
 	switch (instr->size) {
 	case 4:
-		*(vm_int32*)target = *(vm_int32*)(t->call_frame->stack_arguments + instr->offset);
+		*(vm_int32*)target = *(vm_int32*)(t->ebp + instr->offset);
 		break;
 	case 1:
 	case 2:
@@ -72,13 +85,16 @@ vmi_ip _vmi_thread_load_a(vmi_thread* t, vmi_ip ip)
 
 vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
 {
-	const vmi_instr_save_r* instr = (const vmi_instr_save_r*)ip;
+	const vmi_instr_save_r* const instr = (const vmi_instr_save_r*)ip;
+	vm_byte* const target = (vm_byte*)(t->ebp + instr->offset);
 
 	// TODO: Add support for different sizes
 	switch (instr->size) {
-	case 4:
-		*(vm_int32*)(t->call_frame->stack_returns + instr->offset) = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
+	case 4: {
+		vm_int32* const value_on_stack = (vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
+		*((vm_int32*)target) = *value_on_stack;
 		break;
+	}
 	case 1:
 	case 2:
 	case 8:
@@ -91,7 +107,8 @@ vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
 // Return to the caller
 vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 {
-	t->call_frame = (vmi_thread_call_frame*)vmi_stack_pop(&t->stack, sizeof(vmi_thread_call_frame));
+	// Pop the stack pointer and return return the next instruction pointer to be executed
+	t->ebp = *(vm_byte**)vmi_stack_pop(&t->stack, sizeof(vm_byte*));
 	return *(vmi_ip*)vmi_stack_pop(&t->stack, sizeof(vmi_ip));
 }
 
@@ -100,7 +117,7 @@ vmi_ip _vmi_thread_load(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
 	vm_int32* const block = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	*block = t->call_frame->locals[block_index].i32;
+	//*block = t->call_frame->locals[block_index].i32;
 	return ip + sizeof(vmi_instr_single_instruction);
 }
 
@@ -110,7 +127,7 @@ vmi_ip _vmi_thread_loadx(vmi_thread* t, vmi_ip ip)
 	vm_int32* const block = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	*block = t->call_frame->locals[instr->block_index].i32;
+	//*block = t->call_frame->locals[instr->block_index].i32;
 	return ip + sizeof(vmi_instr_loadx);
 }
 
@@ -119,7 +136,7 @@ vmi_ip _vmi_thread_loadl(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
 	vm_int64* const block = (vm_int64*)vmi_stack_push(&t->stack, sizeof(vm_int64));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	*block = t->call_frame->locals[block_index].i64;
+	//*block = t->call_frame->locals[block_index].i64;
 	return ip + sizeof(vmi_instr_single_instruction);
 }
 
@@ -129,7 +146,7 @@ vmi_ip _vmi_thread_loadlx(vmi_thread* t, vmi_ip ip)
 	vm_int64* const block = (vm_int64*)vmi_stack_push(&t->stack, sizeof(vm_int64));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	*block = t->call_frame->locals[instr->block_index].i64;
+	//*block = t->call_frame->locals[instr->block_index].i64;
 	return ip + sizeof(vmi_instr_loadx);
 }
 
@@ -138,7 +155,7 @@ vmi_ip _vmi_thread_store(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
 	const vm_int32* const block = (vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	t->call_frame->locals[block_index].i32 = *block;
+	//t->call_frame->locals[block_index].i32 = *block;
 	return ip + sizeof(vmi_instr_single_instruction);
 }
 
@@ -148,7 +165,7 @@ vmi_ip _vmi_thread_storex(vmi_thread* t, vmi_ip ip)
 	const vm_int32* const block = (vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	t->call_frame->locals[instr->block_index].i32 = *block;
+	//t->call_frame->locals[instr->block_index].i32 = *block;
 	return ip + sizeof(vmi_instr_storex);
 }
 
@@ -157,7 +174,7 @@ vmi_ip _vmi_thread_storel(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
 	const vm_int64* const block = (const vm_int64*)vmi_stack_pop(&t->stack, sizeof(vm_int64));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	t->call_frame->locals[block_index].i64 = *block;
+	//t->call_frame->locals[block_index].i64 = *block;
 	return ip + sizeof(vmi_instr_single_instruction);
 }
 
@@ -167,7 +184,7 @@ vmi_ip _vmi_thread_storelx(vmi_thread* t, vmi_ip ip)
 	const vm_int64* const block = (const vm_int64*)vmi_stack_pop(&t->stack, sizeof(vm_int64));
 	if (block == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
-	t->call_frame->locals[instr->block_index].i64 = *block;
+	//t->call_frame->locals[instr->block_index].i64 = *block;
 	return ip + sizeof(vmi_instr_storex);
 }
 
@@ -316,6 +333,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		// Otherwise handle non-specified instructions first.
 		switch (header->icode)
 		{
+		case VMI_CALL:
+			ip = _vmi_thread_call(t, ip);
+			continue;
 		case VMI_BEGIN:
 			ip = _vmi_thread_begin(t, ip);
 			continue;
@@ -357,6 +377,7 @@ vmi_thread* vmi_thread_new(vmi_process* process)
 	t->process = process;
 	t->bytecode = process->bytecode;
 	vmi_stack_init(&t->stack);
+	t->ebp = NULL;
 
 	// TODO: Add support for multiple threads
 	process->first_thread = t;
@@ -376,9 +397,11 @@ vm_int32 vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 {
 	vm_int32 ret;
 	t->ip = ip;
+	
 	// Push the caller to end-of-execution so that the thread stops running when the current function is no longer running.
 	// This is always done when a function is being called
 	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = &_vmi_force_eoe;
+
 	ret = _vmi_thread_exec(t, ip);
 	return ret;
 }

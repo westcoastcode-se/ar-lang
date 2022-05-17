@@ -1,11 +1,8 @@
 #ifndef _VMI_PROCESS_H_
 #define _VMI_PROCESS_H_
 
-#include "../vm_config.h"
+#include "vmi_config.h"
 #include "../vm_string.h"
-
-// Represents a type for position, in memory, where the virtual machine is processing instructions
-typedef const vm_byte* vmi_ip;
 
 struct vmi_package_func_bytecode_header
 {
