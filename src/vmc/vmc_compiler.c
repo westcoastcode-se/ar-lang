@@ -187,14 +187,14 @@ void _vmc_calculate_offsets(vmc_func* func) {
 	vm_int32 offset = func->args_total_size + func->returns_total_size;
 	vm_int32 i;
 	if (func->args_count > 0) {
-		for (i = func->args_count - 1; i >= 0; --i) {
+		for (i = 0; i < func->args_count; ++i) {
 			vmc_type_info* info = &func->args[i].type;
 			offset -= info->size;
 			info->offset = offset;
 		}
 	}
 	if (func->returns_count > 0) {
-		for (i = func->returns_count - 1; i >= 0; --i) {
+		for (i = 0; i < func->returns_count; ++i) {
 			vmc_type_info* info = &func->returns[i].type;
 			offset -= info->size;
 			info->offset = offset;

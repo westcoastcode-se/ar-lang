@@ -139,10 +139,10 @@ fn Get() (int32, int32) {
 */
 		const auto source = R"(
 fn Get () (int32, int32) {
-	const int32 123	// Push a constant
-	save_r 0		// Pop the top stack value and put it into the first return value	
-	const int32 456	// Push a constant
-	save_r 1		// Pop the top stack value and put it into the second return value
+	const int32 123	// Push 123
+	save_r 0		// stack[4] = 123
+	const int32 456	// Push 456
+	save_r 1		// stack[0] = 456
 	ret				// Return
 }
 )";
@@ -151,13 +151,13 @@ fn Get () (int32, int32) {
 		auto t = thread(p);
 
 		// begin_
-		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
-		vmi_thread_push_i32(t, 88); // return value here (can be done by the API)
+		vmi_thread_push_i32(t, -1); // return value here (can be done by the API)
+		vmi_thread_push_i32(t, -1); // return value here (can be done by the API)
 		invoke(p, t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32) * 2);
-		verify_stack(t, 4, 456);
-		verify_stack(t, 0, 123);
+		verify_stack(t, 0, 456);
+		verify_stack(t, 4, 123);
 
 		destroy(t);
 		destroy(p);

@@ -198,8 +198,8 @@ vmi_ip _vmi_thread_storelx(vmi_thread* t, vmi_ip ip)
 // Add the two top-most values from the stack. Assume that they are 4 byte integers
 vmi_ip _vmi_thread_addi32(vmi_thread* t, vmi_ip ip)
 {
-	const vm_int32 lhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
 	const vm_int32 rhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
+	const vm_int32 lhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
 	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
 	*result = (lhs + rhs);
 	return ip + sizeof(vmi_instr_single_instruction);
