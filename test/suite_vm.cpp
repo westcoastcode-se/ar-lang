@@ -122,9 +122,6 @@ fn Get () (int32) {
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
 		invoke(p, t, "Get");
 
-		if (vmi_stack_count(&t->stack) != 4) {
-			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
-		}
 		verify_stack_size(t, sizeof(vm_int32));
 		verify_stack(t, 0, 123);
 
@@ -154,16 +151,13 @@ fn Get () (int32, int32) {
 		auto t = thread(p);
 
 		// begin_
-		vmi_thread_push_i32(t, 88); // return value here (can be done by the API)
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
+		vmi_thread_push_i32(t, 88); // return value here (can be done by the API)
 		invoke(p, t, "Get");
 
-		if (vmi_stack_count(&t->stack) != 8) {
-			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
-		}
 		verify_stack_size(t, sizeof(vm_int32) * 2);
-		verify_stack(t, 0, 123);
 		verify_stack(t, 4, 456);
+		verify_stack(t, 0, 123);
 
 		destroy(t);
 		destroy(p);
@@ -191,19 +185,13 @@ fn Add (lhs int32, rhs int32) (int32) {
 		auto t = thread(p);
 
 		// begin_
-		vmi_thread_push_i32(t, 10);
-		vmi_thread_push_i32(t, 20);
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
-		
+		vmi_thread_push_i32(t, 20);
+		vmi_thread_push_i32(t, 10);
 		invoke(p, t, "Add");
 
-		if (vmi_stack_count(&t->stack) != 12) {
-			throw_(error() << "expected stack size 12 but was " << vmi_stack_count(&t->stack));
-		}
-		verify_stack_size(t, sizeof(vm_int32) * 3);
-		verify_stack(t, 0, 10);
-		verify_stack(t, 4, 20);
-		verify_stack(t, 8, 30);
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 30);
 
 		destroy(t);
 		destroy(p);
@@ -242,19 +230,13 @@ fn Add2 (lhs int32, rhs int32) (int32) {
 		auto t = thread(p);
 
 		// begin_
-		vmi_thread_push_i32(t, 10);
-		vmi_thread_push_i32(t, 20);
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
-
+		vmi_thread_push_i32(t, 20);
+		vmi_thread_push_i32(t, 10);
 		invoke(p, t, "Add2");
 
-		if (vmi_stack_count(&t->stack) != 12) {
-			throw_(error() << "expected stack size 12 but was " << vmi_stack_count(&t->stack));
-		}
-		verify_stack_size(t, sizeof(vm_int32) * 3);
-		verify_stack(t, 0, 10);
-		verify_stack(t, 4, 20);
-		verify_stack(t, 8, 30);
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 30);
 
 		destroy(t);
 		destroy(p);
@@ -281,12 +263,11 @@ fn Add (lhs int32, rhs int32) (int32) {
 }
 
 fn AddTwoInts() (int32) {
-	const int32 10	// Load constant int32 10
-	const int32 20	// Load constant int32 20
 	alloc_s 4		// Allocate memory for return value of sizeof(int32)
+	const int32 20	// Load constant int32 20
+	const int32 10	// Load constant int32 10
 	call Add(int32,int32)(int32)
-	save_r 0		// Save the value to the return position
-	free_s 8		// Release 8 bytes from the stack
+	save_r 0		// Save the value on the top of the stack to the return position
 	ret
 }
 )";
@@ -294,21 +275,9 @@ fn AddTwoInts() (int32) {
 		auto p = process(c);
 		auto t = thread(p);
 
-		// begin_
 		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
-
-		// Stack:
-		// 10, 20, _ret1
-		//		Add
-		//			_ret1, 10, 20, <IP>
-		// Stack:
-		// 10, 20, 30
-
 		invoke(p, t, "AddTwoInts");
 
-		if (vmi_stack_count(&t->stack) != 4) {
-			throw_(error() << "expected stack size 4 but was " << vmi_stack_count(&t->stack));
-		}
 		verify_stack_size(t, sizeof(vm_int32));
 		verify_stack(t, 0, 30);
 

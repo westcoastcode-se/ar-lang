@@ -182,13 +182,24 @@ void _vmc_package_add_func(vmc_package* p, vmc_func* f)
 	p->func_count++;
 }
 
-// Calculate the offset, on the stack, where the next variable can be found
-vm_int32 _vmc_calculate_var_offset(const vmc_var_definition* defs, vm_int32 count) {
-	vm_int32 i, offset = 0;
-	for (i = 0; i < count; ++i) {
-		offset += defs[i].type.size;
+// Calculate the offset on the stack for arguments, return values and local variables
+void _vmc_calculate_offsets(vmc_func* func) {
+	vm_int32 offset = func->args_total_size + func->returns_total_size;
+	vm_int32 i;
+	if (func->args_count > 0) {
+		for (i = func->args_count - 1; i >= 0; --i) {
+			vmc_type_info* info = &func->args[i].type;
+			offset -= info->size;
+			info->offset = offset;
+		}
 	}
-	return offset;
+	if (func->returns_count > 0) {
+		for (i = func->returns_count - 1; i >= 0; --i) {
+			vmc_type_info* info = &func->returns[i].type;
+			offset -= info->size;
+			info->offset = offset;
+		}
+	}
 }
 
 const vm_string* _vmc_prepare_func_get_signature(vmc_compiler* c, vm_string name, 
@@ -253,7 +264,7 @@ BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, v
 
 		// Reset masks
 		var->type.masks = 0;
-		var->type.offset = _vmc_calculate_var_offset(vars, count);
+		var->type.offset = 0;
 		var->name = *_vm_string_const_anon_names[count];
 
 		// types can be:
@@ -317,7 +328,7 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		// Reset masks
 		var->type.masks = 0;
-		var->type.offset = _vmc_calculate_var_offset(func->args, func->args_count);
+		var->type.offset = 0;
 
 		// Read var name
 		if (t->type != VMC_LEXER_TYPE_KEYWORD)
@@ -484,7 +495,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.opcode = 0;
 			instr.icode = VMI_SAVE_R;
 			instr.size = func->returns[index].type.size;
-			instr.offset = func->args_total_size + func->returns[index].type.offset;
+			instr.offset = func->returns[index].type.offset;
 			vmc_write(c, &instr, sizeof(vmi_instr_save_r));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(alloc_s))) {
@@ -539,6 +550,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			vmi_instr_ret instr;
 			instr.opcode = 0;
 			instr.icode = VMI_RET;
+			instr.pop_stack_size = func->args_total_size;
 			vmc_write(c, &instr, sizeof(vmi_instr_ret));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
@@ -636,6 +648,9 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 	// External functions do not have a body
 	if (vmc_func_is_extern(func))
 		return TRUE;
+
+	// Figure out the offset on the stack
+	_vmc_calculate_offsets(func);
 
 	// Parse the function body
 	if (!_vmc_parse_keyword_fn_body(c, l, p, t, func))

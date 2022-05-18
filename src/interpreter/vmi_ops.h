@@ -220,7 +220,18 @@ typedef struct vmi_instr_storex vmi_instr_storex;
 
 struct vmi_instr_ret
 {
-	OPCODE_HEADER;
+	// Header (must be identical with vmi_opcode_header)
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+			vm_uint16 pop_stack_size;
+		};
+	};
 };
 typedef struct vmi_instr_ret vmi_instr_ret;
 

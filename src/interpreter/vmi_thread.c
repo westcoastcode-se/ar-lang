@@ -32,7 +32,7 @@ vmi_ip _vmi_thread_call(vmi_thread* t, vmi_ip ip)
 	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (ip + sizeof(vmi_instr_call));
 	// Return the functions start position.
 	// TODO: Is it possible to make address be the actual bytecode address?
-	return t->bytecode + (vm_int32)instr->addr;
+	return (vmi_ip)(t->bytecode + (size_t)instr->addr);
 }
 
 vmi_ip _vmi_thread_begin(vmi_thread* t, vmi_ip ip)
@@ -107,9 +107,16 @@ vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
 // Return to the caller
 vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 {
+	const vmi_instr_ret* const instr = (const vmi_instr_ret*)ip;
+	vmi_ip next_ip;
+
 	// Pop the stack pointer and return return the next instruction pointer to be executed
 	t->ebp = *(vm_byte**)vmi_stack_pop(&t->stack, sizeof(vm_byte*));
-	return *(vmi_ip*)vmi_stack_pop(&t->stack, sizeof(vmi_ip));
+	next_ip = *(vmi_ip*)vmi_stack_pop(&t->stack, sizeof(vmi_ip));
+	// Pop a pre-defined amount of bytes from the stack. The amount is normally the arguments, but
+	// not the return values
+	vmi_stack_pop(&t->stack, instr->pop_stack_size);
+	return next_ip;
 }
 
 vmi_ip _vmi_thread_load(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
@@ -191,8 +198,8 @@ vmi_ip _vmi_thread_storelx(vmi_thread* t, vmi_ip ip)
 // Add the two top-most values from the stack. Assume that they are 4 byte integers
 vmi_ip _vmi_thread_addi32(vmi_thread* t, vmi_ip ip)
 {
-	const vm_int32 rhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
 	const vm_int32 lhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
+	const vm_int32 rhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
 	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
 	*result = (lhs + rhs);
 	return ip + sizeof(vmi_instr_single_instruction);
@@ -400,7 +407,7 @@ vm_int32 vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 	
 	// Push the caller to end-of-execution so that the thread stops running when the current function is no longer running.
 	// This is always done when a function is being called
-	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = &_vmi_force_eoe;
+	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (vmi_ip)&_vmi_force_eoe;
 
 	ret = _vmi_thread_exec(t, ip);
 	return ret;
