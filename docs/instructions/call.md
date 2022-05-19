@@ -1,4 +1,4 @@
-# Documentation > Instructions > Call
+# Documentation > Instructions > call
 
 Arguments, and memory for the return value, are placed on the stack in the reverse order of the function signature.
 

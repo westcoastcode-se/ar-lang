@@ -42,6 +42,9 @@ enum vmi_icodes
 	// Add two values on the stack
 	VMI_ADD,
 
+	// Convert a value on the stack and push the converted value to the stack
+	VMI_CONV,
+
 	// End-of-execution. This will forcefully stop the execution of the virtual machine. Normally used
 	// when calling a function from an unmanaged source, such as when used as a scripting language
 	VMI_EOE = 255
@@ -242,6 +245,16 @@ struct vmi_instr_ret
 };
 typedef struct vmi_instr_ret vmi_instr_ret;
 
+// A conv(ert) instruction
+struct vmi_instr_conv
+{
+	OPCODE_HEADER;
+};
+typedef struct vmi_instr_conv vmi_instr_conv;
+
+#define VMI_INSTR_CONV_PROP1_INT16 (0)
+#define VMI_INSTR_CONV_PROP2_INT32 (0)
+
 // End-of-execution instruction. The execution will be halted when when this operation is reached
 typedef vmi_instr_single_instruction vmi_instr_eoe;
 
@@ -252,7 +265,9 @@ enum vmi_ocodes
 	VMI_OP_CONST_INT32 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT32)),
 
 	VMI_OP_ADD_I16 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16)),
-	VMI_OP_ADD_I32 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32))
+	VMI_OP_ADD_I32 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32)),
+
+	VMI_OP_CONV_I16_I32 = (VMI_CONV | VMI_PROPS1_OPCODE(VMI_INSTR_CONV_PROP1_INT16) | VMI_PROPS2_OPCODE(VMI_INSTR_CONV_PROP2_INT32)),
 };
 
 #endif

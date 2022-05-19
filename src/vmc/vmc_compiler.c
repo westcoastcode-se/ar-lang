@@ -33,6 +33,7 @@ VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(add, "add", 3);
 VM_STRING_CONST(call, "call", 4);
+VM_STRING_CONST(conv, "conv", 4);
 
 VM_STRING_CONST(_0, "_0", 2);
 VM_STRING_CONST(_1, "_1", 2);
@@ -605,6 +606,33 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.header.icode = VMI_CALL;
 			instr.addr = OFFSET(func->offset);
 			vmc_write(c, &instr, sizeof(vmi_instr_call));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(conv))) {
+			// conv <from_type> <to_type>
+			vmi_instr_conv instr;
+			instr.header.opcode = 0;
+			instr.header.icode = VMI_CONV;
+
+			// From type
+			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD))
+				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
+			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int16)))
+				instr.props1 = VMI_INSTR_CONV_PROP1_INT16;
+			else
+				return vmc_compiler_message_not_implemented(&c->messages, l, t);
+
+			// To type
+			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD))
+				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
+			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
+				instr.props2 = VMI_INSTR_CONV_PROP2_INT32;
+			else
+				return vmc_compiler_message_not_implemented(&c->messages, l, t);
+
+			vmc_write(c, &instr, sizeof(vmi_instr_conv));
+		}
+		else {
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
 		}
 
 		vmc_lexer_next(l, t);

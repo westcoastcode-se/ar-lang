@@ -1,4 +1,4 @@
-# Documentation > Instructions > Add
+# Documentation > Instructions > add
 
 Add two values from the stack and push the result to the stack. 
 The type has to be known beforehand and the two values has to be of the same type. You can
@@ -12,6 +12,7 @@ add <type>
 
 The following allowed types are:
 
+* int16
 * int32
 
 ## Example

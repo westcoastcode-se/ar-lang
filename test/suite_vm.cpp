@@ -257,6 +257,38 @@ fn Add (lhs %s, rhs %s) (%s) {
 		add_test<vm_int16>("int16", 12, 24);
 		add_test<vm_int32>("int32", 10, 20);
 	}
+
+	// Convert a value from one type to another
+	void conv()
+	{
+/*
+fn Get() (int32) {
+	return int32(int16(1234))
+}
+*/
+		const auto source = R"(
+fn Convert () (int32) {
+	const int16 1234	// Push 1234 on the stack
+	conv int16 int32	// Convert value on the stack to 32 bit integer
+	save_r 0			// Put the converted value to the return slot
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Convert");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, (vm_int32)1234);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
 	
 	void calculate_multiple_funcs() {
 		/*
@@ -352,6 +384,7 @@ fn AddTwoInts() (int32) {
 		TEST(calculate_return_const_int16);
 		TEST(calculate_return_two_int32);
 		TEST(add);
+		TEST(conv);
 		TEST(calculate_multiple_funcs);
 		TEST(calculate_two_int32_inner);
 	}
