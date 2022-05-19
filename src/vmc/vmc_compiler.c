@@ -15,9 +15,13 @@
 // 
 
 VM_STRING_CONST(int8, "int8", 4);
+VM_STRING_CONST(uint8, "uint8", 5);
 VM_STRING_CONST(int16, "int16", 5);
+VM_STRING_CONST(uint16, "uint16", 6);
 VM_STRING_CONST(int32, "int32", 5);
+VM_STRING_CONST(uint32, "uint32", 6);
 VM_STRING_CONST(int64, "int64", 5);
+VM_STRING_CONST(uint64, "uint64", 6);
 VM_STRING_CONST(float32, "float32", 7);
 VM_STRING_CONST(float64, "float64", 7);
 
@@ -454,14 +458,26 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			if (t->type != VMC_LEXER_TYPE_KEYWORD) {
 				return vmc_compiler_message_expected_type(&c->messages, l, t);
 			}
-			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32))) {
+			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int16))) {
 				vmi_instr_const_int32 instr;
 				vmc_lexer_next(l, t);
 				if (t->type != VMC_LEXER_TYPE_INT)
 					return vmc_compiler_message_expected_int(&c->messages, l, t);
-				instr.value = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 				instr.opcode = 0;
 				instr.icode = VMI_CONST;
+				instr.props1 = VMI_INSTR_CONST_PROP1_INT16;
+				instr.i16 = (vm_int16)strtoi64(t->string.start, vm_string_length(&t->string));
+				vmc_write(c, &instr, sizeof(vmi_instr_const_int32));
+
+			} else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32))) {
+				vmi_instr_const_int32 instr;
+				vmc_lexer_next(l, t);
+				if (t->type != VMC_LEXER_TYPE_INT)
+					return vmc_compiler_message_expected_int(&c->messages, l, t);
+				instr.opcode = 0;
+				instr.icode = VMI_CONST;
+				instr.props1 = VMI_INSTR_CONST_PROP1_INT32;
+				instr.value = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 				vmc_write(c, &instr, sizeof(vmi_instr_const_int32));
 			}
 			else
@@ -734,6 +750,7 @@ void _vmc_compiler_register_builtins(vmc_compiler* c)
 	c->package_first = c->package_last = _vmc_package_malloc("vm", 2);
 	c->package_first->id = c->packages_count++;
 	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int32), sizeof(vm_int32));
+	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int16), sizeof(vm_int16));
 }
 
 vmi_process_header* _vmc_compiler_get_header(vmc_compiler* c)

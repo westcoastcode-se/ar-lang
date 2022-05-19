@@ -36,18 +36,6 @@ enum vmi_icodes
 	// Call a function
 	VMI_CALL,
 
-	// Load a local variable to the stack
-	VMI_LOAD,
-
-	// Load a local long value to the stack
-	VMI_LOADL,
-
-	// Store a value from the top of the stack into a variable
-	VMI_STORE,
-
-	// Store a long value from the top of the stack into a variable
-	VMI_STOREL,
-
 	// Return the the caller instruction pointer
 	VMI_RET,
 
@@ -156,9 +144,40 @@ typedef struct vmi_instr_save_r vmi_instr_save_r;
 struct vmi_instr_const_int32
 {
 	OPCODE_HEADER;
-	vm_int32 value;
+	struct {
+		vm_int32 value;
+		struct {
+			vm_int16 i16;
+			vm_int16 i161;
+		};
+		struct {
+			vm_int8 i8;
+			vm_int8 i81;
+			vm_int8 i82;
+			vm_int8 i83;
+		};
+		vm_float32 f32;
+#ifdef VM_32BIT
+		vm_byte* ptr;
+#endif
+	};
 };
 typedef struct vmi_instr_const_int32 vmi_instr_const_int32;
+#ifdef VM_32BIT
+typedef struct vmi_instr_const_int32 vmi_instr_const_ptr;
+#endif
+
+#define VMI_INSTR_CONST_PROP1_BOOL (0)
+#define VMI_INSTR_CONST_PROP1_INT8 (1)
+#define VMI_INSTR_CONST_PROP1_UINT8 (2)
+#define VMI_INSTR_CONST_PROP1_INT16 (3)
+#define VMI_INSTR_CONST_PROP1_UINT16 (4)
+#define VMI_INSTR_CONST_PROP1_INT32 (5)
+#define VMI_INSTR_CONST_PROP1_UINT32 (6)
+#define VMI_INSTR_CONST_PROP1_INT64 (7)
+#define VMI_INSTR_CONST_PROP1_UINT64 (8)
+#define VMI_INSTR_CONST_PROP1_FLOAT32 (9)
+#define VMI_INSTR_CONST_PROP1_FLOAT64 (10)
 
 // A alloc_s(tack) instruction
 struct vmi_instr_alloc_s
@@ -202,22 +221,6 @@ struct vmi_instr_call
 };
 typedef struct vmi_instr_call vmi_instr_call;
 
-// Load a generic 1 block item to the stack
-struct vmi_instr_loadx
-{
-	OPCODE_HEADER;
-	vm_int16 block_index;
-};
-typedef struct vmi_instr_loadx vmi_instr_loadx;
-
-// Pop a value from the stack and put the result into a generic local variable block
-struct vmi_instr_storex
-{
-	OPCODE_HEADER;
-	vm_int16 block_index;
-};
-typedef struct vmi_instr_storex vmi_instr_storex;
-
 struct vmi_instr_ret
 {
 	// Header (must be identical with vmi_opcode_header)
@@ -240,43 +243,9 @@ typedef vmi_instr_single_instruction vmi_instr_eoe;
 
 enum vmi_ocodes
 {
-	VMI_OP_CONST_INT32 = (VMI_CONST | VMI_PROPS1_OPCODE(0)),
-
-	VMI_OP_LOAD0 = (VMI_LOAD | VMI_PROPS1_OPCODE(0)),
-	VMI_OP_LOAD1 = (VMI_LOAD | VMI_PROPS1_OPCODE(1)),
-	VMI_OP_LOAD2 = (VMI_LOAD | VMI_PROPS1_OPCODE(2)),
-	VMI_OP_LOAD3 = (VMI_LOAD | VMI_PROPS1_OPCODE(3)),
-	VMI_OP_LOAD4 = (VMI_LOAD | VMI_PROPS1_OPCODE(4)),
-	VMI_OP_LOAD5 = (VMI_LOAD | VMI_PROPS1_OPCODE(5)),
-	VMI_OP_LOAD6 = (VMI_LOAD | VMI_PROPS1_OPCODE(6)),
-	VMI_OP_LOADX = (VMI_LOAD | VMI_PROPS1_OPCODE(0xFF)),
-
-	VMI_OP_LOADL0 = (VMI_LOADL | VMI_PROPS1_OPCODE(0)),
-	VMI_OP_LOADL1 = (VMI_LOADL | VMI_PROPS1_OPCODE(1)),
-	VMI_OP_LOADL2 = (VMI_LOADL | VMI_PROPS1_OPCODE(2)),
-	VMI_OP_LOADL3 = (VMI_LOADL | VMI_PROPS1_OPCODE(3)),
-	VMI_OP_LOADL4 = (VMI_LOADL | VMI_PROPS1_OPCODE(4)),
-	VMI_OP_LOADL5 = (VMI_LOADL | VMI_PROPS1_OPCODE(5)),
-	VMI_OP_LOADL6 = (VMI_LOADL | VMI_PROPS1_OPCODE(6)),
-	VMI_OP_LOADLX = (VMI_LOADL | VMI_PROPS1_OPCODE(0xFF)),
-
-	VMI_OP_STORE0 = (VMI_STORE | VMI_PROPS1_OPCODE(0)),
-	VMI_OP_STORE1 = (VMI_STORE | VMI_PROPS1_OPCODE(1)),
-	VMI_OP_STORE2 = (VMI_STORE | VMI_PROPS1_OPCODE(2)),
-	VMI_OP_STORE3 = (VMI_STORE | VMI_PROPS1_OPCODE(3)),
-	VMI_OP_STORE4 = (VMI_STORE | VMI_PROPS1_OPCODE(4)),
-	VMI_OP_STORE5 = (VMI_STORE | VMI_PROPS1_OPCODE(5)),
-	VMI_OP_STORE6 = (VMI_STORE | VMI_PROPS1_OPCODE(6)),
-	VMI_OP_STOREX = (VMI_STORE | VMI_PROPS1_OPCODE(0xFF)),
-
-	VMI_OP_STOREL0 = (VMI_STOREL | VMI_PROPS1_OPCODE(0)),
-	VMI_OP_STOREL1 = (VMI_STOREL | VMI_PROPS1_OPCODE(1)),
-	VMI_OP_STOREL2 = (VMI_STOREL | VMI_PROPS1_OPCODE(2)),
-	VMI_OP_STOREL3 = (VMI_STOREL | VMI_PROPS1_OPCODE(3)),
-	VMI_OP_STOREL4 = (VMI_STOREL | VMI_PROPS1_OPCODE(4)),
-	VMI_OP_STOREL5 = (VMI_STOREL | VMI_PROPS1_OPCODE(5)),
-	VMI_OP_STOREL6 = (VMI_STOREL | VMI_PROPS1_OPCODE(6)),
-	VMI_OP_STORELX = (VMI_STOREL | VMI_PROPS1_OPCODE(0xFF)),
+	VMI_OP_CONST_INT8 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT8)),
+	VMI_OP_CONST_INT16 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT16)),
+	VMI_OP_CONST_INT32 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT32)),
 
 	VMI_OP_ADD_I32 = (VMI_ADD | VMI_PROPS1_OPCODE(0))
 };

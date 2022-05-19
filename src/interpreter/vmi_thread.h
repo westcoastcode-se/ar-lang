@@ -104,6 +104,9 @@ typedef struct vmi_thread vmi_thread;
 // Create a new thread
 extern vmi_thread* vmi_thread_new(vmi_process* process);
 
+// Reserve the supplied amount of memory on the stack
+extern vm_int32 vmi_thread_reserve_stack(vmi_thread* t, vm_int32 size);
+
 // Push a 32 bit integer to the stack of the supplied thread. Returns non-zero if an error has occurred
 extern vm_int32 vmi_thread_push_i32(vmi_thread* t, vm_int32 value);
 

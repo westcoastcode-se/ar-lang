@@ -80,6 +80,8 @@ vmi_ip _vmi_thread_load_a(vmi_thread* t, vmi_ip ip)
 		break;
 	case 1:
 	case 2:
+		*(vm_int16*)target = *(vm_int16*)(t->ebp + instr->offset);
+		break;
 	case 8:
 	default:
 		return _vmi_thread_not_implemented(t, ip);
@@ -100,7 +102,11 @@ vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
 		break;
 	}
 	case 1:
-	case 2:
+	case 2: {
+		vm_int16* const value_on_stack = (vm_int16*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
+		*((vm_int16*)target) = *value_on_stack;
+		break;
+	}
 	case 8:
 	default:
 		return _vmi_thread_not_implemented(t, ip);
@@ -123,82 +129,6 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 	return next_ip;
 }
 
-vmi_ip _vmi_thread_load(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
-{
-	vm_int32* const block = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
-	if (block == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-	//*block = t->call_frame->locals[block_index].i32;
-	return ip + sizeof(vmi_instr_single_instruction);
-}
-
-vmi_ip _vmi_thread_loadx(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_loadx* const instr = (const vmi_instr_loadx*)ip;
-	vm_int32* const block = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
-	if (block == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-	//*block = t->call_frame->locals[instr->block_index].i32;
-	return ip + sizeof(vmi_instr_loadx);
-}
-
-vmi_ip _vmi_thread_loadl(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
-{
-	vm_int64* const block = (vm_int64*)vmi_stack_push(&t->stack, sizeof(vm_int64));
-	if (block == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-	//*block = t->call_frame->locals[block_index].i64;
-	return ip + sizeof(vmi_instr_single_instruction);
-}
-
-vmi_ip _vmi_thread_loadlx(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_loadx* const instr = (const vmi_instr_loadx*)ip;
-	vm_int64* const block = (vm_int64*)vmi_stack_push(&t->stack, sizeof(vm_int64));
-	if (block == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-	//*block = t->call_frame->locals[instr->block_index].i64;
-	return ip + sizeof(vmi_instr_loadx);
-}
-
-vmi_ip _vmi_thread_store(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
-{
-	const vm_int32* const block = (vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
-	if (block == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-	//t->call_frame->locals[block_index].i32 = *block;
-	return ip + sizeof(vmi_instr_single_instruction);
-}
-
-vmi_ip _vmi_thread_storex(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_storex* const instr = (const vmi_instr_storex*)ip;
-	const vm_int32* const block = (vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
-	if (block == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-	//t->call_frame->locals[instr->block_index].i32 = *block;
-	return ip + sizeof(vmi_instr_storex);
-}
-
-vmi_ip _vmi_thread_storel(vmi_thread* t, vmi_ip ip, const vm_uint32 block_index)
-{
-	const vm_int64* const block = (const vm_int64*)vmi_stack_pop(&t->stack, sizeof(vm_int64));
-	if (block == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-	//t->call_frame->locals[block_index].i64 = *block;
-	return ip + sizeof(vmi_instr_single_instruction);
-}
-
-vmi_ip _vmi_thread_storelx(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_storex* const instr = (const vmi_instr_storex*)ip;
-	const vm_int64* const block = (const vm_int64*)vmi_stack_pop(&t->stack, sizeof(vm_int64));
-	if (block == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-	//t->call_frame->locals[instr->block_index].i64 = *block;
-	return ip + sizeof(vmi_instr_storex);
-}
-
 // Add the two top-most values from the stack. Assume that they are 4 byte integers
 vmi_ip _vmi_thread_addi32(vmi_thread* t, vmi_ip ip)
 {
@@ -206,6 +136,14 @@ vmi_ip _vmi_thread_addi32(vmi_thread* t, vmi_ip ip)
 	vm_int32* lhs = (vm_int32*)(t->stack.top - sizeof(vm_int32));
 	*lhs = *lhs + rhs;
 	return ip + sizeof(vmi_instr_single_instruction);
+}
+
+vmi_ip _vmi_thread_const_int16(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_const_int32* instr = (const vmi_instr_const_int32*)ip;
+	vm_int16* result = (vm_int16*)vmi_stack_push(&t->stack, sizeof(vm_int16));
+	*result = instr->i16;
+	return ip + sizeof(vmi_instr_const_int32);
 }
 
 vmi_ip _vmi_thread_const_int32(vmi_thread* t, vmi_ip ip)
@@ -228,110 +166,13 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		// Process specialized instructions first
 		switch (header->opcode)
 		{
-		case VMI_OP_LOAD0:
-			ip = _vmi_thread_load(t, ip, 0);
-			continue;
-		case VMI_OP_LOAD1:
-			ip = _vmi_thread_load(t, ip, 1);
-			continue;
-		case VMI_OP_LOAD2:
-			ip = _vmi_thread_load(t, ip, 2);
-			continue;
-		case VMI_OP_LOAD3:
-			ip = _vmi_thread_load(t, ip, 3);
-			continue;
-		case VMI_OP_LOAD4:
-			ip = _vmi_thread_load(t, ip, 4);
-			continue;
-		case VMI_OP_LOAD5:
-			ip = _vmi_thread_load(t, ip, 5);
-			continue;
-		case VMI_OP_LOAD6:
-			ip = _vmi_thread_load(t, ip, 6);
-			continue;
-		case VMI_OP_LOADX:
-			ip = _vmi_thread_loadx(t, ip);
-			continue;
-
-		case VMI_OP_LOADL0:
-			ip = _vmi_thread_loadl(t, ip, 0);
-			continue;
-		case VMI_OP_LOADL1:
-			ip = _vmi_thread_loadl(t, ip, 1);
-			continue;
-		case VMI_OP_LOADL2:
-			ip = _vmi_thread_loadl(t, ip, 2);
-			continue;
-		case VMI_OP_LOADL3:
-			ip = _vmi_thread_loadl(t, ip, 3);
-			continue;
-		case VMI_OP_LOADL4:
-			ip = _vmi_thread_loadl(t, ip, 4);
-			continue;
-		case VMI_OP_LOADL5:
-			ip = _vmi_thread_loadl(t, ip, 5);
-			continue;
-		case VMI_OP_LOADL6:
-			ip = _vmi_thread_loadl(t, ip, 6);
-			continue;
-		case VMI_OP_LOADLX:
-			ip = _vmi_thread_loadlx(t, ip);
-			continue;
-
-		case VMI_OP_STORE0:
-			ip = _vmi_thread_store(t, ip, 0);
-			continue;
-		case VMI_OP_STORE1:
-			ip = _vmi_thread_store(t, ip, 1);
-			continue;
-		case VMI_OP_STORE2:
-			ip = _vmi_thread_store(t, ip, 2);
-			continue;
-		case VMI_OP_STORE3:
-			ip = _vmi_thread_store(t, ip, 3);
-			continue;
-		case VMI_OP_STORE4:
-			ip = _vmi_thread_store(t, ip, 4);
-			continue;
-		case VMI_OP_STORE5:
-			ip = _vmi_thread_store(t, ip, 5);
-			continue;
-		case VMI_OP_STORE6:
-			ip = _vmi_thread_store(t, ip, 6);
-			continue;
-		case VMI_OP_STOREX:
-			ip = _vmi_thread_storex(t, ip);
-			continue;
-
-		case VMI_OP_STOREL0:
-			ip = _vmi_thread_storel(t, ip, 0);
-			continue;
-		case VMI_OP_STOREL1:
-			ip = _vmi_thread_storel(t, ip, 1);
-			continue;
-		case VMI_OP_STOREL2:
-			ip = _vmi_thread_storel(t, ip, 2);
-			continue;
-		case VMI_OP_STOREL3:
-			ip = _vmi_thread_storel(t, ip, 3);
-			continue;
-		case VMI_OP_STOREL4:
-			ip = _vmi_thread_storel(t, ip, 4);
-			continue;
-		case VMI_OP_STOREL5:
-			ip = _vmi_thread_storel(t, ip, 5);
-			continue;
-		case VMI_OP_STOREL6:
-			ip = _vmi_thread_storel(t, ip, 6);
-			continue;
-		case VMI_OP_STORELX:
-			ip = _vmi_thread_storelx(t, ip);
-			continue;
-
 		case VMI_OP_ADD_I32:
 			ip = _vmi_thread_addi32(t, ip);
 			continue;
 
+		case VMI_OP_CONST_INT16:
+			ip = _vmi_thread_const_int16(t, ip);
+			continue;
 		case VMI_OP_CONST_INT32:
 			ip = _vmi_thread_const_int32(t, ip);
 			continue;
@@ -392,6 +233,15 @@ vmi_thread* vmi_thread_new(vmi_process* process)
 	// TODO: Add support for multiple threads
 	process->first_thread = t;
 	return t;
+}
+
+vm_int32 vmi_thread_reserve_stack(vmi_thread* t, vm_int32 value)
+{
+	vm_int32* mem = (vm_int32*)vmi_stack_push(&t->stack, value);
+	if (mem == NULL)
+		return -1;
+	*mem = value;
+	return 0;
 }
 
 vm_int32 vmi_thread_push_i32(vmi_thread* t, vm_int32 value)

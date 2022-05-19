@@ -26,6 +26,14 @@ struct suite_vm_utils : test_utils
 		}
 	}
 
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int16 value)
+	{
+		const vm_int16* byte = (vm_int16*)(t->stack.blocks + offset);
+		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
 	void verify_stack_size(vmi_thread* t, size_t expected_size)
 	{
 		const size_t size = (size_t)(t->stack.top - t->stack.blocks);
@@ -100,7 +108,7 @@ struct suite_vm_utils : test_utils
 // All test functions
 struct suite_vm_tests : suite_vm_utils
 {
-	void calculate_return_constant1()
+	void calculate_return_const_int32()
 	{
 /*
 fn Get() (int32) {
@@ -118,8 +126,8 @@ fn Get () (int32) {
 		auto p = process(c);
 		auto t = thread(p);
 
-		// begin_
-		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
 		invoke(p, t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32));
@@ -130,7 +138,37 @@ fn Get () (int32) {
 		destroy(c);
 	}
 
-	void calculate_return_constant2()
+	void calculate_return_const_int16()
+	{
+		/*
+		fn Get() (int16) {
+			return 12
+		}
+		*/
+		const auto source = R"(
+fn Get () (int16) {
+	const int16 1234 // Push a constant
+	save_r 0		 // Pop the top stack value and put it into the first return value
+	ret				 // Return
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int16));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int16));
+		verify_stack(t, 0, (vm_int16)1234);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void calculate_return_two_int32()
 	{
 /*
 fn Get() (int32, int32) {
@@ -288,8 +326,9 @@ fn AddTwoInts() (int32) {
 
 	void operator()()
 	{
-		TEST(calculate_return_constant1);
-		TEST(calculate_return_constant2);
+		TEST(calculate_return_const_int32);
+		TEST(calculate_return_const_int16);
+		TEST(calculate_return_two_int32);
 		TEST(calculate_two_i32);
 		TEST(calculate_multiple_funcs);
 		TEST(calculate_two_int32_inner);
