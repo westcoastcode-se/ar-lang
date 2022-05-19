@@ -18,6 +18,8 @@ VM_STRING_CONST(int8, "int8", 4);
 VM_STRING_CONST(int16, "int16", 5);
 VM_STRING_CONST(int32, "int32", 5);
 VM_STRING_CONST(int64, "int64", 5);
+VM_STRING_CONST(float32, "float32", 7);
+VM_STRING_CONST(float64, "float64", 7);
 
 VM_STRING_CONST(load_a, "load_a", 6);
 VM_STRING_CONST(save_r, "save_r", 6);
@@ -583,7 +585,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			}
 			instr.header.opcode = 0;
 			instr.header.icode = VMI_CALL;
-			instr.addr = (vmi_ip)func->offset;
+			instr.addr = OFFSET(func->offset);
 			vmc_write(c, &instr, sizeof(vmi_instr_call));
 		}
 

@@ -43,7 +43,11 @@ vmi_ip _vmi_thread_begin(vmi_thread* t, vmi_ip ip)
 	// Push the previous stack pointer and set where arguments and 
 	// return value slots are located on the stack
 	*(vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*)) = t->ebp;
-	t->ebp = t->stack.top - sizeof(vmi_ip) - instr->expected_stack_size - sizeof(vm_byte*);
+
+	// New ebp is where the arguments and the return values can be found.
+	// It is on before the previous ebp, the return value address and at the start of all (assumed)
+	// allocated memory on the stack
+	t->ebp = t->stack.top - sizeof(vmi_ip) - sizeof(vm_byte*) - instr->expected_stack_size;
 
 	return ip + sizeof(vmi_instr_begin);
 }
@@ -199,9 +203,8 @@ vmi_ip _vmi_thread_storelx(vmi_thread* t, vmi_ip ip)
 vmi_ip _vmi_thread_addi32(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int32 rhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
-	const vm_int32 lhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
-	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
-	*result = (lhs + rhs);
+	vm_int32* lhs = (vm_int32*)(t->stack.top - sizeof(vm_int32));
+	*lhs = *lhs + rhs;
 	return ip + sizeof(vmi_instr_single_instruction);
 }
 

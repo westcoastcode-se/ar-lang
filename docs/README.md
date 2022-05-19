@@ -9,3 +9,5 @@ The virtual machine is split into three different parts:
 Each part can be replaced assuming that each c function in the header file is implemented
 
 [operations.md](Operations)
+[data-types.md](Data Types)
+[instructions/README.md](Instructions)
