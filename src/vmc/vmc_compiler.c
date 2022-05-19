@@ -492,7 +492,9 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			if (t->type != VMC_LEXER_TYPE_KEYWORD)
 				return vmc_compiler_message_expected_type(&c->messages, l, t);
 			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
-				opcode |= VMI_PROPS1_OPCODE(0);
+				opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32);
+			else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int16)))
+				opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16);
 			_vmc_emit_opcode(c, opcode);
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(save_r))) {

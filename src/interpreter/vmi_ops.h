@@ -86,6 +86,10 @@ struct vmi_instr_single_instruction
 };
 typedef struct vmi_instr_single_instruction vmi_instr_single_instruction;
 
+#define VMI_INSTR_ADD_PROP1_INT16 (0)
+#define VMI_INSTR_ADD_PROP1_INT32 (1)
+typedef struct vmi_instr_single_instruction vmi_instr_add;
+
 // A begin instruction
 struct vmi_instr_begin
 {
@@ -247,7 +251,8 @@ enum vmi_ocodes
 	VMI_OP_CONST_INT16 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT16)),
 	VMI_OP_CONST_INT32 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT32)),
 
-	VMI_OP_ADD_I32 = (VMI_ADD | VMI_PROPS1_OPCODE(0))
+	VMI_OP_ADD_I16 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16)),
+	VMI_OP_ADD_I32 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32))
 };
 
 #endif

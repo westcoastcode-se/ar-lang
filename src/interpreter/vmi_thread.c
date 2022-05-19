@@ -129,10 +129,20 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 	return next_ip;
 }
 
+// Add the two top-most values from the stack. Assume that they are 2 byte integers
+vmi_ip _vmi_thread_addi16(vmi_thread* t, vmi_ip ip)
+{
+	const vm_int16 rhs = *(const vm_int16*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
+	vm_int16* lhs = (vm_int16*)(t->stack.top - sizeof(vm_int16));
+	*lhs = *lhs + rhs;
+	return ip + sizeof(vmi_instr_single_instruction);
+}
+
+
 // Add the two top-most values from the stack. Assume that they are 4 byte integers
 vmi_ip _vmi_thread_addi32(vmi_thread* t, vmi_ip ip)
 {
-	const vm_int32 rhs = *(const vm_int32*)vmi_stack_pop(&t->stack, 4);
+	const vm_int32 rhs = *(const vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	vm_int32* lhs = (vm_int32*)(t->stack.top - sizeof(vm_int32));
 	*lhs = *lhs + rhs;
 	return ip + sizeof(vmi_instr_single_instruction);
@@ -166,6 +176,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		// Process specialized instructions first
 		switch (header->opcode)
 		{
+		case VMI_OP_ADD_I16:
+			ip = _vmi_thread_addi16(t, ip);
+			continue;
 		case VMI_OP_ADD_I32:
 			ip = _vmi_thread_addi32(t, ip);
 			continue;
@@ -238,6 +251,14 @@ vmi_thread* vmi_thread_new(vmi_process* process)
 vm_int32 vmi_thread_reserve_stack(vmi_thread* t, vm_int32 value)
 {
 	vm_int32* mem = (vm_int32*)vmi_stack_push(&t->stack, value);
+	if (mem == NULL)
+		return -1;
+	return 0;
+}
+
+vm_int32 vmi_thread_push_i16(vmi_thread* t, vm_int16 value)
+{
+	vm_int16* mem = (vm_int16*)vmi_stack_push(&t->stack, sizeof(vm_int16));
 	if (mem == NULL)
 		return -1;
 	*mem = value;

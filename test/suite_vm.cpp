@@ -42,6 +42,16 @@ struct suite_vm_utils : test_utils
 		}
 	}
 
+	void push_value(vmi_thread* t, vm_int16 value)
+	{
+		vmi_thread_push_i16(t, value);
+	}
+
+	void push_value(vmi_thread* t, vm_int32 value)
+	{
+		vmi_thread_push_i32(t, value);
+	}
+
 	vmc_compiler* compile(const vm_byte* src)
 	{
 		auto const compiler = vmc_compiler_new(NULL);
@@ -202,38 +212,50 @@ fn Get () (int32, int32) {
 		destroy(c);
 	}
 
-	void calculate_two_i32()
-	{
+	template<typename T>
+	void add_test(const char* type, T lhs, T rhs) {
 /*
-fn Add(lhs int32, rhs int32) (int32) {
-	return lhs + rhs
-}
-*/	
-		const auto source = R"(
-fn Add (lhs int32, rhs int32) (int32) {
-	load_a 0	// Push first arg (4 bytes) to the stack (esp + 0)
-	load_a 1	// Push second arg (4 bytes) to the stack (esp + 4)
-	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
+		fn Add(lhs <type>, rhs <type>) (<type>) {
+			return lhs + rhs
+		}
+*/
+		const auto format = R"(
+fn Add (lhs %s, rhs %s) (%s) {
+	load_a 0	// Push first arg to the stack
+	load_a 1	// Push second arg to the stack
+	add %s		// Pop the two top-most items on the stack (of the same type) together, add 
+				// them and then make sure that the value is at the top of the stack
 	save_r 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
 }
 )";
+		char source[1024];
+		sprintf(source, format, type, type, type, type);
+
 		auto c = compile(source);
 		auto p = process(c);
 		auto t = thread(p);
 
-		// begin_
-		vmi_thread_push_i32(t, 99); // return value here (can be done by the API)
-		vmi_thread_push_i32(t, 20);
-		vmi_thread_push_i32(t, 10);
+		vmi_thread_reserve_stack(t, sizeof(T));
+		push_value(t, (T)rhs);
+		push_value(t, (T)lhs);
 		invoke(p, t, "Add");
 
-		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, 30);
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)(lhs + rhs));
 
 		destroy(t);
 		destroy(p);
 		destroy(c);
+	}
+
+	// Add two values of types:
+	// * int16
+	// * int32
+	void add()
+	{
+		add_test<vm_int16>("int16", 12, 24);
+		add_test<vm_int32>("int32", 10, 20);
 	}
 	
 	void calculate_multiple_funcs() {
@@ -329,7 +351,7 @@ fn AddTwoInts() (int32) {
 		TEST(calculate_return_const_int32);
 		TEST(calculate_return_const_int16);
 		TEST(calculate_return_two_int32);
-		TEST(calculate_two_i32);
+		TEST(add);
 		TEST(calculate_multiple_funcs);
 		TEST(calculate_two_int32_inner);
 	}
