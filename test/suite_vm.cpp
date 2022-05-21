@@ -120,11 +120,11 @@ struct suite_vm_tests : suite_vm_utils
 {
 	void calculate_return_const_int32()
 	{
-/*
-fn Get() (int32) {
-	return 12
-}
-*/
+		/*
+		fn Get() (int32) {
+			return 12
+		}
+		*/
 		const auto source = R"(
 fn Get () (int32) {
 	const int32 123	// Push a constant
@@ -180,11 +180,11 @@ fn Get () (int16) {
 
 	void calculate_return_two_int32()
 	{
-/*
-fn Get() (int32, int32) {
-	return 123, 456
-}
-*/
+		/*
+		fn Get() (int32, int32) {
+			return 123, 456
+		}
+		*/
 		const auto source = R"(
 fn Get () (int32, int32) {
 	const int32 123	// Push 123
@@ -214,11 +214,11 @@ fn Get () (int32, int32) {
 
 	template<typename T>
 	void add_test(const char* type, T lhs, T rhs) {
-/*
-		fn Add(lhs <type>, rhs <type>) (<type>) {
-			return lhs + rhs
-		}
-*/
+		/*
+				fn Add(lhs <type>, rhs <type>) (<type>) {
+					return lhs + rhs
+				}
+		*/
 		const auto format = R"(
 fn Add (lhs %s, rhs %s) (%s) {
 	load_a 0	// Push first arg to the stack
@@ -261,11 +261,11 @@ fn Add (lhs %s, rhs %s) (%s) {
 	// Convert a value from one type to another
 	void conv()
 	{
-/*
-fn Get() (int32) {
-	return int32(int16(1234))
-}
-*/
+		/*
+		fn Get() (int32) {
+			return int32(int16(1234))
+		}
+		*/
 		const auto source = R"(
 fn Convert () (int32) {
 	const int16 1234	// Push 1234 on the stack
@@ -289,7 +289,7 @@ fn Convert () (int32) {
 		destroy(p);
 		destroy(c);
 	}
-	
+
 	void calculate_multiple_funcs() {
 		/*
 fn Add1(lhs int32, rhs int32) (int32) {
@@ -378,8 +378,31 @@ fn AddTwoInts() (int32) {
 		destroy(c);
 	}
 
+	/*class abc1 {
+	public:abc1() {}
+		virtual ~abc1() {}
+	};
+
+	class abc2 : public abc1 {
+	public: abc2() {}
+	};
+	
+	struct abc3 {};
+	struct abc4 {
+		int v;
+	};*/
+
 	void operator()()
 	{
+		/*abc2 items1[10];
+		abc3 items2[10];
+		abc4 items3[10];
+		int items4[10];
+		const auto s1 = sizeof(items1);
+		const auto s2 = sizeof(items2);
+		const auto s3 = sizeof(items3);
+		const auto s4 = sizeof(items4);
+		*/
 		TEST(calculate_return_const_int32);
 		TEST(calculate_return_const_int16);
 		TEST(calculate_return_two_int32);

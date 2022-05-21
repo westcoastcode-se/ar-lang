@@ -1,5 +1,6 @@
 #include "vmi_thread.h"
 #include "vmi_ops.h"
+#include "vmi_debug.h"
 #include <string.h>
 #include <stdarg.h>
 
@@ -11,6 +12,16 @@ const vmi_instr_eoe _vmi_force_eoe = {
 vmi_ip _vmi_thread_halt(vmi_thread* t, vmi_ip ip, vm_int32 flags, const char* message)
 {
 	vmi_thread_halti(t, flags, message);
+	t->halt_pos = ip;
+	return (vmi_ip)&_vmi_force_eoe;
+}
+
+vmi_ip _vmi_thread_stack_mismanaged(vmi_thread* t, vmi_ip ip, vm_int32 bytes_left)
+{
+	vmi_thread_shalti(t, 
+		VMI_THREAD_FLAG_STACK_MISMANAGED, 
+		"the stack is mismanaged. you have %d bytes left on the stack",
+		bytes_left);
 	t->halt_pos = ip;
 	return (vmi_ip)&_vmi_force_eoe;
 }
@@ -120,12 +131,20 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 	const vmi_instr_ret* const instr = (const vmi_instr_ret*)ip;
 	vmi_ip next_ip;
 
+#if defined(VM_STACK_DEBUG)
+	const vm_byte* expected = t->stack.top - instr->expected_ebp_offset;
+	// Make sure that we haven't manipulated the stack in a way that caused it to become malformed
+	if (t->ebp != expected)
+		return _vmi_thread_stack_mismanaged(t, ip, (vm_int32)(expected - t->ebp));
+#endif
+
 	// Pop the stack pointer and return return the next instruction pointer to be executed
 	t->ebp = *(vm_byte**)vmi_stack_pop(&t->stack, sizeof(vm_byte*));
 	next_ip = *(vmi_ip*)vmi_stack_pop(&t->stack, sizeof(vmi_ip));
 	// Pop a pre-defined amount of bytes from the stack. The amount is normally the arguments, but
 	// not the return values
 	vmi_stack_pop(&t->stack, instr->pop_stack_size);
+
 	return next_ip;
 }
 
@@ -166,7 +185,7 @@ vmi_ip _vmi_thread_const_int32(vmi_thread* t, vmi_ip ip)
 
 // Convert an int16 to int32
 vmi_ip _vmi_thread_conv_i16_i32(vmi_thread* t, vmi_ip ip)
-{	
+{
 	const vm_int16 rhs = *(const vm_int16*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
 	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
 	*result = (vm_int32)rhs;
@@ -180,6 +199,7 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 	{
 		if (t->flags != 0)
 			return t->flags;
+		//vmi_debug_instruction(ip);
 		header = (const vmi_opcode_header*)ip;
 
 		// Process specialized instructions first

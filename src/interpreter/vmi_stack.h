@@ -26,6 +26,10 @@ extern vm_byte* vmi_stack_push(vmi_stack* s, vm_int32 size);
 // the poped value from. Will return NULL if you've popped to much memory
 extern vm_byte* vmi_stack_pop(vmi_stack* s, vm_int32 size);
 
+// Verify that the stack is at the supplied position or after. Useful for when running
+// the virtual machine in debug mode
+extern BOOL vmi_stack_verify(vmi_stack* s, const vm_byte* pos);
+
 // Get the capacity of the stack, in bytes
 inline static vm_int32 vmi_stack_capacity(const vmi_stack* s)
 {

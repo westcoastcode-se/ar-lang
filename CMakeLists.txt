@@ -44,7 +44,7 @@ add_library(vm "src/vm_config.h"
     "src/vmc/vmc_compiler_messages.h" "src/vmc/vmc_lexer_messages.h" "src/vmc/vmc_compiler_messages.c" "src/vmc/vmc_lexer_messages.c"
      
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
-    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h")
+    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c")
 
 
 # Tests

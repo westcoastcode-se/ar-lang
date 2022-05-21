@@ -46,6 +46,10 @@ typedef unsigned long long vm_uint64;
 #	endif
 #endif
 
+#if !defined(NDEBUG)
+#	define VM_STACK_DEBUG 1
+#endif
+
 #ifndef NULL
 #	define NULL 0
 #endif

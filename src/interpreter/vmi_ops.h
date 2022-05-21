@@ -242,6 +242,9 @@ struct vmi_instr_ret
 			vm_uint16 pop_stack_size;
 		};
 	};
+#if defined(VM_STACK_DEBUG)
+	vm_uint32 expected_ebp_offset;
+#endif
 };
 typedef struct vmi_instr_ret vmi_instr_ret;
 

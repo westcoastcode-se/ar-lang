@@ -572,6 +572,14 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.opcode = 0;
 			instr.icode = VMI_RET;
 			instr.pop_stack_size = func->args_total_size;
+#if defined(VM_STACK_DEBUG)
+			// The values pushed on the stack when the function starts are
+			// 1. Pointer to the return address location
+			// 2. The previous ebp
+			// 3. return values
+			// 4. arguments
+			instr.expected_ebp_offset = sizeof(vmi_ip) + sizeof(vm_byte*) + func->returns_total_size + func->args_total_size;
+#endif
 			vmc_write(c, &instr, sizeof(vmi_instr_ret));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
