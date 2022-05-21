@@ -258,36 +258,45 @@ fn Add (lhs %s, rhs %s) (%s) {
 		add_test<vm_int32>("int32", 10, 20);
 	}
 
-	// Convert a value from one type to another
-	void conv()
+	template<typename T>
+	void conv_test(const char* from_type, const char* to_type, T value)
 	{
-		/*
-		fn Get() (int32) {
-			return int32(int16(1234))
-		}
-		*/
-		const auto source = R"(
-fn Convert () (int32) {
-	const int16 1234	// Push 1234 on the stack
-	conv int16 int32	// Convert value on the stack to 32 bit integer
-	save_r 0			// Put the converted value to the return slot
+/*
+fn Get() (int32) {
+	return int32(int16(1234))
+}
+*/
+		const auto format = R"(
+fn Convert () (%s) {
+	const %s %d	// Push 1234 on the stack
+	conv %s %s		// Convert value on the stack to 32 bit integer
+	save_r 0		// Put the converted value to the return slot
 	ret
 }
 )";
+		char source[1024];
+		sprintf(source, format, to_type, from_type, value, from_type, to_type);
+
 		auto c = compile(source);
 		auto p = process(c);
 		auto t = thread(p);
 
 		// Reserve memory for the return value
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		vmi_thread_reserve_stack(t, sizeof(T));
 		invoke(p, t, "Convert");
 
-		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, (vm_int32)1234);
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)1234);
 
 		destroy(t);
 		destroy(p);
 		destroy(c);
+	}
+
+	// Convert a value from one type to another
+	void conv()
+	{
+		conv_test<vm_int32>("int16", "int32", 1234);
 	}
 
 	void calculate_multiple_funcs() {
@@ -413,7 +422,83 @@ fn AddTwoInts() (int32) {
 	}
 };
 
+struct suite_vm_compare : suite_vm_utils
+{
+	// Compare less-then
+	void clt()
+	{
+		/*
+		fn Compare() (int32) {
+			return 12 < 34
+		}
+		*/
+		const auto source = R"(
+fn Compare () (int32) {
+	const int32 34	// Push a constant
+	const int32 12	// Push a constant
+	clt				// Compare 
+	save_r 0		// Pop the top stack value and put it into the first return value
+	ret				// Return
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Compare");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 1);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	// Compare greater-then
+	void cgt()
+	{
+		/*
+		fn Compare() (int32) {
+			return 34 > 12
+		}
+		*/
+		const auto source = R"(
+fn Compare () (int32) {
+	const int32 12	// Push a constant
+	const int32 34	// Push a constant
+	cgt				// Compare 
+	save_r 0		// Pop the top stack value and put it into the first return value
+	ret				// Return
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Compare");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 1);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void operator()()
+	{
+		TEST(clt);
+		TEST(cgt);
+	}
+};
+
 void suite_vm()
 {
 	SUITE(suite_vm_tests);
+	SUITE(suite_vm_compare);
 }

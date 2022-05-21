@@ -34,6 +34,8 @@ VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(add, "add", 3);
 VM_STRING_CONST(call, "call", 4);
 VM_STRING_CONST(conv, "conv", 4);
+VM_STRING_CONST(clt, "clt", 3);
+VM_STRING_CONST(cgt, "cgt", 3);
 
 VM_STRING_CONST(_0, "_0", 2);
 VM_STRING_CONST(_1, "_1", 2);
@@ -562,6 +564,26 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.icode = VMI_FREE_S;
 			instr.size = num_bytes;
 			vmc_write(c, &instr, sizeof(vmi_instr_free_s));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(clt))) {
+			// clt
+
+			vmi_instr_cmp instr;
+			instr.opcode = 0;
+			instr.icode = VMI_CMP;
+			instr.props1 = VMI_INSTR_CMP_PROP1_LT;
+			instr.props2 = VMI_INSTR_CMP_PROP2_SIGNED;
+			vmc_write(c, &instr, sizeof(vmi_instr_cmp));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(cgt))) {
+		// cgt
+
+		vmi_instr_cmp instr;
+		instr.opcode = 0;
+		instr.icode = VMI_CMP;
+		instr.props1 = VMI_INSTR_CMP_PROP1_GT;
+		instr.props2 = VMI_INSTR_CMP_PROP2_SIGNED;
+		vmc_write(c, &instr, sizeof(vmi_instr_cmp));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(ret))) {
 			// ret

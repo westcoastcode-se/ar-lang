@@ -45,6 +45,10 @@ enum vmi_icodes
 	// Convert a value on the stack and push the converted value to the stack
 	VMI_CONV,
 
+	// Compare the two top-most values on the stack and push an vm_int32 bit value
+	// that represents the result
+	VMI_CMP,
+
 	// End-of-execution. This will forcefully stop the execution of the virtual machine. Normally used
 	// when calling a function from an unmanaged source, such as when used as a scripting language
 	VMI_EOE = 255
@@ -258,6 +262,19 @@ typedef struct vmi_instr_conv vmi_instr_conv;
 #define VMI_INSTR_CONV_PROP1_INT16 (0)
 #define VMI_INSTR_CONV_PROP2_INT32 (0)
 
+// A cmp(are) instruction
+struct vmi_instr_cmp
+{
+	OPCODE_HEADER;
+};
+typedef struct vmi_instr_cmp vmi_instr_cmp;
+#define VMI_INSTR_CMP_PROP1_LT (0)
+#define VMI_INSTR_CMP_PROP1_LE (1)
+#define VMI_INSTR_CMP_PROP1_GT (2)
+#define VMI_INSTR_CMP_PROP1_GE (3)
+#define VMI_INSTR_CMP_PROP2_SIGNED (0)
+#define VMI_INSTR_CMP_PROP2_UNSIGNED (1)
+
 // End-of-execution instruction. The execution will be halted when when this operation is reached
 typedef vmi_instr_single_instruction vmi_instr_eoe;
 
@@ -271,6 +288,8 @@ enum vmi_ocodes
 	VMI_OP_ADD_I32 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32)),
 
 	VMI_OP_CONV_I16_I32 = (VMI_CONV | VMI_PROPS1_OPCODE(VMI_INSTR_CONV_PROP1_INT16) | VMI_PROPS2_OPCODE(VMI_INSTR_CONV_PROP2_INT32)),
-};
 
+	VMI_OP_CMP_LT = (VMI_CMP | VMI_PROPS1_OPCODE(VMI_INSTR_CMP_PROP1_LT) | VMI_PROPS2_OPCODE(VMI_INSTR_CMP_PROP2_SIGNED)),
+	VMI_OP_CMP_GT = (VMI_CMP | VMI_PROPS1_OPCODE(VMI_INSTR_CMP_PROP1_GT) | VMI_PROPS2_OPCODE(VMI_INSTR_CMP_PROP2_SIGNED)),
+};
 #endif
