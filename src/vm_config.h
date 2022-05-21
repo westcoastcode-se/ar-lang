@@ -46,8 +46,11 @@ typedef unsigned long long vm_uint64;
 #	endif
 #endif
 
-#if !defined(NDEBUG)
-#	define VM_STACK_DEBUG 1
+// Enable runtime stack validation. This is enabled by default when building in debug mode
+#if !defined(VM_STACK_DEBUG)
+#	if !defined(NDEBUG)
+#		define VM_STACK_DEBUG 1
+#	endif
 #endif
 
 #ifndef NULL

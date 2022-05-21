@@ -16,11 +16,21 @@ vmi_ip _vmi_thread_halt(vmi_thread* t, vmi_ip ip, vm_int32 flags, const char* me
 	return (vmi_ip)&_vmi_force_eoe;
 }
 
-vmi_ip _vmi_thread_stack_mismanaged(vmi_thread* t, vmi_ip ip, vm_int32 bytes_left)
+vmi_ip _vmi_thread_stack_mismanaged_begin(vmi_thread* t, vmi_ip ip, vm_int32 bytes_left)
+{
+	vmi_thread_shalti(t,
+		VMI_THREAD_FLAG_STACK_MISMANAGED,
+		"the stack is mismanaged. you are expected to push %d bytes to the stack",
+		bytes_left);
+	t->halt_pos = ip;
+	return (vmi_ip)&_vmi_force_eoe;
+}
+
+vmi_ip _vmi_thread_stack_mismanaged_ret(vmi_thread* t, vmi_ip ip, vm_int32 bytes_left)
 {
 	vmi_thread_shalti(t, 
 		VMI_THREAD_FLAG_STACK_MISMANAGED, 
-		"the stack is mismanaged. you have %d bytes left on the stack",
+		"the stack is mismanaged. you have %d un-popped bytes left on the stack",
 		bytes_left);
 	t->halt_pos = ip;
 	return (vmi_ip)&_vmi_force_eoe;
@@ -39,6 +49,7 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 vmi_ip _vmi_thread_call(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_call* instr = (const vmi_instr_call*)ip;
+
 	// Push the address where the application should continue executing when the function returns
 	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (ip + sizeof(vmi_instr_call));
 	// Return the functions start position.
@@ -50,6 +61,16 @@ vmi_ip _vmi_thread_begin(vmi_thread* t, vmi_ip ip)
 {
 	// TODO: The problem is that call_frame points to the wrong frame when poping from the stack
 	const vmi_instr_begin* const instr = (const vmi_instr_begin*)ip;
+
+#if defined(VM_STACK_DEBUG)
+	// Verify that we've pushed the bare-minimum data on the stack for the 
+	// function to work
+	// 
+	// we must've pushed at least "expected_stack_size" in bytes
+	const vm_byte* expected = t->stack.top - instr->expected_stack_size - sizeof(vmi_ip) - sizeof(vm_byte*);
+	if (t->ebp + instr->expected_stack_size > expected)
+		return _vmi_thread_stack_mismanaged_begin(t, ip, instr->expected_stack_size);
+#endif
 
 	// Push the previous stack pointer and set where arguments and 
 	// return value slots are located on the stack
@@ -135,7 +156,7 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 	const vm_byte* expected = t->stack.top - instr->expected_ebp_offset;
 	// Make sure that we haven't manipulated the stack in a way that caused it to become malformed
 	if (t->ebp != expected)
-		return _vmi_thread_stack_mismanaged(t, ip, (vm_int32)(expected - t->ebp));
+		return _vmi_thread_stack_mismanaged_ret(t, ip, (vm_int32)(expected - t->ebp));
 #endif
 
 	// Pop the stack pointer and return return the next instruction pointer to be executed

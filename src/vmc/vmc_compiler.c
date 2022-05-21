@@ -403,9 +403,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 	// The function is actually beginning here
 	// TODO: Add support for reserving memory for local variables
-	if (func->args_total_size > INT8_MAX)
-		return vmc_compiler_message_not_implemented(&c->messages, l, t);
-	if (func->returns_total_size > INT8_MAX)
+	if ((vm_uint32)(func->args_total_size + func->returns_total_size) > UINT16_MAX)
 		return vmc_compiler_message_not_implemented(&c->messages, l, t);
 	_vmc_emit_begin(c, func->args_total_size, func->returns_total_size);
 
