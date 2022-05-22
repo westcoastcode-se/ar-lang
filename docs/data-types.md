@@ -4,7 +4,7 @@ Build-in datatypes are found in the `vm` package - and also available in the glo
 
 ## bool
 
-Boolean
+Boolean.
 
 ## byte / int8
 

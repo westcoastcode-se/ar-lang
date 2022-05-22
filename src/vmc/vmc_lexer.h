@@ -76,6 +76,9 @@ enum vmc_lexer_token_type
 	// .
 	VMC_LEXER_TYPE_DOT,
 
+	// Label marker #. Normally used for the compiler to remember where an adress is located
+	VMC_LEXER_TYPE_MEMORY_MARKER,
+
 	// &, used for both bit manipulations and as a value modifier
 	VMC_LEXER_TYPE_BIT_AND,
 	VMC_LEXER_TYPE_ADDR_OF = VMC_LEXER_TYPE_BIT_AND,

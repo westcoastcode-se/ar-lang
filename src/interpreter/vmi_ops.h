@@ -49,6 +49,9 @@ enum vmi_icodes
 	// that represents the result
 	VMI_CMP,
 
+	// Jump to a new destination
+	VMI_JMP,
+
 	// End-of-execution. This will forcefully stop the execution of the virtual machine. Normally used
 	// when calling a function from an unmanaged source, such as when used as a scripting language
 	VMI_EOE = 255
@@ -275,6 +278,16 @@ typedef struct vmi_instr_cmp vmi_instr_cmp;
 #define VMI_INSTR_CMP_PROP2_SIGNED (0)
 #define VMI_INSTR_CMP_PROP2_UNSIGNED (1)
 
+// A jmp instruction
+struct vmi_instr_jmp
+{
+	OPCODE_HEADER;
+	vmi_ip destination;
+};
+typedef struct vmi_instr_jmp vmi_instr_jmp;
+#define VMI_INSTR_JMP_PROP1_TRUE (0)
+#define VMI_INSTR_JMP_PROP1_FALSE (1)
+
 // End-of-execution instruction. The execution will be halted when when this operation is reached
 typedef vmi_instr_single_instruction vmi_instr_eoe;
 
@@ -291,5 +304,8 @@ enum vmi_ocodes
 
 	VMI_OP_CMP_LT = (VMI_CMP | VMI_PROPS1_OPCODE(VMI_INSTR_CMP_PROP1_LT) | VMI_PROPS2_OPCODE(VMI_INSTR_CMP_PROP2_SIGNED)),
 	VMI_OP_CMP_GT = (VMI_CMP | VMI_PROPS1_OPCODE(VMI_INSTR_CMP_PROP1_GT) | VMI_PROPS2_OPCODE(VMI_INSTR_CMP_PROP2_SIGNED)),
+
+	VMI_OP_JMPT = (VMI_JMP | VMI_PROPS1_OPCODE(VMI_INSTR_JMP_PROP1_TRUE)),
+	VMI_OP_JMPF = (VMI_JMP | VMI_PROPS1_OPCODE(VMI_INSTR_JMP_PROP1_FALSE)),
 };
 #endif

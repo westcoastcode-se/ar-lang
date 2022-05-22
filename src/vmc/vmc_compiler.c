@@ -14,6 +14,7 @@
 // PRIVATE ///////////////////////////////////////////////////////////////////////////
 // 
 
+VM_STRING_CONST(bool, "bool", 4);
 VM_STRING_CONST(int8, "int8", 4);
 VM_STRING_CONST(uint8, "uint8", 5);
 VM_STRING_CONST(int16, "int16", 5);
@@ -36,6 +37,7 @@ VM_STRING_CONST(call, "call", 4);
 VM_STRING_CONST(conv, "conv", 4);
 VM_STRING_CONST(clt, "clt", 3);
 VM_STRING_CONST(cgt, "cgt", 3);
+VM_STRING_CONST(jmpt, "jmpt", 4);
 
 VM_STRING_CONST(_0, "_0", 2);
 VM_STRING_CONST(_1, "_1", 2);
@@ -103,6 +105,7 @@ void _vmc_func_init(vmc_func* func)
 	func->complexity_components = 0;
 	func->args_count = 0;
 	func->returns_count = 0;
+	func->memory_marker_first = func->memory_marker_last = NULL;
 }
 
 // Allocate new memory for a potential function. Will return NULL if the system is out of memory
@@ -118,6 +121,8 @@ vmc_func* _vmc_func_malloc()
 // Destroy memory allocated for the supplied function
 void _vmc_func_free(vmc_func* func)
 {
+	vmc_linker_memory_marker_destroy(func->memory_marker_first);
+	func->memory_marker_first = func->memory_marker_last = NULL;
 	free(func);
 }
 
@@ -389,6 +394,41 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		func->returns, &func->returns_count, &func->returns_total_size);
 }
 
+vmc_linker_memory_marker* _vmc_func_add_empty_memory_marker(vmc_compiler* c, vmc_func* func, const vm_string* name)
+{
+	vmc_linker_memory_marker* const marker = vmc_linker_memory_marker_alloc();
+	if (marker == NULL) {
+		return FALSE;
+	}
+	marker->name = *name;
+	if (func->memory_marker_last == NULL)
+		func->memory_marker_first = func->memory_marker_last = marker;
+	else {
+		func->memory_marker_last->next = marker;
+		func->memory_marker_last = marker;
+	}
+	return marker;
+}
+
+BOOL _vmc_func_add_memory_marker(vmc_compiler* c, vmc_func* func, const vm_string* name)
+{
+	vmc_linker_memory_marker* marker = vmc_linker_memory_marker_find_sibling(func->memory_marker_first, name);
+	if (marker != NULL) {
+		// If this marker already have an offset then this marker already exists
+		if (marker->offset != 0) {
+			return FALSE;
+		}
+		marker->offset = vm_bytestream_get_size(&c->bytecode);
+		return TRUE;
+	}
+	marker = _vmc_func_add_empty_memory_marker(c, func, name);
+	if (marker == NULL) {
+		return FALSE;
+	}
+	marker->offset = vm_bytestream_get_size(&c->bytecode);
+	return TRUE;
+}
+
 BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	// External functions are not allowed to have a body
@@ -422,6 +462,14 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		// Ignore comments
 		if (t->type == VMC_LEXER_TYPE_COMMENT) {
+			vmc_lexer_next(l, t);
+			continue;
+		}
+
+		// Ignore memory markers for now
+		if (t->type == VMC_LEXER_TYPE_MEMORY_MARKER) {
+			if (!_vmc_func_add_memory_marker(c, func, &t->string))
+				return vmc_compiler_message_memory_marker_exists(&c->messages, l, &t->string);
 			vmc_lexer_next(l, t);
 			continue;
 		}
@@ -576,14 +624,48 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			vmc_write(c, &instr, sizeof(vmi_instr_cmp));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(cgt))) {
-		// cgt
+			// cgt
 
-		vmi_instr_cmp instr;
-		instr.opcode = 0;
-		instr.icode = VMI_CMP;
-		instr.props1 = VMI_INSTR_CMP_PROP1_GT;
-		instr.props2 = VMI_INSTR_CMP_PROP2_SIGNED;
-		vmc_write(c, &instr, sizeof(vmi_instr_cmp));
+			vmi_instr_cmp instr;
+			instr.opcode = 0;
+			instr.icode = VMI_CMP;
+			instr.props1 = VMI_INSTR_CMP_PROP1_GT;
+			instr.props2 = VMI_INSTR_CMP_PROP2_SIGNED;
+			vmc_write(c, &instr, sizeof(vmi_instr_cmp));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(jmpt))) {
+			// jmpt <destination>
+
+			vmi_instr_jmp instr;
+			vmc_linker_memory_marker* marker;
+			instr.opcode = 0;
+			instr.icode = VMI_JMP;
+			instr.props1 = VMI_INSTR_JMP_PROP1_TRUE;
+			instr.destination = 0; // Jump forward one instruction
+
+			vmc_lexer_next(l, t);
+			if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
+			}
+			// Try to find a marker. If no marker exist then create/add it
+			marker = vmc_linker_memory_marker_find_sibling(func->memory_marker_first, &t->string);
+			if (marker == NULL) {
+				marker = _vmc_func_add_empty_memory_marker(c, func, &t->string);
+				if (marker == NULL) {
+					vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+					return FALSE;
+				}
+			}
+			if (marker->offset == 0) {
+				if (vmc_linker_add_memory_marker(&c->linker, marker, OFFSETOF(vmi_instr_jmp, destination)) == NULL) {
+					vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+					return FALSE;
+				}
+			}
+			else {
+				instr.destination = OFFSET(marker->offset);
+			}
+			vmc_write(c, &instr, sizeof(vmi_instr_jmp));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(ret))) {
 			// ret
@@ -869,11 +951,6 @@ void _vmc_append_package_info(vmc_compiler* c)
 	}
 }
 
-// Link
-void _vmc_link(vmc_compiler* c)
-{
-}
-
 // Cleanup all packages
 void _vmc_compiler_destroy_packages(vmc_compiler* c)
 {
@@ -906,6 +983,7 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	c->packages_count = 0;
 	c->functions_count = 0;
 	vmc_string_pool_init(&c->string_pool);
+	vmc_linker_init(&c->linker, &c->bytecode);
 
 	_vmc_compiler_register_builtins(c);
 	vmc_package_new(c, "main", 4);
@@ -914,6 +992,7 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 
 void vmc_compiler_destroy(vmc_compiler* c)
 {
+	vmc_linker_release(&c->linker);
 	vmc_string_pool_destroy(&c->string_pool);
 	vm_messages_destroy(&c->messages);
 	_vmc_compiler_destroy_packages(c);
@@ -932,7 +1011,7 @@ BOOL vmc_compiler_compile(vmc_compiler* c, const vm_byte* src)
 	vmc_lexer_release(&l);
 	if (vmc_compiler_success(c)) {
 		_vmc_append_package_info(c);
-		_vmc_link(c);
+		vmc_linker_process(&c->linker);
 		// We might have gotten link errors, so let's verify success again
 		return vmc_compiler_success(c);
 	}

@@ -4,6 +4,7 @@
 #include "vmc_lexer.h"
 #include "../vm_bytestream.h"
 #include "vmc_string_pool.h"
+#include "vmc_linker.h"
 
 enum vmc_type_header_type
 {
@@ -147,6 +148,10 @@ struct vmc_func
 	vm_int32 returns_count;
 	vm_int32 returns_total_size;
 
+	// Memory markers
+	vmc_linker_memory_marker* memory_marker_first;
+	vmc_linker_memory_marker* memory_marker_last;
+
 	// Package this function can be found in
 	struct vmc_package* package;
 
@@ -260,14 +265,17 @@ struct vmc_compiler
 	vmc_package* package_first;
 	vmc_package* package_last;
 
-	// Number of packages collected
+	// Number of packages collected, in total
 	vm_uint32 packages_count;
 
 	// Number of functions, in total
 	vm_uint32 functions_count;
 
-	vmc_string_pool string_pool;
+	// Linker
+	vmc_linker linker;
 
+	// Strings
+	vmc_string_pool string_pool;
 };
 typedef struct vmc_compiler vmc_compiler;
 

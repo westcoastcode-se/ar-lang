@@ -460,11 +460,11 @@ fn Compare () (int32) {
 	// Compare greater-then
 	void cgt()
 	{
-		/*
-		fn Compare() (int32) {
-			return 34 > 12
-		}
-		*/
+/*
+fn Compare() (int32) {
+	return 34 > 12
+}
+*/
 		const auto source = R"(
 fn Compare () (int32) {
 	const int32 12	// Push a constant
@@ -490,10 +490,56 @@ fn Compare () (int32) {
 		destroy(c);
 	}
 
+	// Jump if value on the stack is true
+	void jmpt()
+	{
+/*
+fn Test() (int32) {
+	if 34 > 12 {
+		return 10
+	} else {
+		return 20
+	}
+}
+*/
+		const auto source = R"(
+fn Test() (int32) {
+	const int32 12	// Push a constant
+	const int32 34	// Push a constant
+	cgt				// Compare 32 > 12
+	jmpt marker		// if > jmp marker
+	free_s 4		// Remove the result from the stack
+	const int32 20
+	save_r 0
+	ret				// return 20
+#marker 
+	free_s 4		// Remove the result from the stack
+	const int32 10
+	save_r 0
+	ret				// return 10
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Test");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 10);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void operator()()
 	{
 		TEST(clt);
 		TEST(cgt);
+		TEST(jmpt);
 	}
 };
 

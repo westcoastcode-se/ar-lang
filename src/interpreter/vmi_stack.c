@@ -34,6 +34,14 @@ char* vmi_stack_pop(vmi_stack* s, vm_int32 size)
 	return s->top;
 }
 
+const vm_byte* vmi_stack_peek(vmi_stack* s, vm_int32 size)
+{
+	if (s->top - size < s->blocks) {
+		return NULL;
+	}
+	return s->top - size;
+}
+
 BOOL vmi_stack_verify(vmi_stack* s, const vm_byte* pos)
 {
 	return s->top >= pos;

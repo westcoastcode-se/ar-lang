@@ -233,6 +233,14 @@ vmi_ip _vmi_thread_cmp_gt(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_cmp);
 }
 
+vmi_ip _vmi_thread_jmp_true(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_jmp* const instr = (const vmi_instr_jmp*)ip;
+
+	// TODO: Is it possible to make address be the actual bytecode address?
+	return instr->destination;
+}
+
 vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_opcode_header* header;
@@ -269,6 +277,10 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_OP_CMP_GT:
 			ip = _vmi_thread_cmp_gt(t, ip);
+			continue;
+
+		case VMI_OP_JMPT:
+			ip = _vmi_thread_jmp_true(t, ip);
 			continue;
 
 		default:
