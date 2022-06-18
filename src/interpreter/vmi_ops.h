@@ -166,6 +166,42 @@ struct vmi_instr_save_r
 };
 typedef struct vmi_instr_save_r vmi_instr_save_r;
 
+// A load_l(ocal) instruction
+struct vmi_instr_load_l
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 size;
+			vm_uint8 offset;
+			vm_uint8 props3;
+		};
+	};
+};
+typedef struct vmi_instr_load_l vmi_instr_load_l;
+
+// A save_l(ocal) instruction
+struct vmi_instr_save_l
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 size;
+			vm_uint8 offset;
+			vm_uint8 props3;
+		};
+	};
+};
+typedef struct vmi_instr_save_l vmi_instr_save_l;
+
 // A const(ant) int32 instruction
 struct vmi_instr_const_int32
 {

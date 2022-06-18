@@ -34,6 +34,8 @@ VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(call, "call", 4);
 VM_STRING_CONST(locals, "locals", 6);
+VM_STRING_CONST(load_l, "load_l", 6);
+VM_STRING_CONST(save_l, "save_l", 6);
 
 VM_STRING_CONST(conv, "conv", 4);
 
@@ -467,6 +469,18 @@ BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_lexer* l, vmc_package* p,
 		func->locals_total_size += var->type.size;
 	}
 
+	// Augment offsets (where is the memory located from the "ebp"'s point of view).
+	// EBP points to where the stack is located 
+	if (func->locals_count > 0) {
+		vm_int32 i;
+		vm_int32 offset = sizeof(vmi_ip) + sizeof(vm_byte*) + func->args_total_size + func->returns_total_size;
+		for (i = 0; i < func->locals_count; ++i) {
+			vmc_type_info* info = &func->locals[i].type;
+			info->offset = offset;
+			offset += info->size;
+		}
+	}
+
 	return TRUE;
 }
 
@@ -706,6 +720,48 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.icode = VMI_LOCALS;
 			instr.size = func->locals_total_size;
 			vmc_write(c, &instr, sizeof(vmi_instr_locals));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(load_l))) {
+			// load_l <i32>
+
+			vmi_instr_load_l instr;
+			vm_int32 index;
+
+			vmc_lexer_next(l, t);
+			if (t->type != VMC_LEXER_TYPE_INT) {
+				return vmc_compiler_message_expected_index(&c->messages, l, t);
+			}
+
+			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+			if (func->locals_count == 0 || func->locals_count <= index) {
+				return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->locals_count - 1);
+			}
+			instr.opcode = 0;
+			instr.icode = VMI_LOAD_L;
+			instr.size = func->locals[index].type.size;
+			instr.offset = func->locals[index].type.offset;
+			vmc_write(c, &instr, sizeof(vmi_instr_load_l));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(save_l))) {
+			// save_l <i32>
+
+			vmi_instr_save_l instr;
+			vm_int32 index;
+
+			vmc_lexer_next(l, t);
+			if (t->type != VMC_LEXER_TYPE_INT) {
+				return vmc_compiler_message_expected_index(&c->messages, l, t);
+			}
+
+			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+			if (func->locals_count == 0 || func->locals_count <= index) {
+				return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->locals_count - 1);
+			}
+			instr.opcode = 0;
+			instr.icode = VMI_SAVE_L;
+			instr.size = func->locals[index].type.size;
+			instr.offset = func->locals[index].type.offset;
+			vmc_write(c, &instr, sizeof(vmi_instr_save_l));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(clt))) {
 			// clt

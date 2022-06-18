@@ -499,11 +499,111 @@ fn Func() (int32) {
 		destroy(c);
 	}
 
+	// Local variable
+	void allocate_load_save_locals1()
+	{
+		/*
+		fn Func() (int32) {
+			var i = 10
+			i += 5
+			return i
+		}
+		*/
+		const auto source = R"(
+fn Func() (int32) {
+	// var i int32
+	locals (i int32)
+	// i = 10
+	const int32 10
+	save_l 0
+	// i += 5
+	load_l 0
+	const int32 5
+	add int32
+	save_l 0
+	// return i
+	load_l 0
+	save_r 0
+	ret	
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Func");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, (vm_int32)15);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	// Local variable
+	void allocate_load_save_locals2()
+	{
+/*
+fn InnerFunc(in int32) (int32) {
+	var i = 10
+	i += in
+	return i
+}
+fn Func() (int32) {
+	return InnerFunc(5);
+}
+*/
+		const auto source = R"(
+fn InnerFunc(in int32) (int32) {
+	// var i int32
+	locals (i int32)
+	// i = 10
+	const int32 10
+	save_l 0
+	// i += 5
+	load_l 0
+	const int32 5
+	add int32
+	save_l 0
+	// return i
+	load_l 0
+	save_r 0
+	ret
+}
+fn Func() (int32) {
+	// InnerFunc(5)
+	alloc_s 4
+	const int32 5
+	call InnerFunc(int32)(int32)
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Func");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, (vm_int32)15);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
 
 	void operator()()
 	{
 		TEST(allocate_locals1);
 		TEST(allocate_locals2);
+		TEST(allocate_load_save_locals1);
+		TEST(allocate_load_save_locals2);
 	}
 };
 

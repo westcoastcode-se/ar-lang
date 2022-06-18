@@ -230,6 +230,12 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_SAVE_R:
 			ip = _vmi_thread_save_r(t, ip);
 			continue;
+		case VMI_LOAD_L:
+			ip = _vmi_thread_load_l(t, ip);
+			continue;
+		case VMI_SAVE_L:
+			ip = _vmi_thread_save_l(t, ip);
+			continue;
 		case VMI_RET:
 			ip = _vmi_thread_ret(t, ip);
 			continue;
