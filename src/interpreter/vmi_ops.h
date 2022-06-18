@@ -39,6 +39,15 @@ enum vmi_icodes
 	// Return the the caller instruction pointer
 	VMI_RET,
 
+	// Locals marker
+	VMI_LOCALS,
+
+	// Load local variable and put the result on the stack
+	VMI_LOAD_L,
+
+	// Save value on the stack to a local variable
+	VMI_SAVE_L,
+
 	// Add two values on the stack
 	VMI_ADD,
 
@@ -112,6 +121,9 @@ struct vmi_instr_begin
 		{
 			vm_uint8 icode;
 			vm_uint8 props1;
+
+			// The expected (incoming) stack size that's required by the function - such as the arguments and the 
+			// return values
 			vm_uint16 expected_stack_size;
 		};
 	};
@@ -237,15 +249,13 @@ typedef struct vmi_instr_call vmi_instr_call;
 
 struct vmi_instr_ret
 {
-	// Header (must be identical with vmi_opcode_header)
+	OPCODE_HEADER;
 	union
 	{
-		vmi_opcode_header header;
-		vmi_opcode opcode;
+		vm_uint32 _pop_memory;
 		struct
 		{
-			vm_uint8 icode;
-			vm_uint8 props1;
+			vm_uint16 pop_locals_size;
 			vm_uint16 pop_stack_size;
 		};
 	};
@@ -254,6 +264,23 @@ struct vmi_instr_ret
 #endif
 };
 typedef struct vmi_instr_ret vmi_instr_ret;
+
+// A locals instruction
+struct vmi_instr_locals
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+			vm_uint16 size;
+		};
+	};
+};
+typedef struct vmi_instr_locals vmi_instr_locals;
 
 // A conv(ert) instruction
 struct vmi_instr_conv

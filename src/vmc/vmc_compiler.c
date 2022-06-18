@@ -33,7 +33,7 @@ VM_STRING_CONST(alloc_s, "alloc_s", 7);
 VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(call, "call", 4);
-VM_STRING_CONST(vars, "vars", 4);
+VM_STRING_CONST(locals, "locals", 6);
 
 VM_STRING_CONST(conv, "conv", 4);
 
@@ -108,8 +108,11 @@ void _vmc_func_init(vmc_func* func)
 	func->complexity = 0;
 	func->complexity_components = 0;
 	func->args_count = 0;
+	func->args_total_size = 0;
 	func->returns_count = 0;
+	func->returns_total_size = 0;
 	func->locals_count = 0;
+	func->locals_total_size = 0;
 	func->memory_marker_first = func->memory_marker_last = NULL;
 }
 
@@ -398,6 +401,75 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	return TRUE;
 }
 
+BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+{
+	func->locals_count = 0;
+	func->locals_total_size = 0;
+	vmc_package* type_package;
+	vmc_type_definition* type_definition;
+
+	// Expected a '(' token
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
+
+	// Parse until we reach that end ')' token
+	while (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_R)) {
+		vmc_var_definition* const var = &func->locals[func->locals_count];
+		type_package = p;
+
+		// Ignore comma
+		if (t->type == VMC_LEXER_TYPE_COMMA) {
+			vmc_lexer_next(l, t);
+		}
+
+		// Reset masks
+		var->type.masks = 0;
+		var->type.offset = 0;
+
+		// Read var name
+		if (t->type != VMC_LEXER_TYPE_KEYWORD)
+			return vmc_compiler_message_expected_identifier(&c->messages, l, t);
+		var->name = t->string;
+		vmc_lexer_next(l, t);
+
+		// The first part can be a name OR a type
+		// names are guaranteed to be a KEYWORD
+		// vars can be:
+		// KEYWORD
+		// *KEYWORD
+		// [INT]KEYWORD
+		// KEYWPORD<TYPE>
+
+		// We can, quickly figure out if this is a type if the keyword is:
+		// '[' or '*' since those are part of the type
+		if (t->type == VMC_LEXER_TYPE_SQUARE_L || t->type == VMC_LEXER_TYPE_PTR) {
+			// These types of types are not supported yet!
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		}
+
+		// Expected type
+		if (t->type != VMC_LEXER_TYPE_KEYWORD)
+			return vmc_compiler_message_expected_type(&c->messages, l, t);
+
+		type_definition = vmc_package_find_type(type_package, &t->string);
+		if (type_definition == NULL)
+			return vmc_compiler_message_type_not_found(&c->messages, l, t);
+		var->type.definition = type_definition;
+
+		// Figure out the size of the variable
+		if ((var->type.masks & VMC_TYPE_INFO_MASK_ADDR) == VMC_TYPE_INFO_MASK_ADDR)
+			var->type.size = sizeof(void*);
+		else
+			var->type.size = type_definition->size;
+
+		// Argument now loaded
+		func->locals_count++;
+		func->locals_total_size += var->type.size;
+	}
+
+	return TRUE;
+}
+
 BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	return _vmc_compiler_parse_type_decl_without_name(c, l, p, t,
@@ -623,14 +695,17 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.size = num_bytes;
 			vmc_write(c, &instr, sizeof(vmi_instr_free_s));
 		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(vars))) {
-			// vars (name type, ...)
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(locals))) {
+			// locals (name type, ...)
+			vmi_instr_locals instr;
+			// Parse locals
+			if (!_vmc_parse_keyword_fn_locals(c, l, p, t, func))
+				return FALSE;
 
-			//vmc_lexer_next(l, t);
-			//if (t->type != VMC_LEXER_TYPE_PARAN_L) {
-			//	return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
-			//}
-			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+			instr.opcode = 0;
+			instr.icode = VMI_LOCALS;
+			instr.size = func->locals_total_size;
+			vmc_write(c, &instr, sizeof(vmi_instr_locals));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(clt))) {
 			// clt
@@ -693,6 +768,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.opcode = 0;
 			instr.icode = VMI_RET;
 			instr.pop_stack_size = func->args_total_size;
+			instr.pop_locals_size = func->locals_total_size;
 #if defined(VM_STACK_DEBUG)
 			// The values pushed on the stack when the function starts are
 			// 1. Pointer to the return address location

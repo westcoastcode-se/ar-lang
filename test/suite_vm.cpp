@@ -422,6 +422,91 @@ fn AddTwoInts() (int32) {
 	}
 };
 
+struct suite_vm_memory : suite_vm_utils
+{
+	// Local variable
+	void allocate_locals1()
+	{
+/*
+fn Func() (int32) {
+	var i int32
+	return 5
+}
+*/
+		const auto source = R"(
+fn Func() (int32) {
+	locals (i int32)// Allocate local memory storage for an int32 named i
+	const int32 5	// Load 5
+	save_r 0
+	ret				// Return
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Func");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, (vm_int32)5);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	// Local variable
+	void allocate_locals2()
+	{
+		/*
+		fn InnerFunc() (int32) {
+			var i int32
+			return 5
+		}
+		fn Func() (int32) {
+			return InnerFunc()
+		}
+		*/
+		const auto source = R"(
+fn InnerFunc() (int32) {
+	locals (i int32)// Allocate local memory storage for an int32 named i
+	const int32 5	// Load 5
+	save_r 0
+	ret				// Return
+}
+fn Func() (int32) {
+	alloc_s 4		// Allocate memory for return value of sizeof(int32)
+	call InnerFunc()(int32)
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Func");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, (vm_int32)5);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+
+	void operator()()
+	{
+		TEST(allocate_locals1);
+		TEST(allocate_locals2);
+	}
+};
+
 struct suite_vm_compare : suite_vm_utils
 {
 	// Compare less-then
@@ -589,4 +674,5 @@ void suite_vm()
 {
 	SUITE(suite_vm_tests);
 	SUITE(suite_vm_compare);
+	SUITE(suite_vm_memory);
 }
