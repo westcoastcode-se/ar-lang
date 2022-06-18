@@ -508,12 +508,10 @@ fn Test() (int32) {
 	const int32 34	// Push a constant
 	cgt				// Compare 32 > 12
 	jmpt marker		// if > jmp marker
-	free_s 4		// Remove the result from the stack
 	const int32 20
 	save_r 0
 	ret				// return 20
 #marker 
-	free_s 4		// Remove the result from the stack
 	const int32 10
 	save_r 0
 	ret				// return 10
@@ -535,11 +533,55 @@ fn Test() (int32) {
 		destroy(c);
 	}
 
+	// Jump if value on the stack is false
+	void jmpf()
+	{
+		/*
+		fn Test() (int32) {
+			if 34 < 12 {
+				return 10
+			} else {
+				return 20
+			}
+		}
+		*/
+		const auto source = R"(
+fn Test() (int32) {
+	const int32 12	// Push a constant
+	const int32 34	// Push a constant
+	clt				// Compare 32 < 12
+	jmpt marker		// if > jmp marker
+	const int32 20
+	save_r 0
+	ret				// return 20
+#marker 
+	const int32 10
+	save_r 0
+	ret				// return 10
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Test");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 20);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void operator()()
 	{
 		TEST(clt);
 		TEST(cgt);
 		TEST(jmpt);
+		TEST(jmpf);
 	}
 };
 
