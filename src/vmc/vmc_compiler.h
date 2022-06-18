@@ -98,6 +98,7 @@ typedef struct vmc_var_definition vmc_var_definition;
 
 #define VMC_FUNC_MAX_ARGS 9
 #define VMC_FUNC_MAX_RETURNS 9
+#define VMC_FUNC_MAX_LOCALS 9
 
 // Information of a function
 struct vmc_func
@@ -147,6 +148,11 @@ struct vmc_func
 	vmc_var_definition returns[VMC_FUNC_MAX_RETURNS];
 	vm_int32 returns_count;
 	vm_int32 returns_total_size;
+
+	// local variables
+	vmc_var_definition locals[VMC_FUNC_MAX_RETURNS];
+	vm_int32 locals_count;
+	vm_int32 locals_total_size;
 
 	// Memory markers for locations in this function. These are only used for jumps within the function itself
 	vmc_linker_memory_marker* memory_marker_first;

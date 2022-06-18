@@ -32,12 +32,16 @@ VM_STRING_CONST(const, "const", 5);
 VM_STRING_CONST(alloc_s, "alloc_s", 7);
 VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
-VM_STRING_CONST(add, "add", 3);
 VM_STRING_CONST(call, "call", 4);
+VM_STRING_CONST(vars, "vars", 4);
+
 VM_STRING_CONST(conv, "conv", 4);
+
 VM_STRING_CONST(clt, "clt", 3);
 VM_STRING_CONST(cgt, "cgt", 3);
 VM_STRING_CONST(jmpt, "jmpt", 4);
+
+VM_STRING_CONST(add, "add", 3);
 
 VM_STRING_CONST(_0, "_0", 2);
 VM_STRING_CONST(_1, "_1", 2);
@@ -105,6 +109,7 @@ void _vmc_func_init(vmc_func* func)
 	func->complexity_components = 0;
 	func->args_count = 0;
 	func->returns_count = 0;
+	func->locals_count = 0;
 	func->memory_marker_first = func->memory_marker_last = NULL;
 }
 
@@ -617,6 +622,15 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.icode = VMI_FREE_S;
 			instr.size = num_bytes;
 			vmc_write(c, &instr, sizeof(vmi_instr_free_s));
+		}
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(vars))) {
+			// vars (name type, ...)
+
+			//vmc_lexer_next(l, t);
+			//if (t->type != VMC_LEXER_TYPE_PARAN_L) {
+			//	return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
+			//}
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(clt))) {
 			// clt
