@@ -139,6 +139,7 @@ vmc_package* _vmc_package_malloc(const char* name, int length)
 	p->type_first = p->type_last = NULL;
 	p->type_count = 0;
 	p->data_offset = 0;
+	p->memory_marker_first = p->memory_marker_last = NULL;
 	p->root_package = NULL;
 	p->next = NULL;
 	return p;
@@ -164,6 +165,10 @@ void _vmc_package_free(vmc_package* p)
 		free(t);
 		t = next;
 	}
+
+	// Cleanup memory markers
+	vmc_linker_memory_marker_destroy(p->memory_marker_first);
+	p->memory_marker_first = p->memory_marker_last = NULL;
 
 	free(p);
 }
