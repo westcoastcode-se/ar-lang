@@ -46,68 +46,6 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 	return _vmi_thread_halt(t, ip, VMI_THREAD_FLAG_NOT_IMPLEMENTED, "not implemented");
 }
 
-vmi_ip _vmi_thread_alloc_s(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_alloc_s* instr = (const vmi_instr_alloc_s*)ip;
-	vmi_stack_push(&t->stack, instr->size);
-	return ip + sizeof(vmi_instr_alloc_s);
-}
-
-vmi_ip _vmi_thread_free_s(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_free_s* instr = (const vmi_instr_free_s*)ip;
-	vmi_stack_pop(&t->stack, instr->size);
-	return ip + sizeof(vmi_instr_free_s);
-}
-
-vmi_ip _vmi_thread_load_a(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_load_a* instr = (const vmi_instr_load_a*)ip;
-	char* const target = vmi_stack_push(&t->stack, instr->size);
-	if (target == NULL)
-		return _vmi_thread_stack_out_of_memory(t, ip);
-
-	// TODO: Add support for different sizes
-	switch (instr->size) {
-	case 4:
-		*(vm_int32*)target = *(vm_int32*)(t->ebp + instr->offset);
-		break;
-	case 1:
-	case 2:
-		*(vm_int16*)target = *(vm_int16*)(t->ebp + instr->offset);
-		break;
-	case 8:
-	default:
-		return _vmi_thread_not_implemented(t, ip);
-	}
-	return ip + sizeof(vmi_instr_load_a);
-}
-
-vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_save_r* const instr = (const vmi_instr_save_r*)ip;
-	vm_byte* const target = (vm_byte*)(t->ebp + instr->offset);
-
-	// TODO: Add support for different sizes
-	switch (instr->size) {
-	case 4: {
-		vm_int32* const value_on_stack = (vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
-		*((vm_int32*)target) = *value_on_stack;
-		break;
-	}
-	case 1:
-	case 2: {
-		vm_int16* const value_on_stack = (vm_int16*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
-		*((vm_int16*)target) = *value_on_stack;
-		break;
-	}
-	case 8:
-	default:
-		return _vmi_thread_not_implemented(t, ip);
-	}
-	return ip + sizeof(vmi_instr_save_r);
-}
-
 #include "instr/add.inc.c"
 #include "instr/const.inc.c"
 #include "instr/conv.inc.c"
@@ -116,6 +54,7 @@ vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
 #include "instr/locals.inc.c"
 #include "instr/func.inc.c"
 #include "instr/copy_s.inc.c"
+#include "instr/stack.inc.c"
 
 vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 {
