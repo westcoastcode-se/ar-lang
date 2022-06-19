@@ -8,3 +8,7 @@
 
 [clt.md](clt)
 [cgt.md](cgt)
+
+# Stack Manipulation
+
+[copy_s.md](copy_s)

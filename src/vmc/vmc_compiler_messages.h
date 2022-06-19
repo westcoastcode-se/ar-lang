@@ -47,6 +47,9 @@ enum vmc_compiler_messages
 	// Invalid index normally happens if you refer to an index that doesnt exist
 	VMC_COMPILER_MSG_INVALID_INDEX,
 
+	// Invalid size happens when you try to manage a larger value than the container allows
+	VMC_COMPILER_MSG_INVALID_SIZE,
+
 	// Unexpected end-of-file
 	VMC_COMPILER_MSG_UNEXPECTED_EOF,
 
@@ -69,6 +72,7 @@ enum vmc_compiler_messages
 #define VMC_COMPILER_MSG_EXPECTED_INT_STR "expected integer value but was '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_NOT_IMPLEMENTED_STR "keyword '%.*s' is not implemented yet at %d:%d"
 #define VMC_COMPILER_MSG_INVALID_INDEX_STR "supplied index %d but it must be within range [%d,%d] at %d:%d"
+#define VMC_COMPILER_MSG_INVALID_SIZE_STR "supplied size %d but it must be within range [%d,%d] at %d:%d"
 #define VMC_COMPILER_MSG_UNEXPECTED_EOF_STR "unexpected end of file found at %d:%d"
 #define VMC_COMPILER_MSG_SYNTAX_ERROR_STR "syntax error: missing '%c' before '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_FUNC_BODY_EXISTS_STR "function '%.*s' already has a body at %d:%d"
@@ -88,6 +92,7 @@ extern BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer* l, vm
 extern BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 index, vm_int32 min, vm_int32 max);
+extern BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer* l, vm_int32 size, vm_int32 min, vm_int32 max);
 extern BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t, char expected);
 extern BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer* l, const vm_string* signature);

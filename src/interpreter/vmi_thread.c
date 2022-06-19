@@ -156,6 +156,7 @@ vmi_ip _vmi_thread_conv_i16_i32(vmi_thread* t, vmi_ip ip)
 #include "instr/jmp.inc.c"
 #include "instr/locals.inc.c"
 #include "instr/func.inc.c"
+#include "instr/copy_s.inc.c"
 
 vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 {
@@ -200,6 +201,10 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_OP_JMPF:
 			ip = _vmi_thread_jmp_false(t, ip);
+			continue;
+
+		case VMI_OP_COPY_S_INT32:
+			ip = _vmi_thread_copy_s_int32(t, ip);
 			continue;
 
 		default:

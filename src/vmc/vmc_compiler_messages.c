@@ -109,6 +109,17 @@ BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 i
 		index, min, max, line, line_offset);
 }
 
+BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer* l, vm_int32 size, vm_int32 min, vm_int32 max)
+{
+	int line, line_offset, _;
+	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	return vm_messages_add(m,
+		VMC_COMPILER_MESSAGE_PREFIX,
+		VMC_COMPILER_MSG_INVALID_SIZE,
+		VMC_COMPILER_MSG_INVALID_SIZE_STR,
+		size, min, max, line, line_offset);
+}
+
 BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
 {
 	int line, line_offset, _;

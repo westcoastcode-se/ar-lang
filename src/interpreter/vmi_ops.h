@@ -9,9 +9,29 @@
 // Low INT8 (the four first bits)
 #define VMI_PROPS_LOW(P) ((P))
 
+//
+// Helper structs to put opcodes into their appropriate position in memory
+//
+
 #define VMI_PROPS1_OPCODE(P) ((P) << 8)
 #define VMI_PROPS2_OPCODE(P) ((P) << 16)
 #define VMI_PROPS3_OPCODE(P) ((P) << 24)
+
+//
+// Default type defines
+//
+
+#define VMI_INSTR_PROP_BOOL (0)
+#define VMI_INSTR_PROP_INT8 (1)
+#define VMI_INSTR_PROP_UINT8 (2)
+#define VMI_INSTR_PROP_INT16 (3)
+#define VMI_INSTR_PROP_UINT16 (4)
+#define VMI_INSTR_PROP_INT32 (5)
+#define VMI_INSTR_PROP_UINT32 (6)
+#define VMI_INSTR_PROP_INT64 (7)
+#define VMI_INSTR_PROP_UINT64 (8)
+#define VMI_INSTR_PROP_FLOAT32 (9)
+#define VMI_INSTR_PROP_FLOAT64 (10)
 
 enum vmi_icodes
 {
@@ -60,6 +80,9 @@ enum vmi_icodes
 
 	// Jump to a new destination
 	VMI_JMP,
+
+	// Copy stack value at the top and push the copied value to the top of the stack
+	VMI_COPY_S,
 
 	// End-of-execution. This will forcefully stop the execution of the virtual machine. Normally used
 	// when calling a function from an unmanaged source, such as when used as a scripting language
@@ -229,17 +252,17 @@ typedef struct vmi_instr_const_int32 vmi_instr_const_int32;
 typedef struct vmi_instr_const_int32 vmi_instr_const_ptr;
 #endif
 
-#define VMI_INSTR_CONST_PROP1_BOOL (0)
-#define VMI_INSTR_CONST_PROP1_INT8 (1)
-#define VMI_INSTR_CONST_PROP1_UINT8 (2)
-#define VMI_INSTR_CONST_PROP1_INT16 (3)
-#define VMI_INSTR_CONST_PROP1_UINT16 (4)
-#define VMI_INSTR_CONST_PROP1_INT32 (5)
-#define VMI_INSTR_CONST_PROP1_UINT32 (6)
-#define VMI_INSTR_CONST_PROP1_INT64 (7)
-#define VMI_INSTR_CONST_PROP1_UINT64 (8)
-#define VMI_INSTR_CONST_PROP1_FLOAT32 (9)
-#define VMI_INSTR_CONST_PROP1_FLOAT64 (10)
+#define VMI_INSTR_CONST_PROP1_BOOL VMI_INSTR_PROP_BOOL
+#define VMI_INSTR_CONST_PROP1_INT8 VMI_INSTR_PROP_INT8
+#define VMI_INSTR_CONST_PROP1_UINT8 VMI_INSTR_PROP_UINT8
+#define VMI_INSTR_CONST_PROP1_INT16 VMI_INSTR_PROP_INT16
+#define VMI_INSTR_CONST_PROP1_UINT16 VMI_INSTR_PROP_UINT16
+#define VMI_INSTR_CONST_PROP1_INT32 VMI_INSTR_PROP_INT32
+#define VMI_INSTR_CONST_PROP1_UINT32 VMI_INSTR_PROP_UINT32
+#define VMI_INSTR_CONST_PROP1_INT64 VMI_INSTR_PROP_INT64
+#define VMI_INSTR_CONST_PROP1_UINT64 VMI_INSTR_PROP_UINT64
+#define VMI_INSTR_CONST_PROP1_FLOAT32 VMI_INSTR_PROP_FLOAT32
+#define VMI_INSTR_CONST_PROP1_FLOAT64 VMI_INSTR_PROP_FLOAT64
 
 // A alloc_s(tack) instruction
 struct vmi_instr_alloc_s
@@ -370,5 +393,7 @@ enum vmi_ocodes
 
 	VMI_OP_JMPT = (VMI_JMP | VMI_PROPS1_OPCODE(VMI_INSTR_JMP_PROP1_TRUE)),
 	VMI_OP_JMPF = (VMI_JMP | VMI_PROPS1_OPCODE(VMI_INSTR_JMP_PROP1_FALSE)),
+
+	VMI_OP_COPY_S_INT32 = (VMI_COPY_S | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32)),
 };
 #endif

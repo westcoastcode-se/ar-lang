@@ -598,12 +598,53 @@ fn Func() (int32) {
 		destroy(c);
 	}
 
+	template<typename T>
+	void copy_s_test(const char* type, T in) {
+		/*
+				fn Mul2(in <type>) (<type>) {
+					return lhs+lhs
+				}
+		*/
+		const auto format = R"(
+fn Mul2 (in %s) (%s) {
+	load_a 0	// Push arg to the stack
+	copy_s %s	// Copy value to the stack
+	add %s		// Add the two values together
+	save_r 0	// Pop the top stack value and put it into the first return value
+	ret			// Return to the caller address (assume return value is on the top of the stack)
+}
+)";
+		char source[1024];
+		sprintf(source, format, type, type, type, type);
+
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(T));
+		push_value(t, (T)in);
+		invoke(p, t, "Mul2");
+
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)(in + in));
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void copy_s()
+	{
+		copy_s_test<vm_int32>("int32", 10);
+	}
+
 	void operator()()
 	{
 		TEST(allocate_locals1);
 		TEST(allocate_locals2);
 		TEST(allocate_load_save_locals1);
 		TEST(allocate_load_save_locals2);
+		TEST(copy_s);
 	}
 };
 
