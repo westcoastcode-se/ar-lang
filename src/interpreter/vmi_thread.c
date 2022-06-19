@@ -108,33 +108,9 @@ vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_save_r);
 }
 
-
-vmi_ip _vmi_thread_const_int16(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_const_int32* instr = (const vmi_instr_const_int32*)ip;
-	vm_int16* result = (vm_int16*)vmi_stack_push(&t->stack, sizeof(vm_int16));
-	*result = instr->i16;
-	return ip + sizeof(vmi_instr_const_int32);
-}
-
-vmi_ip _vmi_thread_const_int32(vmi_thread* t, vmi_ip ip)
-{
-	const vmi_instr_const_int32* instr = (const vmi_instr_const_int32*)ip;
-	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
-	*result = instr->value;
-	return ip + sizeof(vmi_instr_const_int32);
-}
-
-// Convert an int16 to int32
-vmi_ip _vmi_thread_conv_i16_i32(vmi_thread* t, vmi_ip ip)
-{
-	const vm_int16 rhs = *(const vm_int16*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
-	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
-	*result = (vm_int32)rhs;
-	return ip + sizeof(vmi_instr_conv);
-}
-
 #include "instr/add.inc.c"
+#include "instr/const.inc.c"
+#include "instr/conv.inc.c"
 #include "instr/cmp.inc.c"
 #include "instr/jmp.inc.c"
 #include "instr/locals.inc.c"
