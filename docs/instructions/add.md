@@ -20,8 +20,8 @@ The following allowed types are:
 If you want to do a `10 + 20` then you do the following. Please note the order of values pushed on the stack
 
 ```
-const int32 10
-const int32 20
+c_i32 10
+c_i32 20
 add int32
 ```
 

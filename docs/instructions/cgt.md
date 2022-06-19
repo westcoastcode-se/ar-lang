@@ -18,7 +18,7 @@ cgt
 Let's pretend that you want to evaulate `20 < 10` then you do the following:
 
 ```
-const int32 10
-const int32 20
+c_i32 10
+c_i32 20
 cgt
 ```

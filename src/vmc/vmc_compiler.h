@@ -289,6 +289,16 @@ struct vmc_compiler
 };
 typedef struct vmc_compiler vmc_compiler;
 
+struct vmc_parse_scope
+{
+	vmc_compiler* c;
+	vmc_lexer* l;
+	vmc_package* p; 
+	vmc_lexer_token* t;
+	vmc_func* func;
+};
+typedef struct vmc_parse_scope vmc_parse_scope;
+
 // Create a new compiler. If the configuration is NULL then the default configuration will be used. Will return
 // NULL if computer is out of memory
 extern vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config);

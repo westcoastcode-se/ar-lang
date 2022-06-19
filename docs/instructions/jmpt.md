@@ -17,7 +17,7 @@ jmpt <destination>
 Let's jump to a destination and pop the value from the stack
 
 ```
-const int32 1
+c_i32 1
 jmpt dest
 #dest ret
 free_s 4	// The boolean is saved as an int32

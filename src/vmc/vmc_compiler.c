@@ -14,6 +14,10 @@
 // PRIVATE ///////////////////////////////////////////////////////////////////////////
 // 
 
+#define BODY_BRANCH_BEGIN if(0) {}
+#define BODY_BRANCH_END
+#define BODY_BRANCH(C) else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(C))) { if (!C(c, l, p, t, func)) return FALSE; }
+
 VM_STRING_CONST(bool, "bool", 4);
 VM_STRING_CONST(int8, "int8", 4);
 VM_STRING_CONST(uint8, "uint8", 5);
@@ -28,7 +32,8 @@ VM_STRING_CONST(float64, "float64", 7);
 
 VM_STRING_CONST(load_a, "load_a", 6);
 VM_STRING_CONST(save_r, "save_r", 6);
-VM_STRING_CONST(const, "const", 5);
+VM_STRING_CONST(c_i32, "c_i32", 5);
+VM_STRING_CONST(c_i16, "c_i16", 5);
 VM_STRING_CONST(alloc_s, "alloc_s", 7);
 VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
@@ -232,8 +237,8 @@ void _vmc_calculate_offsets(vmc_func* func) {
 	}
 }
 
-const vm_string* _vmc_prepare_func_get_signature(vmc_compiler* c, vm_string name, 
-	vmc_var_definition* args, vm_int32 args_count, 
+const vm_string* _vmc_prepare_func_get_signature(vmc_compiler* c, vm_string name,
+	vmc_var_definition* args, vm_int32 args_count,
 	vmc_var_definition* returns, vm_int32 returns_count)
 {
 	char memory[2048];
@@ -526,6 +531,9 @@ BOOL _vmc_func_add_memory_marker(vmc_compiler* c, vmc_func* func, const vm_strin
 	return TRUE;
 }
 
+#include "instr/c_iX.inc.c"
+#include "instr/func.inc.c"
+
 BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	// External functions are not allowed to have a body
@@ -576,59 +584,11 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			return vmc_compiler_message_expected_keyword(&c->messages, l, t);
 		}
 
-		if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(load_a))) {
-			// load_a <i32>
-
-			vmi_instr_load_a instr;
-			vm_int32 index;
-
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_INT) {
-				return vmc_compiler_message_expected_index(&c->messages, l, t);
-			}
-
-			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (func->args_count == 0 || func->args_count <= index) {
-				return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->args_count - 1);
-			}
-			instr.opcode = 0;
-			instr.icode = VMI_LOAD_A;
-			instr.size = func->args[index].type.size;
-			instr.offset = func->args[index].type.offset;
-			vmc_write(c, &instr, sizeof(vmi_instr_load_a));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(const))) {
-			// const <type> <value>
-
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_KEYWORD) {
-				return vmc_compiler_message_expected_type(&c->messages, l, t);
-			}
-			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int16))) {
-				vmi_instr_const_int32 instr;
-				vmc_lexer_next(l, t);
-				if (t->type != VMC_LEXER_TYPE_INT)
-					return vmc_compiler_message_expected_int(&c->messages, l, t);
-				instr.opcode = 0;
-				instr.icode = VMI_CONST;
-				instr.props1 = VMI_INSTR_CONST_PROP1_INT16;
-				instr.i16 = (vm_int16)strtoi64(t->string.start, vm_string_length(&t->string));
-				vmc_write(c, &instr, sizeof(vmi_instr_const_int32));
-
-			} else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32))) {
-				vmi_instr_const_int32 instr;
-				vmc_lexer_next(l, t);
-				if (t->type != VMC_LEXER_TYPE_INT)
-					return vmc_compiler_message_expected_int(&c->messages, l, t);
-				instr.opcode = 0;
-				instr.icode = VMI_CONST;
-				instr.props1 = VMI_INSTR_CONST_PROP1_INT32;
-				instr.value = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-				vmc_write(c, &instr, sizeof(vmi_instr_const_int32));
-			}
-			else
-				return vmc_compiler_message_not_implemented(&c->messages, l, t);
-		}
+		BODY_BRANCH_BEGIN
+			BODY_BRANCH(load_a)
+			BODY_BRANCH(c_i16)
+			BODY_BRANCH(c_i32)
+		
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(add))) {
 			// add <type>
 
@@ -860,7 +820,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			vm_int32 _;
 			vmc_func* func;
 			vmi_instr_call instr;
-			
+
 			// Name of the function
 			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD))
 				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
@@ -1079,7 +1039,7 @@ void _vmc_append_package_info(vmc_compiler* c)
 	// Memory structure for package information:
 	// <Package Header>
 	// char[]	| name bytes
-	
+
 	while (p != NULL) {
 		vmi_package_bytecode_header package_header = {
 			vm_string_length(&p->name),

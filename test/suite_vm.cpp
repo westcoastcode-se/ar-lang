@@ -118,89 +118,24 @@ struct suite_vm_utils : test_utils
 // All test functions
 struct suite_vm_tests : suite_vm_utils
 {
-	void calculate_return_const_int32()
+	void calculate_return_two_values()
 	{
-		/*
-		fn Get() (int32) {
-			return 12
-		}
-		*/
-		const auto source = R"(
-fn Get () (int32) {
-	const int32 123	// Push a constant
-	save_r 0		// Pop the top stack value and put it into the first return value
-	ret				// Return
-}
-)";
-		auto c = compile(source);
-		auto p = process(c);
-		auto t = thread(p);
-
-		// Reserve memory for the return value
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
-		invoke(p, t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, 123);
-
-		destroy(t);
-		destroy(p);
-		destroy(c);
-	}
-
-	void calculate_return_const_int16()
-	{
-		/*
-		fn Get() (int16) {
-			return 12
-		}
-		*/
-		const auto source = R"(
-fn Get () (int16) {
-	const int16 1234 // Push a constant
-	save_r 0		 // Pop the top stack value and put it into the first return value
-	ret				 // Return
-}
-)";
-		auto c = compile(source);
-		auto p = process(c);
-		auto t = thread(p);
-
-		// Reserve memory for the return value
-		vmi_thread_reserve_stack(t, sizeof(vm_int16));
-		invoke(p, t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int16));
-		verify_stack(t, 0, (vm_int16)1234);
-
-		destroy(t);
-		destroy(p);
-		destroy(c);
-	}
-
-	void calculate_return_two_int32()
-	{
-		/*
-		fn Get() (int32, int32) {
-			return 123, 456
-		}
-		*/
 		const auto source = R"(
 fn Get () (int32, int32) {
-	const int32 123	// Push 123
-	save_r 0		// stack[4] = 123
-	const int32 456	// Push 456
-	save_r 1		// stack[0] = 456
-	ret				// Return
+	// return 123, 456
+	c_i32 123
+	save_r 0
+	c_i32 456
+	save_r 1
+	ret
 }
 )";
 		auto c = compile(source);
 		auto p = process(c);
 		auto t = thread(p);
 
-		// begin_
-		vmi_thread_push_i32(t, -1); // return value here (can be done by the API)
-		vmi_thread_push_i32(t, -1); // return value here (can be done by the API)
+		vmi_thread_push_i32(t, -1);
+		vmi_thread_push_i32(t, -1);
 		invoke(p, t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32) * 2);
@@ -214,19 +149,14 @@ fn Get () (int32, int32) {
 
 	template<typename T>
 	void add_test(const char* type, T lhs, T rhs) {
-		/*
-				fn Add(lhs <type>, rhs <type>) (<type>) {
-					return lhs + rhs
-				}
-		*/
 		const auto format = R"(
 fn Add (lhs %s, rhs %s) (%s) {
-	load_a 0	// Push first arg to the stack
-	load_a 1	// Push second arg to the stack
-	add %s		// Pop the two top-most items on the stack (of the same type) together, add 
-				// them and then make sure that the value is at the top of the stack
-	save_r 0	// Pop the top stack value and put it into the first return value
-	ret			// Return to the caller address (assume return value is on the top of the stack)
+	// return lhs + rhs
+	load_a 0
+	load_a 1
+	add %s
+	save_r 0
+	ret
 }
 )";
 		char source[1024];
@@ -256,47 +186,6 @@ fn Add (lhs %s, rhs %s) (%s) {
 	{
 		add_test<vm_int16>("int16", 12, 24);
 		add_test<vm_int32>("int32", 10, 20);
-	}
-
-	template<typename T>
-	void conv_test(const char* from_type, const char* to_type, T value)
-	{
-/*
-fn Get() (int32) {
-	return int32(int16(1234))
-}
-*/
-		const auto format = R"(
-fn Convert () (%s) {
-	const %s %d	// Push 1234 on the stack
-	conv %s %s		// Convert value on the stack to 32 bit integer
-	save_r 0		// Put the converted value to the return slot
-	ret
-}
-)";
-		char source[1024];
-		sprintf(source, format, to_type, from_type, value, from_type, to_type);
-
-		auto c = compile(source);
-		auto p = process(c);
-		auto t = thread(p);
-
-		// Reserve memory for the return value
-		vmi_thread_reserve_stack(t, sizeof(T));
-		invoke(p, t, "Convert");
-
-		verify_stack_size(t, sizeof(T));
-		verify_stack(t, 0, (T)1234);
-
-		destroy(t);
-		destroy(p);
-		destroy(c);
-	}
-
-	// Convert a value from one type to another
-	void conv()
-	{
-		conv_test<vm_int32>("int16", "int32", 1234);
 	}
 
 	void calculate_multiple_funcs() {
@@ -365,8 +254,8 @@ fn Add (lhs int32, rhs int32) (int32) {
 
 fn AddTwoInts() (int32) {
 	alloc_s 4		// Allocate memory for return value of sizeof(int32)
-	const int32 20	// Load constant int32 20
-	const int32 10	// Load constant int32 10
+	c_i32 20		// Load constant int32 20
+	c_i32 10		// Load constant int32 10
 	call Add(int32,int32)(int32)
 	save_r 0		// Save the value on the top of the stack to the return position
 	ret
@@ -387,36 +276,10 @@ fn AddTwoInts() (int32) {
 		destroy(c);
 	}
 
-	/*class abc1 {
-	public:abc1() {}
-		virtual ~abc1() {}
-	};
-
-	class abc2 : public abc1 {
-	public: abc2() {}
-	};
-	
-	struct abc3 {};
-	struct abc4 {
-		int v;
-	};*/
-
 	void operator()()
 	{
-		/*abc2 items1[10];
-		abc3 items2[10];
-		abc4 items3[10];
-		int items4[10];
-		const auto s1 = sizeof(items1);
-		const auto s2 = sizeof(items2);
-		const auto s3 = sizeof(items3);
-		const auto s4 = sizeof(items4);
-		*/
-		TEST(calculate_return_const_int32);
-		TEST(calculate_return_const_int16);
-		TEST(calculate_return_two_int32);
+		TEST(calculate_return_two_values);
 		TEST(add);
-		TEST(conv);
 		TEST(calculate_multiple_funcs);
 		TEST(calculate_two_int32_inner);
 	}
@@ -436,7 +299,7 @@ fn Func() (int32) {
 		const auto source = R"(
 fn Func() (int32) {
 	locals (i int32)// Allocate local memory storage for an int32 named i
-	const int32 5	// Load 5
+	c_i32 5			// Load 5
 	save_r 0
 	ret				// Return
 }
@@ -472,7 +335,7 @@ fn Func() (int32) {
 		const auto source = R"(
 fn InnerFunc() (int32) {
 	locals (i int32)// Allocate local memory storage for an int32 named i
-	const int32 5	// Load 5
+	c_i32 5			// Load 5
 	save_r 0
 	ret				// Return
 }
@@ -514,11 +377,11 @@ fn Func() (int32) {
 	// var i int32
 	locals (i int32)
 	// i = 10
-	const int32 10
+	c_i32 10
 	save_l 0
 	// i += 5
 	load_l 0
-	const int32 5
+	c_i32 5
 	add int32
 	save_l 0
 	// return i
@@ -561,11 +424,11 @@ fn InnerFunc(in int32) (int32) {
 	// var i int32
 	locals (i int32)
 	// i = 10
-	const int32 10
+	c_i32 10
 	save_l 0
 	// i += 5
 	load_l 0
-	const int32 5
+	c_i32 5
 	add int32
 	save_l 0
 	// return i
@@ -576,7 +439,7 @@ fn InnerFunc(in int32) (int32) {
 fn Func() (int32) {
 	// InnerFunc(5)
 	alloc_s 4
-	const int32 5
+	c_i32 5
 	call InnerFunc(int32)(int32)
 	save_r 0
 	ret
@@ -660,11 +523,11 @@ struct suite_vm_compare : suite_vm_utils
 		*/
 		const auto source = R"(
 fn Compare () (int32) {
-	const int32 34	// Push a constant
-	const int32 12	// Push a constant
-	clt				// Compare 
-	save_r 0		// Pop the top stack value and put it into the first return value
-	ret				// Return
+	c_i32 34	// Push a constant
+	c_i32 12	// Push a constant
+	clt			// Compare 
+	save_r 0	// Pop the top stack value and put it into the first return value
+	ret			// Return
 }
 )";
 		auto c = compile(source);
@@ -693,11 +556,11 @@ fn Compare() (int32) {
 */
 		const auto source = R"(
 fn Compare () (int32) {
-	const int32 12	// Push a constant
-	const int32 34	// Push a constant
-	cgt				// Compare 
-	save_r 0		// Pop the top stack value and put it into the first return value
-	ret				// Return
+	c_i32 12	// Push a constant
+	c_i32 34	// Push a constant
+	cgt			// Compare 
+	save_r 0	// Pop the top stack value and put it into the first return value
+	ret			// Return
 }
 )";
 		auto c = compile(source);
@@ -730,17 +593,17 @@ fn Test() (int32) {
 */
 		const auto source = R"(
 fn Test() (int32) {
-	const int32 12	// Push a constant
-	const int32 34	// Push a constant
-	cgt				// Compare 32 > 12
-	jmpt marker		// if > jmp marker
-	const int32 20
+	c_i32 12	// Push a constant
+	c_i32 34	// Push a constant
+	cgt			// Compare 32 > 12
+	jmpt marker	// if > jmp marker
+	c_i32 20
 	save_r 0
-	ret				// return 20
+	ret			// return 20
 #marker 
-	const int32 10
+	c_i32 10
 	save_r 0
-	ret				// return 10
+	ret			// return 10
 }
 )";
 		auto c = compile(source);
@@ -773,17 +636,17 @@ fn Test() (int32) {
 		*/
 		const auto source = R"(
 fn Test() (int32) {
-	const int32 12	// Push a constant
-	const int32 34	// Push a constant
-	clt				// Compare 32 < 12
-	jmpt marker		// if > jmp marker
-	const int32 20
+	c_i32 12	// Push a constant
+	c_i32 34	// Push a constant
+	clt			// Compare 32 < 12
+	jmpt marker	// if > jmp marker
+	c_i32 20
 	save_r 0
-	ret				// return 20
+	ret			// return 20
 #marker 
-	const int32 10
+	c_i32 10
 	save_r 0
-	ret				// return 10
+	ret			// return 10
 }
 )";
 		auto c = compile(source);
@@ -811,9 +674,103 @@ fn Test() (int32) {
 	}
 };
 
+struct suite_vm_constants : suite_vm_utils
+{
+	template<typename T>
+	void const_test(const char* type, const char* shorthand, T value) {
+		const auto format = R"(
+fn Get () (%s) {
+	c_%s %d
+	save_r 0
+	ret
+}
+)";
+		char source[1024];
+		sprintf(source, format, type, shorthand, value);
+
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(T));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)(value));
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void const_test()
+	{
+		const_test<vm_int16>("int16", "i16", 123);
+		const_test<vm_int32>("int32", "i32", 123546);
+	}
+
+	void operator()()
+	{
+		TEST(const_test);
+	}
+};
+
+struct suite_vm_convert : suite_vm_utils
+{
+
+	template<typename T>
+	void conv_test(const char* from_type, const char* to_type, const char* short_fromtype, T value)
+	{
+		/*
+		fn Get() (int32) {
+			return int32(int16(1234))
+		}
+		*/
+		const auto format = R"(
+fn Convert () (%s) {
+	// return int32(int16(1234))
+	c_%s %d
+	conv %s %s
+	save_r 0
+	ret
+}
+)";
+		char source[1024];
+		sprintf(source, format, to_type, short_fromtype, value, from_type, to_type);
+
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		// Reserve memory for the return value
+		vmi_thread_reserve_stack(t, sizeof(T));
+		invoke(p, t, "Convert");
+
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)1234);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	// Convert a value from one type to another
+	void conv()
+	{
+		conv_test<vm_int32>("int16", "int32", "i16", 1234);
+	}
+
+	void operator()()
+	{
+		TEST(conv);
+	}
+};
+
 void suite_vm()
 {
 	SUITE(suite_vm_tests);
 	SUITE(suite_vm_compare);
 	SUITE(suite_vm_memory);
+	SUITE(suite_vm_constants);
+	SUITE(suite_vm_convert);
 }

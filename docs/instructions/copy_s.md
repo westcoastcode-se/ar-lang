@@ -18,7 +18,7 @@ The following allowed types are:
 If you want to do a `10 + 10` but what to use `copy_s`
 
 ```
-const int32 10
+c_i32 10
 copy_s int32
 add int32
 ```
