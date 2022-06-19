@@ -86,6 +86,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_OP_CONV_I16_I32:
 			ip = _vmi_thread_conv_i16_i32(t, ip);
 			continue;
+		case VMI_OP_CONV_I32_I16:
+			ip = _vmi_thread_conv_i32_i16(t, ip);
+			continue;
 
 		case VMI_OP_CMP_LT:
 			ip = _vmi_thread_cmp_lt(t, ip);

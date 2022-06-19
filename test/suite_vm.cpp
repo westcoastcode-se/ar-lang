@@ -1,8 +1,47 @@
 #include "test.hpp"
 
+template<typename T>
+struct suite_vm_helper
+{
+};
+
+template<>
+struct suite_vm_helper<vm_int32>
+{
+	static constexpr auto name = "int32";
+	static constexpr auto shorthand = "i32";
+};
+
+template<>
+struct suite_vm_helper<vm_int16>
+{
+	static constexpr auto name = "int16";
+	static constexpr auto shorthand = "i16";
+};
+
 // Base class for all vm tests
 struct suite_vm_utils : test_utils
 {
+	template<typename T>
+	static const char* name() {
+		return suite_vm_helper<T>::name;
+	}
+
+	template<typename T>
+	static const char* name_of(T) {
+		return suite_vm_helper<T>::name;
+	}
+
+	template<typename T>
+	static const char* shorthand() {
+		return suite_vm_helper<T>::shorthand;
+	}
+
+	template<typename T>
+	static const char* shorthand_of(T) {
+		return suite_vm_helper<T>::shorthand;
+	}
+
 	void verify_compiler(vmc_compiler* c)
 	{
 		if (!vmc_compiler_success(c)) {
@@ -677,7 +716,7 @@ fn Test() (int32) {
 struct suite_vm_constants : suite_vm_utils
 {
 	template<typename T>
-	void const_test(const char* type, const char* shorthand, T value) {
+	void const_test(T value) {
 		const auto format = R"(
 fn Get () (%s) {
 	c_%s %d
@@ -686,7 +725,7 @@ fn Get () (%s) {
 }
 )";
 		char source[1024];
-		sprintf(source, format, type, shorthand, value);
+		sprintf(source, format, name_of(value), shorthand_of(value), value);
 
 		auto c = compile(source);
 		auto p = process(c);
@@ -705,8 +744,8 @@ fn Get () (%s) {
 
 	void const_test()
 	{
-		const_test<vm_int16>("int16", "i16", 123);
-		const_test<vm_int32>("int32", "i32", 123546);
+		const_test<vm_int16>(123);
+		const_test<vm_int32>(123546);
 	}
 
 	void operator()()
@@ -718,36 +757,31 @@ fn Get () (%s) {
 struct suite_vm_convert : suite_vm_utils
 {
 
-	template<typename T>
-	void conv_test(const char* from_type, const char* to_type, const char* short_fromtype, T value)
+	template<typename FROM, typename TO>
+	void conv_test(FROM from, TO to)
 	{
-		/*
-		fn Get() (int32) {
-			return int32(int16(1234))
-		}
-		*/
 		const auto format = R"(
 fn Convert () (%s) {
 	// return int32(int16(1234))
 	c_%s %d
-	conv %s %s
+	conv_%s_%s
 	save_r 0
 	ret
 }
 )";
 		char source[1024];
-		sprintf(source, format, to_type, short_fromtype, value, from_type, to_type);
+		sprintf(source, format, name_of(to), shorthand_of(from), from, shorthand_of(from), shorthand_of(to));
 
 		auto c = compile(source);
 		auto p = process(c);
 		auto t = thread(p);
 
 		// Reserve memory for the return value
-		vmi_thread_reserve_stack(t, sizeof(T));
+		vmi_thread_reserve_stack(t, sizeof(TO));
 		invoke(p, t, "Convert");
 
-		verify_stack_size(t, sizeof(T));
-		verify_stack(t, 0, (T)1234);
+		verify_stack_size(t, sizeof(TO));
+		verify_stack(t, 0, (TO)to);
 
 		destroy(t);
 		destroy(p);
@@ -757,7 +791,8 @@ fn Convert () (%s) {
 	// Convert a value from one type to another
 	void conv()
 	{
-		conv_test<vm_int32>("int16", "int32", "i16", 1234);
+		conv_test<vm_int32, vm_int16>(1234, 1234);
+		conv_test<vm_int16, vm_int32>(123, 123);
 	}
 
 	void operator()()

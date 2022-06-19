@@ -16,7 +16,7 @@
 
 #define BODY_BRANCH_BEGIN if(0) {}
 #define BODY_BRANCH_END
-#define BODY_BRANCH(C) else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(C))) { if (!C(c, l, p, t, func)) return FALSE; }
+#define BODY_BRANCH(C) else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(C))) { if (!parse_##C(c, l, p, t, func)) return FALSE; }
 
 VM_STRING_CONST(bool, "bool", 4);
 VM_STRING_CONST(int8, "int8", 4);
@@ -32,8 +32,6 @@ VM_STRING_CONST(float64, "float64", 7);
 
 VM_STRING_CONST(load_a, "load_a", 6);
 VM_STRING_CONST(save_r, "save_r", 6);
-VM_STRING_CONST(c_i32, "c_i32", 5);
-VM_STRING_CONST(c_i16, "c_i16", 5);
 VM_STRING_CONST(alloc_s, "alloc_s", 7);
 VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
@@ -43,7 +41,11 @@ VM_STRING_CONST(load_l, "load_l", 6);
 VM_STRING_CONST(save_l, "save_l", 6);
 VM_STRING_CONST(copy_s, "copy_s", 6);
 
-VM_STRING_CONST(conv, "conv", 4);
+VM_STRING_CONST(c_i32, "c_i32", 5);
+VM_STRING_CONST(c_i16, "c_i16", 5);
+
+VM_STRING_CONST(conv_i16_i32, "conv_i16_i32", 12);
+VM_STRING_CONST(conv_i32_i16, "conv_i32_i16", 12);
 
 VM_STRING_CONST(clt, "clt", 3);
 VM_STRING_CONST(cgt, "cgt", 3);
@@ -531,8 +533,7 @@ BOOL _vmc_func_add_memory_marker(vmc_compiler* c, vmc_func* func, const vm_strin
 	return TRUE;
 }
 
-#include "instr/c_iX.inc.c"
-#include "instr/func.inc.c"
+#include "vmc_compiler_instr.inc.c"
 
 BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
@@ -586,178 +587,22 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		BODY_BRANCH_BEGIN
 			BODY_BRANCH(load_a)
+			BODY_BRANCH(save_r)
 			BODY_BRANCH(c_i16)
 			BODY_BRANCH(c_i32)
+			BODY_BRANCH(locals)
+			BODY_BRANCH(load_l)
+			BODY_BRANCH(save_l)
+			BODY_BRANCH(alloc_s)
+			BODY_BRANCH(free_s)
+			BODY_BRANCH(copy_s)
+			BODY_BRANCH(clt)
+			BODY_BRANCH(cgt)
+			BODY_BRANCH(add)
+			BODY_BRANCH(conv_i16_i32)
+			BODY_BRANCH(conv_i32_i16)
+		BODY_BRANCH_END
 		
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(add))) {
-			// add <type>
-
-			vmi_opcode opcode = VMI_ADD;
-
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_KEYWORD)
-				return vmc_compiler_message_expected_type(&c->messages, l, t);
-			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
-				opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32);
-			else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int16)))
-				opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16);
-			else
-				return vmc_compiler_message_not_implemented(&c->messages, l, t);
-			_vmc_emit_opcode(c, opcode);
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(save_r))) {
-			// save_r <i32>
-
-			vmi_instr_save_r instr;
-			vm_int32 index;
-
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_INT) {
-				return vmc_compiler_message_expected_index(&c->messages, l, t);
-			}
-
-			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (func->returns_count == 0 || func->returns_count <= index) {
-				return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->returns_count - 1);
-			}
-			instr.opcode = 0;
-			instr.icode = VMI_SAVE_R;
-			instr.size = func->returns[index].type.size;
-			instr.offset = func->returns[index].type.offset;
-			vmc_write(c, &instr, sizeof(vmi_instr_save_r));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(alloc_s))) {
-			// alloc_s <i32>
-
-			vmi_instr_alloc_s instr;
-			vm_int32 num_bytes;
-
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_INT) {
-				return vmc_compiler_message_expected_int(&c->messages, l, t);
-			}
-
-			num_bytes = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (num_bytes < 0) {
-				return vmc_compiler_message_expected_int(&c->messages, l, t);
-			}
-			else if (num_bytes > UINT16_MAX) {
-				return vmc_compiler_message_not_implemented(&c->messages, l, t);
-			}
-			instr.opcode = 0;
-			instr.icode = VMI_ALLOC_S;
-			instr.size = num_bytes;
-			vmc_write(c, &instr, sizeof(vmi_instr_alloc_s));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(free_s))) {
-			// free_s <i32>
-
-			vmi_instr_free_s instr;
-			vm_int32 num_bytes;
-
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_INT) {
-				return vmc_compiler_message_expected_int(&c->messages, l, t);
-			}
-
-			num_bytes = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (num_bytes < 0) {
-				return vmc_compiler_message_expected_int(&c->messages, l, t);
-			}
-			else if (num_bytes > UINT16_MAX) {
-				return vmc_compiler_message_not_implemented(&c->messages, l, t);
-			}
-			instr.opcode = 0;
-			instr.icode = VMI_FREE_S;
-			instr.size = num_bytes;
-			vmc_write(c, &instr, sizeof(vmi_instr_free_s));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(locals))) {
-			// locals (name type, ...)
-			vmi_instr_locals instr;
-			// Parse locals
-			if (!_vmc_parse_keyword_fn_locals(c, l, p, t, func))
-				return FALSE;
-
-			instr.opcode = 0;
-			instr.icode = VMI_LOCALS;
-			instr.size = func->locals_total_size;
-			vmc_write(c, &instr, sizeof(vmi_instr_locals));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(load_l))) {
-			// load_l <i32>
-
-			vmi_instr_load_l instr;
-			vm_int32 index;
-
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_INT) {
-				return vmc_compiler_message_expected_index(&c->messages, l, t);
-			}
-
-			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (func->locals_count == 0 || func->locals_count <= index) {
-				return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->locals_count - 1);
-			}
-			instr.opcode = 0;
-			instr.icode = VMI_LOAD_L;
-			instr.size = func->locals[index].type.size;
-			instr.offset = func->locals[index].type.offset;
-			vmc_write(c, &instr, sizeof(vmi_instr_load_l));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(save_l))) {
-			// save_l <i32>
-
-			vmi_instr_save_l instr;
-			vm_int32 index;
-
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_INT) {
-				return vmc_compiler_message_expected_index(&c->messages, l, t);
-			}
-
-			index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-			if (func->locals_count == 0 || func->locals_count <= index) {
-				return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->locals_count - 1);
-			}
-			instr.opcode = 0;
-			instr.icode = VMI_SAVE_L;
-			instr.size = func->locals[index].type.size;
-			instr.offset = func->locals[index].type.offset;
-			vmc_write(c, &instr, sizeof(vmi_instr_save_l));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(copy_s))) {
-			// copy_s <type>
-			vmi_opcode opcode = VMI_COPY_S;
-			vmc_lexer_next(l, t);
-			if (t->type != VMC_LEXER_TYPE_KEYWORD)
-				return vmc_compiler_message_expected_type(&c->messages, l, t);
-			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
-				opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32);
-			else
-				return vmc_compiler_message_not_implemented(&c->messages, l, t);
-			_vmc_emit_opcode(c, opcode);
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(clt))) {
-			// clt
-
-			vmi_instr_cmp instr;
-			instr.opcode = 0;
-			instr.icode = VMI_CMP;
-			instr.props1 = VMI_INSTR_CMP_PROP1_LT;
-			instr.props2 = VMI_INSTR_CMP_PROP2_SIGNED;
-			vmc_write(c, &instr, sizeof(vmi_instr_cmp));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(cgt))) {
-			// cgt
-
-			vmi_instr_cmp instr;
-			instr.opcode = 0;
-			instr.icode = VMI_CMP;
-			instr.props1 = VMI_INSTR_CMP_PROP1_GT;
-			instr.props2 = VMI_INSTR_CMP_PROP2_SIGNED;
-			vmc_write(c, &instr, sizeof(vmi_instr_cmp));
-		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(jmpt))) {
 			// jmpt <destination>
 
@@ -842,30 +687,6 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			instr.header.icode = VMI_CALL;
 			instr.addr = OFFSET(func->offset);
 			vmc_write(c, &instr, sizeof(vmi_instr_call));
-		}
-		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(conv))) {
-			// conv <from_type> <to_type>
-			vmi_instr_conv instr;
-			instr.header.opcode = 0;
-			instr.header.icode = VMI_CONV;
-
-			// From type
-			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD))
-				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
-			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int16)))
-				instr.props1 = VMI_INSTR_CONV_PROP1_INT16;
-			else
-				return vmc_compiler_message_not_implemented(&c->messages, l, t);
-
-			// To type
-			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD))
-				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
-			if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
-				instr.props2 = VMI_INSTR_CONV_PROP2_INT32;
-			else
-				return vmc_compiler_message_not_implemented(&c->messages, l, t);
-
-			vmc_write(c, &instr, sizeof(vmi_instr_conv));
 		}
 		else {
 			return vmc_compiler_message_not_implemented(&c->messages, l, t);

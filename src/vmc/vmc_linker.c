@@ -71,7 +71,7 @@ void vmc_linker_release(vmc_linker* l)
 vmc_linker_memory_marker_target* vmc_linker_add_memory_marker(vmc_linker* l, vmc_linker_memory_marker* marker,
 	vm_int32 offset)
 {
-	vmc_linker_memory_marker_target* const target = (vmc_linker_memory_marker*)malloc(sizeof(vmc_linker_memory_marker));
+	vmc_linker_memory_marker_target* const target = (vmc_linker_memory_marker_target*)malloc(sizeof(vmc_linker_memory_marker_target));
 	if (target == NULL)
 		return NULL;
 	target->marker = marker;
