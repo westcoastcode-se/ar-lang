@@ -7,6 +7,8 @@
 // What type of object is this
 enum vmc_type_header_type
 {
+	// Unknown type. Usually happens if you refer to a type that's not defined yet
+	VMC_TYPE_HEADER_UNKNOWN,
 	// Tells us that a definition is a package
 	VMC_TYPE_HEADER_PACKAGE = 1,
 	// Tells us that a definition is a variable
@@ -261,5 +263,14 @@ extern void vmc_package_free(vmc_package* p);
 
 // Add the supplied function to the supplied package
 extern void vmc_package_add_func(vmc_package* p, vmc_func* f);
+
+// Search for a type in the supplied package
+extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name);
+
+// Search for a function with the supplied signature
+extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature);
+
+// Create a new type definition and add it to the supplied package
+extern vmc_type_definition* vmc_type_definition_new(vmc_package* p, const vm_string* name, vm_int32 size);
 
 #endif

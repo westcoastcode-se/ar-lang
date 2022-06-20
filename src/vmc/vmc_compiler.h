@@ -120,13 +120,4 @@ extern vm_int32 vmc_compiler_config_import(vmc_compiler* c, const vm_string* pat
 // Create a new package
 extern vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length);
 
-// Search for a type
-extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name);
-
-// Try to func a function in the supplied package with a specific signature
-extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature);
-
-// Add a new type to a package
-extern vmc_type_definition* vmc_type_definition_new(vmc_package* p, const vm_string* name, vm_int32 size);
-
 #endif

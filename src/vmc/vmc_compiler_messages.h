@@ -60,7 +60,10 @@ enum vmc_compiler_messages
 	VMC_COMPILER_MSG_FUNC_BODY_EXISTS,
 
 	// A memory marker already exist with the same name
-	VMC_COMPILER_MSG_MEMORY_MARKER_ALREADY_EXIST
+	VMC_COMPILER_MSG_MEMORY_MARKER_ALREADY_EXIST,
+
+	// A definition array is too small, such as the arguments array in the function definition
+	VMC_COMPILER_MSG_DEFARRAY_TOO_SMALL
 };
 
 #define VMC_COMPILER_MSG_UNKNOWN_TOKEN_STR "unknown token: '%.*s' at %d:%d"
@@ -77,6 +80,7 @@ enum vmc_compiler_messages
 #define VMC_COMPILER_MSG_SYNTAX_ERROR_STR "syntax error: missing '%c' before '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_FUNC_BODY_EXISTS_STR "function '%.*s' already has a body at %d:%d"
 #define VMC_COMPILER_MSG_MEMORY_MARKER_ALREADY_EXIST_STR "memory marker '%.*s' at %d:%d already exist"
+#define VMC_COMPILER_MSG_DEFARRAY_TOO_SMALL_STR "you cannot have more definitions than %d at %d:%d"
 
 // 
 // Functions which helps adding messages to the messages container
@@ -97,6 +101,7 @@ extern BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer* l, vm
 extern BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t, char expected);
 extern BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer* l, const vm_string* signature);
 extern BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer* l, const vm_string* memory_marker);
+extern BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer* l, vm_int32 size);
 
 #endif
 

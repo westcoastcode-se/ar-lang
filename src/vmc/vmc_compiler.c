@@ -587,7 +587,11 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 // [name:keyword]([arg1:keyword] [type1:keyword],...)([type1:keyword])
 vmc_func* _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t)
 {
-	vmc_func* func;
+	vmc_func* const func = vmc_func_malloc();
+	if (func == NULL) {
+		vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+		return NULL;
+	}
 
 	// 1. Function name
 	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD)) {
@@ -595,11 +599,6 @@ vmc_func* _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* 
 		return NULL;
 	}
 
-	func = vmc_func_malloc();
-	if (func == NULL) {
-		vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
-		return NULL;
-	}
 	func->name = t->string;
 	if (vmc_lexer_test_uppercase(*func->name.start))
 		func->modifiers |= VMC_FUNC_MODIFIER_PUBLIC;
@@ -866,50 +865,4 @@ vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length)
 	c->package_last = p;
 	p->id = c->packages_count++;
 	return p;
-}
-
-vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name)
-{
-	vmc_type_definition* type = p->type_first;
-	while (type != NULL) {
-		if (vm_string_cmp(&type->name, name))
-			return type;
-		type = type->next;
-	}
-	if (p->root_package) {
-		return vmc_package_find_type(p->root_package, name);
-	}
-	return NULL;
-}
-
-vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature)
-{
-	vmc_func* func = p->func_first;
-	while (func != NULL) {
-		if (vm_string_cmp(&func->signature, signature)) {
-			return func;
-		}
-		func = func->next;
-	}
-	return NULL;
-}
-
-vmc_type_definition* vmc_type_definition_new(vmc_package* p, const vm_string* name, vm_int32 size)
-{
-	vmc_type_definition* type = (vmc_type_definition*)malloc(sizeof(vmc_type_definition));
-	if (type == NULL)
-		return type;
-	type->name = *name;
-	type->package = p;
-	type->size = size;
-	type->next = NULL;
-	if (p->type_last == NULL) {
-		p->type_first = p->type_last = type;
-	}
-	else {
-		p->type_last->next = type;
-		p->type_last = type;
-	}
-	p->type_count++;
-	return type;
 }

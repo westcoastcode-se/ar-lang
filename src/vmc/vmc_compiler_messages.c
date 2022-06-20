@@ -163,3 +163,14 @@ BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer* l, con
 		VMC_COMPILER_MSG_MEMORY_MARKER_ALREADY_EXIST_STR,
 		vm_string_length(memory_marker), memory_marker->start, line, line_offset);
 }
+
+BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer* l, vm_int32 size)
+{
+	int line, line_offset, _;
+	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	return vm_messages_add(m,
+		VMC_COMPILER_MESSAGE_PREFIX,
+		VMC_COMPILER_MSG_DEFARRAY_TOO_SMALL,
+		VMC_COMPILER_MSG_DEFARRAY_TOO_SMALL_STR,
+		size, line, line_offset);
+}
