@@ -28,6 +28,28 @@ vmc_func* vmc_func_malloc()
 	return func;
 }
 
+void vmc_func_calculate_offsets(vmc_func* func)
+{
+	// The offset represents where a specific argument can be found. The order is backwards, because 
+	// you push values from the right to the left (i.e. memory for the last return value is pushed first)
+	vm_int32 offset = func->args_total_size + func->returns_total_size;
+	vm_int32 i;
+	if (func->args_count > 0) {
+		for (i = 0; i < func->args_count; ++i) {
+			vmc_type_info* info = &func->args[i].type;
+			offset -= info->size;
+			info->offset = offset;
+		}
+	}
+	if (func->returns_count > 0) {
+		for (i = 0; i < func->returns_count; ++i) {
+			vmc_type_info* info = &func->returns[i].type;
+			offset -= info->size;
+			info->offset = offset;
+		}
+	}
+}
+
 // Destroy memory allocated for the supplied function
 void vmc_func_free(vmc_func* func)
 {
@@ -81,4 +103,16 @@ void vmc_package_free(vmc_package* p)
 	p->memory_marker_first = p->memory_marker_last = NULL;
 
 	free(p);
+}
+
+void vmc_package_add_func(vmc_package* p, vmc_func* f)
+{
+	if (p->func_last == NULL) {
+		p->func_first = p->func_last = f;
+	}
+	else {
+		p->func_last->next = f;
+		p->func_last = f;
+	}
+	p->func_count++;
 }

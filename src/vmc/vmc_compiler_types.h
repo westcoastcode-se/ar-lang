@@ -177,6 +177,9 @@ extern void vmc_func_free(vmc_func* func);
 // Allocate new memory for a potential function. Will return NULL if the system is out of memory
 extern vmc_func* vmc_func_malloc();
 
+// Calculate the offset on the stack for arguments, return values and local variables
+extern void vmc_func_calculate_offsets(vmc_func* func);
+
 // Check to see if the supplied function is public
 static inline BOOL vmc_func_is_public(const vmc_func* func)
 {
@@ -255,5 +258,8 @@ extern vmc_package* vmc_package_malloc(const char* name, int length);
 
 // Free the allocated package memory including everything associated with it
 extern void vmc_package_free(vmc_package* p);
+
+// Add the supplied function to the supplied package
+extern void vmc_package_add_func(vmc_package* p, vmc_func* f);
 
 #endif

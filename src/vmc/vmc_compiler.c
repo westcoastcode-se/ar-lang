@@ -121,39 +121,6 @@ void _vmc_append_header(vmc_compiler* c)
 	vmc_write(c, &header, sizeof(header));
 }
 
-// Add the supplied function to the supplied package
-void _vmc_package_add_func(vmc_package* p, vmc_func* f)
-{
-	if (p->func_last == NULL) {
-		p->func_first = p->func_last = f;
-	}
-	else {
-		p->func_last->next = f;
-		p->func_last = f;
-	}
-	p->func_count++;
-}
-
-// Calculate the offset on the stack for arguments, return values and local variables
-void _vmc_calculate_offsets(vmc_func* func) {
-	vm_int32 offset = func->args_total_size + func->returns_total_size;
-	vm_int32 i;
-	if (func->args_count > 0) {
-		for (i = 0; i < func->args_count; ++i) {
-			vmc_type_info* info = &func->args[i].type;
-			offset -= info->size;
-			info->offset = offset;
-		}
-	}
-	if (func->returns_count > 0) {
-		for (i = 0; i < func->returns_count; ++i) {
-			vmc_type_info* info = &func->returns[i].type;
-			offset -= info->size;
-			info->offset = offset;
-		}
-	}
-}
-
 const vm_string* _vmc_prepare_func_get_signature(vmc_compiler* c, vm_string name,
 	vmc_var_definition* args, vm_int32 args_count,
 	vmc_var_definition* returns, vm_int32 returns_count)
@@ -663,7 +630,7 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 	if (func == NULL) {
 		return FALSE;
 	}
-	_vmc_package_add_func(p, func);
+	vmc_package_add_func(p, func);
 	func->id = c->functions_count++;
 	func->modifiers |= modifiers;
 
@@ -672,7 +639,7 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_le
 		return TRUE;
 
 	// Figure out the offset on the stack
-	_vmc_calculate_offsets(func);
+	vmc_func_calculate_offsets(func);
 
 	// Parse the function body
 	if (!_vmc_parse_keyword_fn_body(c, l, p, t, func))
