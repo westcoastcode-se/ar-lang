@@ -44,11 +44,13 @@ add_library(vm "src/vm_config.h"
     "src/vmc/vmc_compiler_messages.h" "src/vmc/vmc_lexer_messages.h" "src/vmc/vmc_compiler_messages.c" "src/vmc/vmc_lexer_messages.c"
      
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
-    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" "src/vmc/vmc_linker.h" "src/vmc/vmc_linker.c")
+    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" 
+    "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" "src/vmc/vmc_linker.h" "src/vmc/vmc_linker.c"
+    "src/vmc/vmc_compiler_types.h")
 
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)
 include_directories("${VM_INCLUDE_DIRS}")
-add_executable(test "test/main.cpp" "test/test.hpp"  "test/suite_vm.cpp" "test/suite_lexer.cpp")
+add_executable(test "test/main.cpp" "test/test.hpp" "test/suite_vm.cpp" "test/suite_lexer.cpp")
 target_link_libraries(test vm)

@@ -411,6 +411,8 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	return TRUE;
 }
 
+// fn (<scope>) Name (<args>) (<returns>)
+
 BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	func->locals_count = 0;
