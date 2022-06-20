@@ -106,91 +106,6 @@ void _vmc_emit_icode(vmc_compiler* c, vm_int8 icode)
 	vmc_write(c, &instr, sizeof(vmi_instr_single_instruction));
 }
 
-// Initialize the function memory
-void _vmc_func_init(vmc_func* func)
-{
-	VMC_INIT_TYPE_HEADER(func, VMC_TYPE_HEADER_FUNC, sizeof(void*));
-	func->package = NULL;
-	vm_string_zero(&func->name);
-	func->offset = -1;
-	func->next = NULL;
-	func->modifiers = 0;
-	func->complexity = 0;
-	func->complexity_components = 0;
-	func->args_count = 0;
-	func->args_total_size = 0;
-	func->returns_count = 0;
-	func->returns_total_size = 0;
-	func->locals_count = 0;
-	func->locals_total_size = 0;
-	func->memory_marker_first = func->memory_marker_last = NULL;
-}
-
-// Allocate new memory for a potential function. Will return NULL if the system is out of memory
-vmc_func* _vmc_func_malloc()
-{
-	vmc_func* func = (vmc_func*)malloc(sizeof(vmc_func));
-	if (func == NULL)
-		return NULL;
-	_vmc_func_init(func);
-	return func;
-}
-
-// Destroy memory allocated for the supplied function
-void _vmc_func_free(vmc_func* func)
-{
-	vmc_linker_memory_marker_destroy(func->memory_marker_first);
-	func->memory_marker_first = func->memory_marker_last = NULL;
-	free(func);
-}
-
-vmc_package* _vmc_package_malloc(const char* name, int length)
-{
-	vmc_package* p = (vmc_package*)malloc(sizeof(vmc_package));
-	if (p == NULL)
-		return NULL;
-	VMC_INIT_TYPE_HEADER(p, VMC_TYPE_HEADER_PACKAGE, sizeof(void*));
-	vm_string_setsz(&p->name, name, length);
-	p->full_name = p->name;
-	p->func_first = p->func_last = NULL;
-	p->func_count = 0;
-	p->type_first = p->type_last = NULL;
-	p->type_count = 0;
-	p->data_offset = 0;
-	p->memory_marker_first = p->memory_marker_last = NULL;
-	p->root_package = NULL;
-	p->next = NULL;
-	return p;
-}
-
-void _vmc_package_free(vmc_package* p)
-{
-	vmc_func* f;
-	vmc_type_definition* t;
-
-	// Cleanup functions
-	f = p->func_first;
-	while (f != NULL) {
-		vmc_func* next = f->next;
-		_vmc_func_free(f);
-		f = next;
-	}
-
-	// Cleanup types
-	t = p->type_first;
-	while (t != NULL) {
-		vmc_type_definition* next = t->next;
-		free(t);
-		t = next;
-	}
-
-	// Cleanup memory markers
-	vmc_linker_memory_marker_destroy(p->memory_marker_first);
-	p->memory_marker_first = p->memory_marker_last = NULL;
-
-	free(p);
-}
-
 void _vmc_append_header(vmc_compiler* c)
 {
 	vmi_process_header header;
@@ -713,7 +628,7 @@ vmc_func* _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* 
 		return NULL;
 	}
 
-	func = _vmc_func_malloc();
+	func = vmc_func_malloc();
 	if (func == NULL) {
 		vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
 		return NULL;
@@ -836,7 +751,7 @@ void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 void _vmc_compiler_register_builtins(vmc_compiler* c)
 {
 	// Register the "vm" package and all type definitions
-	c->package_first = c->package_last = _vmc_package_malloc("vm", 2);
+	c->package_first = c->package_last = vmc_package_malloc("vm", 2);
 	c->package_first->id = c->packages_count++;
 	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int32), sizeof(vm_int32));
 	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int16), sizeof(vm_int16));
@@ -906,7 +821,7 @@ void _vmc_compiler_destroy_packages(vmc_compiler* c)
 	vmc_package* p = c->package_first;
 	while (p != NULL) {
 		vmc_package* const next = p->next;
-		_vmc_package_free(p);
+		vmc_package_free(p);
 		p = next;
 	}
 	c->package_first = c->package_last = NULL;
@@ -975,7 +890,7 @@ vm_int32 vmc_compiler_config_import(struct vmc_compiler* c, const vm_string* pat
 
 vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length)
 {
-	vmc_package* p = _vmc_package_malloc(name, length);
+	vmc_package* p = vmc_package_malloc(name, length);
 	if (p == NULL)
 		return NULL;
 	// Add the package to the linked list. Assume that vm/root package is in the beginning

@@ -2,6 +2,7 @@
 #define _VMC_COMPILER_TYPES_H_
 
 #include "../vm_string.h"
+#include "vmc_linker.h"
 
 // What type of object is this
 enum vmc_type_header_type
@@ -167,6 +168,15 @@ struct vmc_func
 };
 typedef struct vmc_func vmc_func;
 
+// Initialize the memory for the supplied function
+extern void vmc_func_init(vmc_func* func);
+
+// Destroy memory allocated for the supplied function
+extern void vmc_func_free(vmc_func* func);
+
+// Allocate new memory for a potential function. Will return NULL if the system is out of memory
+extern vmc_func* vmc_func_malloc();
+
 // Check to see if the supplied function is public
 static inline BOOL vmc_func_is_public(const vmc_func* func)
 {
@@ -239,5 +249,11 @@ struct vmc_package
 	struct vmc_package* next;
 };
 typedef struct vmc_package vmc_package;
+
+// Allocate memory for a new package with the supplied name
+extern vmc_package* vmc_package_malloc(const char* name, int length);
+
+// Free the allocated package memory including everything associated with it
+extern void vmc_package_free(vmc_package* p);
 
 #endif
