@@ -46,13 +46,24 @@ typedef struct vmc_type_header vmc_type_header;
 #define VMC_INIT_TYPE_HEADER(PTR, TYPE, SIZE) PTR->header.type = TYPE; PTR->header.id = 0; PTR->size = SIZE
 
 // Definition information of a script type
+// *int - ptr of_type int
+// [32]int - array[32] of_type int
+// **int - ptr of_type ptr of_type int
+// MyStruct - MyStruct
+// MyStruct<int> - MyStruct targ[0] int
 struct vmc_type_definition
 {
-	// Name of the type
-	vm_string name;
-
-	// Size of this type
-	vm_int32 size;
+	union
+	{
+		vmc_type_header header;
+		struct
+		{
+			vmc_type_header_type type;
+			vm_uint32 id;
+			vm_int32 size;
+			vm_string name;
+		};
+	};
 
 	// The package this type exists inside
 	struct vmc_package* package;
@@ -107,22 +118,14 @@ typedef struct vmc_var_definition vmc_var_definition;
 // Information of a function
 struct vmc_func
 {
-	// Type header
 	union
 	{
 		vmc_type_header header;
 		struct
 		{
-			// Tells what type of object this is
 			vmc_type_header_type type;
-
-			// A unique id of the definition
 			vm_uint32 id;
-
-			// Size of this type in memory
 			vm_int32 size;
-
-			// Name of the definition
 			vm_string name;
 		};
 	};
@@ -203,22 +206,14 @@ static inline BOOL vmc_func_has_body(const vmc_func* func)
 // A package containing functions and variables
 struct vmc_package
 {
-	// Type header
 	union
 	{
 		vmc_type_header header;
 		struct
 		{
-			// Tells what type of object this is
 			vmc_type_header_type type;
-
-			// A unique id of the definition
 			vm_uint32 id;
-
-			// Size of this type in memory
 			vm_int32 size;
-
-			// Name of the definition
 			vm_string name;
 		};
 	};
@@ -264,13 +259,16 @@ extern void vmc_package_free(vmc_package* p);
 // Add the supplied function to the supplied package
 extern void vmc_package_add_func(vmc_package* p, vmc_func* f);
 
+// Add the supplied type to the supplied package
+extern void vmc_package_add_type(vmc_package* p, vmc_type_definition* type);
+
 // Search for a type in the supplied package
 extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name);
 
 // Search for a function with the supplied signature
 extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature);
 
-// Create a new type definition and add it to the supplied package
-extern vmc_type_definition* vmc_type_definition_new(vmc_package* p, const vm_string* name, vm_int32 size);
+// Create a new type definition
+extern vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 size);
 
 #endif

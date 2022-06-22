@@ -720,18 +720,19 @@ void _vmc_compiler_register_builtins(vmc_compiler* c)
 	// Register the "vm" package and all type definitions that's built-in
 	c->package_first = c->package_last = vmc_package_malloc("vm", 2);
 	c->package_first->id = c->packages_count++;
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int64), sizeof(vm_int64));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(uint64), sizeof(vm_uint64));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int32), sizeof(vm_int32));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(uint32), sizeof(vm_uint32));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int16), sizeof(vm_int16));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(uint16), sizeof(vm_uint16));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(int8), sizeof(vm_int8));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(uint8), sizeof(vm_uint8));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(bool), sizeof(vm_int8));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(float32), sizeof(vm_float32));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(float64), sizeof(vm_float64));
-	vmc_type_definition_new(c->package_first, VM_STRING_CONST_GET(ptr), sizeof(void*));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(int64), sizeof(vm_int64)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(int64), sizeof(vm_int64)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(uint64), sizeof(vm_uint64)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(int32), sizeof(vm_int32)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(uint32), sizeof(vm_uint32)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(int16), sizeof(vm_int16)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(uint16), sizeof(vm_uint16)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(int8), sizeof(vm_int8)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(uint8), sizeof(vm_uint8)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(bool), sizeof(vm_int8)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(float32), sizeof(vm_float32)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(float64), sizeof(vm_float64)));
+	vmc_package_add_type(c->package_first, vmc_type_definition_new(VM_STRING_CONST_GET(ptr), sizeof(void*)));
 }
 
 vmi_process_header* _vmc_compiler_get_header(vmc_compiler* c)

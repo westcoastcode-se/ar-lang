@@ -117,6 +117,19 @@ void vmc_package_add_func(vmc_package* p, vmc_func* f)
 	p->func_count++;
 }
 
+void vmc_package_add_type(vmc_package* p, vmc_type_definition* type)
+{
+	type->package = p;
+	if (p->type_last == NULL) {
+		p->type_first = p->type_last = type;
+	}
+	else {
+		p->type_last->next = type;
+		p->type_last = type;
+	}
+	p->type_count++;
+}
+
 vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name)
 {
 	vmc_type_definition* type = p->type_first;
@@ -143,22 +156,14 @@ vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature)
 	return NULL;
 }
 
-vmc_type_definition* vmc_type_definition_new(vmc_package* p, const vm_string* name, vm_int32 size)
+vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 size)
 {
 	vmc_type_definition* type = (vmc_type_definition*)malloc(sizeof(vmc_type_definition));
 	if (type == NULL)
 		return type;
+	VMC_INIT_TYPE_HEADER(type, VMC_TYPE_HEADER_UNKNOWN, size);
 	type->name = *name;
-	type->package = p;
-	type->size = size;
+	type->package = NULL;
 	type->next = NULL;
-	if (p->type_last == NULL) {
-		p->type_first = p->type_last = type;
-	}
-	else {
-		p->type_last->next = type;
-		p->type_last = type;
-	}
-	p->type_count++;
 	return type;
 }
