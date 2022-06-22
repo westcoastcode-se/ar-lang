@@ -2,6 +2,7 @@
 #define _VMC_COMPILER_H_
 
 #include "vmc_lexer.h"
+#include "../vm_list.h"
 #include "../vm_bytestream.h"
 #include "vmc_string_pool.h"
 #include "vmc_linker.h"
@@ -40,11 +41,7 @@ struct vmc_compiler
 	vm_message panic_error_message;
 
 	// Packages
-	vmc_package* package_first;
-	vmc_package* package_last;
-
-	// Number of packages collected, in total
-	vm_uint32 packages_count;
+	vm_list packages;
 
 	// Number of functions, in total
 	vm_uint32 functions_count;

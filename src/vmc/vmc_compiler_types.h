@@ -88,7 +88,7 @@ typedef struct vmc_type_definition vmc_type_definition;
 extern vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 size);
 
 // Create a new type definition of another type
-extern vmc_type_definition* vmc_type_definition_of_type(const vm_string* name, const vmc_type_definition* parent);
+extern vmc_type_definition* vmc_type_definition_of_type(const vm_string* name, vmc_type_definition* parent);
 
 struct vmc_type_definition_castinfo
 {
@@ -257,9 +257,6 @@ struct vmc_package
 
 	// Root package, useful for searching for built-in types
 	struct vmc_package* root_package;
-
-	// Linked List next
-	struct vmc_package* next;
 };
 typedef struct vmc_package vmc_package;
 
@@ -277,6 +274,9 @@ extern void vmc_package_add_type(vmc_package* p, vmc_type_definition* type);
 
 // Search for a type in the supplied package
 extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name);
+
+// Search for a type in the supplied package
+extern vmc_type_definition* vmc_package_find_type_with_parent(vmc_package* p, const vm_string* name, vmc_type_definition* parent);
 
 // Search for a function with the supplied signature
 extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature);

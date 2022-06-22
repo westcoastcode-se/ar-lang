@@ -14,7 +14,7 @@ vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 siz
 	return type;
 }
 
-vmc_type_definition* vmc_type_definition_of_type(const vm_string* name, const vmc_type_definition* parent)
+vmc_type_definition* vmc_type_definition_of_type(const vm_string* name, vmc_type_definition* parent)
 {
 	vmc_type_definition* def = vmc_type_definition_new(name, parent->size);
 	if (def == NULL)
@@ -114,7 +114,6 @@ vmc_package* vmc_package_malloc(const char* name, int length)
 	p->data_offset = 0;
 	p->memory_marker_first = p->memory_marker_last = NULL;
 	p->root_package = NULL;
-	p->next = NULL;
 	return p;
 }
 
@@ -181,6 +180,23 @@ vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name
 	}
 	if (p->root_package) {
 		return vmc_package_find_type(p->root_package, name);
+	}
+	return NULL;
+}
+
+vmc_type_definition* vmc_package_find_type_with_parent(vmc_package* p, const vm_string* name, vmc_type_definition* parent)
+{
+	if (parent == NULL)
+		return vmc_package_find_type(p, name);
+
+	vmc_type_definition* type = p->type_first;
+	while (type != NULL) {
+		if (type->of_type == parent && vm_string_cmp(&type->name, name))
+			return type;
+		type = type->next;
+	}
+	if (p->root_package) {
+		return vmc_package_find_type_with_parent(p->root_package, name, parent);
 	}
 	return NULL;
 }
