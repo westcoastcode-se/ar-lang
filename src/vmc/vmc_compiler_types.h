@@ -65,6 +65,12 @@ struct vmc_type_definition
 		};
 	};
 
+	// Information of this type
+	vm_int32 mask;
+
+	// A type can be of another type. Used for typedef
+	struct vmc_type_definition* of_type;
+
 	// The package this type exists inside
 	struct vmc_package* package;
 
@@ -73,33 +79,40 @@ struct vmc_type_definition
 };
 typedef struct vmc_type_definition vmc_type_definition;
 
-#define VMC_TYPE_INFO_MASK_NONE (0)
-#define VMC_TYPE_INFO_MASK_ADDR (1 << 0)
+// No mask
+#define VMC_TYPE_DEF_MASK_NONE (0)
+// Indicates that the type is an memory address/pointer
+#define VMC_TYPE_DEF_MASK_ADDR (1 << 0)
 
-// Type definition
-struct vmc_type_info
+// Create a new type definition
+extern vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 size);
+
+// Create a new type definition of another type
+extern vmc_type_definition* vmc_type_definition_of_type(const vm_string* name, const vmc_type_definition* parent);
+
+struct vmc_type_definition_castinfo
 {
-	vmc_type_definition* definition;
-	vm_int32 masks;
+	// Where the memory starts from when an object is casted from one type to another
+	vm_int32 offset;
+};
+typedef struct vmc_type_definition_castinfo vmc_type_definition_castinfo;
 
-	// The size this type takes in memory
-	vm_int32 size;
+// Compare two types to see how they are compatible. 
+extern BOOL vmc_type_definition_compare(const vmc_type_definition* from, const vmc_type_definition* to, vmc_type_definition_castinfo* result);
+
+// Declaration of a variable
+struct vmc_var
+{
+	// The definition itself
+	vmc_type_definition* definition;
+
+	// Name of the variable
+	vm_string name;
 
 	// The offset, from the start, where this var can be found on the stack
 	vm_int32 offset;
 };
-typedef struct vmc_type_info vmc_type_info;
-
-// Declaration of a variable
-struct vmc_var_definition
-{
-	// Name of the variable
-	vm_string name;
-
-	// Variable type definition
-	vmc_type_info type;
-};
-typedef struct vmc_var_definition vmc_var_definition;
+typedef struct vmc_var vmc_var;
 
 // Defines a function to be external - i.e. you can link functionality from 
 // your compiled application into the script language
@@ -147,17 +160,17 @@ struct vmc_func
 	vm_int32 complexity_components;
 
 	// Arguments
-	vmc_var_definition args[VMC_FUNC_MAX_ARGS];
+	vmc_var args[VMC_FUNC_MAX_ARGS];
 	vm_int32 args_count;
 	vm_int32 args_total_size;
 
 	// Returns
-	vmc_var_definition returns[VMC_FUNC_MAX_RETURNS];
+	vmc_var returns[VMC_FUNC_MAX_RETURNS];
 	vm_int32 returns_count;
 	vm_int32 returns_total_size;
 
 	// local variables
-	vmc_var_definition locals[VMC_FUNC_MAX_RETURNS];
+	vmc_var locals[VMC_FUNC_MAX_RETURNS];
 	vm_int32 locals_count;
 	vm_int32 locals_total_size;
 
@@ -267,8 +280,5 @@ extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_strin
 
 // Search for a function with the supplied signature
 extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature);
-
-// Create a new type definition
-extern vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 size);
 
 #endif

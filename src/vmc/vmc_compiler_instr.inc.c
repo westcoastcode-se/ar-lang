@@ -76,8 +76,8 @@ FUNC_BODY(load_a)
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_LOAD_A;
-	instr.size = func->args[index].type.size;
-	instr.offset = func->args[index].type.offset;
+	instr.size = func->args[index].definition->size;
+	instr.offset = func->args[index].offset;
 	vmc_write(c, &instr, sizeof(vmi_instr_load_a));
 	return TRUE;
 }
@@ -98,8 +98,8 @@ FUNC_BODY(save_r)
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_SAVE_R;
-	instr.size = func->returns[index].type.size;
-	instr.offset = func->returns[index].type.offset;
+	instr.size = func->returns[index].definition->size;
+	instr.offset = func->returns[index].offset;
 	vmc_write(c, &instr, sizeof(vmi_instr_save_r));
 	return TRUE;
 }
@@ -134,8 +134,8 @@ FUNC_BODY(load_l)
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_LOAD_L;
-	instr.size = func->locals[index].type.size;
-	instr.offset = func->locals[index].type.offset;
+	instr.size = func->locals[index].definition->size;
+	instr.offset = func->locals[index].offset;
 	vmc_write(c, &instr, sizeof(vmi_instr_load_l));
 	return TRUE;
 }
@@ -156,8 +156,8 @@ FUNC_BODY(save_l)
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_SAVE_L;
-	instr.size = func->locals[index].type.size;
-	instr.offset = func->locals[index].type.offset;
+	instr.size = func->locals[index].definition->size;
+	instr.offset = func->locals[index].offset;
 	vmc_write(c, &instr, sizeof(vmi_instr_save_l));
 	return TRUE;
 }

@@ -1,5 +1,46 @@
 #include "vmc_compiler_types.h"
 
+vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 size)
+{
+	vmc_type_definition* type = (vmc_type_definition*)malloc(sizeof(vmc_type_definition));
+	if (type == NULL)
+		return type;
+	VMC_INIT_TYPE_HEADER(type, VMC_TYPE_HEADER_UNKNOWN, size);
+	type->name = *name;
+	type->mask = VMC_TYPE_DEF_MASK_NONE;
+	type->of_type = NULL;
+	type->package = NULL;
+	type->next = NULL;
+	return type;
+}
+
+vmc_type_definition* vmc_type_definition_of_type(const vm_string* name, const vmc_type_definition* parent)
+{
+	vmc_type_definition* def = vmc_type_definition_new(name, parent->size);
+	if (def == NULL)
+		return NULL;
+	def->of_type = parent;
+	return def;
+}
+
+BOOL vmc_type_definition_compare(const vmc_type_definition* from, const vmc_type_definition* to, vmc_type_definition_castinfo* result)
+{
+	if (from->of_type == NULL)
+		return FALSE;
+	if (from == to) {
+		result->offset = 0;
+		return TRUE;
+	}
+	while ((from = from->of_type) != NULL)
+	{
+		if (from == to) {
+			// figure out the offset
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 void vmc_func_init(vmc_func* func)
 {
 	VMC_INIT_TYPE_HEADER(func, VMC_TYPE_HEADER_FUNC, sizeof(void*));
@@ -36,15 +77,15 @@ void vmc_func_calculate_offsets(vmc_func* func)
 	vm_int32 i;
 	if (func->args_count > 0) {
 		for (i = 0; i < func->args_count; ++i) {
-			vmc_type_info* info = &func->args[i].type;
-			offset -= info->size;
+			vmc_var* info = &func->args[i];
+			offset -= info->definition->size;
 			info->offset = offset;
 		}
 	}
 	if (func->returns_count > 0) {
 		for (i = 0; i < func->returns_count; ++i) {
-			vmc_type_info* info = &func->returns[i].type;
-			offset -= info->size;
+			vmc_var* info = &func->returns[i];
+			offset -= info->definition->size;
 			info->offset = offset;
 		}
 	}
@@ -154,16 +195,4 @@ vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature)
 		func = func->next;
 	}
 	return NULL;
-}
-
-vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 size)
-{
-	vmc_type_definition* type = (vmc_type_definition*)malloc(sizeof(vmc_type_definition));
-	if (type == NULL)
-		return type;
-	VMC_INIT_TYPE_HEADER(type, VMC_TYPE_HEADER_UNKNOWN, size);
-	type->name = *name;
-	type->package = NULL;
-	type->next = NULL;
-	return type;
 }
