@@ -2,6 +2,8 @@
 #define _VMC_COMPILER_TYPES_H_
 
 #include "../vm_string.h"
+#include "../vm_list.h"
+#include "lists/types_list.h"
 #include "vmc_linker.h"
 
 // What type of object is this
@@ -11,12 +13,10 @@ enum vmc_type_header_type
 	VMC_TYPE_HEADER_UNKNOWN,
 	// Tells us that a definition is a package
 	VMC_TYPE_HEADER_PACKAGE = 1,
-	// Tells us that a definition is a variable
-	VMC_TYPE_HEADER_VAR,
-	// Tells us that a definition is a structure
-	VMC_TYPE_HEADER_STRUCT,
-	// Tells us that a definition is a interface
-	VMC_TYPE_HEADER_INTERFACE,
+	// The type is an import alias for another package
+	VMC_TYPE_HEADER_IMPORT_ALIAS,
+	// A type
+	VMC_TYPE_HEADER_TYPE,
 	// Tells us that a definition is a function
 	VMC_TYPE_HEADER_FUNC
 };
@@ -40,7 +40,7 @@ struct vmc_type_header
 typedef struct vmc_type_header vmc_type_header;
 
 // Convert an object to the object's header
-#define TO_TYPE_HEADER(x) (x->header)
+#define TO_TYPE_HEADER(x) (&x->header)
 
 // Initialize object header
 #define VMC_INIT_TYPE_HEADER(PTR, TYPE, SIZE) PTR->header.type = TYPE; PTR->header.id = 0; PTR->size = SIZE
@@ -73,9 +73,6 @@ struct vmc_type_definition
 
 	// The package this type exists inside
 	struct vmc_package* package;
-
-	// Linked list next
-	struct vmc_type_definition* next;
 };
 typedef struct vmc_type_definition vmc_type_definition;
 
@@ -216,6 +213,25 @@ static inline BOOL vmc_func_has_body(const vmc_func* func)
 	return (func->modifiers & VMC_FUNC_MODIFIER_HAS_BODY) == VMC_FUNC_MODIFIER_HAS_BODY;
 }
 
+// An import alias used to connect one package to another
+struct vmc_import_alias
+{
+	union
+	{
+		vmc_type_header header;
+		struct
+		{
+			vmc_type_header_type type;
+			vm_uint32 id;
+			vm_int32 size;
+			vm_string name;
+		};
+	};
+	// The package we are importing
+	struct vmc_package* package;
+};
+typedef struct vmc_import_alias vmc_import_alias;
+
 // A package containing functions and variables
 struct vmc_package
 {
@@ -234,19 +250,8 @@ struct vmc_package
 	// The full name (including parent packages) of this package
 	vm_string full_name;
 
-	// Linked List functions
-	vmc_func* func_first;
-	vmc_func* func_last;
-
-	// Number of functions
-	vm_uint32 func_count;
-
 	// Linked list types
-	vmc_type_definition* type_first;
-	vmc_type_definition* type_last;
-
-	// Number of types
-	vm_uint32 type_count;
+	vmc_types_list types;
 
 	// Offset where the data information for this package can be found
 	vm_uint32 data_offset;
@@ -254,9 +259,6 @@ struct vmc_package
 	// Memory markers for functions and global variables
 	vmc_linker_memory_marker* memory_marker_first;
 	vmc_linker_memory_marker* memory_marker_last;
-
-	// Root package, useful for searching for built-in types
-	struct vmc_package* root_package;
 };
 typedef struct vmc_package vmc_package;
 
@@ -272,11 +274,11 @@ extern void vmc_package_add_func(vmc_package* p, vmc_func* f);
 // Add the supplied type to the supplied package
 extern void vmc_package_add_type(vmc_package* p, vmc_type_definition* type);
 
-// Search for a type in the supplied package
-extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name);
+// Add the supplied type to the supplied package
+extern void vmc_package_add_import_alias(vmc_package* p, vmc_package* package, const vm_string* alias);
 
 // Search for a type in the supplied package
-extern vmc_type_definition* vmc_package_find_type_with_parent(vmc_package* p, const vm_string* name, vmc_type_definition* parent);
+extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name);
 
 // Search for a function with the supplied signature
 extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature);

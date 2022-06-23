@@ -28,7 +28,7 @@ vm_int32 vm_list_add(vm_list* list, void* ptr)
 {
 	if (list->count >= list->capacity) {
 		list->capacity += list->resize_count;
-		list->memory = realloc(list->memory, list->capacity);
+		list->memory = realloc(list->memory, sizeof(void*) * list->capacity);
 		if (list->memory == NULL)
 			return -1;
 	}

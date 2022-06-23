@@ -65,6 +65,8 @@ VM_STRING_CONST(_7, "_7", 2);
 VM_STRING_CONST(_8, "_8", 2);
 VM_STRING_CONST(_9, "_9", 2);
 
+VM_STRING_CONST(empty, "", 0);
+
 const vm_string* _vm_string_const_anon_names[10] = {
 	VM_STRING_CONST_GET(_0),
 	VM_STRING_CONST_GET(_1),
@@ -152,40 +154,11 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 	return TRUE;
 }
 
-// Try parse a type
-BOOL try_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t,
-	vmc_var* var) {
-	// Reset internal properties
-	var->offset = 0;
-	var->definition = NULL;
-
-	// Read potential modifiers: *, []
-	vmc_lexer_next(l, t);
-
-	// This is a pointer. But we don't know of what yet
-	if (t->type == VMC_LEXER_TYPE_PTR) {
-		var->definition = vmc_package_find_type(p, VM_STRING_CONST_GET(ptr));
-		vmc_lexer_next(l, t);
-	}
-	
-	// Expected type
-	if (t->type != VMC_LEXER_TYPE_KEYWORD)
-		return vmc_compiler_message_expected_type(&c->messages, l, t);
-
-	// Try to find the definition for this variable
-	var->definition = vmc_package_find_type_with_parent(p, &t->string, var->definition);
-	if (var->definition == NULL)
-		return vmc_compiler_message_type_not_found(&c->messages, l, t);
-
-	return TRUE;
-}
-
 BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t,
 	vmc_var* vars, vm_int32* out_count, vm_int32* out_total_size)
 {
 	vm_int32 count = 0;
 	vm_int32 total_size = 0;
-	vmc_package* type_package;
 	vmc_type_definition* type_definition;
 
 	// Expected a '(' token
@@ -195,7 +168,6 @@ BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, v
 	// Parse until we reach that end ')' token
 	while (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_R)) {
 		vmc_var* const var = &vars[count];
-		type_package = p;
 
 		// Ignore comma
 		if (t->type == VMC_LEXER_TYPE_COMMA) {
@@ -224,7 +196,7 @@ BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, v
 		if (t->type != VMC_LEXER_TYPE_KEYWORD)
 			return vmc_compiler_message_expected_type(&c->messages, l, t);
 
-		type_definition = vmc_package_find_type(type_package, &t->string);
+		type_definition = vmc_package_find_type(p, &t->string);
 		if (type_definition == NULL)
 			return vmc_compiler_message_type_not_found(&c->messages, l, t);
 		var->definition = type_definition;
@@ -722,7 +694,6 @@ void _vmc_compiler_register_builtins(vmc_compiler* c)
 	VM_LIST_ADD(c->packages, root);
 
 	vmc_package_add_type(root, vmc_type_definition_new(VM_STRING_CONST_GET(int64), sizeof(vm_int64)));
-	vmc_package_add_type(root, vmc_type_definition_new(VM_STRING_CONST_GET(int64), sizeof(vm_int64)));
 	vmc_package_add_type(root, vmc_type_definition_new(VM_STRING_CONST_GET(uint64), sizeof(vm_uint64)));
 	vmc_package_add_type(root, vmc_type_definition_new(VM_STRING_CONST_GET(int32), sizeof(vm_int32)));
 	vmc_package_add_type(root, vmc_type_definition_new(VM_STRING_CONST_GET(uint32), sizeof(vm_uint32)));
@@ -745,7 +716,7 @@ vmi_process_header* _vmc_compiler_get_header(vmc_compiler* c)
 void _vmc_append_package_info(vmc_compiler* c)
 {
 	const vm_int32 size = c->packages.count;
-	int i;
+	int i, j;
 	vmc_package* package;
 
 	// Set how many packages compiled into the bytecode
@@ -763,8 +734,8 @@ void _vmc_append_package_info(vmc_compiler* c)
 		package = VM_LIST_GET(c->packages, vmc_package, i);
 		vmi_package_bytecode_header package_header = {
 			vm_string_length(&package->name),
-			package->func_count,
-			package->type_count,
+			vmc_types_list_count_type(&package->types, VMC_TYPE_HEADER_FUNC),
+			vmc_types_list_count_type(&package->types, VMC_TYPE_HEADER_TYPE),
 			0,
 			0
 		};
@@ -782,15 +753,17 @@ void _vmc_append_package_info(vmc_compiler* c)
 
 	for (i = 0; i < size; ++i) {
 		package = VM_LIST_GET(c->packages, vmc_package, i);
-		vmc_func* f = package->func_first;
-		while (f != NULL) {
-			vmi_package_func_bytecode_header func_header = {
-				vm_string_length(&f->name),
-				f->offset
-			};
-			vmc_write(c, &func_header, sizeof(vmi_package_func_bytecode_header));
-			vmc_write(c, (void*)f->name.start, vm_string_length(&f->name)); // name bytes
-			f = f->next;
+		for (j = 0; j < package->types.count; ++j) {
+			vmc_type_header* header = package->types.memory[j];
+			if (header->type == VMC_TYPE_HEADER_FUNC) {
+				vmc_func* f = (vmc_func*)header;
+				vmi_package_func_bytecode_header func_header = {
+					vm_string_length(&f->name),
+					f->offset
+				};
+				vmc_write(c, &func_header, sizeof(vmi_package_func_bytecode_header));
+				vmc_write(c, (void*)f->name.start, vm_string_length(&f->name)); // name bytes
+			}
 		}
 	}
 }
@@ -872,8 +845,8 @@ vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length)
 	vmc_package* p = vmc_package_malloc(name, length);
 	if (p == NULL)
 		return NULL;
-	// Add the package to the linked list. Assume that vm/root package is in the beginning
-	p->root_package = VM_LIST_GET(c->packages, vmc_package, 0);
+	// Always add the vm root scope as imported
+	vmc_package_add_import_alias(p, VM_LIST_GET(c->packages, vmc_package, 0), VM_STRING_CONST_GET(empty));
 	p->id = vm_list_add(&c->packages, p);
 	return p;
 }

@@ -5,12 +5,11 @@ vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 siz
 	vmc_type_definition* type = (vmc_type_definition*)malloc(sizeof(vmc_type_definition));
 	if (type == NULL)
 		return type;
-	VMC_INIT_TYPE_HEADER(type, VMC_TYPE_HEADER_UNKNOWN, size);
+	VMC_INIT_TYPE_HEADER(type, VMC_TYPE_HEADER_TYPE, size);
 	type->name = *name;
 	type->mask = VMC_TYPE_DEF_MASK_NONE;
 	type->of_type = NULL;
 	type->package = NULL;
-	type->next = NULL;
 	return type;
 }
 
@@ -107,13 +106,9 @@ vmc_package* vmc_package_malloc(const char* name, int length)
 	VMC_INIT_TYPE_HEADER(p, VMC_TYPE_HEADER_PACKAGE, sizeof(void*));
 	vm_string_setsz(&p->name, name, length);
 	p->full_name = p->name;
-	p->func_first = p->func_last = NULL;
-	p->func_count = 0;
-	p->type_first = p->type_last = NULL;
-	p->type_count = 0;
+	vmc_types_list_init(&p->types);
 	p->data_offset = 0;
 	p->memory_marker_first = p->memory_marker_last = NULL;
-	p->root_package = NULL;
 	return p;
 }
 
@@ -122,21 +117,7 @@ void vmc_package_free(vmc_package* p)
 	vmc_func* f;
 	vmc_type_definition* t;
 
-	// Cleanup functions
-	f = p->func_first;
-	while (f != NULL) {
-		vmc_func* next = f->next;
-		vmc_func_free(f);
-		f = next;
-	}
-
-	// Cleanup types
-	t = p->type_first;
-	while (t != NULL) {
-		vmc_type_definition* next = t->next;
-		free(t);
-		t = next;
-	}
+	vmc_types_list_destroy(&p->types);
 
 	// Cleanup memory markers
 	vmc_linker_memory_marker_destroy(p->memory_marker_first);
@@ -147,68 +128,40 @@ void vmc_package_free(vmc_package* p)
 
 void vmc_package_add_func(vmc_package* p, vmc_func* f)
 {
-	if (p->func_last == NULL) {
-		p->func_first = p->func_last = f;
-	}
-	else {
-		p->func_last->next = f;
-		p->func_last = f;
-	}
-	p->func_count++;
+	f->package = p;
+	vmc_types_list_add(&p->types, TO_TYPE_HEADER(f));
 }
 
 void vmc_package_add_type(vmc_package* p, vmc_type_definition* type)
 {
 	type->package = p;
-	if (p->type_last == NULL) {
-		p->type_first = p->type_last = type;
-	}
-	else {
-		p->type_last->next = type;
-		p->type_last = type;
-	}
-	p->type_count++;
+	vmc_types_list_add(&p->types, TO_TYPE_HEADER(type));
+}
+
+void vmc_package_add_import_alias(vmc_package* p, vmc_package* package, const vm_string* _alias)
+{
+	vmc_import_alias* alias = (vmc_import_alias*)malloc(sizeof(vmc_import_alias));
+	VMC_INIT_TYPE_HEADER(alias, VMC_TYPE_HEADER_IMPORT_ALIAS, 0);
+	alias->name = *_alias;
+	alias->package = package;
+	vmc_types_list_add(&p->types, TO_TYPE_HEADER(alias));
 }
 
 vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name)
 {
-	vmc_type_definition* type = p->type_first;
-	while (type != NULL) {
-		if (vm_string_cmp(&type->name, name))
-			return type;
-		type = type->next;
+	vmc_type_header* header = vmc_types_list_find_recursive(&p->types, name);
+	if (header == NULL) {
+		return NULL;
 	}
-	if (p->root_package) {
-		return vmc_package_find_type(p->root_package, name);
+	switch (header->type) {
+	case VMC_TYPE_HEADER_TYPE:
+		return (vmc_type_definition*)header;
+	default:
+		return NULL;
 	}
-	return NULL;
-}
-
-vmc_type_definition* vmc_package_find_type_with_parent(vmc_package* p, const vm_string* name, vmc_type_definition* parent)
-{
-	if (parent == NULL)
-		return vmc_package_find_type(p, name);
-
-	vmc_type_definition* type = p->type_first;
-	while (type != NULL) {
-		if (type->of_type == parent && vm_string_cmp(&type->name, name))
-			return type;
-		type = type->next;
-	}
-	if (p->root_package) {
-		return vmc_package_find_type_with_parent(p->root_package, name, parent);
-	}
-	return NULL;
 }
 
 vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature)
 {
-	vmc_func* func = p->func_first;
-	while (func != NULL) {
-		if (vm_string_cmp(&func->signature, signature)) {
-			return func;
-		}
-		func = func->next;
-	}
-	return NULL;
+	return vmc_types_list_find_func(&p->types, signature);
 }
