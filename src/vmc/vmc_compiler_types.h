@@ -259,6 +259,9 @@ struct vmc_package
 	// Memory markers for functions and global variables
 	vmc_linker_memory_marker* memory_marker_first;
 	vmc_linker_memory_marker* memory_marker_last;
+
+	// Global package
+	struct vmc_package* global_package;
 };
 typedef struct vmc_package vmc_package;
 
@@ -277,8 +280,8 @@ extern void vmc_package_add_type(vmc_package* p, vmc_type_definition* type);
 // Add the supplied type to the supplied package
 extern void vmc_package_add_import_alias(vmc_package* p, vmc_package* package, const vm_string* alias);
 
-// Search for a type in the supplied package
-extern vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name);
+// Search for an unknown type in the supplied package
+extern vmc_type_header* vmc_package_find(vmc_package* p, const vm_string* name);
 
 // Search for a function with the supplied signature
 extern vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature);

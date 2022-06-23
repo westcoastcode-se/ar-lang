@@ -61,25 +61,6 @@ struct vmc_type_header* vmc_types_list_find(vmc_types_list* l, const vm_string* 
 	return NULL;
 }
 
-struct vmc_type_header* vmc_types_list_find_recursive(vmc_types_list* l, const vm_string* name)
-{
-	struct vmc_type_header** item = &l->memory[0];
-	struct vmc_type_header** const end = &l->memory[l->count];
-	for (; item != end; ++item) {
-		struct vmc_type_header* header = *item;
-		if (vm_string_cmp(&header->name, name)) {
-			return header;
-		}
-		else if (vm_string_length(&header->name) == 0 && header->type == VMC_TYPE_HEADER_IMPORT_ALIAS) {
-			vmc_import_alias* alias = (vmc_import_alias*)header;
-			header = vmc_types_list_find(&alias->package->types, name);
-			if (header != NULL)
-				return header;
-		}
-	}
-	return NULL;
-}
-
 struct vmc_func* vmc_types_list_find_func(vmc_types_list* l, const vm_string* signature)
 {
 	struct vmc_type_header** item = &l->memory[0];

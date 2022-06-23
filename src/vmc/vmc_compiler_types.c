@@ -114,9 +114,6 @@ vmc_package* vmc_package_malloc(const char* name, int length)
 
 void vmc_package_free(vmc_package* p)
 {
-	vmc_func* f;
-	vmc_type_definition* t;
-
 	vmc_types_list_destroy(&p->types);
 
 	// Cleanup memory markers
@@ -147,18 +144,13 @@ void vmc_package_add_import_alias(vmc_package* p, vmc_package* package, const vm
 	vmc_types_list_add(&p->types, TO_TYPE_HEADER(alias));
 }
 
-vmc_type_definition* vmc_package_find_type(vmc_package* p, const vm_string* name)
+vmc_type_header* vmc_package_find(vmc_package* p, const vm_string* name)
 {
-	vmc_type_header* header = vmc_types_list_find_recursive(&p->types, name);
+	vmc_type_header* header = vmc_types_list_find(&p->types, name);
 	if (header == NULL) {
-		return NULL;
+		header = vmc_package_find(p->global_package, name);
 	}
-	switch (header->type) {
-	case VMC_TYPE_HEADER_TYPE:
-		return (vmc_type_definition*)header;
-	default:
-		return NULL;
-	}
+	return header;
 }
 
 vmc_func* vmc_func_find(vmc_package* p, const vm_string* signature)

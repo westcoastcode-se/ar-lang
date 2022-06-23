@@ -27,9 +27,6 @@ extern vm_int32 vmc_types_list_add(vmc_types_list* l, struct vmc_type_header* pt
 // Search for a type with the supplied import name
 extern struct vmc_type_header* vmc_types_list_find(vmc_types_list* l, const vm_string* name);
 
-// Search for a type with the supplied import name recursivelly amoung all import aliases as well
-extern struct vmc_type_header* vmc_types_list_find_recursive(vmc_types_list* l, const vm_string* name);
-
 // Search for a function with the supplied signature
 extern struct vmc_func* vmc_types_list_find_func(vmc_types_list* l, const vm_string* signature);
 

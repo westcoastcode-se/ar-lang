@@ -154,12 +154,60 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 	return TRUE;
 }
 
+// Parse a type:
+// 
+// KEYWORD
+// *KEYWORD
+// [INT]KEYWORD
+// KEYWPORD<TYPE>
+// *PACKAGE.KEYWORD
+BOOL _vmc_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
+	BOOL addressof = FALSE;
+	vmc_type_header* header;
+	var->definition = NULL;
+	if (t->type == VMC_LEXER_TYPE_PTR) {
+		addressof = TRUE;
+		vmc_lexer_next(l, t);
+	}
+
+	if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+		return vmc_compiler_message_expected_type(&c->messages, l, t);
+	}
+
+	header = vmc_package_find(p, &t->string);
+	if (header == NULL) {
+		return vmc_compiler_message_type_not_found(&c->messages, l, t);
+	}
+
+	while (header->type == VMC_TYPE_HEADER_IMPORT_ALIAS) {
+		vmc_import_alias* const alias = (vmc_import_alias*)header;
+		// Dot delimiter
+		vmc_lexer_next(l, t);
+		if (t->type != VMC_LEXER_TYPE_DOT) {
+			return vmc_compiler_message_syntax_error(&c->messages, l, t, '.');
+
+		}
+		// Next keyword
+		vmc_lexer_next(l, t);
+		if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+			return vmc_compiler_message_expected_type(&c->messages, l, t);
+		}
+
+		header = vmc_package_find(alias->package, &t->string);
+	}
+
+	if (header->type != VMC_TYPE_HEADER_TYPE) {
+		return vmc_compiler_message_expected_type(&c->messages, l, t);
+	}
+	var->definition = (vmc_type_definition*)header;
+	return TRUE;
+}
+
 BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t,
 	vmc_var* vars, vm_int32* out_count, vm_int32* out_total_size)
 {
 	vm_int32 count = 0;
 	vm_int32 total_size = 0;
-	vmc_type_definition* type_definition;
 
 	// Expected a '(' token
 	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
@@ -177,33 +225,15 @@ BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, v
 		// Reset masks
 		var->offset = 0;
 		var->name = *_vm_string_const_anon_names[count];
-
-		// types can be:
-		// KEYWORD
-		// *KEYWORD
-		// [INT]KEYWORD
-		// KEYWPORD<TYPE>
-		// *PACKAGE.KEYWORD
-
-		// We can, quickly figure out if this is a type if the keyword is:
-		// '[' or '*' since those are part of the type
-		if (t->type == VMC_LEXER_TYPE_SQUARE_L || t->type == VMC_LEXER_TYPE_PTR) {
-			// These types of types are not supported yet!
-			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		
+		// Parse type
+		if (!_vmc_parse_type(c, l, p, t, var)) {
+			return FALSE;
 		}
-
-		// Expected type
-		if (t->type != VMC_LEXER_TYPE_KEYWORD)
-			return vmc_compiler_message_expected_type(&c->messages, l, t);
-
-		type_definition = vmc_package_find_type(p, &t->string);
-		if (type_definition == NULL)
-			return vmc_compiler_message_type_not_found(&c->messages, l, t);
-		var->definition = type_definition;
 
 		// Argument now loaded
 		count++;
-		total_size += type_definition->size;
+		total_size += var->definition->size;
 	}
 
 	*out_count = count;
@@ -215,8 +245,6 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 {
 	func->args_count = 0;
 	func->args_total_size = 0;
-	vmc_package* type_package;
-	vmc_type_definition* type_definition;
 
 	// Expected a '(' token
 	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
@@ -225,7 +253,6 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	// Parse until we reach that end ')' token
 	while (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_R)) {
 		vmc_var* const var = &func->args[func->args_count];
-		type_package = p;
 
 		// Ignore comma
 		if (t->type == VMC_LEXER_TYPE_COMMA) {
@@ -241,33 +268,14 @@ BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		var->name = t->string;
 		vmc_lexer_next(l, t);
 
-		// The first part can be a name OR a type
-		// names are guaranteed to be a KEYWORD
-		// vars can be:
-		// KEYWORD
-		// *KEYWORD
-		// [INT]KEYWORD
-		// KEYWPORD<TYPE>
-
-		// We can, quickly figure out if this is a type if the keyword is:
-		// '[' or '*' since those are part of the type
-		if (t->type == VMC_LEXER_TYPE_SQUARE_L || t->type == VMC_LEXER_TYPE_PTR) {
-			// These types of types are not supported yet!
-			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		// Parse type
+		if (!_vmc_parse_type(c, l, p, t, var)) {
+			return FALSE;
 		}
-
-		// Expected type
-		if (t->type != VMC_LEXER_TYPE_KEYWORD)
-			return vmc_compiler_message_expected_type(&c->messages, l, t);
-
-		type_definition = vmc_package_find_type(type_package, &t->string);
-		if (type_definition == NULL)
-			return vmc_compiler_message_type_not_found(&c->messages, l, t);
-		var->definition = type_definition;
 
 		// Argument now loaded
 		func->args_count++;
-		func->args_total_size += type_definition->size;
+		func->args_total_size += var->definition->size;
 	}
 
 	return TRUE;
@@ -279,8 +287,6 @@ BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_lexer* l, vmc_package* p,
 {
 	func->locals_count = 0;
 	func->locals_total_size = 0;
-	vmc_package* type_package;
-	vmc_type_definition* type_definition;
 
 	// Expected a '(' token
 	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
@@ -289,7 +295,6 @@ BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_lexer* l, vmc_package* p,
 	// Parse until we reach that end ')' token
 	while (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_R)) {
 		vmc_var* const var = &func->locals[func->locals_count];
-		type_package = p;
 
 		// Ignore comma
 		if (t->type == VMC_LEXER_TYPE_COMMA) {
@@ -305,33 +310,14 @@ BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_lexer* l, vmc_package* p,
 		var->name = t->string;
 		vmc_lexer_next(l, t);
 
-		// The first part can be a name OR a type
-		// names are guaranteed to be a KEYWORD
-		// vars can be:
-		// KEYWORD
-		// *KEYWORD
-		// [INT]KEYWORD
-		// KEYWPORD<TYPE>
-
-		// We can, quickly figure out if this is a type if the keyword is:
-		// '[' or '*' since those are part of the type
-		if (t->type == VMC_LEXER_TYPE_SQUARE_L || t->type == VMC_LEXER_TYPE_PTR) {
-			// These types of types are not supported yet!
-			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		// Parse type
+		if (!_vmc_parse_type(c, l, p, t, var)) {
+			return FALSE;
 		}
-
-		// Expected type
-		if (t->type != VMC_LEXER_TYPE_KEYWORD)
-			return vmc_compiler_message_expected_type(&c->messages, l, t);
-
-		type_definition = vmc_package_find_type(type_package, &t->string);
-		if (type_definition == NULL)
-			return vmc_compiler_message_type_not_found(&c->messages, l, t);
-		var->definition = type_definition;
 
 		// Argument now loaded
 		func->locals_count++;
-		func->locals_total_size += type_definition->size;
+		func->locals_total_size += var->definition->size;
 	}
 
 	// Augment offsets (where is the memory located from the "ebp"'s point of view).
@@ -845,8 +831,9 @@ vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length)
 	vmc_package* p = vmc_package_malloc(name, length);
 	if (p == NULL)
 		return NULL;
+	p->global_package = VM_LIST_GET(c->packages, vmc_package, 0);
 	// Always add the vm root scope as imported
-	vmc_package_add_import_alias(p, VM_LIST_GET(c->packages, vmc_package, 0), VM_STRING_CONST_GET(empty));
+	//vmc_package_add_import_alias(p, VM_LIST_GET(c->packages, vmc_package, 0), VM_STRING_CONST_GET(empty));
 	p->id = vm_list_add(&c->packages, p);
 	return p;
 }
