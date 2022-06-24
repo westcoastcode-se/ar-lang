@@ -155,10 +155,17 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 }
 
 // Parse a type:
+// pointer of_type KEYWORD
+// ARRAY of_type KEYWORD
+// pointer of_type ARRAY of_type KEYWORD
+// ARRAY of_type POINTER of_type KEYWORD
+// ...
 // 
 // KEYWORD
 // *KEYWORD
 // [INT]KEYWORD
+// *[INT]KEYWORD
+// [INT]*KEYWORD
 // KEYWPORD<TYPE>
 // *PACKAGE.KEYWORD
 BOOL _vmc_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
@@ -617,6 +624,11 @@ BOOL _vmc_parse_keyword_extern(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vm
 	}
 }
 
+BOOL _vmc_parse_keyword_import(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t)
+{
+	return vmc_compiler_message_not_implemented(&c->messages, l, t);
+}
+
 BOOL _vmc_parse_keyword(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t)
 {
 	switch (t->type)
@@ -625,6 +637,8 @@ BOOL _vmc_parse_keyword(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer
 		return _vmc_parse_keyword_extern(c, l, p, t);
 	case VMC_LEXER_TYPE_KEYWORD_FN:
 		return _vmc_parse_keyword_fn(c, l, p, t, 0);
+	case VMC_LEXER_TYPE_KEYWORD_IMPORT:
+		return _vmc_parse_keyword_import(c, l, p, t);
 	case VMC_LEXER_TYPE_KEYWORD_CONST:
 	default:
 		break;

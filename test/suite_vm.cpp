@@ -53,6 +53,7 @@ struct suite_vm_utils : test_utils
 				message = message->next;
 			}
 			e << "\n]";
+			vmc_compiler_destroy(c);
 			throw_(e);
 		}
 	}

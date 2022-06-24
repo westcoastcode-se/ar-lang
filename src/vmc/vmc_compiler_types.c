@@ -109,6 +109,7 @@ vmc_package* vmc_package_malloc(const char* name, int length)
 	vmc_types_list_init(&p->types);
 	p->data_offset = 0;
 	p->memory_marker_first = p->memory_marker_last = NULL;
+	p->global_package = NULL;
 	return p;
 }
 
@@ -147,7 +148,7 @@ void vmc_package_add_import_alias(vmc_package* p, vmc_package* package, const vm
 vmc_type_header* vmc_package_find(vmc_package* p, const vm_string* name)
 {
 	vmc_type_header* header = vmc_types_list_find(&p->types, name);
-	if (header == NULL) {
+	if (header == NULL && p->global_package != NULL) {
 		header = vmc_package_find(p->global_package, name);
 	}
 	return header;
