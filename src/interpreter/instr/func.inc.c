@@ -82,10 +82,14 @@ vmi_ip _vmi_thread_load_a(vmi_thread* t, vmi_ip ip)
 		*(vm_int32*)target = *(vm_int32*)(t->ebp + instr->offset);
 		break;
 	case 1:
+		*(vm_int8*)target = *(vm_int8*)(t->ebp + instr->offset);
+		break;
 	case 2:
 		*(vm_int16*)target = *(vm_int16*)(t->ebp + instr->offset);
 		break;
 	case 8:
+		*(vm_int64*)target = *(vm_int64*)(t->ebp + instr->offset);
+		break;
 	default:
 		return _vmi_thread_not_implemented(t, ip);
 	}

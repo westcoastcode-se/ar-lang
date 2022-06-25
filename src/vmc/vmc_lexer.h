@@ -201,4 +201,7 @@ inline static BOOL vmc_lexer_success(vmc_lexer* l)
 	return vm_messages_has_messages(&l->messages) == FALSE;
 }
 
+// Try to convert the token value into a real integer
+extern vm_int32 vmc_lexer_token_toint32(vmc_lexer_token* t);
+
 #endif

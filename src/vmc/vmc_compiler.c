@@ -41,6 +41,8 @@ VM_STRING_CONST(locals, "locals", 6);
 VM_STRING_CONST(load_l, "load_l", 6);
 VM_STRING_CONST(save_l, "save_l", 6);
 VM_STRING_CONST(copy_s, "copy_s", 6);
+VM_STRING_CONST(ldl_a, "ldl_a", 5);
+VM_STRING_CONST(sunref_i32, "sunref_i32", 10);
 
 VM_STRING_CONST(c_i32, "c_i32", 5);
 VM_STRING_CONST(c_i16, "c_i16", 5);
@@ -166,17 +168,106 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 // [INT]KEYWORD
 // *[INT]KEYWORD
 // [INT]*KEYWORD
+// *[INT]*KEYWORD
 // KEYWPORD<TYPE>
 // *PACKAGE.KEYWORD
-BOOL _vmc_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
-	BOOL addressof = FALSE;
+BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
 	vmc_type_header* header;
-	var->definition = NULL;
-	if (t->type == VMC_LEXER_TYPE_PTR) {
-		addressof = TRUE;
-		vmc_lexer_next(l, t);
-	}
 
+	// Is the type a pointer or an array?
+	if (t->type == VMC_LEXER_TYPE_PTR) {
+		char memory[128];
+		const vm_string* pointer_type_name;
+		vmc_type_header* pointer_type_header;
+		vmc_lexer_next(l, t);
+		if (!_vmc_parse_type2(c, l, p, t, var)) {
+			return FALSE;
+		}
+
+		// Stringify the type
+		memory[0] = '*';
+		vm_str_cpy(&memory[1], var->definition->name.start, vm_string_length(&var->definition->name));
+
+		// Try find the "pointer" type. If not found then add it to it's owner package
+		pointer_type_name = vmc_string_pool_stringsz(&c->string_pool, memory, vm_string_length(&var->definition->name) + 1);
+		if (pointer_type_name == NULL) {
+			return vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+		}
+
+		// Reuse the type if found, otherwise create it and add it to the package
+		pointer_type_header = vmc_package_find(var->definition->package, pointer_type_name);
+		if (pointer_type_header == NULL) {
+			// Doesnt exist, so let's create it
+			vmc_package* package = var->definition->package;
+			var->definition = vmc_type_definition_of_type(pointer_type_name, var->definition);
+			vmc_package_add_type(package, var->definition);
+		}
+		else if (pointer_type_header->type != VMC_TYPE_HEADER_TYPE) {
+			return vmc_compiler_message_expected_type(&c->messages, l, t);			
+		}
+		else {
+			var->definition = (vmc_type_definition*)pointer_type_header;
+		}
+		var->definition->size = sizeof(void*);
+		return TRUE;
+	}
+	else if (t->type == VMC_LEXER_TYPE_BRACKET_L) {
+		char memory[128];
+		char* memory_ptr;
+		const vm_string* array_type_name;
+		vmc_type_header* array_type_header;
+		vm_int32 size;
+		vmc_lexer_next(l, t);
+		if (t->type != VMC_LEXER_TYPE_INT) {
+			// TODO: Add support for constants containing the integer size
+			if (t->type == VMC_LEXER_TYPE_KEYWORD) {
+				return vmc_compiler_message_not_implemented(&c->messages, l, t);
+			}
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		}
+
+		size = vmc_lexer_token_toint32(t);
+		vmc_lexer_next(l, t);
+		if (t->type != VMC_LEXER_TYPE_BRACKET_R) {
+			return vmc_compiler_message_syntax_error(&c->messages, l, t, ']');
+		}
+		vmc_lexer_next(l, t);
+		
+		// We now have a known array size of the upcoming type
+		if (!_vmc_parse_type2( c, l, p, t, var)) {
+			return FALSE;
+		}
+
+		// Stringify the type
+		memory[0] = '[';
+		memory_ptr = vm_str_cpy(&memory[1], t->string.start, vm_string_length(&t->string));
+		*memory_ptr++ = ']';
+		memory_ptr = vm_str_cpy(memory_ptr, var->definition->name.start, vm_string_length(&var->definition->name));
+
+		// Try find the "pointer" type. If not found then add it to it's owner package
+		array_type_name = vmc_string_pool_stringsz(&c->string_pool, memory, (int)(memory_ptr - memory));
+		if (array_type_name == NULL) {
+			return vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+		}
+
+		// Reuse the type if found, otherwise create it and add it to the package
+		array_type_header = vmc_package_find(var->definition->package, array_type_name);
+		if (array_type_header == NULL) {
+			// Doesnt exist, so let's create it
+			vmc_package* package = var->definition->package;
+			var->definition = vmc_type_definition_of_type(array_type_name, var->definition);
+			vmc_package_add_type(package, var->definition);
+		}
+		else if (array_type_header->type != VMC_TYPE_HEADER_TYPE) {
+			return vmc_compiler_message_expected_type(&c->messages, l, t);
+		}
+		else {
+			var->definition = (vmc_type_definition*)array_type_header;
+		}
+		var->definition->size *= size;
+		return TRUE;
+	}
+	
 	if (t->type != VMC_LEXER_TYPE_KEYWORD) {
 		return vmc_compiler_message_expected_type(&c->messages, l, t);
 	}
@@ -192,7 +283,6 @@ BOOL _vmc_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_to
 		vmc_lexer_next(l, t);
 		if (t->type != VMC_LEXER_TYPE_DOT) {
 			return vmc_compiler_message_syntax_error(&c->messages, l, t, '.');
-
 		}
 		// Next keyword
 		vmc_lexer_next(l, t);
@@ -206,8 +296,13 @@ BOOL _vmc_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_to
 	if (header->type != VMC_TYPE_HEADER_TYPE) {
 		return vmc_compiler_message_expected_type(&c->messages, l, t);
 	}
+
 	var->definition = (vmc_type_definition*)header;
 	return TRUE;
+}
+
+BOOL _vmc_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
+	return _vmc_parse_type2(c, l, p, t, var);
 }
 
 BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t,
@@ -451,6 +546,8 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			BODY_BRANCH(add)
 			BODY_BRANCH(conv_i16_i32)
 			BODY_BRANCH(conv_i32_i16)
+			BODY_BRANCH(ldl_a)
+			BODY_BRANCH(sunref_i32)
 		BODY_BRANCH_END
 		
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(jmpt))) {

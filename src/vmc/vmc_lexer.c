@@ -1,6 +1,7 @@
 #include "vmc_lexer.h"
 #include "vmc_lexer_logic.h"
 #include "vmc_lexer_messages.h"
+#include "vmc_lexer_math.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -497,4 +498,17 @@ BOOL vmc_lexer_next_type(vmc_lexer* l, vmc_lexer_token* token, vmc_lexer_token_t
 char vmc_lexer_peek(vmc_lexer* l)
 {
 	return *(l->source + 1);
+}
+
+vm_int32 vmc_lexer_token_toint32(vmc_lexer_token* t)
+{
+	switch (t->type)
+	{
+	case VMC_LEXER_TYPE_HEX:
+		return (vm_int32)hextoi64(t->string.start, vm_string_length(&t->string));
+	case VMC_LEXER_TYPE_INT:
+		return (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+	default:
+		return 0;
+	}
 }

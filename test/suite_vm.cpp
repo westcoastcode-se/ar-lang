@@ -802,6 +802,52 @@ fn Convert () (%s) {
 	}
 };
 
+struct suite_vm_pointer : suite_vm_utils
+{
+	void call_fn_using_pointer()
+	{
+		const auto source= R"(
+fn InnerGet(val *int32) () {
+	// *val = 10
+	load_a 0
+	c_i32 10
+	sunref_i32
+	ret
+}
+
+fn Get () (int32) {
+	// var value int32
+	locals (value int32)
+	// InnerGet(&value)
+	ldl_a 0
+	call InnerGet(*int32)()
+	// return value
+	load_l 0
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 10);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void operator()()
+	{
+		TEST(call_fn_using_pointer);
+	}
+};
+
 void suite_vm()
 {
 	SUITE(suite_vm_tests);
@@ -809,4 +855,5 @@ void suite_vm()
 	SUITE(suite_vm_memory);
 	SUITE(suite_vm_constants);
 	SUITE(suite_vm_convert);
+	SUITE(suite_vm_pointer);
 }

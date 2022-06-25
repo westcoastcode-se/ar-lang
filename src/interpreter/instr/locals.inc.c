@@ -56,3 +56,21 @@ vmi_ip _vmi_thread_save_l(vmi_thread* t, vmi_ip ip)
 	}
 	return ip + sizeof(vmi_instr_save_l);
 }
+
+vmi_ip _vmi_thread_ldl_a(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_ldl_a* const instr = (const vmi_instr_ldl_a*)ip;
+	vm_byte* const target = (vm_byte*)(t->ebp + instr->offset);
+	vm_byte** const stack_value = (vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*));
+	*stack_value = target;
+	return ip + sizeof(vmi_instr_ldl_a);
+}
+
+vmi_ip _vmi_thread_sunref_int32(vmi_thread* t, vmi_ip ip)
+{
+	// it is assumed that the value on top is of the same type as the pointer in this case
+	const vm_int32 value = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
+	vm_int32* const ptr = *(vm_int32**)vmi_stack_pop(&t->stack, sizeof(vm_int32*));
+	*ptr = value;
+	return ip + sizeof(vmi_instr_single_instruction);
+}

@@ -68,6 +68,12 @@ enum vmi_icodes
 	// Save value on the stack to a local variable
 	VMI_SAVE_L,
 
+	// Load the memory address to where a local variable is located
+	VMI_LDL_A,
+
+	// Save the value on the stack into the memory address located on the stack
+	VMI_SUNREF,
+
 	// Add two values on the stack
 	VMI_ADD,
 
@@ -224,6 +230,31 @@ struct vmi_instr_save_l
 	};
 };
 typedef struct vmi_instr_save_l vmi_instr_save_l;
+
+// A ldl_a(address) instruction
+struct vmi_instr_ldl_a
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 size;
+			vm_uint8 offset;
+			vm_uint8 props3;
+		};
+	};
+};
+typedef struct vmi_instr_ldl_a vmi_instr_ldl_a;
+
+// A sunref_X instruction
+struct vmi_instr_sunref
+{
+	OPCODE_HEADER;
+};
+typedef struct vmi_instr_sunref vmi_instr_sunref;
 
 // A const(ant) int32 instruction
 struct vmi_instr_const_int32
@@ -393,5 +424,7 @@ enum vmi_ocodes
 	VMI_OP_JMPF = (VMI_JMP | VMI_PROPS1_OPCODE(VMI_INSTR_JMP_PROP1_FALSE)),
 
 	VMI_OP_COPY_S_INT32 = (VMI_COPY_S | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32)),
+
+	VMI_OP_SUNREF_INT32 = (VMI_SUNREF | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32))
 };
 #endif

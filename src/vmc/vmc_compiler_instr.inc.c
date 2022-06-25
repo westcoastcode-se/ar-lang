@@ -162,6 +162,33 @@ FUNC_BODY(save_l)
 	return TRUE;
 }
 
+FUNC_BODY(ldl_a)
+{
+	vmi_instr_ldl_a instr;
+	vm_int32 index;
+
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT) {
+		return vmc_compiler_message_expected_index(&c->messages, l, t);
+	}
+
+	index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+	if (func->locals_count == 0 || func->locals_count <= index) {
+		return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->locals_count - 1);
+	}
+	instr.opcode = 0;
+	instr.icode = VMI_LDL_A;
+	instr.size = func->locals[index].definition->size;
+	instr.offset = func->locals[index].offset;
+	vmc_write(c, &instr, sizeof(vmi_instr_ldl_a));
+	return TRUE;
+}
+FUNC_BODY(sunref_i32)
+{
+	_vmc_emit_opcode(c, VMI_OP_SUNREF_INT32);
+	return TRUE;
+}
+
 FUNC_BODY(alloc_s)
 {
 	vmi_instr_alloc_s instr;

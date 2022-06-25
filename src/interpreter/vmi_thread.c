@@ -108,6 +108,10 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			ip = _vmi_thread_copy_s_int32(t, ip);
 			continue;
 
+		case VMI_OP_SUNREF_INT32:
+			ip = _vmi_thread_sunref_int32(t, ip);
+			continue;
+
 		default:
 			break;
 		}
@@ -141,6 +145,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_SAVE_L:
 			ip = _vmi_thread_save_l(t, ip);
+			continue;
+		case VMI_LDL_A:
+			ip = _vmi_thread_ldl_a(t, ip);
 			continue;
 		case VMI_RET:
 			ip = _vmi_thread_ret(t, ip);
