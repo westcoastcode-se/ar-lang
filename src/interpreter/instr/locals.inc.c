@@ -12,22 +12,51 @@ vmi_ip _vmi_thread_locals(vmi_thread* t, vmi_ip ip)
 vmi_ip _vmi_thread_load_l(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_load_l* instr = (const vmi_instr_load_l*)ip;
-	char* const target = vmi_stack_push(&t->stack, instr->size);
-	if (target == NULL)
+	vm_byte* dest = vmi_stack_push(&t->stack, instr->size);
+	const vm_byte* src = t->ebp + instr->offset;
+	if (dest == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
 
-	// TODO: Add support for different sizes
 	switch (instr->size) {
-	case 4:
-		*(vm_int32*)target = *(vm_int32*)(t->ebp + instr->offset);
-		break;
 	case 1:
+		*dest = *src;
+		break;
 	case 2:
-		*(vm_int16*)target = *(vm_int16*)(t->ebp + instr->offset);
+		*(vm_int16*)dest = *(vm_int16*)src;
+		break;
+	case 4:
+		*(vm_int32*)dest = *(vm_int32*)src;
 		break;
 	case 8:
+		*(vm_int64*)dest = *(vm_int64*)src;
+		break;
+	case 16:
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		break;
+	case 24:
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		break;
+	case 32:
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		break;
 	default:
-		return _vmi_thread_not_implemented(t, ip);
+		if (instr->size % sizeof(vm_int32) == 0)
+			vmi_copy_int32((vm_int32*)dest, (vm_int32*)(t->ebp + instr->offset), instr->size / 4);
+		else
+			vmi_copy_bytes(dest, t->ebp + instr->offset, instr->size);
+		break;
 	}
 	return ip + sizeof(vmi_instr_load_l);
 }
@@ -35,24 +64,49 @@ vmi_ip _vmi_thread_load_l(vmi_thread* t, vmi_ip ip)
 vmi_ip _vmi_thread_save_l(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_save_l* const instr = (const vmi_instr_save_l*)ip;
-	vm_byte* const target = (vm_byte*)(t->ebp + instr->offset);
+	vm_byte* dest = (vm_byte*)(t->ebp + instr->offset);
+	const vm_byte* src = vmi_stack_pop(&t->stack, instr->size);
 
-	// TODO: Add support for different sizes
 	switch (instr->size) {
-	case 4: {
-		vm_int32* const value_on_stack = (vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
-		*((vm_int32*)target) = *value_on_stack;
-		break;
-	}
 	case 1:
-	case 2: {
-		vm_int16* const value_on_stack = (vm_int16*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
-		*((vm_int16*)target) = *value_on_stack;
+		*dest = *src;
 		break;
-	}
+	case 2:
+		*(vm_int16*)dest = *(vm_int16*)src;
+		break;
+	case 4:
+		*(vm_int32*)dest = *(vm_int32*)src;
+		break;
 	case 8:
+		*(vm_int64*)dest = *(vm_int64*)src;
+		break;
+	case 16:
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		break;
+	case 24:
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		break;
+	case 32:
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		dest += sizeof(vm_int64); src += sizeof(vm_int64);
+		*(vm_int64*)dest = *(vm_int64*)src;
+		break;
 	default:
-		return _vmi_thread_not_implemented(t, ip);
+		if (instr->size % sizeof(vm_int32) == 0)
+			vmi_copy_int32((vm_int32*)dest, (vm_int32*)src, instr->size / 4);
+		else 
+			vmi_copy_bytes(dest, src, instr->size);
+		break;
 	}
 	return ip + sizeof(vmi_instr_save_l);
 }

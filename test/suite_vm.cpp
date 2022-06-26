@@ -1251,11 +1251,113 @@ fn Get () (int32, int32) {
 		destroy(c);
 	}
 
+	void return_array_4int8()
+	{
+		const auto source = R"(
+fn Get () ([4]int8) {
+	// var values [4]int8
+	locals (values [4]int8)
+	// values[0] = 10
+	ldl_a 0
+	ldc_i32 0
+	ldc_i8 10
+	stelem int8
+	// values[1] = 20
+	ldl_a 0
+	ldc_i32 1
+	ldc_i8 20
+	stelem int8
+	// values[2] = 30
+	ldl_a 0
+	ldc_i32 2
+	ldc_i8 30
+	stelem int8
+	// values[3] = 40
+	ldl_a 0
+	ldc_i32 3
+	ldc_i8 40
+	stelem int8
+	// return values
+	load_l 0
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vm_int8* const ret = (vm_int8*)vmi_thread_reserve_stack(t, sizeof(vm_int8[4]));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int8[4]));
+		verify_value(ret[0], (vm_int8)10);
+		verify_value(ret[1], (vm_int8)20);
+		verify_value(ret[2], (vm_int8)30);
+		verify_value(ret[3], (vm_int8)40);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void return_array_4int32()
+	{
+		const auto source = R"(
+fn Get () ([4]int32) {
+	// var values [4]int32
+	locals (values [4]int32)
+	// values[0] = 10
+	ldl_a 0
+	ldc_i32 0
+	ldc_i32 10
+	stelem int32
+	// values[1] = 20
+	ldl_a 0
+	ldc_i32 1
+	ldc_i32 20
+	stelem int32
+	// values[2] = 30
+	ldl_a 0
+	ldc_i32 2
+	ldc_i32 30
+	stelem int32
+	// values[3] = 40
+	ldl_a 0
+	ldc_i32 3
+	ldc_i32 40
+	stelem int32
+	// return values
+	load_l 0
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vm_int32* const ret = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32[4]));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32[4]));
+		verify_value(ret[0], 10);
+		verify_value(ret[1], 20);
+		verify_value(ret[2], 30);
+		verify_value(ret[3], 40);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void operator()()
 	{
 		TEST(load_and_store_array_value);
 		TEST(load_store_types);
 		TEST(return_two_values_from_array);
+		TEST(return_array_4int8);
+		TEST(return_array_4int32);
 	}
 };
 

@@ -232,6 +232,7 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 		const vm_string* array_type_name;
 		vmc_type_header* array_type_header;
 		vm_int32 size;
+		vmc_lexer_token temp_token;
 		vmc_lexer_next(l, t);
 		if (t->type != VMC_LEXER_TYPE_INT) {
 			// TODO: Add support for constants containing the integer size
@@ -242,6 +243,7 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 		}
 
 		size = vmc_lexer_token_toint32(t);
+		temp_token = *t;
 		vmc_lexer_next(l, t);
 		if (t->type != VMC_LEXER_TYPE_SQUARE_R) {
 			return vmc_compiler_message_syntax_error(&c->messages, l, t, ']');
@@ -255,7 +257,7 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 
 		// Stringify the type
 		memory[0] = '[';
-		memory_ptr = vm_str_cpy(&memory[1], t->string.start, vm_string_length(&t->string));
+		memory_ptr = vm_str_cpy(&memory[1], temp_token.string.start, vm_string_length(&temp_token.string));
 		*memory_ptr++ = ']';
 		memory_ptr = vm_str_cpy(memory_ptr, var->definition->name.start, vm_string_length(&var->definition->name));
 
@@ -272,6 +274,7 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 			vmc_package* package = var->definition->package;
 			var->definition = vmc_type_definition_of_type(array_type_name, var->definition);
 			vmc_package_add_type(package, var->definition);
+			var->definition->size *= size;
 		}
 		else if (array_type_header->type != VMC_TYPE_HEADER_TYPE) {
 			return vmc_compiler_message_expected_type(&c->messages, l, t);
@@ -279,7 +282,6 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 		else {
 			var->definition = (vmc_type_definition*)array_type_header;
 		}
-		var->definition->size *= size;
 		return TRUE;
 	}
 	
