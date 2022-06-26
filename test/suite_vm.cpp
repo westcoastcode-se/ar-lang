@@ -1351,6 +1351,154 @@ fn Get () ([4]int32) {
 		destroy(c);
 	}
 
+	void call_function_with_array_address()
+	{
+		const auto source = R"(
+fn InnerGet(values *int32) () {
+	// values[0] = 10
+	load_a 0
+	ldc_i32 0
+	ldc_i32 10
+	stelem int32
+	// values[1] = 20
+	load_a 0
+	ldc_i32 1
+	ldc_i32 20
+	stelem int32
+	// values[2] = 30
+	load_a 0
+	ldc_i32 2
+	ldc_i32 30
+	stelem int32
+	// values[3] = 40
+	load_a 0
+	ldc_i32 3
+	ldc_i32 40
+	stelem int32
+	ret
+}
+
+fn Get () ([4]int32) {
+	// var values [4]int32
+	locals (values [4]int32)
+	// InnerGet(&values)
+	ldl_a 0
+	call InnerGet(*int32)()
+	// return values
+	load_l 0
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vm_int32* const ret = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32[4]));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32[4]));
+		verify_value(ret[0], 10);
+		verify_value(ret[1], 20);
+		verify_value(ret[2], 30);
+		verify_value(ret[3], 40);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void call_function_with_array_of_addresses()
+	{
+		const auto source = R"(
+fn InnerGet(values [4]*int32) () {
+	// *values[0] = 10
+	lda_a 0
+	ldc_i32 0
+	ldelem *int32
+	ldc_i32 10
+	sunref_i32
+	// *values[1] = 20
+	lda_a 0
+	ldc_i32 1
+	ldelem *int32
+	ldc_i32 20
+	sunref_i32
+	// *values[2] = 30
+	lda_a 0
+	ldc_i32 2
+	ldelem *int32
+	ldc_i32 30
+	sunref_i32
+	// *values[3] = 40
+	lda_a 0
+	ldc_i32 3
+	ldelem *int32
+	ldc_i32 40
+	sunref_i32
+	ret
+}
+
+fn Get () (int32, int32, int32, int32) {
+	// var val0, val1, val2, val3 int32
+	// var values [4]*int32
+	locals (val0 int32, val1 int32, val2 int32, val3 int32, values [4]*int32)
+	// values[0] = &val0
+	ldl_a 4
+	ldc_i32 0
+	ldl_a 0
+	stelem *int32
+	// values[1] = &val1
+	ldl_a 4
+	ldc_i32 1
+	ldl_a 1
+	stelem *int32
+	// values[2] = &val2
+	ldl_a 4
+	ldc_i32 2
+	ldl_a 2
+	stelem *int32
+	// values[3] = &val3
+	ldl_a 4
+	ldc_i32 3
+	ldl_a 3
+	stelem *int32
+	// InnerGet(values)
+	load_l 4
+	call InnerGet([4]*int32)()
+	// return values
+	load_l 0
+	save_r 0
+	load_l 1
+	save_r 1
+	load_l 2
+	save_r 2
+	load_l 3
+	save_r 3
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vm_int32* const val3 = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		vm_int32* const val2 = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		vm_int32* const val1 = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		vm_int32* const val0 = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32) * 4);
+		verify_value(*val0, 10);
+		verify_value(*val1, 20);
+		verify_value(*val2, 30);
+		verify_value(*val3, 40);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void operator()()
 	{
 		TEST(load_and_store_array_value);
@@ -1358,6 +1506,8 @@ fn Get () ([4]int32) {
 		TEST(return_two_values_from_array);
 		TEST(return_array_4int8);
 		TEST(return_array_4int32);
+		TEST(call_function_with_array_address);
+		TEST(call_function_with_array_of_addresses);
 	}
 };
 

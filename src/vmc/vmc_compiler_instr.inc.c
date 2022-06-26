@@ -228,6 +228,28 @@ FUNC_BODY(load_a)
 	return TRUE;
 }
 
+FUNC_BODY(lda_a)
+{
+	vmi_instr_lda_a instr;
+	vm_int32 index;
+
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT) {
+		return vmc_compiler_message_expected_index(&c->messages, l, t);
+	}
+
+	index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+	if (func->args_count == 0 || func->args_count <= index) {
+		return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->args_count - 1);
+	}
+	instr.opcode = 0;
+	instr.icode = VMI_LDA_A;
+	instr.size = func->args[index].definition->size;
+	instr.offset = func->args[index].offset;
+	vmc_write(c, &instr, sizeof(vmi_instr_lda_a));
+	return TRUE;
+}
+
 FUNC_BODY(save_r)
 {
 	vmi_instr_save_r instr;
@@ -341,7 +363,7 @@ FUNC_BODY(stelem)
 	vmi_instr_stelem instr;
 	vmc_var var;
 	vmc_lexer_next(l, t);
-	if (!_vmc_parse_type2(c, l, p, t, &var))
+	if (!_vmc_parse_type(c, l, p, t, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_STELEM;
@@ -355,7 +377,7 @@ FUNC_BODY(stelem_s)
 	vmi_instr_stelem_s instr;
 	vmc_var var;
 	vmc_lexer_next(l, t);
-	if (!_vmc_parse_type2(c, l, p, t, &var))
+	if (!_vmc_parse_type(c, l, p, t, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_STELEM_S;
@@ -369,7 +391,7 @@ FUNC_BODY(ldelem)
 	vmi_instr_ldelem instr;
 	vmc_var var;
 	vmc_lexer_next(l, t);
-	if (!_vmc_parse_type2(c, l, p, t, &var))
+	if (!_vmc_parse_type(c, l, p, t, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_LDELEM;
@@ -383,7 +405,7 @@ FUNC_BODY(ldelem_s)
 	vmi_instr_ldelem_s instr;
 	vmc_var var;
 	vmc_lexer_next(l, t);
-	if (!_vmc_parse_type2(c, l, p, t, &var))
+	if (!_vmc_parse_type(c, l, p, t, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_LDELEM_S;

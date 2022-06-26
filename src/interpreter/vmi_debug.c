@@ -9,6 +9,7 @@ void vmi_debug_instruction(vmi_ip ip)
 	switch (header->icode) {
 		VMI_DEBUG_INSTR(VMI_BEGIN);
 		VMI_DEBUG_INSTR(VMI_LOAD_A);
+		VMI_DEBUG_INSTR(VMI_LDA_A);
 		VMI_DEBUG_INSTR(VMI_SAVE_R);
 		VMI_DEBUG_INSTR(VMI_ALLOC_S);
 		VMI_DEBUG_INSTR(VMI_FREE_S);
@@ -33,4 +34,9 @@ void vmi_debug_instruction(vmi_ip ip)
 		printf("<unknown instruction>\n");
 		break;
 	}
+}
+
+extern void vmi_debug_stack(const vmi_stack* s)
+{
+	printf("StackSize: %d\n", vmi_stack_count(s));
 }

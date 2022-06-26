@@ -66,6 +66,7 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		if (t->flags != 0)
 			return t->flags;
 		//vmi_debug_instruction(ip);
+		//vmi_debug_stack(&t->stack);
 		header = (const vmi_opcode_header*)ip;
 
 		// Process specialized instructions first
@@ -232,6 +233,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_LOAD_A:
 			ip = _vmi_thread_load_a(t, ip);
+			continue;
+		case VMI_LDA_A:
+			ip = _vmi_thread_lda_a(t, ip);
 			continue;
 		case VMI_SAVE_R:
 			ip = _vmi_thread_save_r(t, ip);

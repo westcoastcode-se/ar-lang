@@ -18,7 +18,7 @@ static vm_byte* vmi_copy_int32(vm_int32* dest, const vm_int32* src, vm_int32 cou
 	for (; dest != end; ++dest, ++src) {
 		*dest = *src;
 	}
-	return dest;
+	return (vm_byte*)dest;
 }
 
 #endif

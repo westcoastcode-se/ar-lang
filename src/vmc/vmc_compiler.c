@@ -32,6 +32,7 @@ VM_STRING_CONST(float64, "float64", 7);
 VM_STRING_CONST(ptr, "ptr", 3);
 
 VM_STRING_CONST(load_a, "load_a", 6);
+VM_STRING_CONST(lda_a, "lda_a", 5);
 VM_STRING_CONST(save_r, "save_r", 6);
 VM_STRING_CONST(alloc_s, "alloc_s", 7);
 VM_STRING_CONST(free_s, "free_s", 6);
@@ -186,7 +187,7 @@ BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
 // *[INT]*KEYWORD
 // KEYWPORD<TYPE>
 // *PACKAGE.KEYWORD
-BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
+BOOL _vmc_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
 	vmc_type_header* header;
 
 	// Is the type a pointer or an array?
@@ -195,7 +196,7 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 		const vm_string* pointer_type_name;
 		vmc_type_header* pointer_type_header;
 		vmc_lexer_next(l, t);
-		if (!_vmc_parse_type2(c, l, p, t, var)) {
+		if (!_vmc_parse_type(c, l, p, t, var)) {
 			return FALSE;
 		}
 
@@ -251,7 +252,7 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 		vmc_lexer_next(l, t);
 		
 		// We now have a known array size of the upcoming type
-		if (!_vmc_parse_type2( c, l, p, t, var)) {
+		if (!_vmc_parse_type( c, l, p, t, var)) {
 			return FALSE;
 		}
 
@@ -316,10 +317,6 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 
 	var->definition = (vmc_type_definition*)header;
 	return TRUE;
-}
-
-BOOL _vmc_parse_type(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
-	return _vmc_parse_type2(c, l, p, t, var);
 }
 
 BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t,
@@ -549,6 +546,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 		BODY_BRANCH_BEGIN
 			BODY_BRANCH(load_a)
+			BODY_BRANCH(lda_a)
 			BODY_BRANCH(save_r)
 
 			BODY_BRANCH(ldc_s_i8)

@@ -40,6 +40,9 @@ enum vmi_icodes
 
 	// Load argument to the stack
 	VMI_LOAD_A,
+
+	// Load the address one of the arguments
+	VMI_LDA_A,
 	
 	// Save stack value to return target
 	VMI_SAVE_R,
@@ -194,6 +197,7 @@ struct vmi_instr_load_a
 	};
 };
 typedef struct vmi_instr_load_a vmi_instr_load_a;
+typedef struct vmi_instr_load_a vmi_instr_lda_a;
 
 // A save_r(eturn) instruction
 struct vmi_instr_save_r
