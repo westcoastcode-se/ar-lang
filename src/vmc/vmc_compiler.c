@@ -43,6 +43,10 @@ VM_STRING_CONST(save_l, "save_l", 6);
 VM_STRING_CONST(copy_s, "copy_s", 6);
 VM_STRING_CONST(ldl_a, "ldl_a", 5);
 VM_STRING_CONST(sunref_i32, "sunref_i32", 10);
+VM_STRING_CONST(stelem, "stelem", 6);
+VM_STRING_CONST(stelem_s, "stelem_s", 8);
+VM_STRING_CONST(ldelem, "ldelem", 6);
+VM_STRING_CONST(ldelem_s, "ldelem_s", 8);
 
 VM_STRING_CONST(c_i32, "c_i32", 5);
 VM_STRING_CONST(c_i16, "c_i16", 5);
@@ -211,7 +215,7 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 		var->definition->size = sizeof(void*);
 		return TRUE;
 	}
-	else if (t->type == VMC_LEXER_TYPE_BRACKET_L) {
+	else if (t->type == VMC_LEXER_TYPE_SQUARE_L) {
 		char memory[128];
 		char* memory_ptr;
 		const vm_string* array_type_name;
@@ -228,7 +232,7 @@ BOOL _vmc_parse_type2(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_t
 
 		size = vmc_lexer_token_toint32(t);
 		vmc_lexer_next(l, t);
-		if (t->type != VMC_LEXER_TYPE_BRACKET_R) {
+		if (t->type != VMC_LEXER_TYPE_SQUARE_R) {
 			return vmc_compiler_message_syntax_error(&c->messages, l, t, ']');
 		}
 		vmc_lexer_next(l, t);
@@ -548,6 +552,10 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			BODY_BRANCH(conv_i32_i16)
 			BODY_BRANCH(ldl_a)
 			BODY_BRANCH(sunref_i32)
+			BODY_BRANCH(stelem)
+			BODY_BRANCH(stelem_s)
+			BODY_BRANCH(ldelem)
+			BODY_BRANCH(ldelem_s)
 		BODY_BRANCH_END
 		
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(jmpt))) {

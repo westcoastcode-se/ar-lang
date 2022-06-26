@@ -1,6 +1,6 @@
 # Documentation > Instructions > ldl_a
 
-Load the address of a local variable. Used if you want to work with pointers
+Load the address of a local variable. Used if you want to work with pointers or arrays
 
 
 ## Definition

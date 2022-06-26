@@ -183,9 +183,66 @@ FUNC_BODY(ldl_a)
 	vmc_write(c, &instr, sizeof(vmi_instr_ldl_a));
 	return TRUE;
 }
+
 FUNC_BODY(sunref_i32)
 {
 	_vmc_emit_opcode(c, VMI_OP_SUNREF_INT32);
+	return TRUE;
+}
+
+FUNC_BODY(stelem)
+{
+	vmi_instr_stelem instr;
+	vmc_var var;
+	vmc_lexer_next(l, t);
+	if (!_vmc_parse_type2(c, l, p, t, &var))
+		return FALSE;
+	instr.opcode = 0;
+	instr.icode = VMI_STELEM;
+	instr.size_per_element = var.definition->size;
+	vmc_write(c, &instr, sizeof(vmi_instr_stelem));
+	return TRUE;
+}
+
+FUNC_BODY(stelem_s)
+{
+	vmi_instr_stelem_s instr;
+	vmc_var var;
+	vmc_lexer_next(l, t);
+	if (!_vmc_parse_type2(c, l, p, t, &var))
+		return FALSE;
+	instr.opcode = 0;
+	instr.icode = VMI_STELEM_S;
+	instr.size = var.definition->size;
+	vmc_write(c, &instr, sizeof(vmi_instr_stelem_s));
+	return TRUE;
+}
+
+FUNC_BODY(ldelem)
+{
+	vmi_instr_ldelem instr;
+	vmc_var var;
+	vmc_lexer_next(l, t);
+	if (!_vmc_parse_type2(c, l, p, t, &var))
+		return FALSE;
+	instr.opcode = 0;
+	instr.icode = VMI_LDELEM;
+	instr.size_per_element = var.definition->size;
+	vmc_write(c, &instr, sizeof(vmi_instr_ldelem));
+	return TRUE;
+}
+
+FUNC_BODY(ldelem_s)
+{
+	vmi_instr_ldelem_s instr;
+	vmc_var var;
+	vmc_lexer_next(l, t);
+	if (!_vmc_parse_type2(c, l, p, t, &var))
+		return FALSE;
+	instr.opcode = 0;
+	instr.icode = VMI_LDELEM_S;
+	instr.size = var.definition->size;
+	vmc_write(c, &instr, sizeof(vmi_instr_ldelem_s));
 	return TRUE;
 }
 

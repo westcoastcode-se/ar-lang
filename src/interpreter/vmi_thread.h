@@ -113,6 +113,9 @@ extern vm_int32 vmi_thread_push_i16(vmi_thread* t, vm_int16 value);
 // Push a 32 bit integer to the stack of the supplied thread. Returns non-zero if an error has occurred
 extern vm_int32 vmi_thread_push_i32(vmi_thread* t, vm_int32 value);
 
+// Push a memory address to the stack
+extern vm_int32 vmi_thread_push_ptr(vmi_thread* t, void* value);
+
 // Start executing at the start of the supplied bytecode segment. It is assumed that any arguments are already pushed
 // to the stack. If the execution is successful then the return code should be 0
 extern vm_int32 vmi_thread_exec(vmi_thread* t, vmi_ip ip);

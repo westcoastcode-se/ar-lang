@@ -82,6 +82,14 @@ struct suite_vm_utils : test_utils
 		}
 	}
 
+	template<typename T>
+	void verify_value(T value, T expected)
+	{
+		if (value != expected) {
+			throw_(error() << "expected value to be " << expected << " but was " << value);
+		}
+	}
+
 	void push_value(vmi_thread* t, vm_int16 value)
 	{
 		vmi_thread_push_i16(t, value);
@@ -90,6 +98,11 @@ struct suite_vm_utils : test_utils
 	void push_value(vmi_thread* t, vm_int32 value)
 	{
 		vmi_thread_push_i32(t, value);
+	}
+
+	void push_value(vmi_thread* t, void* ptr)
+	{
+		vmi_thread_push_ptr(t, ptr);
 	}
 
 	vmc_compiler* compile(const vm_byte* src)
@@ -842,9 +855,125 @@ fn Get () (int32) {
 		destroy(c);
 	}
 
+	void supply_int32_ptr_from_c()
+	{
+		const auto source = R"(
+fn Get(val *int32) () {
+	// *val = 10
+	load_a 0
+	c_i32 10
+	sunref_i32
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vm_int32 value;
+		push_value(t, &value);
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, 0);
+		verify_value(value, 10);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void operator()()
 	{
 		TEST(call_fn_using_pointer);
+		TEST(supply_int32_ptr_from_c);
+	}
+};
+
+struct suite_vm_arrays : suite_vm_utils
+{
+	void load_and_store_array_value()
+	{
+		const auto source = R"(
+fn Get () (int32) {
+	// var value int32
+	locals (values [2]int32)
+	// values[0] = 10
+	ldl_a 0
+	c_i32 0
+	c_i32 10
+	stelem int32
+	// return values[0]
+	ldl_a 0
+	c_i32 0
+	ldelem int32
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 10);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void return_two_values_from_array()
+	{
+		const auto source = R"(
+fn Get () (int32, int32) {
+	// var value int32
+	locals (values [2]int32)
+	// values[0] = 10
+	ldl_a 0
+	c_i32 0
+	c_i32 10
+	stelem int32
+	// values[1] = 20
+	ldl_a 0
+	c_i32 1
+	c_i32 20
+	stelem int32
+	// return values[0], values[1]
+	ldl_a 0
+	c_i32 0
+	ldelem int32
+	save_r 0
+	ldl_a 0
+	c_i32 1
+	ldelem int32
+	save_r 1
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		verify_stack(t, 0, 20);
+		verify_stack(t, sizeof(vm_int32), 10);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void operator()()
+	{
+		TEST(load_and_store_array_value);
+		TEST(return_two_values_from_array);
 	}
 };
 
@@ -856,4 +985,5 @@ void suite_vm()
 	SUITE(suite_vm_constants);
 	SUITE(suite_vm_convert);
 	SUITE(suite_vm_pointer);
+	SUITE(suite_vm_arrays);
 }

@@ -1,6 +1,7 @@
 #include "vmi_thread.h"
 #include "vmi_ops.h"
 #include "vmi_debug.h"
+#include "vmi_utils.h"
 #include <string.h>
 #include <stdarg.h>
 
@@ -55,6 +56,7 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 #include "instr/func.inc.c"
 #include "instr/copy_s.inc.c"
 #include "instr/stack.inc.c"
+#include "instr/arrays.inc.c"
 
 vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 {
@@ -112,6 +114,32 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			ip = _vmi_thread_sunref_int32(t, ip);
 			continue;
 
+		case VMI_OP_STELEM_S_I8:
+			ip = _vmi_thread_stelem_s_i8(t, ip);
+			continue;
+		case VMI_OP_STELEM_S_I16:
+			ip = _vmi_thread_stelem_s_i16(t, ip);
+			continue;
+		case VMI_OP_STELEM_S_I32:
+			ip = _vmi_thread_stelem_s_i32(t, ip);
+			continue;
+		case VMI_OP_STELEM_S_I64:
+			ip = _vmi_thread_stelem_s_i64(t, ip);
+			continue;
+		case VMI_OP_LDELEM_S_I8:
+			ip = _vmi_thread_ldelem_s_i8(t, ip);
+			continue;
+		case VMI_OP_LDELEM_S_I16:
+			ip = _vmi_thread_ldelem_s_i16(t, ip);
+			continue;
+		case VMI_OP_LDELEM_S_I32:
+			ip = _vmi_thread_ldelem_s_i32(t, ip);
+			continue;
+		case VMI_OP_LDELEM_S_I64:
+			ip = _vmi_thread_ldelem_s_i64(t, ip);
+			continue;
+
+
 		default:
 			break;
 		}
@@ -148,6 +176,18 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_LDL_A:
 			ip = _vmi_thread_ldl_a(t, ip);
+			continue;
+		case VMI_STELEM:
+			ip = _vmi_thread_stelem(t, ip);
+			continue;
+		case VMI_STELEM_S:
+			ip = _vmi_thread_stelem_s(t, ip);
+			continue;
+		case VMI_LDELEM:
+			ip = _vmi_thread_ldelem(t, ip);
+			continue;
+		case VMI_LDELEM_S:
+			ip = _vmi_thread_ldelem_s(t, ip);
 			continue;
 		case VMI_RET:
 			ip = _vmi_thread_ret(t, ip);
@@ -202,6 +242,15 @@ vm_int32 vmi_thread_push_i16(vmi_thread* t, vm_int16 value)
 vm_int32 vmi_thread_push_i32(vmi_thread* t, vm_int32 value)
 {
 	vm_int32* mem = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
+	if (mem == NULL)
+		return -1;
+	*mem = value;
+	return 0;
+}
+
+vm_int32 vmi_thread_push_ptr(vmi_thread* t, void* value)
+{
+	void** mem = (void**)vmi_stack_push(&t->stack, sizeof(void*));
 	if (mem == NULL)
 		return -1;
 	*mem = value;

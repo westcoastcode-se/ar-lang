@@ -13,3 +13,10 @@
 # Stack Manipulation
 
 [copy_s.md](copy_s)
+
+# Arrays
+
+[ldelem.md](ldelem)
+[ldelem_s.md](ldelem_s)
+[stelem.md](stelem)
+[stelem_s.md](stelem_s)
