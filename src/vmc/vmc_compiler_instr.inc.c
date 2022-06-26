@@ -206,9 +206,9 @@ FUNC_BODY(cgt)
 	return TRUE;
 }
 
-FUNC_BODY(load_a)
+FUNC_BODY(lda)
 {
-	vmi_instr_load_a instr;
+	vmi_instr_lda instr;
 	vm_int32 index;
 
 	vmc_lexer_next(l, t);
@@ -221,10 +221,10 @@ FUNC_BODY(load_a)
 		return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->args_count - 1);
 	}
 	instr.opcode = 0;
-	instr.icode = VMI_LOAD_A;
+	instr.icode = VMI_LDA;
 	instr.size = func->args[index].definition->size;
 	instr.offset = func->args[index].offset;
-	vmc_write(c, &instr, sizeof(vmi_instr_load_a));
+	vmc_write(c, &instr, sizeof(vmi_instr_lda));
 	return TRUE;
 }
 

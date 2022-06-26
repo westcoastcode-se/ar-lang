@@ -1,10 +1,14 @@
 # Documentation > Instructions
 
-[call.md](call)
 [add.md](add)
 [conv.md](conv)
 [ldc.md](ldc)
 [ldc_s.md](ldc_s)
+
+## Functions
+
+[call.md](call)
+[lda.md](lda)
 
 ## Compare instructions
 

@@ -265,8 +265,8 @@ fn Get () (int32, int32) {
 		const auto format = R"(
 fn Add (lhs %s, rhs %s) (%s) {
 	// return lhs + rhs
-	load_a 0
-	load_a 1
+	lda 0
+	lda 1
 	add %s
 	save_r 0
 	ret
@@ -313,16 +313,16 @@ fn Add2(lhs int32, rhs int32) (int32) {
 */
 		const auto source = R"(
 fn Add1 (lhs int32, rhs int32) (int32) {
-	load_a 0	// Push first arg (4 bytes) to the stack (esp + 0)
-	load_a 1	// Push second arg (4 bytes) to the stack (esp + 4)
+	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
+	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
 	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
 	save_r 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
 }
 
 fn Add2 (lhs int32, rhs int32) (int32) {
-	load_a 0	// Push first arg (4 bytes) to the stack (esp + 0)
-	load_a 1	// Push second arg (4 bytes) to the stack (esp + 4)
+	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
+	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
 	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
 	save_r 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
@@ -358,8 +358,8 @@ fn AddTwoInts() (int32) {
 */
 		const auto source = R"(
 fn Add (lhs int32, rhs int32) (int32) {
-	load_a 0	// Push first arg (4 bytes) to the stack (esp + 0)
-	load_a 1	// Push second arg (4 bytes) to the stack (esp + 4)
+	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
+	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
 	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
 	save_r 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
@@ -583,7 +583,7 @@ fn Func() (int32) {
 		*/
 		const auto format = R"(
 fn Mul2 (in %s) (%s) {
-	load_a 0	// Push arg to the stack
+	lda 0	// Push arg to the stack
 	copy_s %s	// Copy value to the stack
 	add %s		// Add the two values together
 	save_r 0	// Pop the top stack value and put it into the first return value
@@ -957,7 +957,7 @@ struct suite_vm_pointer : suite_vm_utils
 		const auto source= R"(
 fn InnerGet(val *int32) () {
 	// *val = 10
-	load_a 0
+	lda 0
 	ldc_i32 10
 	sunref_i32
 	ret
@@ -995,7 +995,7 @@ fn Get () (int32) {
 		const auto source = R"(
 fn Get(val *int32) () {
 	// *val = 10
-	load_a 0
+	lda 0
 	ldc_i32 10
 	sunref_i32
 	ret
@@ -1356,22 +1356,22 @@ fn Get () ([4]int32) {
 		const auto source = R"(
 fn InnerGet(values *int32) () {
 	// values[0] = 10
-	load_a 0
+	lda 0
 	ldc_i32 0
 	ldc_i32 10
 	stelem int32
 	// values[1] = 20
-	load_a 0
+	lda 0
 	ldc_i32 1
 	ldc_i32 20
 	stelem int32
 	// values[2] = 30
-	load_a 0
+	lda 0
 	ldc_i32 2
 	ldc_i32 30
 	stelem int32
 	// values[3] = 40
-	load_a 0
+	lda 0
 	ldc_i32 3
 	ldc_i32 40
 	stelem int32

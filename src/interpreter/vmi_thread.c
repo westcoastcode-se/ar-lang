@@ -231,8 +231,8 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_FREE_S:
 			ip = _vmi_thread_free_s(t, ip);
 			continue;
-		case VMI_LOAD_A:
-			ip = _vmi_thread_load_a(t, ip);
+		case VMI_LDA:
+			ip = _vmi_thread_lda(t, ip);
 			continue;
 		case VMI_LDA_A:
 			ip = _vmi_thread_lda_a(t, ip);

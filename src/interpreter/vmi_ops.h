@@ -38,8 +38,8 @@ enum vmi_icodes
 	// Begin a function invocation (with no local variables)
 	VMI_BEGIN = 1,
 
-	// Load argument to the stack
-	VMI_LOAD_A,
+	// Load the value of an argument to the stack
+	VMI_LDA,
 
 	// Load the address one of the arguments
 	VMI_LDA_A,
@@ -180,8 +180,8 @@ struct vmi_instr_begin
 };
 typedef struct vmi_instr_begin vmi_instr_begin;
 
-// A load_a(rgument) instruction
-struct vmi_instr_load_a
+// A lda(rgument) instruction
+struct vmi_instr_lda
 {
 	union
 	{
@@ -196,8 +196,8 @@ struct vmi_instr_load_a
 		};
 	};
 };
-typedef struct vmi_instr_load_a vmi_instr_load_a;
-typedef struct vmi_instr_load_a vmi_instr_lda_a;
+typedef struct vmi_instr_lda vmi_instr_lda;
+typedef struct vmi_instr_lda vmi_instr_lda_a;
 
 // A save_r(eturn) instruction
 struct vmi_instr_save_r

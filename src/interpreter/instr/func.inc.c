@@ -69,9 +69,9 @@ vmi_ip _vmi_thread_begin(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_begin);
 }
 
-vmi_ip _vmi_thread_load_a(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_lda(vmi_thread* t, vmi_ip ip)
 {
-	const vmi_instr_load_a* instr = (const vmi_instr_load_a*)ip;
+	const vmi_instr_lda* instr = (const vmi_instr_lda*)ip;
 	const vm_byte* src = t->ebp + instr->offset;
 	vm_byte* dest = vmi_stack_push(&t->stack, instr->size);
 	if (dest == NULL)
@@ -118,13 +118,13 @@ vmi_ip _vmi_thread_load_a(vmi_thread* t, vmi_ip ip)
 			vmi_copy_bytes(dest, t->ebp + instr->offset, instr->size);
 		break;
 	}
-	return ip + sizeof(vmi_instr_load_a);
+	return ip + sizeof(vmi_instr_lda);
 }
 
 vmi_ip _vmi_thread_lda_a(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_lda_a* instr = (const vmi_instr_lda_a*)ip;
-	const vm_byte* src = t->ebp + instr->offset;
+	vm_byte* src = t->ebp + instr->offset;
 	vm_byte** dest = (vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*));
 	if (dest == NULL)
 		return _vmi_thread_stack_out_of_memory(t, ip);
