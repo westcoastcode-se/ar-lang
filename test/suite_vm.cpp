@@ -611,7 +611,7 @@ fn Mul2 (in %s) (%s) {
 
 	void copy_s()
 	{
-		copy_s_test<vm_int32>("int32", 10);
+		TEST_FN(copy_s_test<vm_int32>("int32", 10));
 	}
 
 	void operator()()
@@ -895,42 +895,8 @@ fn Get () (float64) {
 		destroy(c);
 	}
 
-	template<typename T>
-	void const_test(T value) {
-		const auto format = R"(
-fn Get () (%s) {
-	ldc_%s %d
-	save_r 0
-	ret
-}
-)";
-		char source[1024];
-		sprintf(source, format, name_of(value), shorthand_of(value), value);
-
-		auto c = compile(source);
-		auto p = process(c);
-		auto t = thread(p);
-
-		vmi_thread_reserve_stack(t, sizeof(T));
-		invoke(p, t, "Get");
-
-		verify_stack_size(t, sizeof(T));
-		verify_stack(t, 0, (T)(value));
-
-		destroy(t);
-		destroy(p);
-		destroy(c);
-	}
-
-	void const_test()
-	{
-		const_test<vm_int16>(123);
-		const_test<vm_int32>(123546);
-	}
-
 	void operator()()
 	{
-		TEST(const_test);
 		TEST(ldc);
 		TEST(ldc_i64);
 		TEST(ldc_f32);
@@ -940,7 +906,6 @@ fn Get () (%s) {
 
 struct suite_vm_convert : suite_vm_utils
 {
-
 	template<typename FROM, typename TO>
 	void conv_test(FROM from, TO to)
 	{
@@ -1101,7 +1066,7 @@ fn Get () (int32) {
 		const auto format = R"(
 fn Get () (%s) {
 	locals (values [2]%s)
-	// values[0] = 10
+	// values[0] = ?
 	ldl_a 0
 	ldc_i32 0
 	ldc_%s %d
@@ -1132,14 +1097,113 @@ fn Get () (%s) {
 		destroy(c);
 	}
 
+	void array_test_i64()
+	{
+		const auto source = R"(
+fn Get () (int64) {
+	locals (values [2]int64)
+	// values[0] = 1234567890
+	ldl_a 0
+	ldc_i32 0
+	ldc_i64 1234567890
+	stelem int64
+	// return values[0]
+	ldl_a 0
+	ldc_i32 0
+	ldelem int64
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_int64));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int64));
+		verify_stack(t, 0, 1234567890L);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void array_test_f32()
+	{
+		const auto source = R"(
+fn Get () (float32) {
+	locals (values [2]float32)
+	// values[0] = 123.45f
+	ldl_a 0
+	ldc_i32 0
+	ldc_f32 123.45f
+	stelem float32
+	// return values[0]
+	ldl_a 0
+	ldc_i32 0
+	ldelem float32
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_float32));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_float32));
+		verify_stack(t, 0, 123.45f);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void array_test_f64()
+	{
+		const auto source = R"(
+fn Get () (float64) {
+	locals (values [2]float64)
+	// values[0] = 12345.6789
+	ldl_a 0
+	ldc_i32 0
+	ldc_f64 12345.6789
+	stelem float64
+	// return values[0]
+	ldl_a 0
+	ldc_i32 0
+	ldelem float64
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_float64));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_float64));
+		verify_stack(t, 0, 12345.6789);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void load_store_types()
 	{
 		TEST_FN(array_test<vm_int8>(12));
 		TEST_FN(array_test<vm_int16>(INT16_MAX - 150));
 		TEST_FN(array_test<vm_int32>(INT32_MAX / 2));
-		//array_test<vm_float32>(10.123f);
-		//array_test<vm_float64>(1234.12345);
-		//array_test<vm_int64>(INT64_MAX - 2);
+		TEST_FN(array_test_i64());
+		TEST_FN(array_test_f32());
+		TEST_FN(array_test_f64());
 	}
 
 	void return_two_values_from_array()
