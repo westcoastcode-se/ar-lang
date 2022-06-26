@@ -14,13 +14,13 @@ vmi_ip _vmi_thread_stelem(vmi_thread* t, vmi_ip ip)
 		*(dest + index) = *src;
 		break;
 	case 2:
-		*(vm_int16*)(dest + (index * sizeof(vm_int16))) = *(vm_int16*)(src);
+		*((vm_int16*)(dest)+index) = *(vm_int16*)(src);
 		break;
 	case 4:
-		*(vm_int32*)(dest + (index * sizeof(vm_int32))) = *(vm_int32*)(src);
+		*((vm_int32*)(dest)+index) = *(vm_int32*)(src);
 		break;
 	case 8:
-		*(vm_int64*)(dest + (index * sizeof(vm_int64))) = *(vm_int64*)(src);
+		*((vm_int64*)(dest)+index) = *(vm_int64*)(src);
 		break;
 	default:
 		vmi_copy_bytes(dest + (index * instr->size_per_element), src, instr->size_per_element);
@@ -41,13 +41,13 @@ vmi_ip _vmi_thread_ldelem(vmi_thread* t, vmi_ip ip)
 		*dest = *(src + index);
 		break;
 	case 2:
-		*(vm_int16*)dest = (vm_int16)(*(src + (index * sizeof(vm_int16))));
+		*(vm_int16*)dest = *((vm_int16*)src + index);
 		break;
 	case 4:
-		*(vm_int32*)dest = (vm_int32)(*(src + (index * sizeof(vm_int32))));
+		*(vm_int32*)dest = *((vm_int32*)src + index);
 		break;
 	case 8:
-		*(vm_int64*)dest = (vm_int64)(*(src + (index * sizeof(vm_int64))));
+		*(vm_int64*)dest = *((vm_int64*)src + index);
 		break;
 	default:
 		vmi_copy_bytes(dest + (index * instr->size_per_element), src, instr->size_per_element);

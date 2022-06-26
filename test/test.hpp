@@ -60,3 +60,12 @@ struct test_utils
 		_tests_success = false; \
 	}
 
+#define TEST_FN(s) \
+	cout << endl << "\t\tTest '" << #s << "'"; \
+	try {\
+		s; \
+		cout << " - OK"; \
+	}\
+	catch (const std::exception& e) { \
+		throw e; \
+	}

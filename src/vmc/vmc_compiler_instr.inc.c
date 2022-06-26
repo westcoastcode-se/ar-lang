@@ -10,31 +10,205 @@
 #define FUNC_BODY(N) BOOL parse_##N(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 #endif
 
-FUNC_BODY(c_i16)
+FUNC_BODY(ldc_s_i8)
 {
-	vmi_instr_const_int32 instr;
+	vmi_instr_ldc_s instr;
 	vmc_lexer_next(l, t);
 	if (t->type != VMC_LEXER_TYPE_INT)
 		return vmc_compiler_message_expected_int(&c->messages, l, t);
 	instr.opcode = 0;
-	instr.icode = VMI_CONST;
+	instr.icode = VMI_LDC_S;
+	instr.props1 = VMI_INSTR_CONST_PROP1_INT8;
+	instr.i8 = (vm_int8)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_s));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_s_i16)
+{
+	vmi_instr_ldc_s instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC_S;
+	instr.props1 = VMI_INSTR_CONST_PROP1_INT16;
+	instr.i8 = (vm_int8)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_s));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_s_i32)
+{
+	vmi_instr_ldc_s instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC_S;
+	instr.props1 = VMI_INSTR_CONST_PROP1_INT32;
+	instr.i8 = (vm_int8)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_s));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_s_i64)
+{
+	vmi_instr_ldc_s instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC_S;
+	instr.props1 = VMI_INSTR_CONST_PROP1_INT64;
+	instr.i8 = (vm_int8)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_s));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_s_f32)
+{
+	vmi_instr_ldc_s instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC_S;
+	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT32;
+	instr.i8 = (vm_int8)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_s));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_s_f64)
+{
+	vmi_instr_ldc_s instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC_S;
+	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT64;
+	instr.i8 = (vm_int8)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_s));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_i8)
+{
+	vmi_instr_ldc_i32 instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC;
+	instr.props1 = VMI_INSTR_CONST_PROP1_INT8;
+	instr.i8 = (vm_int8)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i32));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_i16)
+{
+	vmi_instr_ldc_i32 instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT16;
 	instr.i16 = (vm_int16)strtoi64(t->string.start, vm_string_length(&t->string));
-	vmc_write(c, &instr, sizeof(vmi_instr_const_int32));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i32));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_i32)
+{
+	vmi_instr_ldc_i32 instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC;
+	instr.props1 = VMI_INSTR_CONST_PROP1_INT32;
+	instr.i32 = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i32));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_i64)
+{
+	vmi_instr_ldc_i64 instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC_I64;
+	instr.props1 = VMI_INSTR_CONST_PROP1_INT64;
+	instr.i64 = strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i64));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_f32)
+{
+	vmi_instr_ldc_i32 instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT && t->type != VMC_LEXER_TYPE_DECIMAL)
+		return vmc_compiler_message_expected_decimal(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC;
+	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT32;
+	if (t->type == VMC_LEXER_TYPE_DECIMAL)
+		instr.f32 = (vm_float32)strtod(t->string.start, NULL);
+	else
+		instr.f32 = (vm_float32)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i32));
+	return TRUE;
+}
+
+FUNC_BODY(ldc_f64)
+{
+	vmi_instr_ldc_i64 instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT && t->type != VMC_LEXER_TYPE_DECIMAL)
+		return vmc_compiler_message_expected_decimal(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC_I64;
+	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT64;
+	if (t->type == VMC_LEXER_TYPE_DECIMAL)
+		instr.f64 = strtod(t->string.start, NULL);
+	else
+		instr.f64 = (vm_float64)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i64));
+	return TRUE;
+}
+
+FUNC_BODY(c_i16)
+{
+	vmi_instr_ldc_i32 instr;
+	vmc_lexer_next(l, t);
+	if (t->type != VMC_LEXER_TYPE_INT)
+		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	instr.opcode = 0;
+	instr.icode = VMI_LDC;
+	instr.props1 = VMI_INSTR_CONST_PROP1_INT16;
+	instr.i16 = (vm_int16)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i32));
 	return TRUE;
 }
 
 FUNC_BODY(c_i32)
 {
-	vmi_instr_const_int32 instr;
+	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(l, t);
 	if (t->type != VMC_LEXER_TYPE_INT)
 		return vmc_compiler_message_expected_int(&c->messages, l, t);
 	instr.opcode = 0;
-	instr.icode = VMI_CONST;
+	instr.icode = VMI_LDC;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT32;
-	instr.value = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-	vmc_write(c, &instr, sizeof(vmi_instr_const_int32));
+	instr.i32 = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i32));
 	return TRUE;
 }
 

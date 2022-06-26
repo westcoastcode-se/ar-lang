@@ -44,9 +44,6 @@ enum vmi_icodes
 	// Save stack value to return target
 	VMI_SAVE_R,
 
-	// Load constant value to the stack
-	VMI_CONST,
-
 	// Allocate memory on the stack
 	VMI_ALLOC_S,
 
@@ -61,6 +58,15 @@ enum vmi_icodes
 
 	// Locals marker
 	VMI_LOCALS,
+
+	// Push a constant onto the stack using it's shorthand instruction
+	VMI_LDC_S,
+
+	// Push a constant onto the stack
+	VMI_LDC,
+
+	// Push a 64 bit constant onto the stack
+	VMI_LDC_I64,
 
 	// Load local variable and put the result on the stack
 	VMI_LOAD_L,
@@ -297,22 +303,44 @@ typedef struct vmi_instr_stelem vmi_instr_stelem;
 typedef struct vmi_instr_stelem vmi_instr_ldelem;
 typedef struct vmi_instr_stelem_s vmi_instr_ldelem_s;
 
+// A ldc_s(hort) instruction
+struct vmi_instr_ldc_s
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+			vm_uint8 i8;
+			vm_uint8 i8_1;
+		};
+		struct
+		{
+			vm_uint16 i16_0;
+			vm_uint16 i16;
+		};
+	};
+};
+typedef struct vmi_instr_ldc_s vmi_instr_ldc_s;
 
-// A const(ant) int32 instruction
-struct vmi_instr_const_int32
+// A ldc(onstant) 32 bit instruction
+struct vmi_instr_ldc_i32
 {
 	OPCODE_HEADER;
-	struct {
-		vm_int32 value;
+	union {
+		vm_int32 i32;
 		struct {
 			vm_int16 i16;
-			vm_int16 i161;
+			vm_int16 i16_1;
 		};
 		struct {
 			vm_int8 i8;
-			vm_int8 i81;
-			vm_int8 i82;
-			vm_int8 i83;
+			vm_int8 i8_1;
+			vm_int8 i8_2;
+			vm_int8 i8_3;
 		};
 		vm_float32 f32;
 #ifdef VM_32BIT
@@ -320,9 +348,26 @@ struct vmi_instr_const_int32
 #endif
 	};
 };
-typedef struct vmi_instr_const_int32 vmi_instr_const_int32;
+typedef struct vmi_instr_ldc_i32 vmi_instr_ldc_i32;
 #ifdef VM_32BIT
-typedef struct vmi_instr_const_int32 vmi_instr_const_ptr;
+typedef struct vmi_instr_ldc_i32 vmi_instr_const_ptr;
+#endif
+
+// A ldc(onstant) 64 bit instruction
+struct vmi_instr_ldc_i64
+{
+	OPCODE_HEADER;
+	union {
+		vm_int64 i64;
+		vm_float64 f64;
+#ifdef VM_64BIT
+		vm_byte* ptr;
+#endif
+	};
+};
+typedef struct vmi_instr_ldc_i64 vmi_instr_ldc_i64;
+#ifdef VM_64BIT
+typedef struct vmi_instr_ldc_i64 vmi_instr_ldc_ptr;
 #endif
 
 #define VMI_INSTR_CONST_PROP1_BOOL VMI_INSTR_PROP_BOOL
@@ -449,9 +494,31 @@ typedef vmi_instr_single_instruction vmi_instr_eoe;
 
 enum vmi_ocodes
 {
-	VMI_OP_CONST_INT8 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT8)),
-	VMI_OP_CONST_INT16 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT16)),
-	VMI_OP_CONST_INT32 = (VMI_CONST | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT32)),
+	VMI_OP_LDC_I8 = (VMI_LDC | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT8)),
+	VMI_OP_LDC_I16 = (VMI_LDC | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT16)),
+	VMI_OP_LDC_I32 = (VMI_LDC | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT32)),
+	VMI_OP_LDC_I64 = (VMI_LDC_I64 | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT64)),
+	VMI_OP_LDC_F32 = (VMI_LDC | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_FLOAT32)),
+	VMI_OP_LDC_F64 = (VMI_LDC_I64 | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_FLOAT64)),
+
+	VMI_OP_LDC_S_I8_0 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT8) | VMI_PROPS2_OPCODE(0)),
+	VMI_OP_LDC_S_I8_1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT8) | VMI_PROPS2_OPCODE(1)),
+	VMI_OP_LDC_S_I8_N1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT8) | VMI_PROPS2_OPCODE(-1)),
+	VMI_OP_LDC_S_I16_0 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT16) | VMI_PROPS2_OPCODE(0)),
+	VMI_OP_LDC_S_I16_1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT16) | VMI_PROPS2_OPCODE(1)),
+	VMI_OP_LDC_S_I16_N1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT16) | VMI_PROPS2_OPCODE(-1)),
+	VMI_OP_LDC_S_I32_0 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT32) | VMI_PROPS2_OPCODE(0)),
+	VMI_OP_LDC_S_I32_1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT32) | VMI_PROPS2_OPCODE(1)),
+	VMI_OP_LDC_S_I32_N1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT32) | VMI_PROPS2_OPCODE(-1)),
+	VMI_OP_LDC_S_I64_0 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT64) | VMI_PROPS2_OPCODE(0)),
+	VMI_OP_LDC_S_I64_1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT64) | VMI_PROPS2_OPCODE(1)),
+	VMI_OP_LDC_S_I64_N1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_INT64) | VMI_PROPS2_OPCODE(-1)),
+	VMI_OP_LDC_S_F32_0 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_FLOAT32) | VMI_PROPS2_OPCODE(0)),
+	VMI_OP_LDC_S_F32_1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_FLOAT32) | VMI_PROPS2_OPCODE(1)),
+	VMI_OP_LDC_S_F32_N1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_FLOAT32) | VMI_PROPS2_OPCODE(-1)),
+	VMI_OP_LDC_S_F64_0 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_FLOAT64) | VMI_PROPS2_OPCODE(0)),
+	VMI_OP_LDC_S_F64_1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_FLOAT64) | VMI_PROPS2_OPCODE(1)),
+	VMI_OP_LDC_S_F64_N1 = (VMI_LDC_S | VMI_PROPS1_OPCODE(VMI_INSTR_CONST_PROP1_FLOAT64) | VMI_PROPS2_OPCODE(-1)),
 
 	VMI_OP_ADD_I16 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16)),
 	VMI_OP_ADD_I32 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32)),

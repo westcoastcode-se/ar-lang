@@ -44,6 +44,9 @@ enum vmc_compiler_messages
 	// Expected a string value
 	VMC_COMPILER_MSG_EXPECTED_STRING,
 
+	// Expected a decimal value
+	VMC_COMPILER_MSG_EXPECTED_DECIMAL,
+
 	// Message raised if a compiler feature is not implemented yet
 	VMC_COMPILER_MSG_NOT_IMPLEMENTED,
 
@@ -77,6 +80,7 @@ enum vmc_compiler_messages
 #define VMC_COMPILER_MSG_EXPECTED_INDEX_STR "expected index but was '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_EXPECTED_INT_STR "expected integer value but was '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_EXPECTED_STRING_STR "expected string value but was '%.*s' at %d:%d"
+#define VMC_COMPILER_MSG_EXPECTED_DECIMAL_STR "expected decimal value but was '%.*s' at %d:%d"
 #define VMC_COMPILER_MSG_NOT_IMPLEMENTED_STR "keyword '%.*s' is not implemented yet at %d:%d"
 #define VMC_COMPILER_MSG_INVALID_INDEX_STR "supplied index %d but it must be within range [%d,%d] at %d:%d"
 #define VMC_COMPILER_MSG_INVALID_SIZE_STR "supplied size %d but it must be within range [%d,%d] at %d:%d"
@@ -99,6 +103,7 @@ extern BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer* l, 
 extern BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_string(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_expected_decimal(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 index, vm_int32 min, vm_int32 max);
 extern BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer* l, vm_int32 size, vm_int32 min, vm_int32 max);

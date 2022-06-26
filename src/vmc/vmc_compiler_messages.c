@@ -98,6 +98,17 @@ BOOL vmc_compiler_message_expected_string(vm_messages* m, vmc_lexer* l, vmc_lexe
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
+BOOL vmc_compiler_message_expected_decimal(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+{
+	int line, line_offset, _;
+	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	return vm_messages_add(m,
+		VMC_COMPILER_MESSAGE_PREFIX,
+		VMC_COMPILER_MSG_EXPECTED_DECIMAL,
+		VMC_COMPILER_MSG_EXPECTED_DECIMAL_STR,
+		vm_string_length(&t->string), t->string.start, line, line_offset);
+}
+
 BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
 {
 	int line, line_offset, _;

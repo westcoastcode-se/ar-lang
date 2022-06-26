@@ -6,10 +6,10 @@ struct suite_vm_helper
 };
 
 template<>
-struct suite_vm_helper<vm_int32>
+struct suite_vm_helper<vm_int8>
 {
-	static constexpr auto name = "int32";
-	static constexpr auto shorthand = "i32";
+	static constexpr auto name = "int8";
+	static constexpr auto shorthand = "i8";
 };
 
 template<>
@@ -17,6 +17,34 @@ struct suite_vm_helper<vm_int16>
 {
 	static constexpr auto name = "int16";
 	static constexpr auto shorthand = "i16";
+};
+
+template<>
+struct suite_vm_helper<vm_int32>
+{
+	static constexpr auto name = "int32";
+	static constexpr auto shorthand = "i32";
+};
+
+template<>
+struct suite_vm_helper<vm_int64>
+{
+	static constexpr auto name = "int64";
+	static constexpr auto shorthand = "i64";
+};
+
+template<>
+struct suite_vm_helper<vm_float32>
+{
+	static constexpr auto name = "float32";
+	static constexpr auto shorthand = "f32";
+};
+
+template<>
+struct suite_vm_helper<vm_float64>
+{
+	static constexpr auto name = "float64";
+	static constexpr auto shorthand = "f64";
 };
 
 // Base class for all vm tests
@@ -58,6 +86,22 @@ struct suite_vm_utils : test_utils
 		}
 	}
 
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int8 value)
+	{
+		const vm_int8* byte = (vm_int8*)(t->stack.blocks + offset);
+		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << (vm_int32)value << " but was " << (vm_int32)*byte);
+		}
+	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int16 value)
+	{
+		const vm_int16* byte = (vm_int16*)(t->stack.blocks + offset);
+		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
 	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int32 value)
 	{
 		const vm_int32* byte = (vm_int32*)(t->stack.blocks + offset);
@@ -66,10 +110,26 @@ struct suite_vm_utils : test_utils
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int16 value)
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int64 value)
 	{
-		const vm_int16* byte = (vm_int16*)(t->stack.blocks + offset);
+		const vm_int64* byte = (vm_int64*)(t->stack.blocks + offset);
 		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_float32 value)
+	{
+		const vm_float32* byte = (vm_float32*)(t->stack.blocks + offset);
+		if (abs(*byte - value) > FLT_EPSILON) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_float64 value)
+	{
+		const vm_float64* byte = (vm_float64*)(t->stack.blocks + offset);
+		if (abs(*byte - value) > DBL_EPSILON) {
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
@@ -237,8 +297,8 @@ fn Add (lhs %s, rhs %s) (%s) {
 	// * int32
 	void add()
 	{
-		add_test<vm_int16>("int16", 12, 24);
-		add_test<vm_int32>("int32", 10, 20);
+		TEST_FN(add_test<vm_int16>("int16", 12, 24));
+		TEST_FN(add_test<vm_int32>("int32", 10, 20));
 	}
 
 	void calculate_multiple_funcs() {
@@ -730,6 +790,112 @@ fn Test() (int32) {
 struct suite_vm_constants : suite_vm_utils
 {
 	template<typename T>
+	void ldc_type(T value) {
+		const auto format = R"(
+fn Get () (%s) {
+	ldc_%s %d
+	save_r 0
+	ret
+}
+)";
+		char source[1024];
+		sprintf(source, format, name_of(value), shorthand_of(value), value);
+
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(T));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)value);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void ldc()
+	{
+		TEST_FN(ldc_type<vm_int8>(12));
+		TEST_FN(ldc_type<vm_int16>(INT16_MAX - 10));
+		TEST_FN(ldc_type<vm_int32>(INT32_MAX - 1234));
+	}
+
+	void ldc_i64()
+	{
+		const auto source = R"(
+fn Get () (int64) {
+	ldc_i64 1234567890
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_int64));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int64));
+		verify_stack(t, 0, 1234567890L);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void ldc_f32()
+	{
+		const auto source = R"(
+fn Get () (float32) {
+	ldc_f32 123.67f
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_float32));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_float32));
+		verify_stack(t, 0, 123.67f);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void ldc_f64()
+	{
+		const auto source = R"(
+fn Get () (float64) {
+	ldc_f64 12345.6789
+	save_r 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(vm_float64));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_float64));
+		verify_stack(t, 0, 12345.6789);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	template<typename T>
 	void const_test(T value) {
 		const auto format = R"(
 fn Get () (%s) {
@@ -765,6 +931,10 @@ fn Get () (%s) {
 	void operator()()
 	{
 		TEST(const_test);
+		TEST(ldc);
+		TEST(ldc_i64);
+		TEST(ldc_f32);
+		TEST(ldc_f64);
 	}
 };
 
@@ -925,6 +1095,53 @@ fn Get () (int32) {
 		destroy(c);
 	}
 
+	template<typename T>
+	void array_test(T value)
+	{
+		const auto format = R"(
+fn Get () (%s) {
+	locals (values [2]%s)
+	// values[0] = 10
+	ldl_a 0
+	c_i32 0
+	ldc_%s %d
+	stelem %s
+	// return values[0]
+	ldl_a 0
+	c_i32 0
+	ldelem %s
+	save_r 0
+	ret
+}
+)";
+		char source[1024];
+		sprintf(source, format, name_of(value), name_of(value), shorthand_of(value), value, name_of(value), name_of(value));
+
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vmi_thread_reserve_stack(t, sizeof(T));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)value);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void load_store_types()
+	{
+		TEST_FN(array_test<vm_int8>(12));
+		TEST_FN(array_test<vm_int16>(INT16_MAX - 150));
+		TEST_FN(array_test<vm_int32>(INT32_MAX / 2));
+		//array_test<vm_float32>(10.123f);
+		//array_test<vm_float64>(1234.12345);
+		//array_test<vm_int64>(INT64_MAX - 2);
+	}
+
 	void return_two_values_from_array()
 	{
 		const auto source = R"(
@@ -973,6 +1190,7 @@ fn Get () (int32, int32) {
 	void operator()()
 	{
 		TEST(load_and_store_array_value);
+		TEST(load_store_types);
 		TEST(return_two_values_from_array);
 	}
 };

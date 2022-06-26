@@ -51,6 +51,20 @@ VM_STRING_CONST(ldelem_s, "ldelem_s", 8);
 VM_STRING_CONST(c_i32, "c_i32", 5);
 VM_STRING_CONST(c_i16, "c_i16", 5);
 
+VM_STRING_CONST(ldc_s_i8, "ldc_s_i8", 8);
+VM_STRING_CONST(ldc_s_i16, "ldc_s_i16", 9);
+VM_STRING_CONST(ldc_s_i32, "ldc_s_i32", 9);
+VM_STRING_CONST(ldc_s_i64, "ldc_s_i64", 9);
+VM_STRING_CONST(ldc_s_f32, "ldc_s_f32", 9);
+VM_STRING_CONST(ldc_s_f64, "ldc_s_f64", 9);
+
+VM_STRING_CONST(ldc_i8, "ldc_i8", 6);
+VM_STRING_CONST(ldc_i16, "ldc_i16", 7);
+VM_STRING_CONST(ldc_i32, "ldc_i32", 7);
+VM_STRING_CONST(ldc_i64, "ldc_i64", 7);
+VM_STRING_CONST(ldc_f32, "ldc_f32", 7);
+VM_STRING_CONST(ldc_f64, "ldc_f64", 7);
+
 VM_STRING_CONST(conv_i16_i32, "conv_i16_i32", 12);
 VM_STRING_CONST(conv_i32_i16, "conv_i32_i16", 12);
 
@@ -537,8 +551,24 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		BODY_BRANCH_BEGIN
 			BODY_BRANCH(load_a)
 			BODY_BRANCH(save_r)
+
 			BODY_BRANCH(c_i16)
 			BODY_BRANCH(c_i32)
+
+			BODY_BRANCH(ldc_s_i8)
+			BODY_BRANCH(ldc_s_i16)
+			BODY_BRANCH(ldc_s_i32)
+			BODY_BRANCH(ldc_s_i64)
+			BODY_BRANCH(ldc_s_f32)
+			BODY_BRANCH(ldc_s_f64)
+
+			BODY_BRANCH(ldc_i8)
+			BODY_BRANCH(ldc_i16)
+			BODY_BRANCH(ldc_i32)
+			BODY_BRANCH(ldc_i64)
+			BODY_BRANCH(ldc_f32)
+			BODY_BRANCH(ldc_f64)
+
 			BODY_BRANCH(locals)
 			BODY_BRANCH(load_l)
 			BODY_BRANCH(save_l)
