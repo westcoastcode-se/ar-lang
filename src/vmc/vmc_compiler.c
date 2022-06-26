@@ -48,9 +48,6 @@ VM_STRING_CONST(stelem_s, "stelem_s", 8);
 VM_STRING_CONST(ldelem, "ldelem", 6);
 VM_STRING_CONST(ldelem_s, "ldelem_s", 8);
 
-VM_STRING_CONST(c_i32, "c_i32", 5);
-VM_STRING_CONST(c_i16, "c_i16", 5);
-
 VM_STRING_CONST(ldc_s_i8, "ldc_s_i8", 8);
 VM_STRING_CONST(ldc_s_i16, "ldc_s_i16", 9);
 VM_STRING_CONST(ldc_s_i32, "ldc_s_i32", 9);
@@ -551,9 +548,6 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		BODY_BRANCH_BEGIN
 			BODY_BRANCH(load_a)
 			BODY_BRANCH(save_r)
-
-			BODY_BRANCH(c_i16)
-			BODY_BRANCH(c_i32)
 
 			BODY_BRANCH(ldc_s_i8)
 			BODY_BRANCH(ldc_s_i16)

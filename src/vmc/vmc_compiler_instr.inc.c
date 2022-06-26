@@ -184,34 +184,6 @@ FUNC_BODY(ldc_f64)
 	return TRUE;
 }
 
-FUNC_BODY(c_i16)
-{
-	vmi_instr_ldc_i32 instr;
-	vmc_lexer_next(l, t);
-	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, l, t);
-	instr.opcode = 0;
-	instr.icode = VMI_LDC;
-	instr.props1 = VMI_INSTR_CONST_PROP1_INT16;
-	instr.i16 = (vm_int16)strtoi64(t->string.start, vm_string_length(&t->string));
-	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i32));
-	return TRUE;
-}
-
-FUNC_BODY(c_i32)
-{
-	vmi_instr_ldc_i32 instr;
-	vmc_lexer_next(l, t);
-	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, l, t);
-	instr.opcode = 0;
-	instr.icode = VMI_LDC;
-	instr.props1 = VMI_INSTR_CONST_PROP1_INT32;
-	instr.i32 = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i32));
-	return TRUE;
-}
-
 FUNC_BODY(clt)
 {
 	vmi_instr_cmp instr;

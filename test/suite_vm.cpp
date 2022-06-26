@@ -236,9 +236,9 @@ struct suite_vm_tests : suite_vm_utils
 		const auto source = R"(
 fn Get () (int32, int32) {
 	// return 123, 456
-	c_i32 123
+	ldc_i32 123
 	save_r 0
-	c_i32 456
+	ldc_i32 456
 	save_r 1
 	ret
 }
@@ -367,8 +367,8 @@ fn Add (lhs int32, rhs int32) (int32) {
 
 fn AddTwoInts() (int32) {
 	alloc_s 4		// Allocate memory for return value of sizeof(int32)
-	c_i32 20		// Load constant int32 20
-	c_i32 10		// Load constant int32 10
+	ldc_i32 20		// Load constant int32 20
+	ldc_i32 10		// Load constant int32 10
 	call Add(int32,int32)(int32)
 	save_r 0		// Save the value on the top of the stack to the return position
 	ret
@@ -412,7 +412,7 @@ fn Func() (int32) {
 		const auto source = R"(
 fn Func() (int32) {
 	locals (i int32)// Allocate local memory storage for an int32 named i
-	c_i32 5			// Load 5
+	ldc_i32 5			// Load 5
 	save_r 0
 	ret				// Return
 }
@@ -448,7 +448,7 @@ fn Func() (int32) {
 		const auto source = R"(
 fn InnerFunc() (int32) {
 	locals (i int32)// Allocate local memory storage for an int32 named i
-	c_i32 5			// Load 5
+	ldc_i32 5			// Load 5
 	save_r 0
 	ret				// Return
 }
@@ -490,11 +490,11 @@ fn Func() (int32) {
 	// var i int32
 	locals (i int32)
 	// i = 10
-	c_i32 10
+	ldc_i32 10
 	save_l 0
 	// i += 5
 	load_l 0
-	c_i32 5
+	ldc_i32 5
 	add int32
 	save_l 0
 	// return i
@@ -537,11 +537,11 @@ fn InnerFunc(in int32) (int32) {
 	// var i int32
 	locals (i int32)
 	// i = 10
-	c_i32 10
+	ldc_i32 10
 	save_l 0
 	// i += 5
 	load_l 0
-	c_i32 5
+	ldc_i32 5
 	add int32
 	save_l 0
 	// return i
@@ -552,7 +552,7 @@ fn InnerFunc(in int32) (int32) {
 fn Func() (int32) {
 	// InnerFunc(5)
 	alloc_s 4
-	c_i32 5
+	ldc_i32 5
 	call InnerFunc(int32)(int32)
 	save_r 0
 	ret
@@ -636,8 +636,8 @@ struct suite_vm_compare : suite_vm_utils
 		*/
 		const auto source = R"(
 fn Compare () (int32) {
-	c_i32 34	// Push a constant
-	c_i32 12	// Push a constant
+	ldc_i32 34	// Push a constant
+	ldc_i32 12	// Push a constant
 	clt			// Compare 
 	save_r 0	// Pop the top stack value and put it into the first return value
 	ret			// Return
@@ -669,8 +669,8 @@ fn Compare() (int32) {
 */
 		const auto source = R"(
 fn Compare () (int32) {
-	c_i32 12	// Push a constant
-	c_i32 34	// Push a constant
+	ldc_i32 12	// Push a constant
+	ldc_i32 34	// Push a constant
 	cgt			// Compare 
 	save_r 0	// Pop the top stack value and put it into the first return value
 	ret			// Return
@@ -706,15 +706,15 @@ fn Test() (int32) {
 */
 		const auto source = R"(
 fn Test() (int32) {
-	c_i32 12	// Push a constant
-	c_i32 34	// Push a constant
+	ldc_i32 12	// Push a constant
+	ldc_i32 34	// Push a constant
 	cgt			// Compare 32 > 12
 	jmpt marker	// if > jmp marker
-	c_i32 20
+	ldc_i32 20
 	save_r 0
 	ret			// return 20
 #marker 
-	c_i32 10
+	ldc_i32 10
 	save_r 0
 	ret			// return 10
 }
@@ -749,15 +749,15 @@ fn Test() (int32) {
 		*/
 		const auto source = R"(
 fn Test() (int32) {
-	c_i32 12	// Push a constant
-	c_i32 34	// Push a constant
+	ldc_i32 12	// Push a constant
+	ldc_i32 34	// Push a constant
 	clt			// Compare 32 < 12
 	jmpt marker	// if > jmp marker
-	c_i32 20
+	ldc_i32 20
 	save_r 0
 	ret			// return 20
 #marker 
-	c_i32 10
+	ldc_i32 10
 	save_r 0
 	ret			// return 10
 }
@@ -899,7 +899,7 @@ fn Get () (float64) {
 	void const_test(T value) {
 		const auto format = R"(
 fn Get () (%s) {
-	c_%s %d
+	ldc_%s %d
 	save_r 0
 	ret
 }
@@ -947,7 +947,7 @@ struct suite_vm_convert : suite_vm_utils
 		const auto format = R"(
 fn Convert () (%s) {
 	// return int32(int16(1234))
-	c_%s %d
+	ldc_%s %d
 	conv_%s_%s
 	save_r 0
 	ret
@@ -993,7 +993,7 @@ struct suite_vm_pointer : suite_vm_utils
 fn InnerGet(val *int32) () {
 	// *val = 10
 	load_a 0
-	c_i32 10
+	ldc_i32 10
 	sunref_i32
 	ret
 }
@@ -1031,7 +1031,7 @@ fn Get () (int32) {
 fn Get(val *int32) () {
 	// *val = 10
 	load_a 0
-	c_i32 10
+	ldc_i32 10
 	sunref_i32
 	ret
 }
@@ -1069,12 +1069,12 @@ fn Get () (int32) {
 	locals (values [2]int32)
 	// values[0] = 10
 	ldl_a 0
-	c_i32 0
-	c_i32 10
+	ldc_i32 0
+	ldc_i32 10
 	stelem int32
 	// return values[0]
 	ldl_a 0
-	c_i32 0
+	ldc_i32 0
 	ldelem int32
 	save_r 0
 	ret
@@ -1103,12 +1103,12 @@ fn Get () (%s) {
 	locals (values [2]%s)
 	// values[0] = 10
 	ldl_a 0
-	c_i32 0
+	ldc_i32 0
 	ldc_%s %d
 	stelem %s
 	// return values[0]
 	ldl_a 0
-	c_i32 0
+	ldc_i32 0
 	ldelem %s
 	save_r 0
 	ret
@@ -1150,21 +1150,21 @@ fn Get () (int32, int32) {
 	locals (values [2]int32)
 	// values[0] = 10
 	ldl_a 0
-	c_i32 0
-	c_i32 10
+	ldc_i32 0
+	ldc_i32 10
 	stelem int32
 	// values[1] = 20
 	ldl_a 0
-	c_i32 1
-	c_i32 20
+	ldc_i32 1
+	ldc_i32 20
 	stelem int32
 	// return values[0], values[1]
 	ldl_a 0
-	c_i32 0
+	ldc_i32 0
 	ldelem int32
 	save_r 0
 	ldl_a 0
-	c_i32 1
+	ldc_i32 1
 	ldelem int32
 	save_r 1
 	ret

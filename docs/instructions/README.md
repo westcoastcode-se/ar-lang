@@ -3,7 +3,8 @@
 [call.md](call)
 [add.md](add)
 [conv.md](conv)
-[const.md](const)
+[ldc.md](ldc)
+[ldc_s.md](ldc_s)
 
 ## Compare instructions
 
