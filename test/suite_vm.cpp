@@ -1600,27 +1600,84 @@ fn Get () (int32, int32, int32, int32) {
 	}
 };
 
-struct suite_vm_stack : suite_vm_utils
+struct suite_vm_allocation : suite_vm_utils
 {
 	template<typename T>
-	void alloc_s_free_s()
+	void allocs_frees_type()
 	{
-		
+		const auto format = R"(
+fn Do() () {
+	allocs %d
+	frees %d
+	ret
+}
+)";
+		char source[1024];
+		sprintf(source, format, sizeof(T), sizeof(T));
+
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		invoke(p, t, "Do");
+
+		verify_stack_size(t, 0);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
 	}
 
-	void alloc_free()
+	void allocs_frees()
 	{
-		TEST_FN(alloc_s_free_s<vm_int8>());
-		TEST_FN(alloc_s_free_s<vm_int16>());
-		TEST_FN(alloc_s_free_s<vm_int32>());
-		TEST_FN(alloc_s_free_s<vm_int64>());
-		TEST_FN(alloc_s_free_s<vm_float32>());
-		TEST_FN(alloc_s_free_s<vm_float64>());
+		TEST_FN(allocs_frees_type<vm_int8>());
+		TEST_FN(allocs_frees_type<vm_int16>());
+		TEST_FN(allocs_frees_type<vm_int32>());
+		TEST_FN(allocs_frees_type<vm_int64>());
+		TEST_FN(allocs_frees_type<vm_float32>());
+		TEST_FN(allocs_frees_type<vm_float64>());
+	}
+
+	template<typename T>
+	void alloch_freeh_type()
+	{
+		const auto format = R"(
+fn Do() () {
+	alloch %d
+	freeh %d
+	ret
+}
+)";
+		char source[1024];
+		sprintf(source, format, sizeof(T), sizeof(T));
+
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		invoke(p, t, "Do");
+
+		verify_stack_size(t, 0);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void alloch_freeh()
+	{
+		TEST_FN(alloch_freeh_type<vm_int8>());
+		TEST_FN(alloch_freeh_type<vm_int16>());
+		TEST_FN(alloch_freeh_type<vm_int32>());
+		TEST_FN(alloch_freeh_type<vm_int64>());
+		TEST_FN(alloch_freeh_type<vm_float32>());
+		TEST_FN(alloch_freeh_type<vm_float64>());
 	}
 
 	void operator()()
 	{
-		//TEST(alloc_free);
+		TEST(allocs_frees);
+		TEST(alloch_freeh);
 	}
 };
 
@@ -1633,5 +1690,5 @@ void suite_vm()
 	SUITE(suite_vm_convert);
 	SUITE(suite_vm_pointer);
 	SUITE(suite_vm_arrays);
-	SUITE(suite_vm_stack);
+	SUITE(suite_vm_allocation);
 }
