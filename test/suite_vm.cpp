@@ -253,9 +253,9 @@ struct suite_vm_tests : suite_vm_utils
 fn Get () (int32, int32) {
 	// return 123, 456
 	ldc_i4 123
-	save_r 0
+	str 0
 	ldc_i4 456
-	save_r 1
+	str 1
 	ret
 }
 )";
@@ -284,7 +284,7 @@ fn Add (lhs %s, rhs %s) (%s) {
 	lda 0
 	lda 1
 	add %s
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -332,7 +332,7 @@ fn Add1 (lhs int32, rhs int32) (int32) {
 	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
 	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
 	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
-	save_r 0	// Pop the top stack value and put it into the first return value
+	str 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
 }
 
@@ -340,7 +340,7 @@ fn Add2 (lhs int32, rhs int32) (int32) {
 	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
 	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
 	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
-	save_r 0	// Pop the top stack value and put it into the first return value
+	str 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
 }
 )";
@@ -377,7 +377,7 @@ fn Add (lhs int32, rhs int32) (int32) {
 	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
 	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
 	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
-	save_r 0	// Pop the top stack value and put it into the first return value
+	str 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
 }
 
@@ -386,7 +386,7 @@ fn AddTwoInts() (int32) {
 	ldc_i4 20		// Load constant int32 20
 	ldc_i4 10		// Load constant int32 10
 	call Add(int32,int32)(int32)
-	save_r 0		// Save the value on the top of the stack to the return position
+	str 0		// Save the value on the top of the stack to the return position
 	ret
 }
 )";
@@ -425,7 +425,7 @@ fn Func() (int32) {
 	locals (i int32)
 	// return 5
 	ldc_i4 5
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -454,14 +454,14 @@ fn InnerFunc() (int32) {
 	locals (i int32)
 	// return 5
 	ldc_i4 5
-	save_r 0
+	str 0
 	ret
 }
 fn Func() (int32) {
 	// return InnerFunc()
 	alloc_s 4
 	call InnerFunc()(int32)
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -498,7 +498,7 @@ fn Func() (int32) {
 	stl 0
 	// return i
 	ldl 0
-	save_r 0
+	str 0
 	ret	
 }
 )";
@@ -545,7 +545,7 @@ fn InnerFunc(in int32) (int32) {
 	stl 0
 	// return i
 	ldl 0
-	save_r 0
+	str 0
 	ret
 }
 fn Func() (int32) {
@@ -553,7 +553,7 @@ fn Func() (int32) {
 	alloc_s 4
 	ldc_i4 5
 	call InnerFunc(int32)(int32)
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -593,7 +593,7 @@ fn Mul2 (in %s) (%s) {
 	lda 0	// Push arg to the stack
 	copy_s %s	// Copy value to the stack
 	add %s		// Add the two values together
-	save_r 0	// Pop the top stack value and put it into the first return value
+	str 0	// Pop the top stack value and put it into the first return value
 	ret			// Return to the caller address (assume return value is on the top of the stack)
 }
 )";
@@ -641,7 +641,7 @@ fn Compare () (int32) {
 	ldc_i4 34
 	ldc_i4 12
 	clt
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -670,7 +670,7 @@ fn Compare () (int32) {
 	ldc_i4 12
 	ldc_i4 34
 	cgt
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -709,11 +709,11 @@ fn Test() (int32) {
 	cgt			// Compare 32 > 12
 	jmpt marker	// if > jmp marker
 	ldc_i4 20
-	save_r 0
+	str 0
 	ret			// return 20
 #marker 
 	ldc_i4 10
-	save_r 0
+	str 0
 	ret			// return 10
 }
 )";
@@ -752,11 +752,11 @@ fn Test() (int32) {
 	clt			// Compare 32 < 12
 	jmpt marker	// if > jmp marker
 	ldc_i4 20
-	save_r 0
+	str 0
 	ret			// return 20
 #marker 
 	ldc_i4 10
-	save_r 0
+	str 0
 	ret			// return 10
 }
 )";
@@ -792,7 +792,7 @@ struct suite_vm_constants : suite_vm_utils
 		const auto format = R"(
 fn Get () (%s) {
 	ldc_%s %d
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -826,7 +826,7 @@ fn Get () (%s) {
 		const auto source = R"(
 fn Get () (int64) {
 	ldc_i8 1234567890
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -850,7 +850,7 @@ fn Get () (int64) {
 		const auto source = R"(
 fn Get () (float32) {
 	ldc_f4 123.67f
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -874,7 +874,7 @@ fn Get () (float32) {
 		const auto source = R"(
 fn Get () (float64) {
 	ldc_f8 12345.6789
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -912,7 +912,7 @@ fn Convert () (%s) {
 	// return int32(int16(1234))
 	ldc_%s %d
 	conv_%s_%s
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -969,7 +969,7 @@ fn Get () (int32) {
 	call InnerGet(*int32)()
 	// return value
 	ldl 0
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1130,7 +1130,7 @@ fn Get () (int32) {
 	ldl_a 0
 	ldc_i4 0
 	ldelem int32
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1164,7 +1164,7 @@ fn Get () (%s) {
 	ldl_a 0
 	ldc_i4 0
 	ldelem %s
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1200,7 +1200,7 @@ fn Get () (int64) {
 	ldl_a 0
 	ldc_i4 0
 	ldelem int64
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1233,7 +1233,7 @@ fn Get () (float32) {
 	ldl_a 0
 	ldc_i4 0
 	ldelem float32
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1266,7 +1266,7 @@ fn Get () (float64) {
 	ldl_a 0
 	ldc_i4 0
 	ldelem float64
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1315,11 +1315,11 @@ fn Get () (int32, int32) {
 	ldl_a 0
 	ldc_i4 0
 	ldelem int32
-	save_r 0
+	str 0
 	ldl_a 0
 	ldc_i4 1
 	ldelem int32
-	save_r 1
+	str 1
 	ret
 }
 )";
@@ -1368,7 +1368,7 @@ fn Get () ([4]int8) {
 	stelem int8
 	// return values
 	ldl 0
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1418,7 +1418,7 @@ fn Get () ([4]int32) {
 	stelem int32
 	// return values
 	ldl 0
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1475,7 +1475,7 @@ fn Get () ([4]int32) {
 	call InnerGet(*int32)()
 	// return values
 	ldl 0
-	save_r 0
+	str 0
 	ret
 }
 )";
@@ -1557,13 +1557,13 @@ fn Get () (int32, int32, int32, int32) {
 	call InnerGet([4]*int32)()
 	// return values
 	ldl 0
-	save_r 0
+	str 0
 	ldl 1
-	save_r 1
+	str 1
 	ldl 2
-	save_r 2
+	str 2
 	ldl 3
-	save_r 3
+	str 3
 	ret
 }
 )";

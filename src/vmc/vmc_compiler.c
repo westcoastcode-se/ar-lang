@@ -33,7 +33,7 @@ VM_STRING_CONST(ptr, "ptr", 3);
 
 VM_STRING_CONST(lda, "lda", 3);
 VM_STRING_CONST(lda_a, "lda_a", 5);
-VM_STRING_CONST(save_r, "save_r", 6);
+VM_STRING_CONST(str, "str", 3);
 VM_STRING_CONST(alloc_s, "alloc_s", 7);
 VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
@@ -558,7 +558,8 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		BODY_BRANCH_BEGIN
 			BODY_BRANCH(lda)
 			BODY_BRANCH(lda_a)
-			BODY_BRANCH(save_r)
+
+			BODY_BRANCH(str)
 
 			BODY_BRANCH(ldc_s_i1)
 			BODY_BRANCH(ldc_s_i2)

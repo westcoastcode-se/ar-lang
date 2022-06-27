@@ -134,9 +134,9 @@ vmi_ip _vmi_thread_lda_a(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_lda_a);
 }
 
-vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_str(vmi_thread* t, vmi_ip ip)
 {
-	const vmi_instr_save_r* const instr = (const vmi_instr_save_r*)ip;
+	const vmi_instr_str* const instr = (const vmi_instr_str*)ip;
 	vm_byte* dest = (vm_byte*)(t->ebp + instr->offset);
 	const vm_byte* src = vmi_stack_pop(&t->stack, instr->size);
 
@@ -183,5 +183,5 @@ vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
 			vmi_copy_bytes(dest, src, instr->size);
 		break;
 	}
-	return ip + sizeof(vmi_instr_save_r);
+	return ip + sizeof(vmi_instr_str);
 }

@@ -44,8 +44,8 @@ enum vmi_icodes
 	// Load the address one of the arguments
 	VMI_LDA_A,
 	
-	// Save stack value to return target
-	VMI_SAVE_R,
+	// Store the value on the stack into the reserved return block
+	VMI_STR,
 
 	// Allocate memory on the stack
 	VMI_ALLOC_S,
@@ -202,8 +202,8 @@ struct vmi_instr_lda
 typedef struct vmi_instr_lda vmi_instr_lda;
 typedef struct vmi_instr_lda vmi_instr_lda_a;
 
-// A save_r(eturn) instruction
-struct vmi_instr_save_r
+// A str instruction
+struct vmi_instr_str
 {
 	union
 	{
@@ -218,7 +218,7 @@ struct vmi_instr_save_r
 		};
 	};
 };
-typedef struct vmi_instr_save_r vmi_instr_save_r;
+typedef struct vmi_instr_str vmi_instr_str;
 
 // A ldl instruction
 struct vmi_instr_ldl
