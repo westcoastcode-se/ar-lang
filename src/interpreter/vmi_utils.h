@@ -21,4 +21,13 @@ static vm_byte* vmi_copy_int32(vm_int32* dest, const vm_int32* src, vm_int32 cou
 	return (vm_byte*)dest;
 }
 
+// Copy the bytes found in the source memory location and put the result into the destination location
+static vm_byte* vmi_copy_int64(vm_int64* dest, const vm_int64* src, vm_int32 count) {
+	const vm_int64* const end = dest + count;
+	for (; dest != end; ++dest, ++src) {
+		*dest = *src;
+	}
+	return (vm_byte*)dest;
+}
+
 #endif
