@@ -55,7 +55,7 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 #include "instr/locals.inc.c"
 #include "instr/func.inc.c"
 #include "instr/copy_s.inc.c"
-#include "instr/stack.inc.c"
+#include "instr/memory.inc.c"
 #include "instr/arrays.inc.c"
 #include "instr/sturef.inc.c"
 
@@ -239,11 +239,17 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_LOCALS:
 			ip = _vmi_thread_locals(t, ip);
 			continue;
-		case VMI_ALLOC_S:
-			ip = _vmi_thread_alloc_s(t, ip);
+		case VMI_ALLOCS:
+			ip = _vmi_thread_allocs(t, ip);
 			continue;
-		case VMI_FREE_S:
-			ip = _vmi_thread_free_s(t, ip);
+		case VMI_FREES:
+			ip = _vmi_thread_frees(t, ip);
+			continue;
+		case VMI_ALLOCH:
+			ip = _vmi_thread_alloch(t, ip);
+			continue;
+		case VMI_FREEH:
+			ip = _vmi_thread_freeh(t, ip);
 			continue;
 		case VMI_LDA:
 			ip = _vmi_thread_lda(t, ip);

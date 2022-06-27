@@ -48,10 +48,16 @@ enum vmi_icodes
 	VMI_STR,
 
 	// Allocate memory on the stack
-	VMI_ALLOC_S,
+	VMI_ALLOCS,
 
 	// Free memory from the stack
-	VMI_FREE_S,
+	VMI_FREES,
+
+	// Allocate memory on the heap
+	VMI_ALLOCH,
+
+	// Free memory from the heap
+	VMI_FREEH,
 
 	// Call a function
 	VMI_CALL,
@@ -408,8 +414,8 @@ typedef struct vmi_instr_ldc_i64 vmi_instr_ldc_ptr;
 #define VMI_INSTR_CONST_PROP1_FLOAT32 VMI_INSTR_PROP_FLOAT32
 #define VMI_INSTR_CONST_PROP1_FLOAT64 VMI_INSTR_PROP_FLOAT64
 
-// A alloc_s(tack) instruction
-struct vmi_instr_alloc_s
+// An instruction that has a size that allows for 2 bytes of capacity
+struct vmi_instr_mem_size2
 {
 	union
 	{
@@ -423,24 +429,15 @@ struct vmi_instr_alloc_s
 		};
 	};
 };
-typedef struct vmi_instr_alloc_s vmi_instr_alloc_s;
 
-// A free_s(tack) instruction
-struct vmi_instr_free_s
-{
-	union
-	{
-		vmi_opcode_header header;
-		vmi_opcode opcode;
-		struct
-		{
-			vm_uint8 icode;
-			vm_uint8 props1;
-			vm_uint16 size;
-		};
-	};
-};
-typedef struct vmi_instr_free_s vmi_instr_free_s;
+// A allocs(tack) instruction
+typedef struct vmi_instr_mem_size2 vmi_instr_allocs;
+// A frees(tack) instruction
+typedef struct vmi_instr_mem_size2 vmi_instr_frees;
+// A alloch(eap) instruction
+typedef struct vmi_instr_mem_size2 vmi_instr_alloch;
+// A freeh(eap) instruction
+typedef struct vmi_instr_mem_size2 vmi_instr_freeh;
 
 // A call instruction
 struct vmi_instr_call

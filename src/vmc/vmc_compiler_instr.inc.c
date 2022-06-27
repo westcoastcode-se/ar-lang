@@ -472,53 +472,126 @@ FUNC_BODY(ldelem_s)
 	return TRUE;
 }
 
-FUNC_BODY(alloc_s)
+FUNC_BODY(allocs)
 {
-	vmi_instr_alloc_s instr;
-	vm_int32 num_bytes;
+	vmi_instr_allocs instr;
+	instr.opcode = 0;
+	instr.icode = VMI_ALLOCS;
 
 	vmc_lexer_next(l, t);
-	if (t->type != VMC_LEXER_TYPE_INT) {
-		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	if (t->type == VMC_LEXER_TYPE_INT) {
+		vm_int32 num_bytes;
+		num_bytes = vmc_lexer_token_toint32(t);
+		if (num_bytes < 0) {
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		}
+		else if (num_bytes > UINT16_MAX) {
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		}
+		instr.size = num_bytes;
+	}
+	else {
+		vmc_var var;
+		vmc_lexer_next(l, t);
+		if (!_vmc_parse_type(c, l, p, t, &var))
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		instr.size = var.definition->size;
 	}
 
-	num_bytes = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-	if (num_bytes < 0) {
-		return vmc_compiler_message_expected_int(&c->messages, l, t);
-	}
-	else if (num_bytes > UINT16_MAX) {
-		return vmc_compiler_message_not_implemented(&c->messages, l, t);
-	}
-	instr.opcode = 0;
-	instr.icode = VMI_ALLOC_S;
-	instr.size = num_bytes;
-	vmc_write(c, &instr, sizeof(vmi_instr_alloc_s));
+	vmc_write(c, &instr, sizeof(vmi_instr_allocs));
 	return TRUE;
 }
 
-FUNC_BODY(free_s)
+FUNC_BODY(frees)
 {
-	vmi_instr_free_s instr;
-	vm_int32 num_bytes;
+	vmi_instr_frees instr;
+	instr.opcode = 0;
+	instr.icode = VMI_FREES;
 
 	vmc_lexer_next(l, t);
-	if (t->type != VMC_LEXER_TYPE_INT) {
-		return vmc_compiler_message_expected_int(&c->messages, l, t);
+	if (t->type == VMC_LEXER_TYPE_INT) {
+		vm_int32 num_bytes;
+		num_bytes = vmc_lexer_token_toint32(t);
+		if (num_bytes < 0) {
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		}
+		else if (num_bytes > UINT16_MAX) {
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		}
+		instr.size = num_bytes;
+	}
+	else {
+		vmc_var var;
+		vmc_lexer_next(l, t);
+		if (!_vmc_parse_type(c, l, p, t, &var))
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		instr.size = var.definition->size;
 	}
 
-	num_bytes = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
-	if (num_bytes < 0) {
-		return vmc_compiler_message_expected_int(&c->messages, l, t);
-	}
-	else if (num_bytes > UINT16_MAX) {
-		return vmc_compiler_message_not_implemented(&c->messages, l, t);
-	}
-	instr.opcode = 0;
-	instr.icode = VMI_FREE_S;
-	instr.size = num_bytes;
-	vmc_write(c, &instr, sizeof(vmi_instr_free_s));
+	vmc_write(c, &instr, sizeof(vmi_instr_frees));
 	return TRUE;
 }
+
+FUNC_BODY(alloch)
+{
+	vmi_instr_alloch instr;
+	instr.opcode = 0;
+	instr.icode = VMI_ALLOCH;
+
+	vmc_lexer_next(l, t);
+	if (t->type == VMC_LEXER_TYPE_INT) {
+		vm_int32 num_bytes;
+		num_bytes = vmc_lexer_token_toint32(t);
+		if (num_bytes < 0) {
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		}
+		else if (num_bytes > UINT16_MAX) {
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		}
+		instr.size = num_bytes;
+	}
+	else {
+		vmc_var var;
+		vmc_lexer_next(l, t);
+		if (!_vmc_parse_type(c, l, p, t, &var))
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		instr.size = var.definition->size;
+	}
+
+	vmc_write(c, &instr, sizeof(vmi_instr_alloch));
+	return TRUE;
+}
+
+FUNC_BODY(freeh)
+{
+	vmi_instr_alloch instr;
+	instr.opcode = 0;
+	instr.icode = VMI_FREEH;
+
+	vmc_lexer_next(l, t);
+	if (t->type == VMC_LEXER_TYPE_INT) {
+		vm_int32 num_bytes;
+		num_bytes = vmc_lexer_token_toint32(t);
+		if (num_bytes < 0) {
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		}
+		else if (num_bytes > UINT16_MAX) {
+			return vmc_compiler_message_not_implemented(&c->messages, l, t);
+		}
+		instr.size = num_bytes;
+	}
+	else {
+		vmc_var var;
+		vmc_lexer_next(l, t);
+		if (!_vmc_parse_type(c, l, p, t, &var))
+			return vmc_compiler_message_expected_int(&c->messages, l, t);
+		instr.size = var.definition->size;
+	}
+
+	vmc_write(c, &instr, sizeof(vmi_instr_alloch));
+	return TRUE;
+}
+
 
 FUNC_BODY(copy_s)
 {

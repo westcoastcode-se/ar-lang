@@ -382,7 +382,7 @@ fn Add (lhs int32, rhs int32) (int32) {
 }
 
 fn AddTwoInts() (int32) {
-	alloc_s 4		// Allocate memory for return value of sizeof(int32)
+	allocs 4		// Allocate memory for return value of sizeof(int32)
 	ldc_i4 20		// Load constant int32 20
 	ldc_i4 10		// Load constant int32 10
 	call Add(int32,int32)(int32)
@@ -459,7 +459,7 @@ fn InnerFunc() (int32) {
 }
 fn Func() (int32) {
 	// return InnerFunc()
-	alloc_s 4
+	allocs 4
 	call InnerFunc()(int32)
 	str 0
 	ret
@@ -550,7 +550,7 @@ fn InnerFunc(in int32) (int32) {
 }
 fn Func() (int32) {
 	// InnerFunc(5)
-	alloc_s 4
+	allocs 4
 	ldc_i4 5
 	call InnerFunc(int32)(int32)
 	str 0

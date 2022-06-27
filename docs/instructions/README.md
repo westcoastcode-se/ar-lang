@@ -30,6 +30,13 @@
 [stelem.md](stelem)
 [stelem_s.md](stelem_s)
 
+# Allocation and Deallocation
+
+[allocs.md](allocs)
+[frees.md](frees)
+[alloch.md](alloch)
+[freeh.md](freeh)
+
 # Pointers
 
 [sturef.md](sturef)
