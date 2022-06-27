@@ -492,7 +492,6 @@ FUNC_BODY(allocs)
 	}
 	else {
 		vmc_var var;
-		vmc_lexer_next(l, t);
 		if (!_vmc_parse_type(c, l, p, t, &var))
 			return vmc_compiler_message_expected_int(&c->messages, l, t);
 		instr.size = var.definition->size;
@@ -522,7 +521,6 @@ FUNC_BODY(frees)
 	}
 	else {
 		vmc_var var;
-		vmc_lexer_next(l, t);
 		if (!_vmc_parse_type(c, l, p, t, &var))
 			return vmc_compiler_message_expected_int(&c->messages, l, t);
 		instr.size = var.definition->size;
@@ -552,7 +550,6 @@ FUNC_BODY(alloch)
 	}
 	else {
 		vmc_var var;
-		vmc_lexer_next(l, t);
 		if (!_vmc_parse_type(c, l, p, t, &var))
 			return vmc_compiler_message_expected_int(&c->messages, l, t);
 		instr.size = var.definition->size;
@@ -582,7 +579,6 @@ FUNC_BODY(freeh)
 	}
 	else {
 		vmc_var var;
-		vmc_lexer_next(l, t);
 		if (!_vmc_parse_type(c, l, p, t, &var))
 			return vmc_compiler_message_expected_int(&c->messages, l, t);
 		instr.size = var.definition->size;

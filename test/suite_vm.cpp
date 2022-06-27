@@ -1674,10 +1674,46 @@ fn Do() () {
 		TEST_FN(alloch_freeh_type<vm_float64>());
 	}
 
+	void alloch_from_param()
+	{
+		const auto source = R"(
+fn Get () (*int32) {
+	//var mem *int32
+	locals (mem *int32)
+	// mem = new int32
+	alloch int32
+	stl 0
+	// *mem = 10
+	ldl 0
+	ldc_i4 10
+	sturef_s_i4
+	//return mem
+	ldl 0
+	str 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vm_int32** const ret = (vm_int32**)vmi_thread_reserve_stack(t, sizeof(vm_int32*));
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32*));
+		verify_value(**ret, 10);
+		free(*ret);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
 	void operator()()
 	{
 		TEST(allocs_frees);
 		TEST(alloch_freeh);
+		TEST(alloch_from_param);
 	}
 };
 
