@@ -80,8 +80,11 @@ enum vmi_icodes
 	// Load the memory address to where a local variable is located
 	VMI_LDL_A,
 
-	// Save the value on the stack into the memory address located on the stack
-	VMI_SUNREF,
+	// Store the value on the stack into the memory address located on the stack
+	VMI_STUREF,
+
+	// Store the value on the stack into the memory address located on the stack using a specialized instruction for types with a size smaller than 256
+	VMI_STUREF_S,
 
 	// Store an element to the memory address on the stack
 	VMI_STELEM,
@@ -271,12 +274,31 @@ struct vmi_instr_ldl_a
 };
 typedef struct vmi_instr_ldl_a vmi_instr_ldl_a;
 
-// A sunref_X instruction
-struct vmi_instr_sunref
+// A sturef instruction
+struct vmi_instr_sturef
 {
 	OPCODE_HEADER;
+	vm_int32 size;
 };
-typedef struct vmi_instr_sunref vmi_instr_sunref;
+typedef struct vmi_instr_sturef vmi_instr_sturef;
+
+// A sturef_s(short) instruction
+struct vmi_instr_sturef_s
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 size;
+			vm_uint8 offset;
+			vm_uint8 props3;
+		};
+	};
+};
+typedef struct vmi_instr_sturef_s vmi_instr_sturef_s;
 
 // A stelem_s(hort) instruction
 struct vmi_instr_stelem_s
@@ -537,8 +559,11 @@ enum vmi_ocodes
 	VMI_OP_JMPF = (VMI_JMP | VMI_PROPS1_OPCODE(VMI_INSTR_JMP_PROP1_FALSE)),
 
 	VMI_OP_COPY_S_INT32 = (VMI_COPY_S | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32)),
-
-	VMI_OP_SUNREF_INT32 = (VMI_SUNREF | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32)),
+	
+	VMI_OP_STUREF_S_I8 = (VMI_STUREF_S | VMI_PROPS1_OPCODE(1)),
+	VMI_OP_STUREF_S_I16 = (VMI_STUREF_S | VMI_PROPS1_OPCODE(2)),
+	VMI_OP_STUREF_S_I32 = (VMI_STUREF_S | VMI_PROPS1_OPCODE(4)),
+	VMI_OP_STUREF_S_I64 = (VMI_STUREF_S | VMI_PROPS1_OPCODE(8)),
 
 	VMI_OP_STELEM_S_I8 = (VMI_STELEM_S | VMI_PROPS1_OPCODE(1)),
 	VMI_OP_STELEM_S_I16 = (VMI_STELEM_S | VMI_PROPS1_OPCODE(2)),

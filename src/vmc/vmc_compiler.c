@@ -43,9 +43,17 @@ VM_STRING_CONST(load_l, "load_l", 6);
 VM_STRING_CONST(save_l, "save_l", 6);
 VM_STRING_CONST(copy_s, "copy_s", 6);
 VM_STRING_CONST(ldl_a, "ldl_a", 5);
-VM_STRING_CONST(sunref_i32, "sunref_i32", 10);
+
+VM_STRING_CONST(sturef, "sturef", 6);
+VM_STRING_CONST(sturef_s, "sturef_s", 8);
+VM_STRING_CONST(sturef_s_i8, "sturef_s_i8", 11);
+VM_STRING_CONST(sturef_s_i16, "sturef_s_i16", 12);
+VM_STRING_CONST(sturef_s_i32, "sturef_s_i32", 12);
+VM_STRING_CONST(sturef_s_i64, "sturef_s_i64", 12);
+
 VM_STRING_CONST(stelem, "stelem", 6);
 VM_STRING_CONST(stelem_s, "stelem_s", 8);
+
 VM_STRING_CONST(ldelem, "ldelem", 6);
 VM_STRING_CONST(ldelem_s, "ldelem_s", 8);
 
@@ -575,7 +583,12 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			BODY_BRANCH(conv_i16_i32)
 			BODY_BRANCH(conv_i32_i16)
 			BODY_BRANCH(ldl_a)
-			BODY_BRANCH(sunref_i32)
+			BODY_BRANCH(sturef)
+			BODY_BRANCH(sturef_s)
+			BODY_BRANCH(sturef_s_i8)
+			BODY_BRANCH(sturef_s_i16)
+			BODY_BRANCH(sturef_s_i32)
+			BODY_BRANCH(sturef_s_i64)
 			BODY_BRANCH(stelem)
 			BODY_BRANCH(stelem_s)
 			BODY_BRANCH(ldelem)

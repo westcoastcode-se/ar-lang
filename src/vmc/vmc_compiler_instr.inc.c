@@ -352,9 +352,55 @@ FUNC_BODY(ldl_a)
 	return TRUE;
 }
 
-FUNC_BODY(sunref_i32)
+FUNC_BODY(sturef_s_i8)
 {
-	_vmc_emit_opcode(c, VMI_OP_SUNREF_INT32);
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I8);
+	return TRUE;
+}
+
+FUNC_BODY(sturef_s_i16)
+{
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I16);
+	return TRUE;
+}
+
+FUNC_BODY(sturef_s_i32)
+{
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I32);
+	return TRUE;
+}
+
+FUNC_BODY(sturef_s_i64)
+{
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I64);
+	return TRUE;
+}
+
+FUNC_BODY(sturef_s)
+{
+	vmi_instr_sturef_s instr;
+	vmc_var var;
+	vmc_lexer_next(l, t);
+	if (!_vmc_parse_type(c, l, p, t, &var))
+		return FALSE;
+	instr.opcode = 0;
+	instr.icode = VMI_STUREF_S;
+	instr.size = var.definition->size;
+	vmc_write(c, &instr, sizeof(vmi_instr_sturef_s));
+	return TRUE;
+}
+
+FUNC_BODY(sturef)
+{
+	vmi_instr_sturef instr;
+	vmc_var var;
+	vmc_lexer_next(l, t);
+	if (!_vmc_parse_type(c, l, p, t, &var))
+		return FALSE;
+	instr.opcode = 0;
+	instr.icode = VMI_STUREF;
+	instr.size = var.definition->size;
+	vmc_write(c, &instr, sizeof(vmi_instr_sturef));
 	return TRUE;
 }
 

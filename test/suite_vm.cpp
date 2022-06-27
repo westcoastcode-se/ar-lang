@@ -436,24 +436,18 @@ fn Func() (int32) {
 	// Local variable
 	void allocate_locals2()
 	{
-		/*
-		fn InnerFunc() (int32) {
-			var i int32
-			return 5
-		}
-		fn Func() (int32) {
-			return InnerFunc()
-		}
-		*/
 		const auto source = R"(
 fn InnerFunc() (int32) {
-	locals (i int32)// Allocate local memory storage for an int32 named i
-	ldc_i32 5			// Load 5
+	// var i int32
+	locals (i int32)
+	// return 5
+	ldc_i32 5
 	save_r 0
-	ret				// Return
+	ret
 }
 fn Func() (int32) {
-	alloc_s 4		// Allocate memory for return value of sizeof(int32)
+	// return InnerFunc()
+	alloc_s 4
 	call InnerFunc()(int32)
 	save_r 0
 	ret
@@ -558,6 +552,14 @@ fn Func() (int32) {
 	ret
 }
 )";
+		// push 20
+		// push 10
+		// call add(int32,int32)(int32)
+		//		lda 1
+		//		lda 0
+		//		add
+		//		ret
+		// stloc 0
 		auto c = compile(source);
 		auto p = process(c);
 		auto t = thread(p);
@@ -959,7 +961,7 @@ fn InnerGet(val *int32) () {
 	// *val = 10
 	lda 0
 	ldc_i32 10
-	sunref_i32
+	sturef int32
 	ret
 }
 
@@ -990,14 +992,43 @@ fn Get () (int32) {
 		destroy(c);
 	}
 
-	void supply_int32_ptr_from_c()
+	template<typename T>
+	void sturef_s_types(T value)
+	{
+		const auto format = R"(
+fn Get(val *%s) () {
+	lda 0
+	ldc_%s %d
+	sturef_s_%s
+	ret
+}
+)";
+		char source[1024];
+		sprintf(source, format, name_of(value), shorthand_of(value), value, shorthand_of(value));
+
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		T result;
+		push_value(t, &result);
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, 0);
+		verify_value(result, (T)value);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void sturef_s_types_i64()
 	{
 		const auto source = R"(
-fn Get(val *int32) () {
-	// *val = 10
+fn Get(val *int64) () {
 	lda 0
-	ldc_i32 10
-	sunref_i32
+	ldc_i64 1234567890
+	sturef_s_i64
 	ret
 }
 )";
@@ -1005,22 +1036,84 @@ fn Get(val *int32) () {
 		auto p = process(c);
 		auto t = thread(p);
 
-		vm_int32 value;
-		push_value(t, &value);
+		vm_int64 result;
+		push_value(t, &result);
 		invoke(p, t, "Get");
 
 		verify_stack_size(t, 0);
-		verify_value(value, 10);
+		verify_value(result, (vm_int64)1234567890L);
 
 		destroy(t);
 		destroy(p);
 		destroy(c);
 	}
 
+	void sturef_s_types_f32()
+	{
+		const auto source = R"(
+fn Get(val *float32) () {
+	lda 0
+	ldc_f32 123.45f
+	sturef_s_i32
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vm_float32 result;
+		push_value(t, &result);
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, 0);
+		verify_value(result, 123.45f);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void sturef_s_types_f64()
+	{
+		const auto source = R"(
+fn Get(val *float64) () {
+	lda 0
+	ldc_f64 12345.67890
+	sturef_s_i64
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		vm_float64 result;
+		push_value(t, &result);
+		invoke(p, t, "Get");
+
+		verify_stack_size(t, 0);
+		verify_value(result, 12345.67890);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void sturef_s()
+	{
+		TEST_FN(sturef_s_types<vm_int8>(123));
+		TEST_FN(sturef_s_types<vm_int16>(INT16_MAX - 2));
+		TEST_FN(sturef_s_types<vm_int32>(INT32_MAX - 1231));
+		TEST_FN(sturef_s_types_i64());
+		TEST_FN(sturef_s_types_f32());
+		TEST_FN(sturef_s_types_f64());
+	}
+
 	void operator()()
 	{
 		TEST(call_fn_using_pointer);
-		TEST(supply_int32_ptr_from_c);
+		TEST(sturef_s);
 	}
 };
 
@@ -1417,25 +1510,25 @@ fn InnerGet(values [4]*int32) () {
 	ldc_i32 0
 	ldelem *int32
 	ldc_i32 10
-	sunref_i32
+	sturef_s_i32
 	// *values[1] = 20
 	lda_a 0
 	ldc_i32 1
 	ldelem *int32
 	ldc_i32 20
-	sunref_i32
+	sturef_s_i32
 	// *values[2] = 30
 	lda_a 0
 	ldc_i32 2
 	ldelem *int32
 	ldc_i32 30
-	sunref_i32
+	sturef_s_i32
 	// *values[3] = 40
 	lda_a 0
 	ldc_i32 3
 	ldelem *int32
 	ldc_i32 40
-	sunref_i32
+	sturef_s_i32
 	ret
 }
 

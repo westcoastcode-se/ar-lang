@@ -112,9 +112,9 @@ vmi_ip _vmi_thread_lda(vmi_thread* t, vmi_ip ip)
 		*(vm_int64*)dest = *(vm_int64*)src;
 		break;
 	default:
-		if (instr->size % sizeof(vm_int64) == 0)
+		if (instr->size >= sizeof(vm_int64) && instr->size % sizeof(vm_int64) == 0)
 			vmi_copy_int64((vm_int64*)dest, (vm_int64*)src, instr->size / 8);
-		else if (instr->size % sizeof(vm_int32) == 0)
+		else if (instr->size >= sizeof(vm_int32) && instr->size % sizeof(vm_int32) == 0)
 			vmi_copy_int32((vm_int32*)dest, (vm_int32*)src, instr->size / 4);
 		else
 			vmi_copy_bytes(dest, t->ebp + instr->offset, instr->size);
@@ -175,9 +175,9 @@ vmi_ip _vmi_thread_save_r(vmi_thread* t, vmi_ip ip)
 		*(vm_int64*)dest = *(vm_int64*)src;
 		break;
 	default:
-		if (instr->size % sizeof(vm_int64) == 0)
+		if (instr->size >= sizeof(vm_int64) && instr->size % sizeof(vm_int64) == 0)
 			vmi_copy_int64((vm_int64*)dest, (vm_int64*)src, instr->size / 8);
-		else if (instr->size % sizeof(vm_int32) == 0)
+		else if (instr->size >= sizeof(vm_int32) && instr->size % sizeof(vm_int32) == 0)
 			vmi_copy_int32((vm_int32*)dest, (vm_int32*)src, instr->size / 4);
 		else
 			vmi_copy_bytes(dest, src, instr->size);

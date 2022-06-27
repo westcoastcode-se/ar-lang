@@ -52,9 +52,9 @@ vmi_ip _vmi_thread_load_l(vmi_thread* t, vmi_ip ip)
 		*(vm_int64*)dest = *(vm_int64*)src;
 		break;
 	default:
-		if (instr->size % sizeof(vm_int64) == 0)
+		if (instr->size >= sizeof(vm_int64) && instr->size % sizeof(vm_int64) == 0)
 			vmi_copy_int64((vm_int64*)dest, (vm_int64*)(t->ebp + instr->offset), instr->size / 8);
-		else if (instr->size % sizeof(vm_int32) == 0)
+		else if (instr->size >= sizeof(vm_int32) && instr->size % sizeof(vm_int32) == 0)
 			vmi_copy_int32((vm_int32*)dest, (vm_int32*)(t->ebp + instr->offset), instr->size / 4);
 		else
 			vmi_copy_bytes(dest, t->ebp + instr->offset, instr->size);
@@ -104,9 +104,9 @@ vmi_ip _vmi_thread_save_l(vmi_thread* t, vmi_ip ip)
 		*(vm_int64*)dest = *(vm_int64*)src;
 		break;
 	default:
-		if (instr->size % sizeof(vm_int64) == 0)
+		if (instr->size >= sizeof(vm_int64) && instr->size % sizeof(vm_int64) == 0)
 			vmi_copy_int64((vm_int64*)dest, (vm_int64*)src, instr->size / 8);
-		else if (instr->size % sizeof(vm_int32) == 0)
+		else if (instr->size >= sizeof(vm_int32) && instr->size % sizeof(vm_int32) == 0)
 			vmi_copy_int32((vm_int32*)dest, (vm_int32*)src, instr->size / 4);
 		else 
 			vmi_copy_bytes(dest, src, instr->size);
@@ -122,13 +122,4 @@ vmi_ip _vmi_thread_ldl_a(vmi_thread* t, vmi_ip ip)
 	vm_byte** const stack_value = (vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*));
 	*stack_value = target;
 	return ip + sizeof(vmi_instr_ldl_a);
-}
-
-vmi_ip _vmi_thread_sunref_int32(vmi_thread* t, vmi_ip ip)
-{
-	// it is assumed that the value on top is of the same type as the pointer in this case
-	const vm_int32 value = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
-	vm_int32* const ptr = *(vm_int32**)vmi_stack_pop(&t->stack, sizeof(vm_int32*));
-	*ptr = value;
-	return ip + sizeof(vmi_instr_single_instruction);
 }
