@@ -80,80 +80,84 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			ip = _vmi_thread_addi32(t, ip);
 			continue;
 
-		case VMI_OP_LDC_I8:
+		case VMI_OP_LDC_I1:
 			ip = _vmi_thread_ldc_i8(t, ip);
 			continue;
-		case VMI_OP_LDC_I16:
+		case VMI_OP_LDC_I2:
 			ip = _vmi_thread_ldc_i16(t, ip);
 			continue;
-		case VMI_OP_LDC_I32:
+		case VMI_OP_LDC_I4:
 			ip = _vmi_thread_ldc_i32(t, ip);
 			continue;
-		case VMI_OP_LDC_I64:
+		case VMI_OP_LDC_I8:
 			ip = _vmi_thread_ldc_i64(t, ip);
 			continue;
-		case VMI_OP_LDC_F32:
+		case VMI_OP_LDC_F4:
 			ip = _vmi_thread_ldc_f32(t, ip);
 			continue;
-		case VMI_OP_LDC_F64:
+		case VMI_OP_LDC_F8:
 			ip = _vmi_thread_ldc_f64(t, ip);
 			continue;
 
-		case VMI_OP_LDC_S_I8_0:
+		case VMI_OP_LDC_S_I1_0:
 			ip = _vmi_thread_ldc_s_i8(t, ip, 0);
 			continue;
-		case VMI_OP_LDC_S_I8_1:
+		case VMI_OP_LDC_S_I1_1:
 			ip = _vmi_thread_ldc_s_i8(t, ip, 1);
 			continue;
-		case VMI_OP_LDC_S_I8_N1:
+		case VMI_OP_LDC_S_I1_N1:
 			ip = _vmi_thread_ldc_s_i8(t, ip, -1);
 			continue;
-		case VMI_OP_LDC_S_I16_0:
+
+		case VMI_OP_LDC_S_I2_0:
 			ip = _vmi_thread_ldc_s_i16(t, ip, 0);
 			continue;
-		case VMI_OP_LDC_S_I16_1:
+		case VMI_OP_LDC_S_I2_1:
 			ip = _vmi_thread_ldc_s_i16(t, ip, 1);
 			continue;
-		case VMI_OP_LDC_S_I16_N1:
+		case VMI_OP_LDC_S_I2_N1:
 			ip = _vmi_thread_ldc_s_i16(t, ip, -1);
 			continue;
-		case VMI_OP_LDC_S_I32_0:
+
+		case VMI_OP_LDC_S_I4_0:
 			ip = _vmi_thread_ldc_s_i32(t, ip, 0);
 			continue;
-		case VMI_OP_LDC_S_I32_1:
+		case VMI_OP_LDC_S_I4_1:
 			ip = _vmi_thread_ldc_s_i32(t, ip, 1);
 			continue;
-		case VMI_OP_LDC_S_I32_N1:
+		case VMI_OP_LDC_S_I4_N1:
 			ip = _vmi_thread_ldc_s_i32(t, ip, -1);
 			continue;
-		case VMI_OP_LDC_S_I64_0:
+
+		case VMI_OP_LDC_S_I8_0:
 			ip = _vmi_thread_ldc_s_i64(t, ip, 0);
 			continue;
-		case VMI_OP_LDC_S_I64_1:
+		case VMI_OP_LDC_S_I8_1:
 			ip = _vmi_thread_ldc_s_i64(t, ip, 1);
 			continue;
-		case VMI_OP_LDC_S_I64_N1:
+		case VMI_OP_LDC_S_I8_N1:
 			ip = _vmi_thread_ldc_s_i64(t, ip, -1);
 			continue;
-		case VMI_OP_LDC_S_F32_0:
+
+		case VMI_OP_LDC_S_F4_0:
 			ip = _vmi_thread_ldc_s_f32(t, ip, 0);
 			continue;
-		case VMI_OP_LDC_S_F32_1:
+		case VMI_OP_LDC_S_F4_1:
 			ip = _vmi_thread_ldc_s_f32(t, ip, 1);
 			continue;
-		case VMI_OP_LDC_S_F32_N1:
+		case VMI_OP_LDC_S_F4_N1:
 			ip = _vmi_thread_ldc_s_f32(t, ip, -1);
 			continue;
-		case VMI_OP_LDC_S_F64_0:
+
+		case VMI_OP_LDC_S_F8_0:
 			ip = _vmi_thread_ldc_s_f64(t, ip, 0);
 			continue;
-		case VMI_OP_LDC_S_F64_1:
+		case VMI_OP_LDC_S_F8_1:
 			ip = _vmi_thread_ldc_s_f64(t, ip, 1);
 			continue;
-		case VMI_OP_LDC_S_F64_N1:
+		case VMI_OP_LDC_S_F8_N1:
 			ip = _vmi_thread_ldc_s_f64(t, ip, -1);
 			continue;
-
 
 		case VMI_OP_CONV_I16_I32:
 			ip = _vmi_thread_conv_i16_i32(t, ip);
@@ -180,45 +184,44 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			ip = _vmi_thread_copy_s_int32(t, ip);
 			continue;
 
-		case VMI_OP_STUREF_S_I8:
+		case VMI_OP_STUREF_S_I1:
 			ip = _vmi_thread_sturef_s_i8(t, ip);
 			continue;
-		case VMI_OP_STUREF_S_I16:
+		case VMI_OP_STUREF_S_I2:
 			ip = _vmi_thread_sturef_s_i16(t, ip);
 			continue;
-		case VMI_OP_STUREF_S_I32:
+		case VMI_OP_STUREF_S_I4:
 			ip = _vmi_thread_sturef_s_i32(t, ip);
 			continue;
-		case VMI_OP_STUREF_S_I64:
+		case VMI_OP_STUREF_S_I8:
 			ip = _vmi_thread_sturef_s_i64(t, ip);
 			continue;
 
-		case VMI_OP_STELEM_S_I8:
+		case VMI_OP_STELEM_S_I1:
 			ip = _vmi_thread_stelem_s_i8(t, ip);
 			continue;
-		case VMI_OP_STELEM_S_I16:
+		case VMI_OP_STELEM_S_I2:
 			ip = _vmi_thread_stelem_s_i16(t, ip);
 			continue;
-		case VMI_OP_STELEM_S_I32:
+		case VMI_OP_STELEM_S_I4:
 			ip = _vmi_thread_stelem_s_i32(t, ip);
 			continue;
-		case VMI_OP_STELEM_S_I64:
+		case VMI_OP_STELEM_S_I8:
 			ip = _vmi_thread_stelem_s_i64(t, ip);
 			continue;
 
-		case VMI_OP_LDELEM_S_I8:
+		case VMI_OP_LDELEM_S_I1:
 			ip = _vmi_thread_ldelem_s_i8(t, ip);
 			continue;
-		case VMI_OP_LDELEM_S_I16:
+		case VMI_OP_LDELEM_S_I2:
 			ip = _vmi_thread_ldelem_s_i16(t, ip);
 			continue;
-		case VMI_OP_LDELEM_S_I32:
+		case VMI_OP_LDELEM_S_I4:
 			ip = _vmi_thread_ldelem_s_i32(t, ip);
 			continue;
-		case VMI_OP_LDELEM_S_I64:
+		case VMI_OP_LDELEM_S_I8:
 			ip = _vmi_thread_ldelem_s_i64(t, ip);
 			continue;
-
 
 		default:
 			break;

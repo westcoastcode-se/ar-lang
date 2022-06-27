@@ -46,10 +46,12 @@ VM_STRING_CONST(ldl_a, "ldl_a", 5);
 
 VM_STRING_CONST(sturef, "sturef", 6);
 VM_STRING_CONST(sturef_s, "sturef_s", 8);
+VM_STRING_CONST(sturef_s_i1, "sturef_s_i1", 11);
+VM_STRING_CONST(sturef_s_i2, "sturef_s_i2", 11);
+VM_STRING_CONST(sturef_s_i4, "sturef_s_i4", 11);
 VM_STRING_CONST(sturef_s_i8, "sturef_s_i8", 11);
-VM_STRING_CONST(sturef_s_i16, "sturef_s_i16", 12);
-VM_STRING_CONST(sturef_s_i32, "sturef_s_i32", 12);
-VM_STRING_CONST(sturef_s_i64, "sturef_s_i64", 12);
+VM_STRING_CONST(sturef_s_f4, "sturef_s_f4", 11);
+VM_STRING_CONST(sturef_s_f8, "sturef_s_f8", 11);
 
 VM_STRING_CONST(stelem, "stelem", 6);
 VM_STRING_CONST(stelem_s, "stelem_s", 8);
@@ -57,22 +59,22 @@ VM_STRING_CONST(stelem_s, "stelem_s", 8);
 VM_STRING_CONST(ldelem, "ldelem", 6);
 VM_STRING_CONST(ldelem_s, "ldelem_s", 8);
 
+VM_STRING_CONST(ldc_s_i1, "ldc_s_i1", 8);
+VM_STRING_CONST(ldc_s_i2, "ldc_s_i2", 8);
+VM_STRING_CONST(ldc_s_i4, "ldc_s_i4", 8);
 VM_STRING_CONST(ldc_s_i8, "ldc_s_i8", 8);
-VM_STRING_CONST(ldc_s_i16, "ldc_s_i16", 9);
-VM_STRING_CONST(ldc_s_i32, "ldc_s_i32", 9);
-VM_STRING_CONST(ldc_s_i64, "ldc_s_i64", 9);
-VM_STRING_CONST(ldc_s_f32, "ldc_s_f32", 9);
-VM_STRING_CONST(ldc_s_f64, "ldc_s_f64", 9);
+VM_STRING_CONST(ldc_s_f4, "ldc_s_f4", 8);
+VM_STRING_CONST(ldc_s_f8, "ldc_s_f8", 8);
 
+VM_STRING_CONST(ldc_i1, "ldc_i1", 6);
+VM_STRING_CONST(ldc_i2, "ldc_i2", 6);
+VM_STRING_CONST(ldc_i4, "ldc_i4", 6);
 VM_STRING_CONST(ldc_i8, "ldc_i8", 6);
-VM_STRING_CONST(ldc_i16, "ldc_i16", 7);
-VM_STRING_CONST(ldc_i32, "ldc_i32", 7);
-VM_STRING_CONST(ldc_i64, "ldc_i64", 7);
-VM_STRING_CONST(ldc_f32, "ldc_f32", 7);
-VM_STRING_CONST(ldc_f64, "ldc_f64", 7);
+VM_STRING_CONST(ldc_f4, "ldc_f4", 6);
+VM_STRING_CONST(ldc_f8, "ldc_f8", 6);
 
-VM_STRING_CONST(conv_i16_i32, "conv_i16_i32", 12);
-VM_STRING_CONST(conv_i32_i16, "conv_i32_i16", 12);
+VM_STRING_CONST(conv_i2_i4, "conv_i2_i4", 10);
+VM_STRING_CONST(conv_i4_i2, "conv_i4_i2", 10);
 
 VM_STRING_CONST(clt, "clt", 3);
 VM_STRING_CONST(cgt, "cgt", 3);
@@ -557,19 +559,19 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			BODY_BRANCH(lda_a)
 			BODY_BRANCH(save_r)
 
+			BODY_BRANCH(ldc_s_i1)
+			BODY_BRANCH(ldc_s_i2)
+			BODY_BRANCH(ldc_s_i4)
 			BODY_BRANCH(ldc_s_i8)
-			BODY_BRANCH(ldc_s_i16)
-			BODY_BRANCH(ldc_s_i32)
-			BODY_BRANCH(ldc_s_i64)
-			BODY_BRANCH(ldc_s_f32)
-			BODY_BRANCH(ldc_s_f64)
+			BODY_BRANCH(ldc_s_f4)
+			BODY_BRANCH(ldc_s_f8)
 
+			BODY_BRANCH(ldc_i1)
+			BODY_BRANCH(ldc_i2)
+			BODY_BRANCH(ldc_i4)
 			BODY_BRANCH(ldc_i8)
-			BODY_BRANCH(ldc_i16)
-			BODY_BRANCH(ldc_i32)
-			BODY_BRANCH(ldc_i64)
-			BODY_BRANCH(ldc_f32)
-			BODY_BRANCH(ldc_f64)
+			BODY_BRANCH(ldc_f4)
+			BODY_BRANCH(ldc_f8)
 
 			BODY_BRANCH(locals)
 			BODY_BRANCH(load_l)
@@ -580,17 +582,25 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			BODY_BRANCH(clt)
 			BODY_BRANCH(cgt)
 			BODY_BRANCH(add)
-			BODY_BRANCH(conv_i16_i32)
-			BODY_BRANCH(conv_i32_i16)
+
+			BODY_BRANCH(conv_i2_i4)
+			BODY_BRANCH(conv_i4_i2)
+
 			BODY_BRANCH(ldl_a)
+
 			BODY_BRANCH(sturef)
+
 			BODY_BRANCH(sturef_s)
+			BODY_BRANCH(sturef_s_i1)
+			BODY_BRANCH(sturef_s_i2)
+			BODY_BRANCH(sturef_s_i4)
 			BODY_BRANCH(sturef_s_i8)
-			BODY_BRANCH(sturef_s_i16)
-			BODY_BRANCH(sturef_s_i32)
-			BODY_BRANCH(sturef_s_i64)
+			BODY_BRANCH(sturef_s_f4)
+			BODY_BRANCH(sturef_s_f8)
+
 			BODY_BRANCH(stelem)
 			BODY_BRANCH(stelem_s)
+
 			BODY_BRANCH(ldelem)
 			BODY_BRANCH(ldelem_s)
 		BODY_BRANCH_END

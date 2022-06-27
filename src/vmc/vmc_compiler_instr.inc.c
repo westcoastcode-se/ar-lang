@@ -10,7 +10,7 @@
 #define FUNC_BODY(N) BOOL parse_##N(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 #endif
 
-FUNC_BODY(ldc_s_i8)
+FUNC_BODY(ldc_s_i1)
 {
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(l, t);
@@ -24,7 +24,7 @@ FUNC_BODY(ldc_s_i8)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_s_i16)
+FUNC_BODY(ldc_s_i2)
 {
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(l, t);
@@ -38,7 +38,7 @@ FUNC_BODY(ldc_s_i16)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_s_i32)
+FUNC_BODY(ldc_s_i4)
 {
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(l, t);
@@ -52,7 +52,7 @@ FUNC_BODY(ldc_s_i32)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_s_i64)
+FUNC_BODY(ldc_s_i8)
 {
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(l, t);
@@ -66,7 +66,7 @@ FUNC_BODY(ldc_s_i64)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_s_f32)
+FUNC_BODY(ldc_s_f4)
 {
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(l, t);
@@ -80,7 +80,7 @@ FUNC_BODY(ldc_s_f32)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_s_f64)
+FUNC_BODY(ldc_s_f8)
 {
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(l, t);
@@ -94,7 +94,7 @@ FUNC_BODY(ldc_s_f64)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_i8)
+FUNC_BODY(ldc_i1)
 {
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(l, t);
@@ -108,7 +108,7 @@ FUNC_BODY(ldc_i8)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_i16)
+FUNC_BODY(ldc_i2)
 {
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(l, t);
@@ -122,7 +122,7 @@ FUNC_BODY(ldc_i16)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_i32)
+FUNC_BODY(ldc_i4)
 {
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(l, t);
@@ -136,21 +136,21 @@ FUNC_BODY(ldc_i32)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_i64)
+FUNC_BODY(ldc_i8)
 {
 	vmi_instr_ldc_i64 instr;
 	vmc_lexer_next(l, t);
 	if (t->type != VMC_LEXER_TYPE_INT)
 		return vmc_compiler_message_expected_int(&c->messages, l, t);
 	instr.opcode = 0;
-	instr.icode = VMI_LDC_I64;
+	instr.icode = VMI_LDC_I8;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT64;
 	instr.i64 = strtoi64(t->string.start, vm_string_length(&t->string));
 	vmc_write(c, &instr, sizeof(vmi_instr_ldc_i64));
 	return TRUE;
 }
 
-FUNC_BODY(ldc_f32)
+FUNC_BODY(ldc_f4)
 {
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(l, t);
@@ -167,14 +167,14 @@ FUNC_BODY(ldc_f32)
 	return TRUE;
 }
 
-FUNC_BODY(ldc_f64)
+FUNC_BODY(ldc_f8)
 {
 	vmi_instr_ldc_i64 instr;
 	vmc_lexer_next(l, t);
 	if (t->type != VMC_LEXER_TYPE_INT && t->type != VMC_LEXER_TYPE_DECIMAL)
 		return vmc_compiler_message_expected_decimal(&c->messages, l, t);
 	instr.opcode = 0;
-	instr.icode = VMI_LDC_I64;
+	instr.icode = VMI_LDC_I8;
 	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT64;
 	if (t->type == VMC_LEXER_TYPE_DECIMAL)
 		instr.f64 = strtod(t->string.start, NULL);
@@ -352,27 +352,39 @@ FUNC_BODY(ldl_a)
 	return TRUE;
 }
 
+FUNC_BODY(sturef_s_i1)
+{
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I1);
+	return TRUE;
+}
+
+FUNC_BODY(sturef_s_i2)
+{
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I2);
+	return TRUE;
+}
+
+FUNC_BODY(sturef_s_i4)
+{
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I4);
+	return TRUE;
+}
+
 FUNC_BODY(sturef_s_i8)
 {
 	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I8);
 	return TRUE;
 }
 
-FUNC_BODY(sturef_s_i16)
+FUNC_BODY(sturef_s_f4)
 {
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I16);
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I4);
 	return TRUE;
 }
 
-FUNC_BODY(sturef_s_i32)
+FUNC_BODY(sturef_s_f8)
 {
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I32);
-	return TRUE;
-}
-
-FUNC_BODY(sturef_s_i64)
-{
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I64);
+	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I8);
 	return TRUE;
 }
 
@@ -541,7 +553,7 @@ FUNC_BODY(add)
 	return TRUE;
 }
 
-FUNC_BODY(conv_i16_i32)
+FUNC_BODY(conv_i2_i4)
 {
 	vmi_instr_conv instr;
 	instr.header.opcode = 0;
@@ -552,7 +564,7 @@ FUNC_BODY(conv_i16_i32)
 	return TRUE;
 }
 
-FUNC_BODY(conv_i32_i16)
+FUNC_BODY(conv_i4_i2)
 {
 	vmi_instr_conv instr;
 	instr.header.opcode = 0;
