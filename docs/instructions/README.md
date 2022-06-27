@@ -9,6 +9,10 @@
 
 [call.md](call)
 [lda.md](lda)
+[lda_a.md](lda_a)
+[ldl.md](ldl)
+[ldl.md](ldl_a)
+[stl.md](stl)
 
 ## Compare instructions
 
