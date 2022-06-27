@@ -1,0 +1,10 @@
+package opengl
+
+// Constants
+const GL_NO_ERRORS = 0
+
+// Functions
+extern fn GlGetError() int64
+extern fn GlCreateTextures(id *int32, count int32)
+
+

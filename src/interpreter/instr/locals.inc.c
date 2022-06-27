@@ -9,9 +9,9 @@ vmi_ip _vmi_thread_locals(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_locals);
 }
 
-vmi_ip _vmi_thread_load_l(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldl(vmi_thread* t, vmi_ip ip)
 {
-	const vmi_instr_load_l* instr = (const vmi_instr_load_l*)ip;
+	const vmi_instr_ldl* instr = (const vmi_instr_ldl*)ip;
 	vm_byte* dest = vmi_stack_push(&t->stack, instr->size);
 	const vm_byte* src = t->ebp + instr->offset;
 	if (dest == NULL)
@@ -60,7 +60,7 @@ vmi_ip _vmi_thread_load_l(vmi_thread* t, vmi_ip ip)
 			vmi_copy_bytes(dest, t->ebp + instr->offset, instr->size);
 		break;
 	}
-	return ip + sizeof(vmi_instr_load_l);
+	return ip + sizeof(vmi_instr_ldl);
 }
 
 vmi_ip _vmi_thread_save_l(vmi_thread* t, vmi_ip ip)

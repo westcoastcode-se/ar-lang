@@ -1,0 +1,10 @@
+package stdio
+
+// Print the supplied string to the console
+extern fn Print(value string)
+
+// Print a variadic value to the console
+fn Printf(fmt string, args ...any) {
+	// TODO: Add support for args
+	Print(fmt)
+}

@@ -72,13 +72,13 @@ enum vmi_icodes
 	VMI_LDC_I8,
 
 	// Load local variable and put the result on the stack
-	VMI_LOAD_L,
-
-	// Save value on the stack to a local variable
-	VMI_SAVE_L,
+	VMI_LDL,
 
 	// Load the memory address to where a local variable is located
 	VMI_LDL_A,
+
+	// Save value on the stack to a local variable
+	VMI_SAVE_L,
 
 	// Store the value on the stack into the memory address located on the stack
 	VMI_STUREF,
@@ -220,8 +220,8 @@ struct vmi_instr_save_r
 };
 typedef struct vmi_instr_save_r vmi_instr_save_r;
 
-// A load_l(ocal) instruction
-struct vmi_instr_load_l
+// A ldl instruction
+struct vmi_instr_ldl
 {
 	union
 	{
@@ -236,7 +236,7 @@ struct vmi_instr_load_l
 		};
 	};
 };
-typedef struct vmi_instr_load_l vmi_instr_load_l;
+typedef struct vmi_instr_ldl vmi_instr_ldl;
 
 // A save_l(ocal) instruction
 struct vmi_instr_save_l
@@ -485,12 +485,7 @@ struct vmi_instr_locals
 };
 typedef struct vmi_instr_locals vmi_instr_locals;
 
-// A conv(ert) instruction
-struct vmi_instr_conv
-{
-	OPCODE_HEADER;
-};
-typedef struct vmi_instr_conv vmi_instr_conv;
+typedef struct vmi_instr_single_instruction vmi_instr_conv;
 
 // A cmp(are) instruction
 struct vmi_instr_cmp
@@ -554,8 +549,8 @@ enum vmi_ocodes
 	VMI_OP_ADD_I16 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16)),
 	VMI_OP_ADD_I32 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32)),
 
-	VMI_OP_CONV_I16_I32 = (VMI_CONV | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT16) | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT32)),
-	VMI_OP_CONV_I32_I16 = (VMI_CONV | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32) | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT16)),
+	VMI_OP_CONV_I2_I4 = (VMI_CONV | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT16) | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT32)),
+	VMI_OP_CONV_I4_I2 = (VMI_CONV | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32) | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT16)),
 
 	VMI_OP_CMP_LT = (VMI_CMP | VMI_PROPS1_OPCODE(VMI_INSTR_CMP_PROP1_LT) | VMI_PROPS2_OPCODE(VMI_INSTR_CMP_PROP2_SIGNED)),
 	VMI_OP_CMP_GT = (VMI_CMP | VMI_PROPS1_OPCODE(VMI_INSTR_CMP_PROP1_GT) | VMI_PROPS2_OPCODE(VMI_INSTR_CMP_PROP2_SIGNED)),

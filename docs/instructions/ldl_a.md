@@ -1,19 +1,19 @@
-# Documentation > Instructions > ldl_a
+# Documentation > Instructions > ldl
 
-Load the address of a local variable. Used if you want to work with pointers or arrays
+Load a local variable and push the value onto the stack
 
 
 ## Definition
 
 ```
-ldl_a <index>
+ldl <index>
 ```
 
 ## Example
 
-The example below will push the address to the local variable `value` at the top of the stack
+The example below will push value of `l1` onto the stack
 
 ```
-locals (value int32)
-ldl_a 0
+locals (l1 int32)
+ldl 0
 ```

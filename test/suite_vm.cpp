@@ -492,12 +492,12 @@ fn Func() (int32) {
 	ldc_i4 10
 	save_l 0
 	// i += 5
-	load_l 0
+	ldl 0
 	ldc_i4 5
 	add int32
 	save_l 0
 	// return i
-	load_l 0
+	ldl 0
 	save_r 0
 	ret	
 }
@@ -539,12 +539,12 @@ fn InnerFunc(in int32) (int32) {
 	ldc_i4 10
 	save_l 0
 	// i += 5
-	load_l 0
+	ldl 0
 	ldc_i4 5
 	add int32
 	save_l 0
 	// return i
-	load_l 0
+	ldl 0
 	save_r 0
 	ret
 }
@@ -968,7 +968,7 @@ fn Get () (int32) {
 	ldl_a 0
 	call InnerGet(*int32)()
 	// return value
-	load_l 0
+	ldl 0
 	save_r 0
 	ret
 }
@@ -1367,7 +1367,7 @@ fn Get () ([4]int8) {
 	ldc_i1 40
 	stelem int8
 	// return values
-	load_l 0
+	ldl 0
 	save_r 0
 	ret
 }
@@ -1417,7 +1417,7 @@ fn Get () ([4]int32) {
 	ldc_i4 40
 	stelem int32
 	// return values
-	load_l 0
+	ldl 0
 	save_r 0
 	ret
 }
@@ -1474,7 +1474,7 @@ fn Get () ([4]int32) {
 	ldl_a 0
 	call InnerGet(*int32)()
 	// return values
-	load_l 0
+	ldl 0
 	save_r 0
 	ret
 }
@@ -1553,16 +1553,16 @@ fn Get () (int32, int32, int32, int32) {
 	ldl_a 3
 	stelem *int32
 	// InnerGet(values)
-	load_l 4
+	ldl 4
 	call InnerGet([4]*int32)()
 	// return values
-	load_l 0
+	ldl 0
 	save_r 0
-	load_l 1
+	ldl 1
 	save_r 1
-	load_l 2
+	ldl 2
 	save_r 2
-	load_l 3
+	ldl 3
 	save_r 3
 	ret
 }
@@ -1600,6 +1600,30 @@ fn Get () (int32, int32, int32, int32) {
 	}
 };
 
+struct suite_vm_stack : suite_vm_utils
+{
+	template<typename T>
+	void alloc_s_free_s()
+	{
+		
+	}
+
+	void alloc_free()
+	{
+		TEST_FN(alloc_s_free_s<vm_int8>());
+		TEST_FN(alloc_s_free_s<vm_int16>());
+		TEST_FN(alloc_s_free_s<vm_int32>());
+		TEST_FN(alloc_s_free_s<vm_int64>());
+		TEST_FN(alloc_s_free_s<vm_float32>());
+		TEST_FN(alloc_s_free_s<vm_float64>());
+	}
+
+	void operator()()
+	{
+		//TEST(alloc_free);
+	}
+};
+
 void suite_vm()
 {
 	SUITE(suite_vm_tests);
@@ -1609,4 +1633,5 @@ void suite_vm()
 	SUITE(suite_vm_convert);
 	SUITE(suite_vm_pointer);
 	SUITE(suite_vm_arrays);
+	SUITE(suite_vm_stack);
 }

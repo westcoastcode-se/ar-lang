@@ -1,0 +1,32 @@
+type Item struct {
+	Value int32		// offset=0,size=4
+	Inner InnerItem	// offset=4,size=?
+} // size = 16
+
+type InnerItem struct {
+	Value32 float32	// offset=0, size=4
+	Value64 float64	// offset=4, size=8
+} // size = 12
+
+fn Add(lhs int32, rhs int32) (int32) {
+	// return lhs + rhs
+	load_a 1
+	load_a 0
+	add int32
+	save_r 0
+	ret
+}
+
+fn (s* Item) Get() (int32) {
+	// return s.Value
+	load_a 0
+	load_f Item.Value
+	save_r 0
+	ret
+}
+
+fn (s* Item) Set(val int32) () {
+	load_a 0
+	load_a 1
+	save_f Item.Value
+}

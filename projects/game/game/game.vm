@@ -1,0 +1,30 @@
+package game
+
+import "stdio"
+import "opengl"
+import "net"
+
+type Game struct {
+	serverSocket net.Socket
+}
+
+fn (g *Game) Start() bool {
+	var textureId = 0
+	opengl.GlCreateTextures(&textureId, 1)
+	var error = opengl.GlGetError()
+	if error != opengl.GL_NO_ERRORS {
+		return false
+	}
+
+	g.serverSocket, _ = net.Listen(12345)
+	return true
+}
+
+fn New() *Game {
+	return new Game{}
+}
+
+fn Delete(g* Game) {
+	net.Close(g.serverSocket)
+	delete g
+}

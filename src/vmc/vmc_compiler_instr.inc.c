@@ -286,9 +286,9 @@ FUNC_BODY(locals)
 	return TRUE;
 }
 
-FUNC_BODY(load_l)
+FUNC_BODY(ldl)
 {
-	vmi_instr_load_l instr;
+	vmi_instr_ldl instr;
 	vm_int32 index;
 
 	vmc_lexer_next(l, t);
@@ -301,10 +301,10 @@ FUNC_BODY(load_l)
 		return vmc_compiler_message_invalid_index(&c->messages, l, index, 0, func->locals_count - 1);
 	}
 	instr.opcode = 0;
-	instr.icode = VMI_LOAD_L;
+	instr.icode = VMI_LDL;
 	instr.size = func->locals[index].definition->size;
 	instr.offset = func->locals[index].offset;
-	vmc_write(c, &instr, sizeof(vmi_instr_load_l));
+	vmc_write(c, &instr, sizeof(vmi_instr_ldl));
 	return TRUE;
 }
 

@@ -1,0 +1,25 @@
+package lists
+
+type Node<T> struct {
+	Value T
+	Prev *Node<T>
+	Next *Node<T>
+}
+
+type LinkedList<T> struct {
+	First *Node<T>
+	Last  *Node<T>
+	Count int32
+}
+
+func (l *LinkedList<T>) AddFirst(item T) *Node<T> {
+	
+}
+
+func (l *LinkedList<T>) AddLast(item T) *Node<T> {
+	
+}
+
+func (l *LinkedList<T>) Remove(node *Node<T>) {
+
+}

@@ -159,11 +159,11 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			ip = _vmi_thread_ldc_s_f64(t, ip, -1);
 			continue;
 
-		case VMI_OP_CONV_I16_I32:
-			ip = _vmi_thread_conv_i16_i32(t, ip);
+		case VMI_OP_CONV_I2_I4:
+			ip = _vmi_thread_conv_i2_i4(t, ip);
 			continue;
-		case VMI_OP_CONV_I32_I16:
-			ip = _vmi_thread_conv_i32_i16(t, ip);
+		case VMI_OP_CONV_I4_I2:
+			ip = _vmi_thread_conv_i4_i2(t, ip);
 			continue;
 
 		case VMI_OP_CMP_LT:
@@ -254,8 +254,8 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_SAVE_R:
 			ip = _vmi_thread_save_r(t, ip);
 			continue;
-		case VMI_LOAD_L:
-			ip = _vmi_thread_load_l(t, ip);
+		case VMI_LDL:
+			ip = _vmi_thread_ldl(t, ip);
 			continue;
 		case VMI_SAVE_L:
 			ip = _vmi_thread_save_l(t, ip);
