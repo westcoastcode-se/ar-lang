@@ -490,12 +490,12 @@ fn Func() (int32) {
 	locals (i int32)
 	// i = 10
 	ldc_i4 10
-	save_l 0
+	stl 0
 	// i += 5
 	ldl 0
 	ldc_i4 5
 	add int32
-	save_l 0
+	stl 0
 	// return i
 	ldl 0
 	save_r 0
@@ -537,12 +537,12 @@ fn InnerFunc(in int32) (int32) {
 	locals (i int32)
 	// i = 10
 	ldc_i4 10
-	save_l 0
+	stl 0
 	// i += 5
 	ldl 0
 	ldc_i4 5
 	add int32
-	save_l 0
+	stl 0
 	// return i
 	ldl 0
 	save_r 0

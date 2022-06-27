@@ -77,8 +77,8 @@ enum vmi_icodes
 	// Load the memory address to where a local variable is located
 	VMI_LDL_A,
 
-	// Save value on the stack to a local variable
-	VMI_SAVE_L,
+	// Store a value from the stack into a local variable
+	VMI_STL,
 
 	// Store the value on the stack into the memory address located on the stack
 	VMI_STUREF,
@@ -238,8 +238,8 @@ struct vmi_instr_ldl
 };
 typedef struct vmi_instr_ldl vmi_instr_ldl;
 
-// A save_l(ocal) instruction
-struct vmi_instr_save_l
+// A stl instruction
+struct vmi_instr_stl
 {
 	union
 	{
@@ -254,7 +254,7 @@ struct vmi_instr_save_l
 		};
 	};
 };
-typedef struct vmi_instr_save_l vmi_instr_save_l;
+typedef struct vmi_instr_stl vmi_instr_stl;
 
 // A ldl_a(address) instruction
 struct vmi_instr_ldl_a

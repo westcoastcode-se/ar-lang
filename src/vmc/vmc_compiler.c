@@ -38,11 +38,12 @@ VM_STRING_CONST(alloc_s, "alloc_s", 7);
 VM_STRING_CONST(free_s, "free_s", 6);
 VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(call, "call", 4);
+
 VM_STRING_CONST(locals, "locals", 6);
 VM_STRING_CONST(ldl, "ldl", 3);
-VM_STRING_CONST(save_l, "save_l", 6);
-VM_STRING_CONST(copy_s, "copy_s", 6);
 VM_STRING_CONST(ldl_a, "ldl_a", 5);
+VM_STRING_CONST(stl, "stl", 3);
+VM_STRING_CONST(copy_s, "copy_s", 6);
 
 VM_STRING_CONST(sturef, "sturef", 6);
 VM_STRING_CONST(sturef_s, "sturef_s", 8);
@@ -575,7 +576,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 
 			BODY_BRANCH(locals)
 			BODY_BRANCH(ldl)
-			BODY_BRANCH(save_l)
+			BODY_BRANCH(stl)
 			BODY_BRANCH(alloc_s)
 			BODY_BRANCH(free_s)
 			BODY_BRANCH(copy_s)
