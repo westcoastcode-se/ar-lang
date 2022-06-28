@@ -11,3 +11,13 @@ Each part can be replaced assuming that each c function in the header file is im
 [operations.md](Operations)
 [data-types.md](Data Types)
 [instructions/README.md](Instructions)
+
+## Changes and investigations
+
+### Changes
+
+* ...
+
+### Investigations
+
+* [changes/INV-001_stack_based_return.md](INV-001_stack_based_return)
