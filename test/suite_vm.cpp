@@ -363,30 +363,23 @@ fn Add2 (lhs int32, rhs int32) (int32) {
 	}
 
 	void calculate_two_int32_inner() {
-		/*
-fn Add(lhs int32, rhs int32) (int32) {
-	return lhs + rhs
-}
-
-fn AddTwoInts() (int32) {
-	return Add(10, 20)
-}
-*/
 		const auto source = R"(
 fn Add (lhs int32, rhs int32) (int32) {
-	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
-	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
-	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
-	str 0	// Pop the top stack value and put it into the first return value
-	ret			// Return to the caller address (assume return value is on the top of the stack)
+	// return lhs + rhs
+	lda 0
+	lda 1
+	add int32
+	str 0
+	ret
 }
 
 fn AddTwoInts() (int32) {
-	allocs 4		// Allocate memory for return value of sizeof(int32)
-	ldc_i4 20		// Load constant int32 20
-	ldc_i4 10		// Load constant int32 10
+	// return Add(10, 20)
+	allocs 4
+	ldc_i4 20
+	ldc_i4 10
 	call Add(int32,int32)(int32)
-	str 0		// Save the value on the top of the stack to the return position
+	str 0
 	ret
 }
 )";
@@ -1717,6 +1710,47 @@ fn Get () (*int32) {
 	}
 };
 
+struct suite_vm_functions : suite_vm_utils
+{
+	void call()
+	{
+		const auto source = R"(
+fn Inner() (int32) {
+	// return 10
+	ldc_i4 10
+	str 0
+	ret
+}
+
+fn Outer() (int32) {
+	// return Inner()
+	allocs int32
+	call Inner()(int32)
+	str 0
+	ret
+}
+)";
+		auto c = compile(source);
+		auto p = process(c);
+		auto t = thread(p);
+
+		const vm_int32* const ret = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(p, t, "Outer");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_value(*ret, 10);
+
+		destroy(t);
+		destroy(p);
+		destroy(c);
+	}
+
+	void operator()()
+	{
+		TEST(call);
+	}
+};
+
 void suite_vm()
 {
 	SUITE(suite_vm_tests);
@@ -1727,4 +1761,5 @@ void suite_vm()
 	SUITE(suite_vm_pointer);
 	SUITE(suite_vm_arrays);
 	SUITE(suite_vm_allocation);
+	SUITE(suite_vm_functions);
 }
