@@ -34,39 +34,9 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 vmi_ip _vmi_thread_call(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_call* instr = (const vmi_instr_call*)ip;
-
-	// Push the address where the application should continue executing when the function returns
-	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (ip + sizeof(vmi_instr_call));
-	// Return the functions start position.
 	// TODO: Is it possible to make address be the actual bytecode address?
-	return (vmi_ip)(t->bytecode + (size_t)instr->addr);
-}
-
-vmi_ip _vmi_thread_begin(vmi_thread* t, vmi_ip ip)
-{
-	// TODO: The problem is that call_frame points to the wrong frame when poping from the stack
-	const vmi_instr_begin* const instr = (const vmi_instr_begin*)ip;
-
-#if defined(VM_STACK_DEBUG)
-	// Verify that we've pushed the bare-minimum data on the stack for the 
-	// function to work
-	// 
-	// we must've pushed at least "expected_stack_size" in bytes
-	const vm_byte* expected = t->stack.top - instr->expected_stack_size - sizeof(vmi_ip) - sizeof(vm_byte*);
-	if (t->ebp + instr->expected_stack_size > expected)
-		return _vmi_thread_stack_mismanaged_begin(t, ip, instr->expected_stack_size);
-#endif
-
-	// Push the previous stack pointer and set where arguments and 
-	// return value slots are located on the stack
-	* (vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*)) = t->ebp;
-
-	// New ebp is where the arguments and the return values can be found.
-	// It is on before the previous ebp, the return value address and at the start of all (assumed)
-	// allocated memory on the stack
-	t->ebp = t->stack.top - sizeof(vmi_ip) - sizeof(vm_byte*) - instr->expected_stack_size;
-
-	return ip + sizeof(vmi_instr_begin);
+	vmi_ip new_ip = (vmi_ip)(t->bytecode + (size_t)instr->addr);
+	return vmi_thread_begin_call(t, ip, new_ip, instr->expected_stack_size);
 }
 
 vmi_ip _vmi_thread_lda(vmi_thread* t, vmi_ip ip)

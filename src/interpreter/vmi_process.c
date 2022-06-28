@@ -50,6 +50,7 @@ BOOL _vmi_process_load_package_info(vmi_process* p, const vm_byte* bytecode)
 		current_func->name.start = name_start;
 		current_func->name.end = name_start + header->name_length;
 		current_func->ptr = bytecode + header->ptr_start;
+		current_func->expected_stack_size = header->expected_stack_size;
 
 		first_package_bytes += sizeof(vmi_package_func_bytecode_header) + header->name_length;
 	}
@@ -106,7 +107,7 @@ vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t, const vmi_packag
 	// TODO: Add support for multiple threads
 	// TODO: Add support for routines/light-weight threads
 	p->current_thread = t;
-	result = vmi_thread_exec(t, func->ptr);
+	result = vmi_thread_entrypoint(t, func);
 	p->current_thread = NULL;
 	return result;
 }

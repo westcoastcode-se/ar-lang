@@ -11,6 +11,9 @@ struct vmi_package_func_bytecode_header
 
 	// Offset where the function starts (in relation to the start of the bytecode)
 	vm_uint32 ptr_start;
+
+	// How many bytes are expected to be pushed for this function to work
+	vm_int32 expected_stack_size;
 };
 typedef struct vmi_package_func_bytecode_header vmi_package_func_bytecode_header;
 
@@ -37,6 +40,9 @@ struct vmi_package_func
 
 	// Pointer to where the function is located
 	vmi_ip ptr;
+
+	// How many bytes are expected to be pushed for this function to work
+	vm_int32 expected_stack_size;
 };
 typedef struct vmi_package_func vmi_package_func;
 

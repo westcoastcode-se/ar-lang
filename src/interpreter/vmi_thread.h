@@ -116,9 +116,20 @@ extern vm_int32 vmi_thread_push_i32(vmi_thread* t, vm_int32 value);
 // Push a memory address to the stack
 extern vm_int32 vmi_thread_push_ptr(vmi_thread* t, void* value);
 
-// Start executing at the start of the supplied bytecode segment. It is assumed that any arguments are already pushed
-// to the stack. If the execution is successful then the return code should be 0
-extern vm_int32 vmi_thread_exec(vmi_thread* t, vmi_ip ip);
+// Start executing at the start of the entrypoint of the supplied function. It is assumed that any arguments are already pushed
+// to the stack. 
+// 
+// If the execution is successful then the return code should be 0
+extern vm_int32 vmi_thread_entrypoint(vmi_thread* t, const vmi_package_func* func);
+
+// Start executing a function. This function is normally called if you call a script function from a c function when the
+// thread is already running. It is assumed that any arguments are already pushed to the stack. 
+//
+// If the execution is successful then the return code should be 0
+extern vm_int32 vmi_thread_exec(vmi_thread* t, const vmi_package_func* func);
+
+// Prepare a function call
+extern vmi_ip vmi_thread_begin_call(vmi_thread* t, vmi_ip current_ip, vmi_ip next_ip, vm_int32 expected_stack_size);
 
 // Destroy the supplied thread
 extern void vmi_thread_destroy(vmi_thread* t);

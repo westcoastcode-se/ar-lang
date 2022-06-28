@@ -17,12 +17,12 @@ vmi_ip _vmi_thread_halt(vmi_thread* t, vmi_ip ip, vm_int32 flags, const char* me
 	return (vmi_ip)&_vmi_force_eoe;
 }
 
-vmi_ip _vmi_thread_stack_mismanaged_begin(vmi_thread* t, vmi_ip ip, vm_int32 bytes_left)
+vmi_ip _vmi_thread_stack_mismanaged_begin(vmi_thread* t, vmi_ip ip, vm_int32 bytes, vm_int32 bytes_pushed)
 {
 	vmi_thread_shalti(t,
 		VMI_THREAD_FLAG_STACK_MISMANAGED,
-		"the stack is mismanaged. you are expected to push %d bytes to the stack",
-		bytes_left);
+		"the stack is mismanaged. you are expected to push %d bytes to the stack but was %d",
+		bytes, bytes_pushed);
 	t->halt_pos = ip;
 	return (vmi_ip)&_vmi_force_eoe;
 }
@@ -233,9 +233,6 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_CALL:
 			ip = _vmi_thread_call(t, ip);
 			continue;
-		case VMI_BEGIN:
-			ip = _vmi_thread_begin(t, ip);
-			continue;
 		case VMI_LOCALS:
 			ip = _vmi_thread_locals(t, ip);
 			continue;
@@ -352,17 +349,65 @@ vm_int32 vmi_thread_push_ptr(vmi_thread* t, void* value)
 	return 0;
 }
 
-vm_int32 vmi_thread_exec(vmi_thread* t, vmi_ip ip)
+vm_int32 vmi_thread_entrypoint(vmi_thread* t, const vmi_package_func* func)
 {
-	vm_int32 ret;
-	t->ip = ip;
-	
-	// Push the caller to end-of-execution so that the thread stops running when the current function is no longer running.
-	// This is always done when a function is being called
+	t->ip = func->ptr;
+
+#if defined(VM_STACK_DEBUG)
+	// Verify that we've pushed the data on the stack for the entry-point function to work
+	const vm_byte* expected = t->stack.top - func->expected_stack_size;
+	if (t->stack.blocks != expected) {
+		const vm_int32 stack_size = (vm_int32)(t->stack.top - t->stack.blocks);
+		_vmi_thread_stack_mismanaged_begin(t, NULL, func->expected_stack_size, stack_size);
+		return t->flags;
+	}
+#endif
+
+	// New ebp is where the arguments and the return values can be found.
+	t->ebp = t->stack.top - func->expected_stack_size;
+
+	// Push the address where the application should continue executing when the function returns - i.e.
+	// an end-of-execution
 	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (vmi_ip)&_vmi_force_eoe;
 
-	ret = _vmi_thread_exec(t, ip);
-	return ret;
+	// There is no previous EBP, so push NULL
+	*(vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*)) = NULL;
+
+	return _vmi_thread_exec(t, t->ip);
+}
+
+vm_int32 vmi_thread_exec(vmi_thread* t, const vmi_package_func* func)
+{
+	return _vmi_thread_exec(t,
+		vmi_thread_begin_call(t, t->ip, func->ptr, func->expected_stack_size)
+	);
+}
+
+vmi_ip vmi_thread_begin_call(vmi_thread* t, vmi_ip current_ip, vmi_ip next_ip, vm_int32 expected_stack_size)
+{
+#if defined(VM_STACK_DEBUG)
+	// Verify that we've pushed the bare-minimum data on the stack for the function to work
+	// 
+	// We must've pushed at least "expected_stack_size" in bytes (we also ignore the required function call stack values)
+	const vm_byte* expected = t->stack.top - sizeof(vmi_ip) - sizeof(vm_byte*) - expected_stack_size;
+	if (t->ebp > expected) {
+		const vm_int32 stack_size = (vm_int32)(t->stack.top - t->ebp);
+		return _vmi_thread_stack_mismanaged_begin(t, current_ip, expected_stack_size, stack_size);
+	}
+#endif
+
+	// Push the address where the application should continue executing when the function returns
+	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (current_ip + sizeof(vmi_instr_call));
+
+	// Push the previous stack pointer and set where arguments and 
+	// return value slots are located on the stack
+	*(vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*)) = t->ebp;
+
+	// New ebp is where the arguments and the return values can be found.
+	// It is on before the previous ebp, the return value address and at the start of all (assumed)
+	// allocated memory on the stack
+	t->ebp = t->stack.top - sizeof(vmi_ip) - sizeof(vm_byte*) - expected_stack_size;
+	return next_ip;
 }
 
 void vmi_thread_destroy(vmi_thread* t)

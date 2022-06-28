@@ -7,7 +7,6 @@ void vmi_debug_instruction(vmi_ip ip)
 {
 	const vmi_opcode_header* const header = (const vmi_opcode_header*)ip;
 	switch (header->icode) {
-		VMI_DEBUG_INSTR(VMI_BEGIN);
 		VMI_DEBUG_INSTR(VMI_LDA);
 		VMI_DEBUG_INSTR(VMI_LDA_A);
 		VMI_DEBUG_INSTR(VMI_STR);

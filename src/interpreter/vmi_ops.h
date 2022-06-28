@@ -35,11 +35,8 @@
 
 enum vmi_icodes
 {
-	// Begin a function invocation (with no local variables)
-	VMI_BEGIN = 1,
-
 	// Load the value of an argument to the stack
-	VMI_LDA,
+	VMI_LDA = 1,
 
 	// Load the address one of the arguments
 	VMI_LDA_A,
@@ -167,27 +164,6 @@ typedef struct vmi_instr_single_instruction vmi_instr_single_instruction;
 #define VMI_INSTR_ADD_PROP1_INT16 (0)
 #define VMI_INSTR_ADD_PROP1_INT32 (1)
 typedef struct vmi_instr_single_instruction vmi_instr_add;
-
-// A begin instruction
-struct vmi_instr_begin
-{
-	// Header (must be identical with vmi_opcode_header)
-	union
-	{
-		vmi_opcode_header header;
-		vmi_opcode opcode;
-		struct
-		{
-			vm_uint8 icode;
-			vm_uint8 props1;
-
-			// The expected (incoming) stack size that's required by the function - such as the arguments and the 
-			// return values
-			vm_uint16 expected_stack_size;
-		};
-	};
-};
-typedef struct vmi_instr_begin vmi_instr_begin;
 
 // A lda(rgument) instruction
 struct vmi_instr_lda
@@ -442,7 +418,20 @@ typedef struct vmi_instr_mem_size2 vmi_instr_freeh;
 // A call instruction
 struct vmi_instr_call
 {
-	OPCODE_HEADER;
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+
+			// The expected (incoming) stack size that's required by the function - such as the arguments and the 
+			// return values.
+			vm_uint16 expected_stack_size;
+		};
+	};
 	vmi_ip addr;
 };
 typedef struct vmi_instr_call vmi_instr_call;

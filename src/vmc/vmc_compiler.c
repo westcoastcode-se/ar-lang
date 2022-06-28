@@ -118,15 +118,6 @@ const vmc_compiler_config _vmc_compiler_config_default = {
 	&vmc_compiler_config_import
 };
 
-void _vmc_emit_begin(vmc_compiler* c, vm_int8 argument_total_size, vm_int8 return_total_size)
-{
-	vmi_instr_begin instr;
-	instr.opcode = 0;
-	instr.icode = VMI_BEGIN;
-	instr.expected_stack_size = argument_total_size + return_total_size;
-	vmc_write(c, &instr, sizeof(vmi_instr_begin));
-}
-
 void _vmc_emit_opcode(vmc_compiler* c, vm_int32 opcode)
 {
 	vmi_instr_single_instruction instr;
@@ -527,7 +518,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	// TODO: Add support for reserving memory for local variables
 	if ((vm_uint32)(func->args_total_size + func->returns_total_size) > UINT16_MAX)
 		return vmc_compiler_message_not_implemented(&c->messages, l, t);
-	_vmc_emit_begin(c, func->args_total_size, func->returns_total_size);
+	//_vmc_emit_begin(c, func->args_total_size, func->returns_total_size);
 
 	while (1) {
 		// Unexpected end of function body
@@ -696,6 +687,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			}
 			instr.header.opcode = 0;
 			instr.header.icode = VMI_CALL;
+			instr.expected_stack_size = func->args_total_size + func->returns_total_size;
 			instr.addr = OFFSET(func->offset);
 			vmc_write(c, &instr, sizeof(vmi_instr_call));
 		}
@@ -920,7 +912,8 @@ void _vmc_append_package_info(vmc_compiler* c)
 				vmc_func* f = (vmc_func*)header;
 				vmi_package_func_bytecode_header func_header = {
 					vm_string_length(&f->name),
-					f->offset
+					f->offset,
+					f->args_total_size + f->returns_total_size
 				};
 				vmc_write(c, &func_header, sizeof(vmi_package_func_bytecode_header));
 				vmc_write(c, (void*)f->name.start, vm_string_length(&f->name)); // name bytes
