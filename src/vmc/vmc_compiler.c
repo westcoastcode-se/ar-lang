@@ -44,6 +44,7 @@ VM_STRING_CONST(freeh, "freeh", 5);
 VM_STRING_CONST(ret, "ret", 3);
 VM_STRING_CONST(call, "call", 4);
 
+VM_STRING_CONST(args, "args", 4);
 VM_STRING_CONST(locals, "locals", 6);
 VM_STRING_CONST(ldl, "ldl", 3);
 VM_STRING_CONST(ldl_a, "ldl_a", 5);
@@ -147,36 +148,6 @@ void _vmc_append_header(vmc_compiler* c)
 	header.functions_count = 0;
 	header.first_package_offset = 0;
 	vmc_write(c, &header, sizeof(header));
-}
-
-const vm_string* _vmc_prepare_func_get_signature(vmc_compiler* c, vm_string name,
-	vmc_var* args, vm_int32 args_count,
-	vmc_var* returns, vm_int32 returns_count)
-{
-	char memory[2048];
-	char* ptr = vm_str_cpy(memory, name.start, vm_string_length(&name));
-	*ptr++ = '(';
-	for (int i = 0; i < args_count; ++i) {
-		const vm_int32 len = vm_string_length(&args[i].definition->name);
-		const vmc_var* info = &args[i];
-		ptr = vm_str_cpy(ptr, info->definition->name.start, len);
-	}
-	*ptr++ = ')';
-	*ptr++ = '(';
-	for (int i = 0; i < returns_count; ++i) {
-		const vm_int32 len = vm_string_length(&returns[i].definition->name);
-		const vmc_var* info = &returns[i];
-		ptr = vm_str_cpy(ptr, info->definition->name.start, len);
-	}
-	*ptr++ = ')';
-	return vmc_string_pool_stringsz(&c->string_pool, memory, (int)(ptr - memory));
-}
-
-BOOL _vmc_prepare_func_signature(vmc_compiler* c, vmc_func* func)
-{
-	func->signature = *_vmc_prepare_func_get_signature(c, func->name, func->args, func->args_count,
-		func->returns, func->returns_count);
-	return TRUE;
 }
 
 // Parse a type:
@@ -364,48 +335,7 @@ BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, v
 	return TRUE;
 }
 
-BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
-{
-	func->args_count = 0;
-	func->args_total_size = 0;
-
-	// Expected a '(' token
-	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
-		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
-
-	// Parse until we reach that end ')' token
-	while (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_R)) {
-		vmc_var* const var = &func->args[func->args_count];
-
-		// Ignore comma
-		if (t->type == VMC_LEXER_TYPE_COMMA) {
-			vmc_lexer_next(l, t);
-		}
-
-		// Reset masks
-		var->offset = 0;
-
-		// Read var name
-		if (t->type != VMC_LEXER_TYPE_KEYWORD)
-			return vmc_compiler_message_expected_identifier(&c->messages, l, t);
-		var->name = t->string;
-		vmc_lexer_next(l, t);
-
-		// Parse type
-		if (!_vmc_parse_type(c, l, p, t, var)) {
-			return FALSE;
-		}
-
-		// Argument now loaded
-		func->args_count++;
-		func->args_total_size += var->definition->size;
-	}
-
-	return TRUE;
-}
-
 // fn (<scope>) Name (<args>) (<returns>)
-
 BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	func->locals_count = 0;
@@ -456,6 +386,38 @@ BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_lexer* l, vmc_package* p,
 	}
 
 	return TRUE;
+}
+
+// Parse optional argument names for the current function
+BOOL _vmc_parse_function_arg_names(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+{
+	// Expected a (
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L))
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
+	
+	// Read each argument name
+	for (int i = 0; i < func->args_count; ++i) {
+		vmc_lexer_next(l, t);
+
+		vmc_var* const arg = &func->args[i];
+		if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+			return vmc_compiler_message_expected_keyword(&c->messages, l, t);
+		}
+		arg->name = t->string;
+
+		vmc_lexer_next(l, t);
+	}
+
+	// Expected a )
+	if (t->type != VMC_LEXER_TYPE_PARAN_R)
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, ')');
+	return TRUE;
+}
+
+BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+{
+	return _vmc_compiler_parse_type_decl_without_name(c, l, p, t,
+		func->args, &func->args_count, &func->args_total_size);
 }
 
 BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
@@ -606,6 +568,12 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			BODY_BRANCH(ldelem_s)
 		BODY_BRANCH_END
 		
+		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(args))) {
+			// args (names..., )
+			if (!_vmc_parse_function_arg_names(c, l, p, t, func)) {
+				return FALSE;
+			}
+		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(jmpt))) {
 			// jmpt <destination>
 
@@ -663,6 +631,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			vm_int32 _;
 			vmc_func* func;
 			vmi_instr_call instr;
+			vm_string signature;
 
 			// Name of the function
 			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD))
@@ -677,7 +646,8 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			if (!_vmc_compiler_parse_type_decl_without_name(c, l, p, t, returns, &returns_count, &_))
 				return FALSE;
 
-			func = vmc_func_find(p, _vmc_prepare_func_get_signature(c, name, args, args_count, returns, returns_count));
+			vm_string_setsz(&signature, name.start, (vm_int32)(t->string.end - name.start));
+			func = vmc_func_find(p, &signature);
 			if (func == NULL) {
 				return vmc_compiler_message_not_implemented(&c->messages, l, t);
 			}
@@ -708,7 +678,7 @@ vmc_func* _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* 
 		return NULL;
 	}
 
-	// 1. Function name
+	// 1. Function name (The signature starts with the name and ends with the last return value)
 	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD)) {
 		vmc_compiler_message_expected_identifier(&c->messages, l, t);
 		return NULL;
@@ -726,9 +696,8 @@ vmc_func* _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* 
 	if (!_vmc_parse_keyword_fn_rets(c, l, p, t, func))
 		return NULL;
 
-	// Build the signature string
-	if (!_vmc_prepare_func_signature(c, func))
-		return NULL;
+	// Figure out the signature
+	vm_string_setsz(&func->signature, func->name.start, (vm_int32)(t->string.end - func->name.start));
 	return func;
 }
 

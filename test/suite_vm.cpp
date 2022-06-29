@@ -258,7 +258,7 @@ struct suite_vm_tests : suite_vm_utils
 	void calculate_return_two_values()
 	{
 		const auto source = R"(
-fn Get () (int32, int32) {
+fn Get()(int32,int32) {
 	// return 123, 456
 	ldc_i4 123
 	str 0
@@ -287,7 +287,8 @@ fn Get () (int32, int32) {
 	template<typename T>
 	void add_test(const char* type, T lhs, T rhs) {
 		const auto format = R"(
-fn Add (lhs %s, rhs %s) (%s) {
+fn Add(%s,%s)(%s) {
+	args (lhs, rhs)
 	// return lhs + rhs
 	lda 0
 	lda 1
@@ -326,30 +327,25 @@ fn Add (lhs %s, rhs %s) (%s) {
 	}
 
 	void calculate_multiple_funcs() {
-		/*
-fn Add1(lhs int32, rhs int32) (int32) {
-	return lhs + rhs
-}
-
-fn Add2(lhs int32, rhs int32) (int32) {
-	return lhs + rhs
-}
-*/
 		const auto source = R"(
-fn Add1 (lhs int32, rhs int32) (int32) {
-	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
-	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
-	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
-	str 0	// Pop the top stack value and put it into the first return value
-	ret			// Return to the caller address (assume return value is on the top of the stack)
+fn Add1(int32,int32)(int32) {
+	args (lhs, rhs)
+	// return lhs + rhs
+	lda 0
+	lda 1
+	add int32
+	str 0
+	ret
 }
 
-fn Add2 (lhs int32, rhs int32) (int32) {
-	lda 0	// Push first arg (4 bytes) to the stack (esp + 0)
-	lda 1	// Push second arg (4 bytes) to the stack (esp + 4)
-	add int32	// Pop the two top-most i32 values on the stack and push the sum of those values to the stack
-	str 0	// Pop the top stack value and put it into the first return value
-	ret			// Return to the caller address (assume return value is on the top of the stack)
+fn Add2(int32,int32)(int32) {
+	args (lhs, rhs)
+	// return lhs + rhs
+	lda 0
+	lda 1
+	add int32
+	str 0
+	ret
 }
 )";
 		auto c = compile(source);
@@ -372,7 +368,8 @@ fn Add2 (lhs int32, rhs int32) (int32) {
 
 	void calculate_two_int32_inner() {
 		const auto source = R"(
-fn Add (lhs int32, rhs int32) (int32) {
+fn Add(int32,int32)(int32) {
+	args (lhs, rhs)
 	// return lhs + rhs
 	lda 0
 	lda 1
@@ -381,7 +378,7 @@ fn Add (lhs int32, rhs int32) (int32) {
 	ret
 }
 
-fn AddTwoInts() (int32) {
+fn AddTwoInts()(int32) {
 	// return Add(10, 20)
 	allocs 4
 	ldc_i4 20
@@ -421,7 +418,7 @@ struct suite_vm_memory : suite_vm_utils
 	void allocate_locals1()
 	{
 		const auto source = R"(
-fn Func() (int32) {
+fn Func()(int32) {
 	// var i int32
 	locals (i int32)
 	// return 5
@@ -450,7 +447,7 @@ fn Func() (int32) {
 	void allocate_locals2()
 	{
 		const auto source = R"(
-fn InnerFunc() (int32) {
+fn InnerFunc()(int32) {
 	// var i int32
 	locals (i int32)
 	// return 5
@@ -458,7 +455,7 @@ fn InnerFunc() (int32) {
 	str 0
 	ret
 }
-fn Func() (int32) {
+fn Func()(int32) {
 	// return InnerFunc()
 	allocs 4
 	call InnerFunc()(int32)
@@ -486,7 +483,7 @@ fn Func() (int32) {
 	void allocate_load_save_locals1()
 	{
 		const auto source = R"(
-fn Func() (int32) {
+fn Func()(int32) {
 	// var i int32
 	locals (i int32)
 	// i = 10
@@ -522,18 +519,9 @@ fn Func() (int32) {
 	// Local variable
 	void allocate_load_save_locals2()
 	{
-/*
-fn InnerFunc(in int32) (int32) {
-	var i = 10
-	i += in
-	return i
-}
-fn Func() (int32) {
-	return InnerFunc(5);
-}
-*/
 		const auto source = R"(
-fn InnerFunc(in int32) (int32) {
+fn InnerFunc(int32)(int32) {
+	args (in)
 	// var i int32
 	locals (i int32)
 	// i = 10
@@ -549,7 +537,8 @@ fn InnerFunc(in int32) (int32) {
 	str 0
 	ret
 }
-fn Func() (int32) {
+
+fn Func()(int32) {
 	// InnerFunc(5)
 	allocs 4
 	ldc_i4 5
@@ -584,18 +573,15 @@ fn Func() (int32) {
 
 	template<typename T>
 	void copy_s_test(const char* type, T in) {
-		/*
-				fn Mul2(in <type>) (<type>) {
-					return lhs+lhs
-				}
-		*/
 		const auto format = R"(
-fn Mul2 (in %s) (%s) {
-	lda 0	// Push arg to the stack
-	copy_s %s	// Copy value to the stack
-	add %s		// Add the two values together
-	str 0	// Pop the top stack value and put it into the first return value
-	ret			// Return to the caller address (assume return value is on the top of the stack)
+fn Mul2(%s)(%s) {
+	args (in)
+	// return lhs+lhs
+	lda 0
+	copy_s %s
+	add %s
+	str 0
+	ret
 }
 )";
 		char source[1024];
@@ -637,7 +623,7 @@ struct suite_vm_compare : suite_vm_utils
 	void clt()
 	{
 		const auto source = R"(
-fn Compare () (int32) {
+fn Compare()(int32) {
 	// return 12 < 34
 	ldc_i4 34
 	ldc_i4 12
@@ -666,7 +652,7 @@ fn Compare () (int32) {
 	void cgt()
 	{
 		const auto source = R"(
-fn Compare () (int32) {
+fn Compare()(int32) {
 	// return 34 > 12
 	ldc_i4 12
 	ldc_i4 34
@@ -694,28 +680,22 @@ fn Compare () (int32) {
 	// Jump if value on the stack is true
 	void jmpt()
 	{
-/*
-fn Test() (int32) {
-	if 34 > 12 {
-		return 10
-	} else {
-		return 20
-	}
-}
-*/
 		const auto source = R"(
-fn Test() (int32) {
-	ldc_i4 12	// Push a constant
-	ldc_i4 34	// Push a constant
-	cgt			// Compare 32 > 12
-	jmpt marker	// if > jmp marker
+fn Test()(int32) {
+	ldc_i4 12
+	ldc_i4 34
+	cgt
+	jmpt marker
+	// return 20
 	ldc_i4 20
 	str 0
-	ret			// return 20
-#marker 
+	ret
+	// if 34 > 12 {
+#marker
+	// return 10
 	ldc_i4 10
 	str 0
-	ret			// return 10
+	ret
 }
 )";
 		auto c = compile(source);
@@ -747,7 +727,7 @@ fn Test() (int32) {
 		}
 		*/
 		const auto source = R"(
-fn Test() (int32) {
+fn Test()(int32) {
 	ldc_i4 12	// Push a constant
 	ldc_i4 34	// Push a constant
 	clt			// Compare 32 < 12
@@ -791,7 +771,7 @@ struct suite_vm_constants : suite_vm_utils
 	template<typename T>
 	void ldc_type(T value) {
 		const auto format = R"(
-fn Get () (%s) {
+fn Get()(%s) {
 	ldc_%s %d
 	str 0
 	ret
@@ -825,7 +805,7 @@ fn Get () (%s) {
 	void ldc_i64()
 	{
 		const auto source = R"(
-fn Get () (int64) {
+fn Get()(int64) {
 	ldc_i8 1234567890
 	str 0
 	ret
@@ -849,7 +829,7 @@ fn Get () (int64) {
 	void ldc_f32()
 	{
 		const auto source = R"(
-fn Get () (float32) {
+fn Get()(float32) {
 	ldc_f4 123.67f
 	str 0
 	ret
@@ -873,7 +853,7 @@ fn Get () (float32) {
 	void ldc_f64()
 	{
 		const auto source = R"(
-fn Get () (float64) {
+fn Get()(float64) {
 	ldc_f8 12345.6789
 	str 0
 	ret
@@ -909,7 +889,7 @@ struct suite_vm_convert : suite_vm_utils
 	void conv_test(FROM from, TO to)
 	{
 		const auto format = R"(
-fn Convert () (%s) {
+fn Convert()(%s) {
 	// return int32(int16(1234))
 	ldc_%s %d
 	conv_%s_%s
@@ -954,7 +934,8 @@ struct suite_vm_pointer : suite_vm_utils
 	void call_fn_using_pointer()
 	{
 		const auto source= R"(
-fn InnerGet(val *int32) () {
+fn InnerGet(*int32)() {
+	args (val)
 	// *val = 10
 	lda 0
 	ldc_i4 10
@@ -962,7 +943,7 @@ fn InnerGet(val *int32) () {
 	ret
 }
 
-fn Get () (int32) {
+fn Get()(int32) {
 	// var value int32
 	locals (value int32)
 	// InnerGet(&value)
@@ -993,7 +974,8 @@ fn Get () (int32) {
 	void sturef_s_types(T value)
 	{
 		const auto format = R"(
-fn Get(val *%s) () {
+fn Get(*%s)() {
+	args (val)
 	lda 0
 	ldc_%s %d
 	sturef_s_%s
@@ -1022,7 +1004,8 @@ fn Get(val *%s) () {
 	void sturef_s_types_i64()
 	{
 		const auto source = R"(
-fn Get(val *int64) () {
+fn Get(*int64)() {
+	args (val)
 	lda 0
 	ldc_i8 1234567890
 	sturef_s_i8
@@ -1048,7 +1031,8 @@ fn Get(val *int64) () {
 	void sturef_s_types_f32()
 	{
 		const auto source = R"(
-fn Get(val *float32) () {
+fn Get(*float32)() {
+	args (val)
 	lda 0
 	ldc_f4 123.45f
 	sturef_s_f4
@@ -1074,7 +1058,8 @@ fn Get(val *float32) () {
 	void sturef_s_types_f64()
 	{
 		const auto source = R"(
-fn Get(val *float64) () {
+fn Get(*float64)() {
+	args (val)
 	lda 0
 	ldc_f8 12345.67890
 	sturef_s_f8
@@ -1119,7 +1104,7 @@ struct suite_vm_arrays : suite_vm_utils
 	void load_and_store_array_value()
 	{
 		const auto source = R"(
-fn Get () (int32) {
+fn Get()(int32) {
 	// var value int32
 	locals (values [2]int32)
 	// values[0] = 10
@@ -1154,7 +1139,7 @@ fn Get () (int32) {
 	void array_test(T value)
 	{
 		const auto format = R"(
-fn Get () (%s) {
+fn Get()(%s) {
 	locals (values [2]%s)
 	// values[0] = ?
 	ldl_a 0
@@ -1190,7 +1175,7 @@ fn Get () (%s) {
 	void array_test_i64()
 	{
 		const auto source = R"(
-fn Get () (int64) {
+fn Get()(int64) {
 	locals (values [2]int64)
 	// values[0] = 1234567890
 	ldl_a 0
@@ -1223,7 +1208,7 @@ fn Get () (int64) {
 	void array_test_f32()
 	{
 		const auto source = R"(
-fn Get () (float32) {
+fn Get()(float32) {
 	locals (values [2]float32)
 	// values[0] = 123.45f
 	ldl_a 0
@@ -1256,7 +1241,7 @@ fn Get () (float32) {
 	void array_test_f64()
 	{
 		const auto source = R"(
-fn Get () (float64) {
+fn Get()(float64) {
 	locals (values [2]float64)
 	// values[0] = 12345.6789
 	ldl_a 0
@@ -1299,7 +1284,7 @@ fn Get () (float64) {
 	void return_two_values_from_array()
 	{
 		const auto source = R"(
-fn Get () (int32, int32) {
+fn Get()(int32,int32) {
 	// var value int32
 	locals (values [2]int32)
 	// values[0] = 10
@@ -1344,7 +1329,7 @@ fn Get () (int32, int32) {
 	void return_array_4int8()
 	{
 		const auto source = R"(
-fn Get () ([4]int8) {
+fn Get()([4]int8) {
 	// var values [4]int8
 	locals (values [4]int8)
 	// values[0] = 10
@@ -1394,7 +1379,7 @@ fn Get () ([4]int8) {
 	void return_array_4int32()
 	{
 		const auto source = R"(
-fn Get () ([4]int32) {
+fn Get()([4]int32) {
 	// var values [4]int32
 	locals (values [4]int32)
 	// values[0] = 10
@@ -1444,7 +1429,8 @@ fn Get () ([4]int32) {
 	void call_function_with_array_address()
 	{
 		const auto source = R"(
-fn InnerGet(values *int32) () {
+fn InnerGet(*int32)() {
+	args (values)
 	// values[0] = 10
 	lda 0
 	ldc_i4 0
@@ -1468,7 +1454,7 @@ fn InnerGet(values *int32) () {
 	ret
 }
 
-fn Get () ([4]int32) {
+fn Get()([4]int32) {
 	// var values [4]int32
 	locals (values [4]int32)
 	// InnerGet(&values)
@@ -1501,7 +1487,8 @@ fn Get () ([4]int32) {
 	void call_function_with_array_of_addresses()
 	{
 		const auto source = R"(
-fn InnerGet(values [4]*int32) () {
+fn InnerGet([4]*int32)() {
+	args (values)
 	// *values[0] = 10
 	lda_a 0
 	ldc_i4 0
@@ -1529,7 +1516,7 @@ fn InnerGet(values [4]*int32) () {
 	ret
 }
 
-fn Get () (int32, int32, int32, int32) {
+fn Get()(int32,int32,int32,int32) {
 	// var val0, val1, val2, val3 int32
 	// var values [4]*int32
 	locals (val0 int32, val1 int32, val2 int32, val3 int32, values [4]*int32)
@@ -1607,7 +1594,7 @@ struct suite_vm_allocation : suite_vm_utils
 	void allocs_frees_type()
 	{
 		const auto format = R"(
-fn Do() () {
+fn Do()() {
 	allocs %d
 	frees %d
 	ret
@@ -1643,7 +1630,7 @@ fn Do() () {
 	void alloch_freeh_type()
 	{
 		const auto format = R"(
-fn Do() () {
+fn Do()() {
 	alloch %d
 	freeh %d
 	ret
@@ -1678,7 +1665,7 @@ fn Do() () {
 	void alloch_from_param()
 	{
 		const auto source = R"(
-fn Get () (*int32) {
+fn Get()(*int32) {
 	//var mem *int32
 	locals (mem *int32)
 	// mem = new int32
@@ -1723,14 +1710,14 @@ struct suite_vm_functions : suite_vm_utils
 	void call()
 	{
 		const auto source = R"(
-fn Inner() (int32) {
+fn Inner()(int32) {
 	// return 10
 	ldc_i4 10
 	str 0
 	ret
 }
 
-fn Outer() (int32) {
+fn Outer()(int32) {
 	// return Inner()
 	allocs int32
 	call Inner()(int32)
