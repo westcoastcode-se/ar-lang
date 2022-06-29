@@ -2,53 +2,45 @@
 #define _VMC_LINKER_MARKER_H_
 
 #include "../vm_config.h"
+#include "../vm_string.h"
 
-// Define what type of marker a should be injected
-enum vmc_linker_marker_type
+// Where marker value can be found
+struct vmc_linker_marker_addr
 {
-	// No more markers found
-	VMC_LINKER_MARKER_TYPE_END = 0,
-	// Inject a memory location
-	VMC_LINKER_MARKER_TYPE_INJECT_ADDR = 1
+	// Next item in the linked-list
+	struct vmc_linker_marker_addr* next;
+
+	// A unique signature
+	vm_string signature;
+
+	// Offset in the bytecode where the memory address is
+	vm_uint32 offset;
 };
-typedef enum vmc_linker_marker_type vmc_linker_marker_type;
+typedef struct vmc_linker_marker_addr vmc_linker_marker_addr;
 
-// Header for a memory marker. This makes it possible for the linker to know what it should be doing with
-// the marker itself
-struct vmc_linker_marker_header
-{
-	// The type of marker this is
-	vmc_linker_marker_type type;
-	
-	// The size, in bytes, of the marker
-	vm_int32 size;
-};
-typedef struct vmc_linker_marker_header vmc_linker_marker_header;
-
-// Header for all linker markers
-#define VMC_LINKER_MARKER_HEADER union { \
-	vmc_linker_marker_header header; \
-	struct { \
-		vmc_linker_marker_type type; \
-		vm_int32 size; \
-	};  \
-}
-
-// Marker for where to inject a memory address
+// Marker for where to inject a memory address. This marker exists for each injection
 struct vmc_linker_marker_inject_addr
 {
-	VMC_LINKER_MARKER_HEADER;
+	// Next item in the linked-list
+	struct vmc_linker_marker_inject_addr* next;
 
 	// Offset in the bytecode where to inject a memory address into. 
 	// 
 	// Examples are where the "call" instruction is located in the bytecode
 	vm_uint32 offset;
-};
 
-// Fetch the next marker in the array of markers. If the next marker is at the end then a NULL is returned
-static inline vmc_linker_marker_header* vmc_linker_marker_next(vmc_linker_marker_header* header) {
-	vmc_linker_marker_header* const next_header = ((vm_byte*)header + header->size);
-	return next_header->type == VMC_LINKER_MARKER_TYPE_END ? NULL : next_header;
-}
+	// The address
+	const vmc_linker_marker_addr* addr;
+};
+typedef struct vmc_linker_marker_inject_addr vmc_linker_marker_inject_addr;
+
+// Allocate a new marker
+extern vmc_linker_marker_addr* vmc_linker_marker_addr_alloc(const vm_string* signature);
+
+// Destroy all markers
+extern void vmc_linker_marker_addr_destroy(vmc_linker_marker_addr* first_marker);
+
+// Search for a specific marker
+extern vmc_linker_marker_addr* vmc_linker_marker_addr_search(vmc_linker_marker_addr* first_marker, const vm_string* name);
 
 #endif

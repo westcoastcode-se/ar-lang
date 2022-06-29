@@ -56,7 +56,7 @@ void vmc_func_init(vmc_func* func)
 	func->returns_total_size = 0;
 	func->locals_count = 0;
 	func->locals_total_size = 0;
-	func->memory_marker_first = func->memory_marker_last = NULL;
+	func->marker_local_addr_first = func->marker_local_addr_last = NULL;
 }
 
 vmc_func* vmc_func_malloc()
@@ -93,8 +93,9 @@ void vmc_func_calculate_offsets(vmc_func* func)
 // Destroy memory allocated for the supplied function
 void vmc_func_free(vmc_func* func)
 {
-	vmc_linker_memory_marker_destroy(func->memory_marker_first);
-	func->memory_marker_first = func->memory_marker_last = NULL;
+	vmc_linker_marker_addr_destroy(func->marker_local_addr_first);
+	func->marker_local_addr_first = func->marker_local_addr_last = NULL;
+
 	free(func);
 }
 
@@ -108,7 +109,7 @@ vmc_package* vmc_package_malloc(const char* name, int length)
 	p->full_name = p->name;
 	vmc_types_list_init(&p->types);
 	p->data_offset = 0;
-	p->memory_marker_first = p->memory_marker_last = NULL;
+	p->marker_func_addr_first = p->marker_func_addr_last = NULL;
 	p->global_package = NULL;
 	return p;
 }
@@ -118,8 +119,8 @@ void vmc_package_free(vmc_package* p)
 	vmc_types_list_destroy(&p->types);
 
 	// Cleanup memory markers
-	vmc_linker_memory_marker_destroy(p->memory_marker_first);
-	p->memory_marker_first = p->memory_marker_last = NULL;
+	vmc_linker_marker_addr_destroy(p->marker_func_addr_first);
+	p->marker_func_addr_first = p->marker_func_addr_last = NULL;
 
 	free(p);
 }

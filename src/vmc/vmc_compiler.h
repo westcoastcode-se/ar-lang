@@ -102,7 +102,9 @@ inline static BOOL vmc_compiler_is_panicing(vmc_compiler* c)
 // Check to see if the compiler has compiled successfully
 inline static BOOL vmc_compiler_success(vmc_compiler* c)
 {
-	return !vm_messages_has_messages(&c->messages) && !vmc_compiler_is_panicing(c);
+	return vm_messages_has_messages(&c->messages) == FALSE && 
+		vmc_compiler_is_panicing(c) == FALSE && 
+		vmc_linker_success(&c->linker) == FALSE;
 }
 
 // Get the bytecode created by the supplied compiler
@@ -116,5 +118,11 @@ extern vm_int32 vmc_compiler_config_import(vmc_compiler* c, const vm_string* pat
 
 // Create a new package
 extern vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length);
+
+// Figure out the offset in the bytestream where a specific field is located
+inline static vm_int32 vmc_compiler_bytecode_field_offset(vmc_compiler* c, vm_int32 field_offset)
+{
+	return vm_bytestream_get_size(&c->bytecode) + field_offset;
+}
 
 #endif

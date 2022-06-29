@@ -463,39 +463,35 @@ BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		func->returns, &func->returns_count, &func->returns_total_size);
 }
 
-vmc_linker_memory_marker* _vmc_func_add_empty_memory_marker(vmc_compiler* c, vmc_func* func, const vm_string* name)
+vmc_linker_marker_addr* _vmc_func_add_marker_addr(vmc_compiler* c, vmc_func* func, const vm_string* name)
 {
-	vmc_linker_memory_marker* const marker = vmc_linker_memory_marker_alloc();
-	if (marker == NULL) {
-		return FALSE;
+	vmc_linker_marker_addr* marker = vmc_linker_marker_addr_search(func->marker_local_addr_first, name);
+	if (marker != NULL) {
+		return marker;
 	}
-	marker->name = *name;
-	if (func->memory_marker_last == NULL)
-		func->memory_marker_first = func->memory_marker_last = marker;
+	marker = vmc_linker_marker_addr_alloc(name);
+	if (marker == NULL)
+		return NULL;
+	if (func->marker_local_addr_first == NULL)
+		func->marker_local_addr_first = func->marker_local_addr_last = marker;
 	else {
-		func->memory_marker_last->next = marker;
-		func->memory_marker_last = marker;
+		func->marker_local_addr_last->next = marker;
+		func->marker_local_addr_last = marker;
 	}
 	return marker;
 }
 
-BOOL _vmc_func_add_memory_marker(vmc_compiler* c, vmc_func* func, const vm_string* name)
+BOOL _vmc_func_add_unique_marker_addr(vmc_compiler* c, vmc_func* func, const vm_string* name)
 {
-	vmc_linker_memory_marker* marker = vmc_linker_memory_marker_find_sibling(func->memory_marker_first, name);
+	vmc_linker_marker_addr* marker = _vmc_func_add_marker_addr(c, func, name);
 	if (marker != NULL) {
-		// If this marker already have an offset then this marker already exists
+		// If the marker exists and is already set then this is considered an error
 		if (marker->offset != 0) {
 			return FALSE;
 		}
 		marker->offset = vm_bytestream_get_size(&c->bytecode);
-		return TRUE;
 	}
-	marker = _vmc_func_add_empty_memory_marker(c, func, name);
-	if (marker == NULL) {
-		return FALSE;
-	}
-	marker->offset = vm_bytestream_get_size(&c->bytecode);
-	return TRUE;
+	return marker != NULL;
 }
 
 #include "vmc_compiler_instr.inc.c"
@@ -537,9 +533,13 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			continue;
 		}
 
-		// Ignore memory markers for now
-		if (t->type == VMC_LEXER_TYPE_MEMORY_MARKER) {
-			if (!_vmc_func_add_memory_marker(c, func, &t->string))
+		// Memory markers for jumps
+		if (t->type == VMC_LEXER_TYPE_HASH) {
+			// Get the keyword
+			vmc_lexer_next(l, t);
+			if (!vmc_lexer_type_is_keyword(t->type))
+				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
+			if (!_vmc_func_add_unique_marker_addr(c, func, &t->string))
 				return vmc_compiler_message_memory_marker_exists(&c->messages, l, &t->string);
 			vmc_lexer_next(l, t);
 			continue;
@@ -609,7 +609,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			// jmpt <destination>
 
 			vmi_instr_jmp instr;
-			vmc_linker_memory_marker* marker;
+			vmc_linker_marker_addr* marker;
 			instr.opcode = 0;
 			instr.icode = VMI_JMP;
 			instr.props1 = VMI_INSTR_JMP_PROP1_TRUE;
@@ -619,23 +619,18 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 			if (t->type != VMC_LEXER_TYPE_KEYWORD) {
 				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
 			}
-			// Try to find a marker. If no marker exist then create/add it
-			marker = vmc_linker_memory_marker_find_sibling(func->memory_marker_first, &t->string);
+
+			// Add a new marker. This is so that we can know the actual memory address during runtime.
+			marker = _vmc_func_add_marker_addr(c, func, &t->string);
 			if (marker == NULL) {
-				marker = _vmc_func_add_empty_memory_marker(c, func, &t->string);
-				if (marker == NULL) {
-					vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
-					return FALSE;
-				}
+				vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+				return FALSE;
 			}
-			if (marker->offset == 0) {
-				if (vmc_linker_add_memory_marker(&c->linker, marker, OFFSETOF(vmi_instr_jmp, destination)) == NULL) {
-					vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
-					return FALSE;
-				}
-			}
-			else {
-				instr.destination = OFFSET(marker->offset);
+
+			if (vmc_linker_marker_add_inject_addr(&c->linker, marker, 
+				vmc_compiler_bytecode_field_offset(c, OFFSETOF(vmi_instr_jmp, destination))) == NULL) {
+				vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+				return FALSE;
 			}
 			vmc_write(c, &instr, sizeof(vmi_instr_jmp));
 		}
@@ -953,7 +948,7 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	vm_list_init(&c->packages);
 	c->functions_count = 0;
 	vmc_string_pool_init(&c->string_pool);
-	vmc_linker_init(&c->linker, &c->bytecode);
+	vmc_linker_init(&c->linker);
 
 	_vmc_compiler_register_builtins(c);
 	vmc_package_new(c, "main", 4);
@@ -981,7 +976,7 @@ BOOL vmc_compiler_compile(vmc_compiler* c, const vm_byte* src)
 	vmc_lexer_release(&l);
 	if (vmc_compiler_success(c)) {
 		_vmc_append_package_info(c);
-		vmc_linker_process(&c->linker);
+		vmc_linker_process(&c->linker, &c->bytecode);
 		// We might have gotten link errors, so let's verify success again
 		return vmc_compiler_success(c);
 	}

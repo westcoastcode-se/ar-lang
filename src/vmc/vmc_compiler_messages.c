@@ -28,7 +28,7 @@ BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer* l, vmc_
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_EXPECTED_IDENTIFIER,
-		VMC_COMPILER_MSG_EXPECTED_TYPE_STR,
+		VMC_COMPILER_MSG_EXPECTED_IDENTIFIER_STR,
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 

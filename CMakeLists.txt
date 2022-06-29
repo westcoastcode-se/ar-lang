@@ -42,12 +42,15 @@ add_library(vm "src/vm_config.h"
     "src/vmc/vmc_lexer.c" "src/vmc/vmc_lexer.h" "src/vmc/vmc_lexer_logic.h" "src/vmc/vmc_lexer_math.h"
     "src/vmc/vmc_string_pool.h" "src/vmc/vmc_string_pool.c" 
     "src/vmc/vmc_compiler_messages.h" "src/vmc/vmc_lexer_messages.h" "src/vmc/vmc_compiler_messages.c" "src/vmc/vmc_lexer_messages.c"
-     
+    "src/vmc/vmc_linker.h" "src/vmc/vmc_linker.c"
+    "src/vmc/vmc_compiler_types.h" "src/vmc/vmc_compiler_types.c" "src/vm_list.h" "src/vm_list.c" 
+    "src/vmc/lists/types_list.h" "src/vmc/lists/types_list.c" "src/interpreter/vmi_utils.h" "src/vm_memory.h" "src/vm_memory.c" 
+    "src/vmc/vmc_linker_marker.h" 
+
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
     "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" 
-    "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" "src/vmc/vmc_linker.h" "src/vmc/vmc_linker.c"
-    "src/vmc/vmc_compiler_types.h" "src/vmc/vmc_compiler_types.c" "src/vm_list.h" "src/vm_list.c" 
-      "src/vmc/lists/types_list.h" "src/vmc/lists/types_list.c" "src/interpreter/vmi_utils.h" "src/vm_memory.h" "src/vm_memory.c" "src/vmc/vmc_linker_marker.h")
+    "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" 
+     "src/vmc/vmc_linker_marker.c" "src/vmc/vmc_linker_messages.h" "src/vmc/vmc_linker_messages.c")
 
 
 # Tests

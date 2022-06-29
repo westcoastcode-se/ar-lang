@@ -1,88 +1,79 @@
 #include "vmc_linker.h"
 #include "../interpreter/vmi_config.h"
+#include "vmc_linker_messages.h"
 
-vmc_linker_memory_marker* vmc_linker_memory_marker_alloc()
+void _vmc_linker_marker_free(vmc_linker_marker_inject_addr* h)
 {
-	vmc_linker_memory_marker* const marker = (vmc_linker_memory_marker*)malloc(sizeof(vmc_linker_memory_marker));
-	if (marker == NULL) {
-		return FALSE;
-	}
-	vm_string_zero(&marker->name);
-	marker->offset = 0;
-	marker->next = NULL;
-	return marker;
-}
-
-void vmc_linker_memory_marker_destroy(vmc_linker_memory_marker* m)
-{
-	if (m == NULL)
+	if (h == NULL)
 		return;
-	while (m != NULL) {
-		vmc_linker_memory_marker* const next = m->next;
-		free(m);
-		m = next;
+
+	while (h != NULL) {
+		vmc_linker_marker_inject_addr* const next = h->next;
+		free(h);
+		h = next;
 	}
 }
 
-vmc_linker_memory_marker* vmc_linker_memory_marker_find_sibling(vmc_linker_memory_marker* m, const vm_string* name)
+BOOL _vmc_linker_marker_process_inject_addr(vmc_linker* l, vm_bytestream* stream)
 {
+	const vmc_linker_marker_addr* addr;
+	if (l->inject_addr_first == NULL) {
+		return TRUE;
+	}
+
+	// Verify that if the address is resolved or not
+	addr = l->inject_addr_first->addr;
+	if (addr->offset == 0) {
+		return vmc_linker_message_unresolved_addr(&l->messages, &addr->signature);
+	}
+
+	// Write the actual memory address
+	vmc_linker_marker_inject_addr* m = l->inject_addr_first;
 	while (m != NULL) {
-		if (vm_string_cmp(&m->name, name)) {
-			return m;
-		}
+		// Where to inject the address into
+		vm_byte** const target = (vm_byte**)(stream->memory + m->offset);
+		// Inject the address
+		*target = stream->memory + addr->offset;
+
 		m = m->next;
 	}
-	return NULL;
+	return TRUE;
 }
 
-void vmc_linker_init(vmc_linker* l, vm_bytestream* stream)
+void vmc_linker_init(vmc_linker* l)
 {
-	l->bytestream = stream;
-	l->targets_first = l->targets_last = NULL;
+	vm_messages_init(&l->messages);
+	l->inject_addr_first = l->inject_addr_last = NULL;
 }
 
-void vmc_linker_process(vmc_linker* l)
+BOOL vmc_linker_process(vmc_linker* l, vm_bytestream* stream)
 {
-	vmc_linker_memory_marker_target* t = l->targets_first;
-	while (t != NULL) {
-		// The memory location where the bytecode offset should be injected into
-		vm_byte* const mem = l->bytestream->memory + t->bytestream_offset;
-		// TODO: Assume that the target location is a vmi_ip (const vm_byte*) type
-		vm_byte** destination = (vm_byte**)mem;
-		*destination = l->bytestream->memory + t->marker->offset;
-		t = t->next;
-	}
-}
+	if (!_vmc_linker_marker_process_inject_addr(l, stream))
+		return FALSE;
 
-void _vmc_linker_memory_marker_target_free(vmc_linker_memory_marker_target* t)
-{
-	while (t != NULL) {
-		vmc_linker_memory_marker_target* const next = t->next;
-		free(t);
-		t = next;
-	}
+	return TRUE;
 }
 
 void vmc_linker_release(vmc_linker* l)
 {
-	_vmc_linker_memory_marker_target_free(l->targets_first);
+	_vmc_linker_marker_free(l->inject_addr_first);
+	vm_messages_destroy(&l->messages);
 }
 
-vmc_linker_memory_marker_target* vmc_linker_add_memory_marker(vmc_linker* l, vmc_linker_memory_marker* marker,
-	vm_int32 offset)
+vmc_linker_marker_inject_addr* vmc_linker_marker_add_inject_addr(vmc_linker* l, const vmc_linker_marker_addr* addr, vm_uint32 offset)
 {
-	vmc_linker_memory_marker_target* const target = (vmc_linker_memory_marker_target*)malloc(sizeof(vmc_linker_memory_marker_target));
+	vmc_linker_marker_inject_addr* const target = (vmc_linker_marker_inject_addr*)malloc(sizeof(vmc_linker_marker_inject_addr));
 	if (target == NULL)
 		return NULL;
-	target->marker = marker;
-	target->bytestream_offset = vm_bytestream_pos(l->bytestream) + offset;
 	target->next = NULL;
-	if (l->targets_last == NULL) {
-		l->targets_first = l->targets_last = target;
+	target->offset = offset;
+	target->addr = addr;
+	if (l->inject_addr_last == NULL) {
+		l->inject_addr_first = l->inject_addr_last = target;
 	}
 	else {
-		l->targets_last->next = target;
-		l->targets_last = target;
+		l->inject_addr_last->next = target;
+		l->inject_addr_last = target;
 	}
 	return target;
 }

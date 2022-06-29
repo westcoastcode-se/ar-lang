@@ -96,6 +96,11 @@ struct suite_vm_utils : test_utils
 				e << "\n" << message->message;
 				message = message->next;
 			}
+			message = c->linker.messages.first;
+			while (message != nullptr) {
+				e << "\n" << message->message;
+				message = message->next;
+			}
 			e << "\n]";
 			vmc_compiler_destroy(c);
 			throw_(e);

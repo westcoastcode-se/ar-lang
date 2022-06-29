@@ -242,20 +242,6 @@ void _vmc_lexer_single_line_string(vmc_lexer* l, vmc_lexer_token* token)
 		l->source++;
 }
 
-void _vmc_lexer_memory_marker(vmc_lexer* l, vmc_lexer_token* token)
-{
-	// Remember the first character and step to next char
-	const char* start = ++l->source;
-	//l->source++;
-
-	// Ignore all characters
-	while (vmc_lexer_test_char(*l->source)) l->source++;
-
-	token->string.start = start;
-	token->string.end = l->source;
-	token->type = VMC_LEXER_TYPE_MEMORY_MARKER;
-}
-
 void _vmc_lexer_multi_line_string(vmc_lexer* l, vmc_lexer_token* token)
 {
 	BOOL escaped = FALSE;
@@ -415,7 +401,7 @@ void _vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token)
 		_vmc_lexer_single_line_string(l, token);
 		return;
 	case '#':
-		_vmc_lexer_memory_marker(l, token);
+		_vmc_lexer_atom(l, VMC_LEXER_TYPE_HASH, token);
 		return;
 	case '`':
 		_vmc_lexer_multi_line_string(l, token);

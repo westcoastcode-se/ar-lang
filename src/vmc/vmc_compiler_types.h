@@ -172,8 +172,8 @@ struct vmc_func
 	vm_int32 locals_total_size;
 
 	// Memory markers for locations in this function. These are only used for jumps within the function itself
-	vmc_linker_memory_marker* memory_marker_first;
-	vmc_linker_memory_marker* memory_marker_last;
+	vmc_linker_marker_addr* marker_local_addr_first;
+	vmc_linker_marker_addr* marker_local_addr_last;
 
 	// Package this function can be found in
 	struct vmc_package* package;
@@ -256,9 +256,9 @@ struct vmc_package
 	// Offset where the data information for this package can be found
 	vm_uint32 data_offset;
 
-	// Memory markers for functions and global variables
-	vmc_linker_memory_marker* memory_marker_first;
-	vmc_linker_memory_marker* memory_marker_last;
+	// Memory markers for locations to functions in this package
+	vmc_linker_marker_addr* marker_func_addr_first;
+	vmc_linker_marker_addr* marker_func_addr_last;
 
 	// Global package
 	struct vmc_package* global_package;
