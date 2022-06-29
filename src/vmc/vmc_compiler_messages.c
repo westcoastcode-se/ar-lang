@@ -10,10 +10,10 @@ BOOL vmc_compiler_message_panic(vm_message* m, const char* str)
 	return FALSE;
 }
 
-BOOL vmc_compiler_message_unknown_token(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_unknown_token(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_UNKNOWN_TOKEN,
@@ -21,10 +21,10 @@ BOOL vmc_compiler_message_unknown_token(vm_messages* m, vmc_lexer* l, vmc_lexer_
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_EXPECTED_IDENTIFIER,
@@ -32,10 +32,10 @@ BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer* l, vmc_
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_EXPECTED_TYPE,
@@ -43,10 +43,10 @@ BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer* l, vmc_lexer_
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_TYPE_NOT_FOUND,
@@ -54,10 +54,10 @@ BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer* l, vmc_lexer
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_EXPECTED_KEYWORD,
@@ -65,10 +65,10 @@ BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer* l, vmc_lex
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_EXPECTED_INDEX,
@@ -76,10 +76,10 @@ BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer* l, vmc_lexer
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_EXPECTED_INT,
@@ -87,10 +87,10 @@ BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer* l, vmc_lexer_t
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_string(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_string(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_EXPECTED_STRING,
@@ -98,10 +98,10 @@ BOOL vmc_compiler_message_expected_string(vm_messages* m, vmc_lexer* l, vmc_lexe
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_decimal(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_decimal(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_EXPECTED_DECIMAL,
@@ -109,10 +109,10 @@ BOOL vmc_compiler_message_expected_decimal(vm_messages* m, vmc_lexer* l, vmc_lex
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_NOT_IMPLEMENTED,
@@ -120,10 +120,10 @@ BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer* l, vmc_lexe
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 index, vm_int32 min, vm_int32 max)
+BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer_token* t, vm_int32 index, vm_int32 min, vm_int32 max)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_INVALID_INDEX,
@@ -131,10 +131,10 @@ BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer* l, vm_int32 i
 		index, min, max, line, line_offset);
 }
 
-BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer* l, vm_int32 size, vm_int32 min, vm_int32 max)
+BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer_token* t, vm_int32 size, vm_int32 min, vm_int32 max)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_INVALID_SIZE,
@@ -142,10 +142,10 @@ BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer* l, vm_int32 si
 		size, min, max, line, line_offset);
 }
 
-BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t)
+BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_UNEXPECTED_EOF,
@@ -153,10 +153,10 @@ BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer* l, vmc_lexer
 		line, line_offset);
 }
 
-BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer* l, vmc_lexer_token* t, char expected)
+BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer_token* t, char expected)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_SYNTAX_ERROR,
@@ -164,10 +164,10 @@ BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer* l, vmc_lexer_t
 		expected, vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer* l, const vm_string* signature)
+BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer_token* t, const vm_string* signature)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_FUNC_BODY_EXISTS,
@@ -175,10 +175,10 @@ BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer* l, const v
 		vm_string_length(signature), signature->start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer* l, const vm_string* memory_marker)
+BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer_token* t, const vm_string* memory_marker)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_MEMORY_MARKER_ALREADY_EXIST,
@@ -186,10 +186,10 @@ BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer* l, con
 		vm_string_length(memory_marker), memory_marker->start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer* l, vm_int32 size)
+BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer_token* t, vm_int32 size)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_DEFARRAY_TOO_SMALL,
@@ -197,10 +197,10 @@ BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer* l, vm_int
 		size, line, line_offset);
 }
 
-BOOL vmc_compiler_message_unexpected_newline(vm_messages* m, vmc_lexer* l)
+BOOL vmc_compiler_message_unexpected_newline(vm_messages* m, vmc_lexer_token* t)
 {
 	int line, line_offset, _;
-	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMC_COMPILER_MESSAGE_PREFIX,
 		VMC_COMPILER_MSG_UNEXPECTED_NEWLINE,

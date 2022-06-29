@@ -7,77 +7,77 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-void _vmc_lexer_atom(vmc_lexer* l, vmc_lexer_token_type type, vmc_lexer_token* token)
+void _vmc_lexer_atom(vmc_lexer_token_type type, vmc_lexer_token* token)
 {
 	token->type = type;
 	token->modifier = 0;
-	token->string.start = l->source;
-	token->string.end = ++l->source;
+	token->string.start = token->source;
+	token->string.end = ++token->source;
 }
 
-void _vmc_lexer_unknown(vmc_lexer* l, vmc_lexer_token* token)
+void _vmc_lexer_unknown(vmc_lexer_token* token)
 {
-	token->string.start = l->source;
-	token->string.end = l->source;
+	token->string.start = token->source;
+	token->string.end = token->source;
 	token->type = VMC_LEXER_TYPE_UNKNOWN;
 }
 
-void _vmc_lexer_eof(vmc_lexer* l, vmc_lexer_token* token)
+void _vmc_lexer_eof(vmc_lexer_token* t)
 {
-	token->string.start = l->source;
-	token->string.end = l->source;
-	token->type = VMC_LEXER_TYPE_EOF;
+	t->string.start = t->source;
+	t->string.end = t->source;
+	t->type = VMC_LEXER_TYPE_EOF;
 }
 
-void _vmc_lexer_comment(vmc_lexer* lexer, vmc_lexer_token* token)
+void _vmc_lexer_comment(vmc_lexer_token* t)
 {
-	const char* comment_start = lexer->source;
-	char c = *lexer->source;
+	const char* comment_start = t->source;
+	char c = *t->source;
 
 	// Seek until new-line or eof
 	while (c != 0 && c != '\n')
-		c = *++lexer->source;
+		c = *++t->source;
 
-	token->string.start = comment_start;
-	token->string.end = lexer->source;
-	token->type = VMC_LEXER_TYPE_COMMENT;
+	t->string.start = comment_start;
+	t->string.end = t->source;
+	t->type = VMC_LEXER_TYPE_COMMENT;
 }
 
-void _vmc_lexer_single_line_comment(vmc_lexer* l, vmc_lexer_token* t)
+void _vmc_lexer_single_line_comment(vmc_lexer_token* t)
 {
-	const char* comment_start = ++l->source;
+	const char* comment_start = ++t->source;
 	char c = *comment_start;
 
 	// Seek until new-line or eof
 	while (c != 0 && c != '\n') {
-		c = *(++l->source);
+		c = *(++t->source);
 	}
 
 	t->type = VMC_LEXER_TYPE_COMMENT;
 	t->string.start = comment_start;
-	t->string.end = l->source;
+	t->string.end = t->source;
 }
 
-void _vmc_lexer_multi_line_comment(vmc_lexer* l, vmc_lexer_token* t)
+void _vmc_lexer_multi_line_comment(vmc_lexer_token* t)
 {
-	const char* comment_start = ++l->source;
+	const char* comment_start = ++t->source;
 	const char* commend_end = comment_start;
 	char c = *comment_start;
 
 	// Seek until */ or eof
 	while (1) {
 		if (c == 0) {
-			commend_end = l->source;
-			vmc_lexer_message_unclosed_comment(l);
+			commend_end = t->source;
+			vmc_lexer_message_unclosed_comment(t);
 			break;
 		}
 		// If we've reached */
-		if (c == '*' && *(l->source + 1) == '/') {
-			commend_end = l->source;
-			l->source += 2;
+		if (c == '*' && *(t->source + 1) == '/') {
+			commend_end = t->source;
+			t->source += 2;
 			break;
 		}
-		c = *(++l->source);
+		c = *(++t->source);
 	}
 
 	t->type = VMC_LEXER_TYPE_COMMENT;
@@ -86,47 +86,47 @@ void _vmc_lexer_multi_line_comment(vmc_lexer* l, vmc_lexer_token* t)
 	t->string.end = commend_end;
 }
 
-void _vmc_lexer_div_or_comment(vmc_lexer* l, vmc_lexer_token* t)
+void _vmc_lexer_div_or_comment(vmc_lexer_token* t)
 {
-	const char* start = l->source++;
-	char c = *l->source;
+	const char* start = t->source++;
+	char c = *t->source;
 
 	switch (c)
 	{
 	case '/':
-		_vmc_lexer_single_line_comment(l, t);
+		_vmc_lexer_single_line_comment(t);
 		return;
 	case '*':
-		_vmc_lexer_multi_line_comment(l, t);
+		_vmc_lexer_multi_line_comment(t);
 		return;
 	default:
 		t->type = VMC_LEXER_TYPE_DIV;
 		t->modifier = 0;
 		t->string.start = start;
-		t->string.end = l->source;
+		t->string.end = t->source;
 		return;
 	}
 }
 
-void _vmc_lexer_bitand_or_and(vmc_lexer* l, vmc_lexer_token* t)
+void _vmc_lexer_bitand_or_and(vmc_lexer_token* t)
 {
-	const char* start = l->source++;
-	char c = *l->source;
+	const char* start = t->source++;
+	char c = *t->source;
 
 	switch (c)
 	{
 	case '&':
-		l->source++;
+		t->source++;
 		t->type = VMC_LEXER_TYPE_TEST_AND;
 		t->modifier = 0;
 		t->string.start = start;
-		t->string.end = l->source;
+		t->string.end = t->source;
 		return;
 	default:
 		t->type = VMC_LEXER_TYPE_BIT_AND;
 		t->modifier = 0;
 		t->string.start = start;
-		t->string.end = l->source;
+		t->string.end = t->source;
 		return;
 	}
 }
@@ -184,36 +184,36 @@ vmc_lexer_token_type _vmc_lexer_find_keyword_type(const vm_string* str)
 	return VMC_LEXER_TYPE_KEYWORD;
 }
 
-void _vmc_lexer_keyword(vmc_lexer* l, vmc_lexer_token* token)
+void _vmc_lexer_keyword(vmc_lexer_token* t)
 {
 	// Remember the first character and step to next char
-	const char* start = l->source;
-	l->source++;
+	const char* start = t->source;
+	t->source++;
 
 	// Ignore all characters
-	while (vmc_lexer_test_char(*l->source)) l->source++;
+	while (vmc_lexer_test_char(*t->source)) t->source++;
 
-	token->string.start = start;
-	token->string.end = l->source;
-	token->type = _vmc_lexer_find_keyword_type(&token->string);
+	t->string.start = start;
+	t->string.end = t->source;
+	t->type = _vmc_lexer_find_keyword_type(&t->string);
 }
 
-void _vmc_lexer_single_line_string(vmc_lexer* l, vmc_lexer_token* token)
+void _vmc_lexer_single_line_string(vmc_lexer_token* token)
 {
 	BOOL escaped = FALSE;
-	const char* start = ++l->source;
-	char c = *l->source;
+	const char* start = ++token->source;
+	char c = *token->source;
 
 	while (1) {
 		if (c == 0) {
-			vmc_lexer_message_unclosed_string(l);
+			vmc_lexer_message_unclosed_string(token);
 			break;
 		}
 
 		// Escape the next character
 		if (escaped == TRUE) {
 			if (!vmc_lexer_test_escapeable(c)) {
-				vmc_lexer_message_unknown_escaped_char(l, c);
+				vmc_lexer_message_unknown_escaped_char(token, c);
 			}
 			escaped = FALSE;
 		} else {
@@ -222,7 +222,7 @@ void _vmc_lexer_single_line_string(vmc_lexer* l, vmc_lexer_token* token)
 				break;
 			}
 			else if (c == '\n') {
-				vmc_lexer_message_unclosed_string(l);
+				vmc_lexer_message_unclosed_string(token);
 				break;
 			}
 			else if (c == '\\') {
@@ -231,34 +231,34 @@ void _vmc_lexer_single_line_string(vmc_lexer* l, vmc_lexer_token* token)
 			}
 		}
 
-		c = *++l->source;
+		c = *++token->source;
 	}
 
 	token->type = VMC_LEXER_TYPE_STRING;
 	token->string.start = start;
-	token->string.end = l->source;
+	token->string.end = token->source;
 
 	// Ignore the character
 	if (c != 0)
-		l->source++;
+		token->source++;
 }
 
-void _vmc_lexer_multi_line_string(vmc_lexer* l, vmc_lexer_token* token)
+void _vmc_lexer_multi_line_string(vmc_lexer_token* token)
 {
 	BOOL escaped = FALSE;
-	const char* start = ++l->source;
-	char c = *l->source;
+	const char* start = ++token->source;
+	char c = *token->source;
 
 	while (1) {
 		if (c == 0) {
-			vmc_lexer_message_unclosed_string(l);
+			vmc_lexer_message_unclosed_string(token);
 			break;
 		}
 
 		// Escape the next character
 		if (escaped == TRUE) {
 			if (!vmc_lexer_test_escapeable(c)) {
-				vmc_lexer_message_unknown_escaped_char(l, c);
+				vmc_lexer_message_unknown_escaped_char(token, c);
 			}
 			escaped = FALSE;
 		}
@@ -273,145 +273,145 @@ void _vmc_lexer_multi_line_string(vmc_lexer* l, vmc_lexer_token* token)
 			}
 		}
 
-		c = *++l->source;
+		c = *++token->source;
 	}
 
 	token->type = VMC_LEXER_TYPE_STRING;
 	token->modifier |= VMC_LEXER_TOKEN_MODIFIER_MULTILINE;
 	token->string.start = start;
-	token->string.end = l->source;
+	token->string.end = token->source;
 
 	// Ignore the character if not at the end
 	if (c != 0)
-		l->source++;
+		token->source++;
 }
 
-void _vmc_lexer_number(vmc_lexer* l, vmc_lexer_token* token)
+void _vmc_lexer_number(vmc_lexer_token* token)
 {
 	// Remember the first character and step to next char
-	const char* start = l->source;
-	l->source++;
+	const char* start = token->source;
+	token->source++;
 
 	// Ignore all numbers
-	while (vmc_lexer_test_number(*l->source)) l->source++;
+	while (vmc_lexer_test_number(*token->source)) token->source++;
 
 	// Is this is a decimal?
 	token->type = VMC_LEXER_TYPE_INT;
-	if (*l->source == '.') {
+	if (*token->source == '.') {
 		token->type = VMC_LEXER_TYPE_DECIMAL;
-		l->source++;
+		token->source++;
 
 		// Ignore all numbers
-		while (vmc_lexer_test_number(*l->source)) l->source++;
+		while (vmc_lexer_test_number(*token->source)) token->source++;
 	}
 
 	// Is this a hex-decimal value?
-	if (*l->source == 'x') {
+	if (*token->source == 'x') {
 		token->type = VMC_LEXER_TYPE_HEX;
-		l->source++;
+		token->source++;
 		// Ignore all hex values
-		while (vml_test_hex(*l->source)) l->source++;
+		while (vml_test_hex(*token->source)) token->source++;
 	}
 
 	if (token->type == VMC_LEXER_TYPE_DECIMAL) {
 		// This might be a value with format -3.402823466e+38f
-		if (*l->source == 'e') {
-			char peek = *(l->source + 1);
+		if (*token->source == 'e') {
+			char peek = *(token->source + 1);
 			if (peek == '+' || peek == '-') {
-				l->source += 2;
+				token->source += 2;
 
 				// Ignore all numbers
-				while (vmc_lexer_test_number(*l->source)) l->source++;
+				while (vmc_lexer_test_number(*token->source)) token->source++;
 			}
 		}
 		// Allow the leading "f". Used to differentiate between floats and doubles
-		if (*l->source == 'f')
-			l->source++;
+		if (*token->source == 'f')
+			token->source++;
 	}
 
 	token->string.start = start;
-	token->string.end = l->source;
+	token->string.end = token->source;
 }
 
-void _vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token)
+void _vmc_lexer_next(vmc_lexer_token* token)
 {
-	char ch = *l->source;
+	char ch = *token->source;
 
 	// Reset modifier property
 	token->modifier = 0;
 
 	// Is this a potential keyword?
 	if (vmc_lexer_test_keyword(ch)) {
-		_vmc_lexer_keyword(l, token);
+		_vmc_lexer_keyword(token);
 		return;
 	}
 
 	// Number?
 	if (vmc_lexer_test_number(ch)) {
-		_vmc_lexer_number(l, token);
+		_vmc_lexer_number(token);
 		return;
 	}
 
 	switch (ch)
 	{
 	case '\n':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_NEWLINE, token);
-		l->line++;
-		l->line_offset = l->source;
+		_vmc_lexer_atom(VMC_LEXER_TYPE_NEWLINE, token);
+		token->line++;
+		token->line_offset = token->source;
 		return;
 	case '+':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_PLUS, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_PLUS, token);
 		return;
 	case '-':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_MINUS, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_MINUS, token);
 		return;
 	case '*':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_MULT, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_MULT, token);
 		return;
 	case '/':
-		_vmc_lexer_div_or_comment(l, token);
+		_vmc_lexer_div_or_comment(token);
 		return;
 	case '(':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_PARAN_L, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_PARAN_L, token);
 		return;
 	case ')':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_PARAN_R, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_PARAN_R, token);
 		return;
 	case '[':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_SQUARE_L, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_SQUARE_L, token);
 		return;
 	case ']':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_SQUARE_R, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_SQUARE_R, token);
 		return;
 	case '{':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_BRACKET_L, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_BRACKET_L, token);
 		return;
 	case '}':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_BRACKET_R, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_BRACKET_R, token);
 		return;
 	case '.':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_DOT, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_DOT, token);
 		return;
 	case ',':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_COMMA, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_COMMA, token);
 		return;
 	case '&':
-		_vmc_lexer_bitand_or_and(l, token);
+		_vmc_lexer_bitand_or_and(token);
 		return;
 	case '"':
-		_vmc_lexer_single_line_string(l, token);
+		_vmc_lexer_single_line_string(token);
 		return;
 	case '#':
-		_vmc_lexer_atom(l, VMC_LEXER_TYPE_HASH, token);
+		_vmc_lexer_atom(VMC_LEXER_TYPE_HASH, token);
 		return;
 	case '`':
-		_vmc_lexer_multi_line_string(l, token);
+		_vmc_lexer_multi_line_string(token);
 		return;
 	case 0:
-		_vmc_lexer_eof(l, token);
+		_vmc_lexer_eof(token);
 		return;
 	default:
-		_vmc_lexer_unknown(l, token);
+		_vmc_lexer_unknown(token);
 		return;
 	}
 }
@@ -422,10 +422,19 @@ void _vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* token)
 
 void vmc_lexer_init(vmc_lexer* l, const vm_byte* source)
 {
-	l->source_start = l->source = source;
-	l->line = 0;
-	l->line_offset = NULL;
+	l->source_start = source;
 	vm_messages_init(&l->messages);
+}
+
+void vmc_lexer_token_init(vmc_lexer* l, vmc_lexer_token* t)
+{
+	t->type = VMC_LEXER_TYPE_UNKNOWN;
+	t->modifier = 0;
+	vm_string_zero(&t->string);
+	t->source = t->source_start = l->source_start;
+	t->line = 0;
+	t->line_offset = NULL;
+	t->messages = &l->messages;
 }
 
 vmc_lexer* vmc_lexer_parse(const vm_byte* source)
@@ -448,43 +457,43 @@ void vmc_lexer_destroy(vmc_lexer* l)
 	vmc_free(l);
 }
 
-void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* t)
+void vmc_lexer_next(vmc_lexer_token* t)
 {
-	char ch = *l->source;
+	char ch = *t->source;
 	if (ch == 0) {
-		_vmc_lexer_eof(l, t);
+		_vmc_lexer_eof(t);
 		return;
 	}
 	while (vmc_lexer_test_whitespace(ch)) {
 		if (ch == '\n') {
-			l->line++;
-			l->line_offset = l->source;
+			t->line++;
+			t->line_offset = t->source;
 		}
-		ch = *++l->source;
+		ch = *++t->source;
 	}
-	_vmc_lexer_next(l, t);
+	_vmc_lexer_next(t);
 }
 
-void vmc_lexer_next_newline(vmc_lexer* l, vmc_lexer_token* token)
+void vmc_lexer_next_newline(vmc_lexer_token* token)
 {
-	char ch = *l->source;
+	char ch = *token->source;
 	if (ch == 0) {
-		_vmc_lexer_eof(l, token);
+		_vmc_lexer_eof(token);
 		return;
 	}
-	while (vmc_lexer_test_whitespace_ignore_nl(ch)) ch = *++l->source;
-	_vmc_lexer_next(l, token);
+	while (vmc_lexer_test_whitespace_ignore_nl(ch)) ch = *++token->source;
+	_vmc_lexer_next(token);
 }
 
-BOOL vmc_lexer_next_type(vmc_lexer* l, vmc_lexer_token* token, vmc_lexer_token_type type)
+BOOL vmc_lexer_next_type(vmc_lexer_token* token, vmc_lexer_token_type type)
 {
-	vmc_lexer_next(l, token);
+	vmc_lexer_next(token);
 	return token->type == type;
 }
 
-char vmc_lexer_peek(vmc_lexer* l)
+char vmc_lexer_peek(vmc_lexer* l, vmc_lexer_token* t)
 {
-	return *(l->source + 1);
+	return *(t->source + 1);
 }
 
 vm_int32 vmc_lexer_token_toint32(vmc_lexer_token* t)

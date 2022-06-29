@@ -137,34 +137,43 @@ enum vmc_lexer_token_modifiers
 };
 typedef enum vmc_lexer_token_modifiers vmc_lexer_token_modifiers;
 
-// Represents a specific token
-struct vmc_lexer_token
-{
-	vmc_lexer_token_type type;
-	vmc_lexer_token_modifier modifier;
-	vm_string string;
-};
-typedef struct vmc_lexer_token vmc_lexer_token;
-
 // Lexer
 struct vmc_lexer
 {
+	// The actual source we are parsing
 	const vm_byte* source_start;
-	const vm_byte* source;
-
-	// The current line in the source code
-	int line;
-	
-	// Where the line starts
-	const vm_byte* line_offset;
 
 	// Messages raised by the lexer
 	vm_messages messages;
 };
 typedef struct vmc_lexer vmc_lexer;
 
+// Represents a specific token
+struct vmc_lexer_token
+{
+	vmc_lexer_token_type type;
+	vmc_lexer_token_modifier modifier;
+	vm_string string;
+
+	const vm_byte* source_start;
+	const vm_byte* source;
+
+	// The current line in the source code
+	int line;
+
+	// Where the line starts
+	const vm_byte* line_offset;
+
+	// where we are putting messages
+	vm_messages* messages;
+};
+typedef struct vmc_lexer_token vmc_lexer_token;
+
 // Initialize the supplied lexer with the supplied source code
 extern void vmc_lexer_init(vmc_lexer* l, const vm_byte* source);
+
+// Initalize a lexer token
+extern void vmc_lexer_token_init(vmc_lexer* l, vmc_lexer_token* t);
 
 // Parse the supplied source code and return byte code as the result.
 extern vmc_lexer* vmc_lexer_parse(const vm_byte* source);
@@ -176,23 +185,23 @@ extern void vmc_lexer_release(vmc_lexer* l);
 extern void vmc_lexer_destroy(vmc_lexer* l);
 
 // Get next non-whitespace token
-extern void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* t);
+extern void vmc_lexer_next(vmc_lexer_token* t);
 
 // Get the next non-whitespace token. A newline is not considered whitespace when calling this function
-extern void vmc_lexer_next_newline(vmc_lexer* l, vmc_lexer_token* token);
+extern void vmc_lexer_next_newline(vmc_lexer_token* token);
 
 // Parse the next token and return TRUE if the supplied token is the supplied type
-extern BOOL vmc_lexer_next_type(vmc_lexer* l, vmc_lexer_token* token, vmc_lexer_token_modifier type);
+extern BOOL vmc_lexer_next_type(vmc_lexer_token* token, vmc_lexer_token_modifier type);
 
 // Peek at the next character
-extern char vmc_lexer_peek(vmc_lexer* l);
+extern char vmc_lexer_peek(vmc_lexer* l, vmc_lexer_token* t);
 
 // Get metadata where we are
-inline static void vmc_lexer_get_metadata(vmc_lexer* l, int* line, int* line_offset, int* offset)
+inline static void vmc_lexer_get_metadata(const vmc_lexer_token* t, int* line, int* line_offset, int* offset)
 {
-	*line = l->line;
-	*line_offset = (int)(l->source - l->line_offset);
-	*offset = (int)(l->source - l->source_start);
+	*line = t->line;
+	*line_offset = (int)(t->source - t->line_offset);
+	*offset = (int)(t->source - t->source_start);
 }
 
 // Check to see if the lexer has compiled successfully

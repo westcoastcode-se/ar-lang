@@ -34,8 +34,8 @@ enum vmc_lexer_messages
 // Functions which helps adding messages to the messages container
 //
 
-extern BOOL vmc_lexer_message_unclosed_comment(vmc_lexer* l);
-extern BOOL vmc_lexer_message_unclosed_string(vmc_lexer* l);
-extern BOOL vmc_lexer_message_unknown_escaped_char(vmc_lexer* l, vm_byte rune);
+extern BOOL vmc_lexer_message_unclosed_comment(vmc_lexer_token* l);
+extern BOOL vmc_lexer_message_unclosed_string(vmc_lexer_token* l);
+extern BOOL vmc_lexer_message_unknown_escaped_char(vmc_lexer_token* l, vm_byte rune);
 
 #endif

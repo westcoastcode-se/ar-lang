@@ -3,14 +3,14 @@
 // Base class for all vm tests
 struct suite_lexer_utils : test_utils
 {
-	void verify_token(vmc_lexer& lexer, vmc_lexer_token& token, vmc_lexer_token_type type) {
-		vmc_lexer_next_newline(&lexer, &token);
+	void verify_token(vmc_lexer_token& token, vmc_lexer_token_type type) {
+		vmc_lexer_next_newline(&token);
 		if (type != token.type)
 			throw_(error() << "error token: " << type << " but was : " << token.type);
 	}
 
-	void verify_token(vmc_lexer& lexer, vmc_lexer_token& token, vmc_lexer_token_type type, const char* str) {
-		vmc_lexer_next_newline(&lexer, &token);
+	void verify_token(vmc_lexer_token& token, vmc_lexer_token_type type, const char* str) {
+		vmc_lexer_next_newline(&token);
 		if (type != token.type)
 			throw_(error() << "error token: " << type << " but was : " << token.type);
 		if (!vm_string_cmpsz(&token.string, str, strlen(str)))
@@ -19,10 +19,10 @@ struct suite_lexer_utils : test_utils
 				vm_string_length(&token.string), token.string.start);
 	}
 
-	void verify_whitespace_until_eof(vmc_lexer& lexer, vmc_lexer_token& token) {
-		vmc_lexer_next_newline(&lexer, &token);
+	void verify_whitespace_until_eof(vmc_lexer_token& token) {
+		vmc_lexer_next_newline(&token);
 		while(token.type == VMC_LEXER_TYPE_NEWLINE)
-			vmc_lexer_next_newline(&lexer, &token);
+			vmc_lexer_next_newline(&token);
 
 		if (token.type != VMC_LEXER_TYPE_EOF)
 			throw_(error() << "expected eof but was " << token.type);
@@ -60,7 +60,8 @@ struct suite_lexer_tests : suite_lexer_utils
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
@@ -76,35 +77,36 @@ struct suite_lexer_tests : suite_lexer_utils
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_NEWLINE);
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_NEWLINE);
 
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD_FN);
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD, "Calc");
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD_FN);
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD, "Calc");
 
-		verify_token(lexer, token, VMC_LEXER_TYPE_PARAN_L);
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD, "lhs");
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD, "int32");
-		verify_token(lexer, token, VMC_LEXER_TYPE_COMMA);
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD, "rhs");
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD, "int32");
-		verify_token(lexer, token, VMC_LEXER_TYPE_PARAN_R);
+		verify_token(token, VMC_LEXER_TYPE_PARAN_L);
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD, "lhs");
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD, "int32");
+		verify_token(token, VMC_LEXER_TYPE_COMMA);
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD, "rhs");
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD, "int32");
+		verify_token(token, VMC_LEXER_TYPE_PARAN_R);
 
-		verify_token(lexer, token, VMC_LEXER_TYPE_PARAN_L);
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD, "int32");
-		verify_token(lexer, token, VMC_LEXER_TYPE_PARAN_R);
+		verify_token(token, VMC_LEXER_TYPE_PARAN_L);
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD, "int32");
+		verify_token(token, VMC_LEXER_TYPE_PARAN_R);
 
-		verify_token(lexer, token, VMC_LEXER_TYPE_BRACKET_L);
-		verify_token(lexer, token, VMC_LEXER_TYPE_NEWLINE);
+		verify_token(token, VMC_LEXER_TYPE_BRACKET_L);
+		verify_token(token, VMC_LEXER_TYPE_NEWLINE);
 
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD_RETURN);
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD, "lhs");
-		verify_token(lexer, token, VMC_LEXER_TYPE_PLUS);
-		verify_token(lexer, token, VMC_LEXER_TYPE_KEYWORD, "rhs");
-		verify_token(lexer, token, VMC_LEXER_TYPE_NEWLINE);
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD_RETURN);
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD, "lhs");
+		verify_token(token, VMC_LEXER_TYPE_PLUS);
+		verify_token(token, VMC_LEXER_TYPE_KEYWORD, "rhs");
+		verify_token(token, VMC_LEXER_TYPE_NEWLINE);
 
-		verify_token(lexer, token, VMC_LEXER_TYPE_BRACKET_R);
+		verify_token(token, VMC_LEXER_TYPE_BRACKET_R);
 
-		verify_whitespace_until_eof(lexer, token);
+		verify_whitespace_until_eof(token);
 		verify_successful(lexer);
 	}
 
@@ -116,8 +118,9 @@ struct suite_lexer_tests : suite_lexer_utils
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_COMMENT, " Test");
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_COMMENT, " Test");
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
@@ -129,9 +132,10 @@ struct suite_lexer_tests : suite_lexer_utils
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_COMMENT, " Test ");
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_COMMENT, " Test ");
 		verify_modifier(token, VMC_LEXER_TOKEN_MODIFIER_MULTILINE);
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
@@ -144,9 +148,10 @@ Test */)";
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_COMMENT, " \nTest ");
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_COMMENT, " \nTest ");
 		verify_modifier(token, VMC_LEXER_TOKEN_MODIFIER_MULTILINE);
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
@@ -160,9 +165,10 @@ Test
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_COMMENT, " \nTest\n");
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_COMMENT, " \nTest\n");
 		verify_modifier(token, VMC_LEXER_TOKEN_MODIFIER_MULTILINE);
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
@@ -173,8 +179,9 @@ Test
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_STRING, "Test");
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_STRING, "Test");
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
@@ -185,9 +192,10 @@ Test
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_STRING, "\\\"Test\\\"");
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_STRING, "\\\"Test\\\"");
 		verify_modifier(token, VMC_LEXER_TOKEN_MODIFIER_ESCAPED);
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
@@ -198,9 +206,10 @@ Test
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_STRING, "Test");
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_STRING, "Test");
 		verify_modifier(token, VMC_LEXER_TOKEN_MODIFIER_MULTILINE);
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
@@ -211,8 +220,9 @@ Test
 
 		// Verify lexer
 		vmc_lexer_token token;
-		verify_token(lexer, token, VMC_LEXER_TYPE_INT, "123");
-		verify_token(lexer, token, VMC_LEXER_TYPE_EOF);
+		vmc_lexer_token_init(&lexer, &token);
+		verify_token(token, VMC_LEXER_TYPE_INT, "123");
+		verify_token(token, VMC_LEXER_TYPE_EOF);
 		verify_successful(lexer);
 	}
 
