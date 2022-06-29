@@ -431,6 +431,33 @@ BOOL _vmc_func_add_unique_marker_addr(vmc_compiler* c, vmc_func* func, const vm_
 	return marker != NULL;
 }
 
+// Parse the function signature:
+// [name:keyword]([type1:keyword],...)([type1:keyword])
+BOOL _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+{
+	// 1. Function name (The signature starts with the name and ends with the last return value)
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD)) {
+		vmc_compiler_message_expected_identifier(&c->messages, l, t);
+		return FALSE;
+	}
+
+	func->name = t->string;
+	if (vmc_lexer_test_uppercase(*func->name.start))
+		func->modifiers |= VMC_FUNC_MODIFIER_PUBLIC;
+
+	// Parse args
+	if (!_vmc_parse_keyword_fn_args(c, l, p, t, func))
+		return FALSE;
+
+	// Parse return types
+	if (!_vmc_parse_keyword_fn_rets(c, l, p, t, func))
+		return FALSE;
+
+	// Figure out the signature
+	vm_string_setsz(&func->signature, func->name.start, (vm_int32)(t->string.end - func->name.start));
+	return TRUE;
+}
+
 #include "vmc_compiler_instr.inc.c"
 
 BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
@@ -597,38 +624,20 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
 			// call <definition>
-			vm_string name;
-			vmc_var args[9];
-			vm_int32 args_count;
-			vmc_var returns[9];
-			vm_int32 returns_count;
-			vm_int32 _;
-			vmc_func* func;
 			vmi_instr_call instr;
-			vm_string signature;
-
-			// Name of the function
-			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD))
-				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
-			name = t->string;
-
-			// Fetch arguments
-			if (!_vmc_compiler_parse_type_decl_without_name(c, l, p, t, args, &args_count, &_))
+			vmc_func func;
+			vmc_func_init(&func);
+			if (!_vmc_parse_func_signature(c, l, p, t, &func))
 				return FALSE;
 
-			// Fetch returns
-			if (!_vmc_compiler_parse_type_decl_without_name(c, l, p, t, returns, &returns_count, &_))
-				return FALSE;
-
-			vm_string_setsz(&signature, name.start, (vm_int32)(t->string.end - name.start));
-			func = vmc_func_find(p, &signature);
-			if (func == NULL) {
+			vmc_func* func2 = vmc_func_find(p, &func.signature);
+			if (func2 == NULL) {
 				return vmc_compiler_message_not_implemented(&c->messages, l, t);
 			}
 			instr.header.opcode = 0;
 			instr.header.icode = VMI_CALL;
-			instr.expected_stack_size = func->args_total_size + func->returns_total_size;
-			instr.addr = OFFSET(func->offset);
+			instr.expected_stack_size = func2->args_total_size + func2->returns_total_size;
+			instr.addr = OFFSET(func2->offset);
 			vmc_write(c, &instr, sizeof(vmi_instr_call));
 		}
 		else {
@@ -642,49 +651,18 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 	return TRUE;
 }
 
-// Parse the function signature:
-// [name:keyword]([arg1:keyword] [type1:keyword],...)([type1:keyword])
-vmc_func* _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t)
-{
-	vmc_func* const func = vmc_func_malloc();
-	if (func == NULL) {
-		vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
-		return NULL;
-	}
-
-	// 1. Function name (The signature starts with the name and ends with the last return value)
-	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD)) {
-		vmc_compiler_message_expected_identifier(&c->messages, l, t);
-		return NULL;
-	}
-
-	func->name = t->string;
-	if (vmc_lexer_test_uppercase(*func->name.start))
-		func->modifiers |= VMC_FUNC_MODIFIER_PUBLIC;
-
-	// Parse args
-	if (!_vmc_parse_keyword_fn_args(c, l, p, t, func))
-		return NULL;
-
-	// Parse return types
-	if (!_vmc_parse_keyword_fn_rets(c, l, p, t, func))
-		return NULL;
-
-	// Figure out the signature
-	vm_string_setsz(&func->signature, func->name.start, (vm_int32)(t->string.end - func->name.start));
-	return func;
-}
-
 // Append a new function to the current package. The syntax is:
 // [extern] fn name (arg1 [modifier][package.]type1, arg2 [modifier][package.]type2, ...) ([modifier][package.]ret1, [modifier][package.]ret2, ...)
 //
 // If the function is external then a body is not required. You are allowed to have a body if you want to override the 
 BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vm_bits32 modifiers)
 {
-	vmc_func* func;
-
-	func = _vmc_parse_func_signature(c, l, p, t);
+	vmc_func* const func = vmc_func_malloc();
 	if (func == NULL) {
+		return vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
+	}
+
+	if (!_vmc_parse_func_signature(c, l, p, t, func)) {
 		return FALSE;
 	}
 	vmc_package_add_func(p, func);
