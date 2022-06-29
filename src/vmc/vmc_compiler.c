@@ -89,31 +89,7 @@ VM_STRING_CONST(jmpt, "jmpt", 4);
 
 VM_STRING_CONST(add, "add", 3);
 
-VM_STRING_CONST(_0, "_0", 2);
-VM_STRING_CONST(_1, "_1", 2);
-VM_STRING_CONST(_2, "_2", 2);
-VM_STRING_CONST(_3, "_3", 2);
-VM_STRING_CONST(_4, "_4", 2);
-VM_STRING_CONST(_5, "_5", 2);
-VM_STRING_CONST(_6, "_6", 2);
-VM_STRING_CONST(_7, "_7", 2);
-VM_STRING_CONST(_8, "_8", 2);
-VM_STRING_CONST(_9, "_9", 2);
-
 VM_STRING_CONST(empty, "", 0);
-
-const vm_string* _vm_string_const_anon_names[10] = {
-	VM_STRING_CONST_GET(_0),
-	VM_STRING_CONST_GET(_1),
-	VM_STRING_CONST_GET(_2),
-	VM_STRING_CONST_GET(_3),
-	VM_STRING_CONST_GET(_4),
-	VM_STRING_CONST_GET(_5),
-	VM_STRING_CONST_GET(_6),
-	VM_STRING_CONST_GET(_7),
-	VM_STRING_CONST_GET(_8),
-	VM_STRING_CONST_GET(_9)
-};
 
 const vmc_compiler_config _vmc_compiler_config_default = {
 	NULL,
@@ -318,7 +294,7 @@ BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_lexer* l, v
 
 		// Reset masks
 		var->offset = 0;
-		var->name = *_vm_string_const_anon_names[count];
+		var->name = *VM_STRING_CONST_GET(empty);
 		
 		// Parse type
 		if (!_vmc_parse_type(c, l, p, t, var)) {
@@ -397,14 +373,12 @@ BOOL _vmc_parse_function_arg_names(vmc_compiler* c, vmc_lexer* l, vmc_package* p
 	
 	// Read each argument name
 	for (int i = 0; i < func->args_count; ++i) {
-		vmc_lexer_next(l, t);
-
 		vmc_var* const arg = &func->args[i];
-		if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+		if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD)) {
 			return vmc_compiler_message_expected_keyword(&c->messages, l, t);
 		}
 		arg->name = t->string;
-
+		// Ignore comma (or last ')'
 		vmc_lexer_next(l, t);
 	}
 
