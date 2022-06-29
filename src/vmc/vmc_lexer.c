@@ -2,6 +2,7 @@
 #include "vmc_lexer_logic.h"
 #include "vmc_lexer_messages.h"
 #include "vmc_lexer_math.h"
+#include "vmc_debug.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -429,7 +430,7 @@ void vmc_lexer_init(vmc_lexer* l, const vm_byte* source)
 
 vmc_lexer* vmc_lexer_parse(const vm_byte* source)
 {
-	vmc_lexer* l = (vmc_lexer*)malloc(sizeof(vmc_lexer));
+	vmc_lexer* l = (vmc_lexer*)vmc_malloc(sizeof(vmc_lexer));
 	if (l == NULL)
 		return NULL;
 	vmc_lexer_init(l, source);
@@ -444,7 +445,7 @@ void vmc_lexer_release(vmc_lexer* l)
 void vmc_lexer_destroy(vmc_lexer* l)
 {
 	vmc_lexer_release(l);
-	free(l);
+	vmc_free(l);
 }
 
 void vmc_lexer_next(vmc_lexer* l, vmc_lexer_token* t)

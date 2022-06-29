@@ -4,6 +4,7 @@
 #include "vmc_compiler_messages.h"
 #include "../interpreter/vmi_ops.h"
 #include "../interpreter/vmi_process.h"
+#include "vmc_debug.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -936,7 +937,7 @@ const vmc_compiler_config* vmc_compiler_config_default = &_vmc_compiler_config_d
 
 vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 {
-	vmc_compiler* c = (vmc_compiler*)malloc(sizeof(vmc_compiler));
+	vmc_compiler* c = (vmc_compiler*)vmc_malloc(sizeof(vmc_compiler));
 	if (c == NULL)
 		return c;
 	if (config == NULL)
@@ -958,11 +959,11 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 void vmc_compiler_destroy(vmc_compiler* c)
 {
 	vmc_linker_release(&c->linker);
-	vmc_string_pool_destroy(&c->string_pool);
 	vm_messages_destroy(&c->messages);
 	_vmc_compiler_destroy_packages(c);
+	vmc_string_pool_destroy(&c->string_pool);
 	vm_bytestream_release(&c->bytecode);
-	free(c);
+	vmc_free(c);
 }
 
 BOOL vmc_compiler_compile(vmc_compiler* c, const vm_byte* src)

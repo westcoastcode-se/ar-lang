@@ -1,6 +1,7 @@
 #include "vmc_linker.h"
 #include "../interpreter/vmi_config.h"
 #include "vmc_linker_messages.h"
+#include "vmc_debug.h"
 
 void _vmc_linker_marker_free(vmc_linker_marker_inject_addr* h)
 {
@@ -9,7 +10,7 @@ void _vmc_linker_marker_free(vmc_linker_marker_inject_addr* h)
 
 	while (h != NULL) {
 		vmc_linker_marker_inject_addr* const next = h->next;
-		free(h);
+		vmc_free(h);
 		h = next;
 	}
 }
@@ -62,7 +63,7 @@ void vmc_linker_release(vmc_linker* l)
 
 vmc_linker_marker_inject_addr* vmc_linker_marker_add_inject_addr(vmc_linker* l, const vmc_linker_marker_addr* addr, vm_uint32 offset)
 {
-	vmc_linker_marker_inject_addr* const target = (vmc_linker_marker_inject_addr*)malloc(sizeof(vmc_linker_marker_inject_addr));
+	vmc_linker_marker_inject_addr* const target = (vmc_linker_marker_inject_addr*)vmc_malloc(sizeof(vmc_linker_marker_inject_addr));
 	if (target == NULL)
 		return NULL;
 	target->next = NULL;

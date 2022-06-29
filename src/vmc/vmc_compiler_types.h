@@ -5,6 +5,7 @@
 #include "../vm_list.h"
 #include "lists/types_list.h"
 #include "vmc_linker.h"
+#include "vmc_linker_marker.h"
 
 // What type of object is this
 enum vmc_type_header_type

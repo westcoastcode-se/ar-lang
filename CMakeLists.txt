@@ -50,7 +50,7 @@ add_library(vm "src/vm_config.h"
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
     "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" 
     "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" 
-     "src/vmc/vmc_linker_marker.c" "src/vmc/vmc_linker_messages.h" "src/vmc/vmc_linker_messages.c")
+     "src/vmc/vmc_linker_marker.c" "src/vmc/vmc_linker_messages.h" "src/vmc/vmc_linker_messages.c" "src/vmc/vmc_debug.h" "src/vmc/vmc_debug.c")
 
 
 # Tests

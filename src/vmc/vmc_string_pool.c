@@ -1,4 +1,5 @@
 #include "vmc_string_pool.h"
+#include "vmc_debug.h"
 
 //
 // PRIVATE ///////////////////////////////////////////////////////////////////////////
@@ -6,7 +7,7 @@
 
 void _vmc_compiler_string_copy(vm_string* s, const char* src, int len)
 {
-	char* dest = (char*)malloc(len);
+	char* dest = (char*)vmc_malloc(len);
 	s->start = dest;
 	s->end = dest + len;
 	for (int i = 0; i < len; ++i) {
@@ -28,8 +29,8 @@ void vmc_string_pool_destroy(vmc_string_pool* p)
 	vmc_string_pool_entry* e = p->first;
 	while (e != NULL) {
 		vmc_string_pool_entry* const next = e->next;
-		free((void*)e->value.start);
-		free(e);
+		vmc_free((void*)e->value.start);
+		vmc_free(e);
 		e = next;
 	}
 	p->first = p->last = NULL;
@@ -47,7 +48,7 @@ const vm_string* vmc_string_pool_stringsz(vmc_string_pool* p, const char* str, i
 	}
 
 	// If not, then add it to the string pool
-	e = (vmc_string_pool_entry*)malloc(sizeof(vmc_string_pool_entry));
+	e = (vmc_string_pool_entry*)vmc_malloc(sizeof(vmc_string_pool_entry));
 	if (e == NULL) {
 		return NULL;
 	}

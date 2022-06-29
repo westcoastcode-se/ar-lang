@@ -1,8 +1,9 @@
 #include "vmc_linker_marker.h"
+#include "vmc_debug.h"
 
 vmc_linker_marker_addr* vmc_linker_marker_addr_alloc(const vm_string* signature)
 {
-	vmc_linker_marker_addr* const m = (vmc_linker_marker_addr*)malloc(sizeof(vmc_linker_marker_addr));
+	vmc_linker_marker_addr* const m = (vmc_linker_marker_addr*)vmc_malloc(sizeof(vmc_linker_marker_addr));
 	if (m == NULL) {
 		return FALSE;
 	}
@@ -18,7 +19,7 @@ void vmc_linker_marker_addr_destroy(vmc_linker_marker_addr* m)
 		return;
 	while (m != NULL) {
 		vmc_linker_marker_addr* const next = m->next;
-		free(m);
+		vmc_free(m);
 		m = next;
 	}
 }

@@ -1,11 +1,12 @@
 #include "types_list.h"
 #include "../vmc_compiler_types.h"
+#include "../vmc_debug.h"
 
 BOOL vmc_types_list_init(vmc_types_list* l)
 {
 	l->count = 0;
 	l->capacity = VMC_TYPES_LIST_CAPACITY;
-	l->memory = (struct vmc_type_header**)malloc(sizeof(struct vmc_type_header*) * l->capacity);
+	l->memory = (struct vmc_type_header**)vmc_malloc(sizeof(struct vmc_type_header*) * l->capacity);
 	return l->memory != NULL;
 }
 
@@ -15,13 +16,13 @@ void vmc_types_list_destroy(vmc_types_list* l)
 		vmc_type_header* const header = l->memory[i];
 		switch (header->type) {
 		case VMC_TYPE_HEADER_IMPORT_ALIAS:
-			free((vmc_import_alias*)header);
+			vmc_free((vmc_import_alias*)header);
 			continue;
 		case VMC_TYPE_HEADER_TYPE:
-			free((vmc_type_definition*)header);
+			vmc_free((vmc_type_definition*)header);
 			continue;
 		case VMC_TYPE_HEADER_FUNC:
-			free((vmc_func*)header);
+			vmc_func_free((vmc_func*)header);
 			continue;
 		default:
 			// Unknown header type
@@ -29,7 +30,7 @@ void vmc_types_list_destroy(vmc_types_list* l)
 		}
 	}
 
-	free(l->memory);
+	vmc_free(l->memory);
 	l->memory = NULL;
 	l->capacity = 0;
 	l->count = 0;
@@ -39,7 +40,7 @@ vm_int32 vmc_types_list_add(vmc_types_list* l, struct vmc_type_header* ptr)
 {
 	if (l->count >= l->capacity) {
 		l->capacity += VMC_TYPES_LIST_RESIZE;
-		l->memory = (struct vmc_type_header**)realloc(l->memory, sizeof(struct vmc_type_header*) * l->capacity);
+		l->memory = (struct vmc_type_header**)vmc_realloc(l->memory, sizeof(struct vmc_type_header*) * l->capacity);
 		if (l->memory == NULL)
 			return -1;
 	}

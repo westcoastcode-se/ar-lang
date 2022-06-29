@@ -7,6 +7,7 @@
 #include "vmc_string_pool.h"
 #include "vmc_linker.h"
 #include "vmc_compiler_types.h"
+#include "vmc_debug.h"
 
 // Definition for what the import function looks like. Returns a success if the import was successful
 typedef vm_int32(*vmc_compiler_import_fn)(struct vmc_compiler* c, const vm_string* path);

@@ -1,8 +1,9 @@
 #include "vmc_compiler_types.h"
+#include "vmc_debug.h"
 
 vmc_type_definition* vmc_type_definition_new(const vm_string* name, vm_int32 size)
 {
-	vmc_type_definition* type = (vmc_type_definition*)malloc(sizeof(vmc_type_definition));
+	vmc_type_definition* type = (vmc_type_definition*)vmc_malloc(sizeof(vmc_type_definition));
 	if (type == NULL)
 		return type;
 	VMC_INIT_TYPE_HEADER(type, VMC_TYPE_HEADER_TYPE, size);
@@ -61,7 +62,7 @@ void vmc_func_init(vmc_func* func)
 
 vmc_func* vmc_func_malloc()
 {
-	vmc_func* func = (vmc_func*)malloc(sizeof(vmc_func));
+	vmc_func* func = (vmc_func*)vmc_malloc(sizeof(vmc_func));
 	if (func == NULL)
 		return NULL;
 	vmc_func_init(func);
@@ -96,12 +97,12 @@ void vmc_func_free(vmc_func* func)
 	vmc_linker_marker_addr_destroy(func->marker_local_addr_first);
 	func->marker_local_addr_first = func->marker_local_addr_last = NULL;
 
-	free(func);
+	vmc_free(func);
 }
 
 vmc_package* vmc_package_malloc(const char* name, int length)
 {
-	vmc_package* p = (vmc_package*)malloc(sizeof(vmc_package));
+	vmc_package* p = (vmc_package*)vmc_malloc(sizeof(vmc_package));
 	if (p == NULL)
 		return NULL;
 	VMC_INIT_TYPE_HEADER(p, VMC_TYPE_HEADER_PACKAGE, sizeof(void*));
@@ -122,7 +123,7 @@ void vmc_package_free(vmc_package* p)
 	vmc_linker_marker_addr_destroy(p->marker_func_addr_first);
 	p->marker_func_addr_first = p->marker_func_addr_last = NULL;
 
-	free(p);
+	vmc_free(p);
 }
 
 void vmc_package_add_func(vmc_package* p, vmc_func* f)
@@ -139,7 +140,7 @@ void vmc_package_add_type(vmc_package* p, vmc_type_definition* type)
 
 void vmc_package_add_import_alias(vmc_package* p, vmc_package* package, const vm_string* _alias)
 {
-	vmc_import_alias* alias = (vmc_import_alias*)malloc(sizeof(vmc_import_alias));
+	vmc_import_alias* alias = (vmc_import_alias*)vmc_malloc(sizeof(vmc_import_alias));
 	VMC_INIT_TYPE_HEADER(alias, VMC_TYPE_HEADER_IMPORT_ALIAS, 0);
 	alias->name = *_alias;
 	alias->package = package;

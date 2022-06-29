@@ -197,6 +197,9 @@ struct suite_vm_utils : test_utils
 	void destroy(vmc_compiler* c)
 	{
 		vmc_compiler_destroy(c);
+		if (vmc_memory_test_bytes_left() == FALSE) {
+			throw_(error() << "not all memory was released");
+		}
 	}
 
 	void destroy(vmi_process* p)
