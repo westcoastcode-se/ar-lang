@@ -431,6 +431,44 @@ BOOL _vmc_func_add_unique_marker_addr(vmc_compiler* c, vmc_func* func, const vm_
 	return marker != NULL;
 }
 
+BOOL _vmc_seek_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_lexer_token* t, vm_string* signature)
+{
+	int num_params;
+	
+	// Seek until we've reached the end param for the args
+	signature->start = t->string.start;
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L)) {
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
+	}
+	num_params = 1;
+	while (num_params > 0) {
+		vmc_lexer_next(l, t);
+		if (t->type == VMC_LEXER_TYPE_PARAN_L)
+			num_params++;
+		else if (t->type == VMC_LEXER_TYPE_PARAN_R)
+			num_params--;
+		else if (t->type == VMC_LEXER_TYPE_NEWLINE)
+			return vmc_compiler_message_unexpected_newline(&c->messages, l);
+	}
+
+	// Seek until we've reached the end param for the returns
+	if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_PARAN_L)) {
+		return vmc_compiler_message_syntax_error(&c->messages, l, t, '(');
+	}
+	num_params = 1;
+	while (num_params > 0) {
+		vmc_lexer_next(l, t);
+		if (t->type == VMC_LEXER_TYPE_PARAN_L)
+			num_params++;
+		else if (t->type == VMC_LEXER_TYPE_PARAN_R)
+			num_params--;
+		else if (t->type == VMC_LEXER_TYPE_NEWLINE)
+			return vmc_compiler_message_unexpected_newline(&c->messages, l);
+	}
+	signature->end = t->string.end;
+	return TRUE;
+}
+
 // Parse the function signature:
 // [name:keyword]([type1:keyword],...)([type1:keyword])
 BOOL _vmc_parse_func_signature(vmc_compiler* c, vmc_lexer* l, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
@@ -625,12 +663,14 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_lexer* l, vmc_package* p, v
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
 			// call <definition>
 			vmi_instr_call instr;
-			vmc_func func;
-			vmc_func_init(&func);
-			if (!_vmc_parse_func_signature(c, l, p, t, &func))
+			vm_string signature;
+			if (!vmc_lexer_next_type(l, t, VMC_LEXER_TYPE_KEYWORD)) {
+				return vmc_compiler_message_expected_keyword(&c->messages, l, t);
+			}
+			if (!_vmc_seek_func_signature(c, l, t, &signature)) {
 				return FALSE;
-
-			vmc_func* func2 = vmc_func_find(p, &func.signature);
+			}
+			vmc_func* func2 = vmc_func_find(p, &signature);
 			if (func2 == NULL) {
 				return vmc_compiler_message_not_implemented(&c->messages, l, t);
 			}

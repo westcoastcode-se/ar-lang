@@ -196,3 +196,14 @@ BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer* l, vm_int
 		VMC_COMPILER_MSG_DEFARRAY_TOO_SMALL_STR,
 		size, line, line_offset);
 }
+
+BOOL vmc_compiler_message_unexpected_newline(vm_messages* m, vmc_lexer* l)
+{
+	int line, line_offset, _;
+	vmc_lexer_get_metadata(l, &line, &line_offset, &_);
+	return vm_messages_add(m,
+		VMC_COMPILER_MESSAGE_PREFIX,
+		VMC_COMPILER_MSG_UNEXPECTED_NEWLINE,
+		VMC_COMPILER_MSG_UNEXPECTED_NEWLINE_STR,
+		line, line_offset);
+}
