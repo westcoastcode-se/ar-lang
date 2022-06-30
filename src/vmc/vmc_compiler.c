@@ -365,6 +365,7 @@ BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_package* p, vmc_lexer_tok
 }
 
 // Parse optional argument names for the current function
+// args (name1, name2, ...)
 BOOL _vmc_parse_function_arg_names(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
 {
 	// Expected a (
@@ -431,6 +432,7 @@ BOOL _vmc_func_add_unique_marker_addr(vmc_compiler* c, vmc_func* func, const vm_
 	return marker != NULL;
 }
 
+// Parse the source code for a signature
 BOOL _vmc_seek_func_signature(vmc_compiler* c, vmc_lexer_token* t, vm_string* signature)
 {
 	int num_params;
@@ -722,33 +724,43 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, 
 	return TRUE;
 }
 
-BOOL _vmc_parse_keyword_extern(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t)
+BOOL _vmc_parse_keyword_extern(const vmc_compiler_scope* s)
 {
+	vmc_compiler* const c = s->compiler;
+	vmc_lexer_token* const t = s->token;
+
 	vmc_lexer_next(t);
 	switch (t->type)
 	{
 	case VMC_LEXER_TYPE_KEYWORD_FN:
-		return _vmc_parse_keyword_fn(c, p, t, VMC_FUNC_MODIFIER_EXTERN);
+		return _vmc_parse_keyword_fn(s->compiler, s->package, t, VMC_FUNC_MODIFIER_EXTERN);
 	default:
 		return vmc_compiler_message_unknown_token(&c->messages, t);
 	}
 }
 
-BOOL _vmc_parse_keyword_import(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t)
+BOOL _vmc_parse_keyword_import(const vmc_compiler_scope* s)
 {
+	vmc_compiler* const c = s->compiler;
+	vmc_lexer_token* const t = s->token;
+
 	return vmc_compiler_message_not_implemented(&c->messages, t);
 }
 
-BOOL _vmc_parse_keyword(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t)
+BOOL _vmc_parse_keyword(const vmc_compiler_scope* s)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	switch (t->type)
 	{
 	case VMC_LEXER_TYPE_KEYWORD_EXTERN:
-		return _vmc_parse_keyword_extern(c, p, t);
+		return _vmc_parse_keyword_extern(s);
 	case VMC_LEXER_TYPE_KEYWORD_FN:
 		return _vmc_parse_keyword_fn(c, p, t, 0);
 	case VMC_LEXER_TYPE_KEYWORD_IMPORT:
-		return _vmc_parse_keyword_import(c, p, t);
+		return _vmc_parse_keyword_import(s);
 	case VMC_LEXER_TYPE_KEYWORD_CONST:
 	default:
 		break;
@@ -764,6 +776,9 @@ void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 {
 	vmc_lexer_token token;
 	vmc_lexer_token_init(l, &token);
+	const vmc_compiler_scope scope = {
+		c, &token, p, NULL
+	};
 
 	// Ignore all newlines at the start of the content
 	vmc_lexer_next(&token);
@@ -774,7 +789,7 @@ void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 	{
 		// Is the supplied token a keyword?
 		if (vmc_lexer_type_is_keyword(token.type)) {
-			if (!_vmc_parse_keyword(c, p, &token)) {
+			if (!_vmc_parse_keyword(&scope)) {
 				break;
 			}
 			continue;

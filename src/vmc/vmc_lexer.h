@@ -165,6 +165,7 @@ struct vmc_lexer_token
 	const vm_byte* line_offset;
 
 	// where we are putting messages
+	// TODO: If we are running this in multiple threads then each thread should have it's own token with their own messages object
 	vm_messages* messages;
 };
 typedef struct vmc_lexer_token vmc_lexer_token;
