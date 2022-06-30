@@ -7,15 +7,18 @@
 #endif
 
 #ifndef FUNC_BODY
-#define FUNC_BODY(N) BOOL parse_##N(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+#define FUNC_BODY(N) BOOL parse_##N(const vmc_compiler_scope* s, vmc_func* func)
 #endif
 
 FUNC_BODY(ldc_s_i1)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC_S;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT8;
@@ -26,10 +29,13 @@ FUNC_BODY(ldc_s_i1)
 
 FUNC_BODY(ldc_s_i2)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC_S;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT16;
@@ -40,10 +46,13 @@ FUNC_BODY(ldc_s_i2)
 
 FUNC_BODY(ldc_s_i4)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC_S;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT32;
@@ -54,10 +63,13 @@ FUNC_BODY(ldc_s_i4)
 
 FUNC_BODY(ldc_s_i8)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC_S;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT64;
@@ -68,10 +80,13 @@ FUNC_BODY(ldc_s_i8)
 
 FUNC_BODY(ldc_s_f4)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC_S;
 	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT32;
@@ -82,10 +97,13 @@ FUNC_BODY(ldc_s_f4)
 
 FUNC_BODY(ldc_s_f8)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_s instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC_S;
 	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT64;
@@ -96,10 +114,13 @@ FUNC_BODY(ldc_s_f8)
 
 FUNC_BODY(ldc_i1)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT8;
@@ -110,10 +131,13 @@ FUNC_BODY(ldc_i1)
 
 FUNC_BODY(ldc_i2)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT16;
@@ -124,10 +148,13 @@ FUNC_BODY(ldc_i2)
 
 FUNC_BODY(ldc_i4)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT32;
@@ -138,10 +165,13 @@ FUNC_BODY(ldc_i4)
 
 FUNC_BODY(ldc_i8)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_i64 instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT)
-		return vmc_compiler_message_expected_int(&c->messages, t);
+		return vmc_compiler_message_expected_int(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC_I8;
 	instr.props1 = VMI_INSTR_CONST_PROP1_INT64;
@@ -152,6 +182,9 @@ FUNC_BODY(ldc_i8)
 
 FUNC_BODY(ldc_f4)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT && t->type != VMC_LEXER_TYPE_DECIMAL)
@@ -169,6 +202,9 @@ FUNC_BODY(ldc_f4)
 
 FUNC_BODY(ldc_f8)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldc_i64 instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT && t->type != VMC_LEXER_TYPE_DECIMAL)
@@ -186,6 +222,9 @@ FUNC_BODY(ldc_f8)
 
 FUNC_BODY(clt)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_cmp instr;
 	instr.opcode = 0;
 	instr.icode = VMI_CMP;
@@ -197,6 +236,9 @@ FUNC_BODY(clt)
 
 FUNC_BODY(cgt)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_cmp instr;
 	instr.opcode = 0;
 	instr.icode = VMI_CMP;
@@ -208,6 +250,9 @@ FUNC_BODY(cgt)
 
 FUNC_BODY(lda)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_lda instr;
 	vm_int32 index;
 
@@ -230,6 +275,9 @@ FUNC_BODY(lda)
 
 FUNC_BODY(lda_a)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_lda_a instr;
 	vm_int32 index;
 
@@ -252,6 +300,9 @@ FUNC_BODY(lda_a)
 
 FUNC_BODY(str)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_str instr;
 	vm_int32 index;
 
@@ -276,18 +327,21 @@ FUNC_BODY(locals)
 {
 	vmi_instr_locals instr;
 	// Parse locals
-	if (!_vmc_parse_keyword_fn_locals(c, p, t, func))
+	if (!_vmc_parse_keyword_fn_locals(s, func))
 		return FALSE;
 
 	instr.opcode = 0;
 	instr.icode = VMI_LOCALS;
 	instr.size = func->locals_total_size;
-	vmc_write(c, &instr, sizeof(vmi_instr_locals));
+	vmc_write(s->compiler, &instr, sizeof(vmi_instr_locals));
 	return TRUE;
 }
 
 FUNC_BODY(ldl)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldl instr;
 	vm_int32 index;
 
@@ -310,6 +364,9 @@ FUNC_BODY(ldl)
 
 FUNC_BODY(stl)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_stl instr;
 	vm_int32 index;
 
@@ -332,6 +389,9 @@ FUNC_BODY(stl)
 
 FUNC_BODY(ldl_a)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+
 	vmi_instr_ldl_a instr;
 	vm_int32 index;
 
@@ -354,46 +414,50 @@ FUNC_BODY(ldl_a)
 
 FUNC_BODY(sturef_s_i1)
 {
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I1);
+	_vmc_emit_opcode(s, VMI_OP_STUREF_S_I1);
 	return TRUE;
 }
 
 FUNC_BODY(sturef_s_i2)
 {
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I2);
+	_vmc_emit_opcode(s, VMI_OP_STUREF_S_I2);
 	return TRUE;
 }
 
 FUNC_BODY(sturef_s_i4)
 {
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I4);
+	_vmc_emit_opcode(s, VMI_OP_STUREF_S_I4);
 	return TRUE;
 }
 
 FUNC_BODY(sturef_s_i8)
 {
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I8);
+	_vmc_emit_opcode(s, VMI_OP_STUREF_S_I8);
 	return TRUE;
 }
 
 FUNC_BODY(sturef_s_f4)
 {
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I4);
+	_vmc_emit_opcode(s, VMI_OP_STUREF_S_I4);
 	return TRUE;
 }
 
 FUNC_BODY(sturef_s_f8)
 {
-	_vmc_emit_opcode(c, VMI_OP_STUREF_S_I8);
+	_vmc_emit_opcode(s, VMI_OP_STUREF_S_I8);
 	return TRUE;
 }
 
 FUNC_BODY(sturef_s)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_sturef_s instr;
 	vmc_var var;
 	vmc_lexer_next(t);
-	if (!_vmc_parse_type(c, p, t, &var))
+	if (!_vmc_parse_type(s, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_STUREF_S;
@@ -404,10 +468,14 @@ FUNC_BODY(sturef_s)
 
 FUNC_BODY(sturef)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_sturef instr;
 	vmc_var var;
 	vmc_lexer_next(t);
-	if (!_vmc_parse_type(c, p, t, &var))
+	if (!_vmc_parse_type(s, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_STUREF;
@@ -418,10 +486,14 @@ FUNC_BODY(sturef)
 
 FUNC_BODY(stelem)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_stelem instr;
 	vmc_var var;
 	vmc_lexer_next(t);
-	if (!_vmc_parse_type(c, p, t, &var))
+	if (!_vmc_parse_type(s, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_STELEM;
@@ -432,10 +504,14 @@ FUNC_BODY(stelem)
 
 FUNC_BODY(stelem_s)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_stelem_s instr;
 	vmc_var var;
 	vmc_lexer_next(t);
-	if (!_vmc_parse_type(c, p, t, &var))
+	if (!_vmc_parse_type(s, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_STELEM_S;
@@ -446,10 +522,14 @@ FUNC_BODY(stelem_s)
 
 FUNC_BODY(ldelem)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_ldelem instr;
 	vmc_var var;
 	vmc_lexer_next(t);
-	if (!_vmc_parse_type(c, p, t, &var))
+	if (!_vmc_parse_type(s, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_LDELEM;
@@ -460,10 +540,14 @@ FUNC_BODY(ldelem)
 
 FUNC_BODY(ldelem_s)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_ldelem_s instr;
 	vmc_var var;
 	vmc_lexer_next(t);
-	if (!_vmc_parse_type(c, p, t, &var))
+	if (!_vmc_parse_type(s, &var))
 		return FALSE;
 	instr.opcode = 0;
 	instr.icode = VMI_LDELEM_S;
@@ -474,6 +558,10 @@ FUNC_BODY(ldelem_s)
 
 FUNC_BODY(allocs)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_allocs instr;
 	instr.opcode = 0;
 	instr.icode = VMI_ALLOCS;
@@ -483,7 +571,7 @@ FUNC_BODY(allocs)
 		vm_int32 num_bytes;
 		num_bytes = vmc_lexer_token_toint32(t);
 		if (num_bytes < 0) {
-			return vmc_compiler_message_expected_int(&c->messages, t);
+			return vmc_compiler_message_expected_int(s);
 		}
 		else if (num_bytes > UINT16_MAX) {
 			return vmc_compiler_message_not_implemented(&c->messages, t);
@@ -492,8 +580,8 @@ FUNC_BODY(allocs)
 	}
 	else {
 		vmc_var var;
-		if (!_vmc_parse_type(c, p, t, &var))
-			return vmc_compiler_message_expected_int(&c->messages, t);
+		if (!_vmc_parse_type(s, &var))
+			return vmc_compiler_message_expected_int(s);
 		instr.size = var.definition->size;
 	}
 
@@ -503,6 +591,10 @@ FUNC_BODY(allocs)
 
 FUNC_BODY(frees)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_frees instr;
 	instr.opcode = 0;
 	instr.icode = VMI_FREES;
@@ -512,7 +604,7 @@ FUNC_BODY(frees)
 		vm_int32 num_bytes;
 		num_bytes = vmc_lexer_token_toint32(t);
 		if (num_bytes < 0) {
-			return vmc_compiler_message_expected_int(&c->messages, t);
+			return vmc_compiler_message_expected_int(s);
 		}
 		else if (num_bytes > UINT16_MAX) {
 			return vmc_compiler_message_not_implemented(&c->messages, t);
@@ -521,8 +613,8 @@ FUNC_BODY(frees)
 	}
 	else {
 		vmc_var var;
-		if (!_vmc_parse_type(c, p, t, &var))
-			return vmc_compiler_message_expected_int(&c->messages, t);
+		if (!_vmc_parse_type(s, &var))
+			return vmc_compiler_message_expected_int(s);
 		instr.size = var.definition->size;
 	}
 
@@ -532,6 +624,10 @@ FUNC_BODY(frees)
 
 FUNC_BODY(alloch)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_alloch instr;
 	instr.opcode = 0;
 	instr.icode = VMI_ALLOCH;
@@ -541,7 +637,7 @@ FUNC_BODY(alloch)
 		vm_int32 num_bytes;
 		num_bytes = vmc_lexer_token_toint32(t);
 		if (num_bytes < 0) {
-			return vmc_compiler_message_expected_int(&c->messages, t);
+			return vmc_compiler_message_expected_int(s);
 		}
 		else if (num_bytes > UINT16_MAX) {
 			return vmc_compiler_message_not_implemented(&c->messages, t);
@@ -550,8 +646,8 @@ FUNC_BODY(alloch)
 	}
 	else {
 		vmc_var var;
-		if (!_vmc_parse_type(c, p, t, &var))
-			return vmc_compiler_message_expected_int(&c->messages, t);
+		if (!_vmc_parse_type(s, &var))
+			return vmc_compiler_message_expected_int(s);
 		instr.size = var.definition->size;
 	}
 
@@ -561,6 +657,10 @@ FUNC_BODY(alloch)
 
 FUNC_BODY(freeh)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_alloch instr;
 	instr.opcode = 0;
 	instr.icode = VMI_FREEH;
@@ -570,7 +670,7 @@ FUNC_BODY(freeh)
 		vm_int32 num_bytes;
 		num_bytes = vmc_lexer_token_toint32(t);
 		if (num_bytes < 0) {
-			return vmc_compiler_message_expected_int(&c->messages, t);
+			return vmc_compiler_message_expected_int(s);
 		}
 		else if (num_bytes > UINT16_MAX) {
 			return vmc_compiler_message_not_implemented(&c->messages, t);
@@ -579,8 +679,8 @@ FUNC_BODY(freeh)
 	}
 	else {
 		vmc_var var;
-		if (!_vmc_parse_type(c, p, t, &var))
-			return vmc_compiler_message_expected_int(&c->messages, t);
+		if (!_vmc_parse_type(s, &var))
+			return vmc_compiler_message_expected_int(s);
 		instr.size = var.definition->size;
 	}
 
@@ -591,6 +691,10 @@ FUNC_BODY(freeh)
 
 FUNC_BODY(copy_s)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	// TODO: It should be possible to know which type is pushed in the current scope by the compiler
 	// copy_s <type>
 	vmi_opcode opcode = VMI_COPY_S;
@@ -601,12 +705,16 @@ FUNC_BODY(copy_s)
 		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32);
 	else
 		return vmc_compiler_message_not_implemented(&c->messages, t);
-	_vmc_emit_opcode(c, opcode);
+	_vmc_emit_opcode(s, opcode);
 	return TRUE;
 }
 
 FUNC_BODY(add)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_opcode opcode = VMI_ADD;
 
 	vmc_lexer_next(t);
@@ -618,12 +726,16 @@ FUNC_BODY(add)
 		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16);
 	else
 		return vmc_compiler_message_not_implemented(&c->messages, t);
-	_vmc_emit_opcode(c, opcode);
+	_vmc_emit_opcode(s, opcode);
 	return TRUE;
 }
 
 FUNC_BODY(conv_i2_i4)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_conv instr;
 	instr.header.opcode = 0;
 	instr.header.icode = VMI_CONV;
@@ -635,6 +747,10 @@ FUNC_BODY(conv_i2_i4)
 
 FUNC_BODY(conv_i4_i2)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	vmi_instr_conv instr;
 	instr.header.opcode = 0;
 	instr.header.icode = VMI_CONV;

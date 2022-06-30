@@ -192,7 +192,7 @@ extern void vmc_lexer_next(vmc_lexer_token* t);
 extern void vmc_lexer_next_newline(vmc_lexer_token* token);
 
 // Parse the next token and return TRUE if the supplied token is the supplied type
-extern BOOL vmc_lexer_next_type(vmc_lexer_token* token, vmc_lexer_token_modifier type);
+extern BOOL vmc_lexer_next_type(vmc_lexer_token* token, vmc_lexer_token_type type);
 
 // Peek at the next character
 extern char vmc_lexer_peek(vmc_lexer* l, vmc_lexer_token* t);

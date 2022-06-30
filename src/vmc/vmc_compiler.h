@@ -126,4 +126,14 @@ inline static vm_int32 vmc_compiler_bytecode_field_offset(vmc_compiler* c, vm_in
 	return vm_bytestream_get_size(&c->bytecode) + field_offset;
 }
 
+// Move the current token forward to the next token
+inline static void vmc_compiler_next(const vmc_compiler_scope* s) {
+	vmc_lexer_next(s->token);
+}
+
+// Move the current token forward to the next token
+inline static BOOL vmc_compiler_next_type(const vmc_compiler_scope* s, const vmc_lexer_token_type type) {
+	return vmc_lexer_next_type(s->token, type);
+}
+
 #endif

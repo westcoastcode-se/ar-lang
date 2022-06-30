@@ -10,8 +10,11 @@ BOOL vmc_compiler_message_panic(vm_message* m, const char* str)
 	return FALSE;
 }
 
-BOOL vmc_compiler_message_unknown_token(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_unknown_token(const vmc_compiler_scope* s)
 {
+	const vmc_lexer_token* const t = s->token;
+	vm_messages* const m = &s->compiler->messages;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -76,8 +79,11 @@ BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer_token* t)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_int(const vmc_compiler_scope* s)
 {
+	const vmc_lexer_token* const t = s->token;
+	vm_messages* const m = &s->compiler->messages;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -142,8 +148,11 @@ BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer_token* t, vm_in
 		size, min, max, line, line_offset);
 }
 
-BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_unexpected_eof(const vmc_compiler_scope* s)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,

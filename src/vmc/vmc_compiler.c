@@ -17,7 +17,7 @@
 
 #define BODY_BRANCH_BEGIN if(0) {}
 #define BODY_BRANCH_END
-#define BODY_BRANCH(C) else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(C))) { if (!parse_##C(c, p, t, func)) return FALSE; }
+#define BODY_BRANCH(C) else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(C))) { if (!parse_##C(s, func)) return FALSE; }
 
 VM_STRING_CONST(bool, "bool", 4);
 VM_STRING_CONST(int8, "int8", 4);
@@ -96,19 +96,19 @@ const vmc_compiler_config _vmc_compiler_config_default = {
 	&vmc_compiler_config_import
 };
 
-void _vmc_emit_opcode(vmc_compiler* c, vm_int32 opcode)
+void _vmc_emit_opcode(const vmc_compiler_scope* s, vm_int32 opcode)
 {
 	vmi_instr_single_instruction instr;
 	instr.header.opcode = opcode;
-	vmc_write(c, &instr, sizeof(vmi_instr_single_instruction));
+	vmc_write(s->compiler, &instr, sizeof(vmi_instr_single_instruction));
 }
 
-void _vmc_emit_icode(vmc_compiler* c, vm_int8 icode)
+void _vmc_emit_icode(const vmc_compiler_scope* s, vm_int8 icode)
 {
 	vmi_instr_single_instruction instr;
 	instr.header.opcode = 0;
 	instr.header.icode = icode;
-	vmc_write(c, &instr, sizeof(vmi_instr_single_instruction));
+	vmc_write(s->compiler, &instr, sizeof(vmi_instr_single_instruction));
 }
 
 void _vmc_append_header(vmc_compiler* c)
@@ -141,7 +141,10 @@ void _vmc_append_header(vmc_compiler* c)
 // *[INT]*KEYWORD
 // KEYWPORD<TYPE>
 // *PACKAGE.KEYWORD
-BOOL _vmc_parse_type(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_var* var) {
+BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+	vmc_lexer_token* const t = s->token;
 	vmc_type_header* header;
 
 	// Is the type a pointer or an array?
@@ -150,7 +153,7 @@ BOOL _vmc_parse_type(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_va
 		const vm_string* pointer_type_name;
 		vmc_type_header* pointer_type_header;
 		vmc_lexer_next(t);
-		if (!_vmc_parse_type(c, p, t, var)) {
+		if (!_vmc_parse_type(s, var)) {
 			return FALSE;
 		}
 
@@ -194,7 +197,7 @@ BOOL _vmc_parse_type(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_va
 			if (t->type == VMC_LEXER_TYPE_KEYWORD) {
 				return vmc_compiler_message_not_implemented(&c->messages, t);
 			}
-			return vmc_compiler_message_expected_int(&c->messages, t);
+			return vmc_compiler_message_expected_int(s);
 		}
 
 		size = vmc_lexer_token_toint32(t);
@@ -206,7 +209,7 @@ BOOL _vmc_parse_type(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_va
 		vmc_lexer_next(t);
 		
 		// We now have a known array size of the upcoming type
-		if (!_vmc_parse_type( c, p, t, var)) {
+		if (!_vmc_parse_type(s, var)) {
 			return FALSE;
 		}
 
@@ -273,9 +276,13 @@ BOOL _vmc_parse_type(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_va
 	return TRUE;
 }
 
-BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t,
+BOOL _vmc_compiler_parse_type_decl_without_name(const vmc_compiler_scope* s,
 	vmc_var* vars, vm_int32* out_count, vm_int32* out_total_size)
 {
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+	vmc_lexer_token* const t = s->token;
+
 	vm_int32 count = 0;
 	vm_int32 total_size = 0;
 
@@ -297,7 +304,7 @@ BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_package* p,
 		var->name = *VM_STRING_CONST_GET(empty);
 		
 		// Parse type
-		if (!_vmc_parse_type(c, p, t, var)) {
+		if (!_vmc_parse_type(s, var)) {
 			return FALSE;
 		}
 
@@ -312,8 +319,12 @@ BOOL _vmc_compiler_parse_type_decl_without_name(vmc_compiler* c, vmc_package* p,
 }
 
 // fn (<scope>) Name (<args>) (<returns>)
-BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+BOOL _vmc_parse_keyword_fn_locals(const vmc_compiler_scope* s, vmc_func* func)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	func->locals_count = 0;
 	func->locals_total_size = 0;
 
@@ -340,7 +351,7 @@ BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_package* p, vmc_lexer_tok
 		vmc_lexer_next(t);
 
 		// Parse type
-		if (!_vmc_parse_type(c, p, t, var)) {
+		if (!_vmc_parse_type(s, var)) {
 			return FALSE;
 		}
 
@@ -366,8 +377,12 @@ BOOL _vmc_parse_keyword_fn_locals(vmc_compiler* c, vmc_package* p, vmc_lexer_tok
 
 // Parse optional argument names for the current function
 // args (name1, name2, ...)
-BOOL _vmc_parse_function_arg_names(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+BOOL _vmc_parse_function_arg_names(const vmc_compiler_scope* s, vmc_func* func)
 {
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler* const c = s->compiler;
+	vmc_package* const p = s->package;
+
 	// Expected a (
 	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_PARAN_L))
 		return vmc_compiler_message_syntax_error(&c->messages, t, '(');
@@ -380,7 +395,7 @@ BOOL _vmc_parse_function_arg_names(vmc_compiler* c, vmc_package* p, vmc_lexer_to
 		}
 		arg->name = t->string;
 		// Ignore comma (or last ')'
-		vmc_lexer_next(t);
+		vmc_compiler_next(s);
 	}
 
 	// Expected a )
@@ -389,16 +404,14 @@ BOOL _vmc_parse_function_arg_names(vmc_compiler* c, vmc_package* p, vmc_lexer_to
 	return TRUE;
 }
 
-BOOL _vmc_parse_keyword_fn_args(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+BOOL _vmc_parse_keyword_fn_args(const vmc_compiler_scope* s, vmc_func* func)
 {
-	return _vmc_compiler_parse_type_decl_without_name(c, p, t,
-		func->args, &func->args_count, &func->args_total_size);
+	return _vmc_compiler_parse_type_decl_without_name(s, func->args, &func->args_count, &func->args_total_size);
 }
 
-BOOL _vmc_parse_keyword_fn_rets(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+BOOL _vmc_parse_keyword_fn_rets(const vmc_compiler_scope* s, vmc_func* func)
 {
-	return _vmc_compiler_parse_type_decl_without_name(c, p, t,
-		func->returns, &func->returns_count, &func->returns_total_size);
+	return _vmc_compiler_parse_type_decl_without_name(s, func->returns, &func->returns_count, &func->returns_total_size);
 }
 
 vmc_linker_marker_addr* _vmc_func_add_marker_addr(vmc_compiler* c, vmc_func* func, const vm_string* name)
@@ -473,8 +486,11 @@ BOOL _vmc_seek_func_signature(vmc_compiler* c, vmc_lexer_token* t, vm_string* si
 
 // Parse the function signature:
 // [name:keyword]([type1:keyword],...)([type1:keyword])
-BOOL _vmc_parse_func_signature(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+BOOL _vmc_parse_func_signature(const vmc_compiler_scope* s, vmc_func* func)
 {
+	vmc_compiler* const c = s->compiler;
+	vmc_lexer_token* const t = s->token;
+
 	// 1. Function name (The signature starts with the name and ends with the last return value)
 	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_KEYWORD)) {
 		vmc_compiler_message_expected_identifier(&c->messages, t);
@@ -486,11 +502,11 @@ BOOL _vmc_parse_func_signature(vmc_compiler* c, vmc_package* p, vmc_lexer_token*
 		func->modifiers |= VMC_FUNC_MODIFIER_PUBLIC;
 
 	// Parse args
-	if (!_vmc_parse_keyword_fn_args(c, p, t, func))
+	if (!_vmc_parse_keyword_fn_args(s, func))
 		return FALSE;
 
 	// Parse return types
-	if (!_vmc_parse_keyword_fn_rets(c, p, t, func))
+	if (!_vmc_parse_keyword_fn_rets(s, func))
 		return FALSE;
 
 	// Figure out the signature
@@ -500,8 +516,12 @@ BOOL _vmc_parse_func_signature(vmc_compiler* c, vmc_package* p, vmc_lexer_token*
 
 #include "vmc_compiler_instr.inc.c"
 
-BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vmc_func* func)
+BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 {
+	vmc_compiler* const c = s->compiler;
+	vmc_lexer_token* const t = s->token;
+	vmc_package* const p = s->package;
+
 	// External functions are not allowed to have a body
 	if (vmc_func_is_extern(func))
 		return TRUE;
@@ -515,15 +535,14 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_package* p, vmc_lexer_token
 	func->offset = vm_bytestream_get_size(&c->bytecode);
 
 	// The function is actually beginning here
-	// TODO: Add support for reserving memory for local variables
+	// TODO: Add support for reserving memory for local variables larger than 65535 bytes
 	if ((vm_uint32)(func->args_total_size + func->returns_total_size) > UINT16_MAX)
 		return vmc_compiler_message_not_implemented(&c->messages, t);
-	//_vmc_emit_begin(c, func->args_total_size, func->returns_total_size);
 
 	while (1) {
 		// Unexpected end of function body
 		if (t->type == VMC_LEXER_TYPE_EOF) {
-			return vmc_compiler_message_unexpected_eof(&c->messages, t);
+			return vmc_compiler_message_unexpected_eof(s);
 		}
 
 		// Break if we've reached the end of the function
@@ -611,7 +630,7 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_package* p, vmc_lexer_token
 		
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(args))) {
 			// args (names..., )
-			if (!_vmc_parse_function_arg_names(c, p, t, func)) {
+			if (!_vmc_parse_function_arg_names(s, func)) {
 				return FALSE;
 			}
 		}
@@ -694,20 +713,23 @@ BOOL _vmc_parse_keyword_fn_body(vmc_compiler* c, vmc_package* p, vmc_lexer_token
 }
 
 // Append a new function to the current package. The syntax is:
-// [extern] fn name (arg1 [modifier][package.]type1, arg2 [modifier][package.]type2, ...) ([modifier][package.]ret1, [modifier][package.]ret2, ...)
+// [extern] fn name ([modifier][package.]type1,[modifier][package.]type2,...)([modifier][package.]ret1,[modifier][package.]ret2,...)
 //
 // If the function is external then a body is not required. You are allowed to have a body if you want to override the 
-BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, vm_bits32 modifiers)
+BOOL _vmc_parse_keyword_fn(const vmc_compiler_scope* s, vm_bits32 modifiers)
 {
+	vmc_compiler* const c = s->compiler;
+	vmc_lexer_token* const t = s->token;
+
 	vmc_func* const func = vmc_func_malloc();
 	if (func == NULL) {
 		return vmc_compiler_message_panic(&c->panic_error_message, "out of memory");
 	}
 
-	if (!_vmc_parse_func_signature(c, p, t, func)) {
+	if (!_vmc_parse_func_signature(s, func)) {
 		return FALSE;
 	}
-	vmc_package_add_func(p, func);
+	vmc_package_add_func(s->package, func);
 	func->id = c->functions_count++;
 	func->modifiers |= modifiers;
 
@@ -719,23 +741,22 @@ BOOL _vmc_parse_keyword_fn(vmc_compiler* c, vmc_package* p, vmc_lexer_token* t, 
 	vmc_func_calculate_offsets(func);
 
 	// Parse the function body
-	if (!_vmc_parse_keyword_fn_body(c, p, t, func))
+	if (!_vmc_parse_keyword_fn_body(s, func))
 		return FALSE;
 	return TRUE;
 }
 
 BOOL _vmc_parse_keyword_extern(const vmc_compiler_scope* s)
 {
-	vmc_compiler* const c = s->compiler;
 	vmc_lexer_token* const t = s->token;
 
 	vmc_lexer_next(t);
 	switch (t->type)
 	{
 	case VMC_LEXER_TYPE_KEYWORD_FN:
-		return _vmc_parse_keyword_fn(s->compiler, s->package, t, VMC_FUNC_MODIFIER_EXTERN);
+		return _vmc_parse_keyword_fn(s, VMC_FUNC_MODIFIER_EXTERN);
 	default:
-		return vmc_compiler_message_unknown_token(&c->messages, t);
+		return vmc_compiler_message_unknown_token(s);
 	}
 }
 
@@ -750,24 +771,21 @@ BOOL _vmc_parse_keyword_import(const vmc_compiler_scope* s)
 BOOL _vmc_parse_keyword(const vmc_compiler_scope* s)
 {
 	vmc_lexer_token* const t = s->token;
-	vmc_compiler* const c = s->compiler;
-	vmc_package* const p = s->package;
 
 	switch (t->type)
 	{
 	case VMC_LEXER_TYPE_KEYWORD_EXTERN:
 		return _vmc_parse_keyword_extern(s);
 	case VMC_LEXER_TYPE_KEYWORD_FN:
-		return _vmc_parse_keyword_fn(c, p, t, 0);
+		return _vmc_parse_keyword_fn(s, 0);
 	case VMC_LEXER_TYPE_KEYWORD_IMPORT:
 		return _vmc_parse_keyword_import(s);
 	case VMC_LEXER_TYPE_KEYWORD_CONST:
 	default:
 		break;
 	}
-
-	vmc_compiler_message_unknown_token(&c->messages, t);
-	_vmc_emit_icode(c, VMI_EOE);
+	vmc_compiler_message_unknown_token(s);
+	_vmc_emit_icode(s, VMI_EOE);
 	return FALSE;
 }
 
@@ -802,11 +820,11 @@ void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 		case VMC_LEXER_TYPE_COMMENT:
 			break;
 		case VMC_LEXER_TYPE_EOF:
-			_vmc_emit_icode(c, VMI_EOE);
+			_vmc_emit_icode(&scope, VMI_EOE);
 			return;
 		default:
-			vmc_compiler_message_unknown_token(&c->messages, &token);
-			_vmc_emit_icode(c, VMI_EOE);
+			vmc_compiler_message_unknown_token(&scope);
+			_vmc_emit_icode(&scope, VMI_EOE);
 			return;
 		}
 		vmc_lexer_next(&token);

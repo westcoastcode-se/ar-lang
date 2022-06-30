@@ -3,6 +3,7 @@
 
 #include "../vm_message.h"
 #include "vmc_lexer.h"
+#include "vmc_compiler.h"
 
 // Prefix for all compiler messages
 #define VMC_COMPILER_MESSAGE_PREFIX 'C'
@@ -99,19 +100,19 @@ enum vmc_compiler_messages
 //
 
 extern BOOL vmc_compiler_message_panic(vm_message* m, const char* str);
-extern BOOL vmc_compiler_message_unknown_token(vm_messages* m, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_unknown_token(const vmc_compiler_scope* s);
 extern BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer_token* t);
-extern BOOL vmc_compiler_message_expected_int(vm_messages* m, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_expected_int(const vmc_compiler_scope* s);
 extern BOOL vmc_compiler_message_expected_string(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_decimal(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer_token* t, vm_int32 index, vm_int32 min, vm_int32 max);
 extern BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer_token* t, vm_int32 size, vm_int32 min, vm_int32 max);
-extern BOOL vmc_compiler_message_unexpected_eof(vm_messages* m, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_unexpected_eof(const vmc_compiler_scope* s);
 extern BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer_token* t, char expected);
 extern BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer_token* t, const vm_string* signature);
 extern BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer_token* t, const vm_string* memory_marker);
