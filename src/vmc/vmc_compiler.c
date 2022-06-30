@@ -175,7 +175,7 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 			vmc_package_add_type(package, var->definition);
 		}
 		else if (pointer_type_header->type != VMC_TYPE_HEADER_TYPE) {
-			return vmc_compiler_message_expected_type(&c->messages, t);			
+			return vmc_compiler_message_expected_type(s);			
 		}
 		else {
 			var->definition = (vmc_type_definition*)pointer_type_header;
@@ -194,7 +194,7 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 		if (t->type != VMC_LEXER_TYPE_INT) {
 			// TODO: Add support for constants containing the integer size
 			if (t->type == VMC_LEXER_TYPE_KEYWORD) {
-				return vmc_compiler_message_not_implemented(&c->messages, t);
+				return vmc_compiler_message_not_implemented(s);
 			}
 			return vmc_compiler_message_expected_int(s);
 		}
@@ -234,7 +234,7 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 			var->definition->size *= size;
 		}
 		else if (array_type_header->type != VMC_TYPE_HEADER_TYPE) {
-			return vmc_compiler_message_expected_type(&c->messages, t);
+			return vmc_compiler_message_expected_type(s);
 		}
 		else {
 			var->definition = (vmc_type_definition*)array_type_header;
@@ -243,12 +243,12 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 	}
 	
 	if (t->type != VMC_LEXER_TYPE_KEYWORD) {
-		return vmc_compiler_message_expected_type(&c->messages, t);
+		return vmc_compiler_message_expected_type(s);
 	}
 
 	header = vmc_package_find(s->package, &t->string);
 	if (header == NULL) {
-		return vmc_compiler_message_type_not_found(&c->messages, t);
+		return vmc_compiler_message_type_not_found(s);
 	}
 
 	while (header->type == VMC_TYPE_HEADER_IMPORT_ALIAS) {
@@ -261,14 +261,14 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 		// Next keyword
 		vmc_lexer_next(t);
 		if (t->type != VMC_LEXER_TYPE_KEYWORD) {
-			return vmc_compiler_message_expected_type(&c->messages, t);
+			return vmc_compiler_message_expected_type(s);
 		}
 
 		header = vmc_package_find(alias->package, &t->string);
 	}
 
 	if (header->type != VMC_TYPE_HEADER_TYPE) {
-		return vmc_compiler_message_expected_type(&c->messages, t);
+		return vmc_compiler_message_expected_type(s);
 	}
 
 	var->definition = (vmc_type_definition*)header;
@@ -390,7 +390,7 @@ BOOL _vmc_parse_function_arg_names(const vmc_compiler_scope* s, vmc_func* func)
 	for (int i = 0; i < func->args_count; ++i) {
 		vmc_var* const arg = &func->args[i];
 		if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_KEYWORD)) {
-			return vmc_compiler_message_expected_keyword(&c->messages, t);
+			return vmc_compiler_message_expected_keyword(s);
 		}
 		arg->name = t->string;
 		// Ignore comma (or last ')'
@@ -535,7 +535,7 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 	// The function is actually beginning here
 	// TODO: Add support for reserving memory for local variables larger than 65535 bytes
 	if ((vm_uint32)(func->args_total_size + func->returns_total_size) > UINT16_MAX)
-		return vmc_compiler_message_not_implemented(&c->messages, t);
+		return vmc_compiler_message_not_implemented(s);
 
 	while (1) {
 		// Unexpected end of function body
@@ -559,7 +559,7 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 			// Get the keyword
 			vmc_lexer_next(t);
 			if (!vmc_lexer_type_is_keyword(t->type))
-				return vmc_compiler_message_expected_keyword(&c->messages, t);
+				return vmc_compiler_message_expected_keyword(s);
 			if (!_vmc_func_add_unique_marker_addr(c, func, &t->string))
 				return vmc_compiler_message_memory_marker_exists(&c->messages, t, &t->string);
 			vmc_lexer_next(t);
@@ -568,7 +568,7 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 
 		// Verify that a keyword is being processed
 		if (!vmc_lexer_type_is_keyword(t->type)) {
-			return vmc_compiler_message_expected_keyword(&c->messages, t);
+			return vmc_compiler_message_expected_keyword(s);
 		}
 
 		BODY_BRANCH_BEGIN
@@ -644,7 +644,7 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 
 			vmc_lexer_next(t);
 			if (t->type != VMC_LEXER_TYPE_KEYWORD) {
-				return vmc_compiler_message_expected_keyword(&c->messages, t);
+				return vmc_compiler_message_expected_keyword(s);
 			}
 
 			// Add a new marker. This is so that we can know the actual memory address during runtime.
@@ -684,14 +684,14 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 			vmi_instr_call instr;
 			vm_string signature;
 			if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_KEYWORD)) {
-				return vmc_compiler_message_expected_keyword(&c->messages, t);
+				return vmc_compiler_message_expected_keyword(s);
 			}
 			if (!_vmc_seek_func_signature(c, t, &signature)) {
 				return FALSE;
 			}
 			vmc_func* func2 = vmc_func_find(p, &signature);
 			if (func2 == NULL) {
-				return vmc_compiler_message_not_implemented(&c->messages, t);
+				return vmc_compiler_message_not_implemented(s);
 			}
 			instr.header.opcode = 0;
 			instr.header.icode = VMI_CALL;
@@ -700,7 +700,7 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 			vmc_write(c, &instr, sizeof(vmi_instr_call));
 		}
 		else {
-			return vmc_compiler_message_not_implemented(&c->messages, t);
+			return vmc_compiler_message_not_implemented(s);
 		}
 
 		vmc_lexer_next(t);
@@ -760,10 +760,7 @@ BOOL _vmc_parse_keyword_extern(const vmc_compiler_scope* s)
 
 BOOL _vmc_parse_keyword_import(const vmc_compiler_scope* s)
 {
-	vmc_compiler* const c = s->compiler;
-	vmc_lexer_token* const t = s->token;
-
-	return vmc_compiler_message_not_implemented(&c->messages, t);
+	return vmc_compiler_message_not_implemented(s);
 }
 
 BOOL _vmc_parse_keyword(const vmc_compiler_scope* s)

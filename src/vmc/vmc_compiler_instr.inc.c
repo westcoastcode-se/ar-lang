@@ -188,7 +188,7 @@ FUNC_BODY(ldc_f4)
 	vmi_instr_ldc_i32 instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT && t->type != VMC_LEXER_TYPE_DECIMAL)
-		return vmc_compiler_message_expected_decimal(&c->messages, t);
+		return vmc_compiler_message_expected_decimal(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC;
 	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT32;
@@ -208,7 +208,7 @@ FUNC_BODY(ldc_f8)
 	vmi_instr_ldc_i64 instr;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT && t->type != VMC_LEXER_TYPE_DECIMAL)
-		return vmc_compiler_message_expected_decimal(&c->messages, t);
+		return vmc_compiler_message_expected_decimal(s);
 	instr.opcode = 0;
 	instr.icode = VMI_LDC_I8;
 	instr.props1 = VMI_INSTR_CONST_PROP1_FLOAT64;
@@ -258,12 +258,12 @@ FUNC_BODY(lda)
 
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT) {
-		return vmc_compiler_message_expected_index(&c->messages, t);
+		return vmc_compiler_message_expected_index(s);
 	}
 
 	index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 	if (func->args_count == 0 || func->args_count <= index) {
-		return vmc_compiler_message_invalid_index(&c->messages, t, index, 0, func->args_count - 1);
+		return vmc_compiler_message_invalid_index(s, index, 0, func->args_count - 1);
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_LDA;
@@ -283,12 +283,12 @@ FUNC_BODY(lda_a)
 
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT) {
-		return vmc_compiler_message_expected_index(&c->messages, t);
+		return vmc_compiler_message_expected_index(s);
 	}
 
 	index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 	if (func->args_count == 0 || func->args_count <= index) {
-		return vmc_compiler_message_invalid_index(&c->messages, t, index, 0, func->args_count - 1);
+		return vmc_compiler_message_invalid_index(s, index, 0, func->args_count - 1);
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_LDA_A;
@@ -308,12 +308,12 @@ FUNC_BODY(str)
 
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT) {
-		return vmc_compiler_message_expected_index(&c->messages, t);
+		return vmc_compiler_message_expected_index(s);
 	}
 
 	index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 	if (func->returns_count == 0 || func->returns_count <= index) {
-		return vmc_compiler_message_invalid_index(&c->messages, t, index, 0, func->returns_count - 1);
+		return vmc_compiler_message_invalid_index(s, index, 0, func->returns_count - 1);
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_STR;
@@ -347,12 +347,12 @@ FUNC_BODY(ldl)
 
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT) {
-		return vmc_compiler_message_expected_index(&c->messages, t);
+		return vmc_compiler_message_expected_index(s);
 	}
 
 	index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 	if (func->locals_count == 0 || func->locals_count <= index) {
-		return vmc_compiler_message_invalid_index(&c->messages, t, index, 0, func->locals_count - 1);
+		return vmc_compiler_message_invalid_index(s, index, 0, func->locals_count - 1);
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_LDL;
@@ -372,12 +372,12 @@ FUNC_BODY(stl)
 
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT) {
-		return vmc_compiler_message_expected_index(&c->messages, t);
+		return vmc_compiler_message_expected_index(s);
 	}
 
 	index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 	if (func->locals_count == 0 || func->locals_count <= index) {
-		return vmc_compiler_message_invalid_index(&c->messages, t, index, 0, func->locals_count - 1);
+		return vmc_compiler_message_invalid_index(s, index, 0, func->locals_count - 1);
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_STL;
@@ -397,12 +397,12 @@ FUNC_BODY(ldl_a)
 
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_INT) {
-		return vmc_compiler_message_expected_index(&c->messages, t);
+		return vmc_compiler_message_expected_index(s);
 	}
 
 	index = (vm_int32)strtoi64(t->string.start, vm_string_length(&t->string));
 	if (func->locals_count == 0 || func->locals_count <= index) {
-		return vmc_compiler_message_invalid_index(&c->messages, t, index, 0, func->locals_count - 1);
+		return vmc_compiler_message_invalid_index(s, index, 0, func->locals_count - 1);
 	}
 	instr.opcode = 0;
 	instr.icode = VMI_LDL_A;
@@ -574,7 +574,7 @@ FUNC_BODY(allocs)
 			return vmc_compiler_message_expected_int(s);
 		}
 		else if (num_bytes > UINT16_MAX) {
-			return vmc_compiler_message_not_implemented(&c->messages, t);
+			return vmc_compiler_message_not_implemented(s);
 		}
 		instr.size = num_bytes;
 	}
@@ -607,7 +607,7 @@ FUNC_BODY(frees)
 			return vmc_compiler_message_expected_int(s);
 		}
 		else if (num_bytes > UINT16_MAX) {
-			return vmc_compiler_message_not_implemented(&c->messages, t);
+			return vmc_compiler_message_not_implemented(s);
 		}
 		instr.size = num_bytes;
 	}
@@ -640,7 +640,7 @@ FUNC_BODY(alloch)
 			return vmc_compiler_message_expected_int(s);
 		}
 		else if (num_bytes > UINT16_MAX) {
-			return vmc_compiler_message_not_implemented(&c->messages, t);
+			return vmc_compiler_message_not_implemented(s);
 		}
 		instr.size = num_bytes;
 	}
@@ -673,7 +673,7 @@ FUNC_BODY(freeh)
 			return vmc_compiler_message_expected_int(s);
 		}
 		else if (num_bytes > UINT16_MAX) {
-			return vmc_compiler_message_not_implemented(&c->messages, t);
+			return vmc_compiler_message_not_implemented(s);
 		}
 		instr.size = num_bytes;
 	}
@@ -700,11 +700,11 @@ FUNC_BODY(copy_s)
 	vmi_opcode opcode = VMI_COPY_S;
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_KEYWORD)
-		return vmc_compiler_message_expected_type(&c->messages, t);
+		return vmc_compiler_message_expected_type(s);
 	if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
 		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32);
 	else
-		return vmc_compiler_message_not_implemented(&c->messages, t);
+		return vmc_compiler_message_not_implemented(s);
 	_vmc_emit_opcode(s, opcode);
 	return TRUE;
 }
@@ -719,13 +719,13 @@ FUNC_BODY(add)
 
 	vmc_lexer_next(t);
 	if (t->type != VMC_LEXER_TYPE_KEYWORD)
-		return vmc_compiler_message_expected_type(&c->messages, t);
+		return vmc_compiler_message_expected_type(s);
 	if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
 		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32);
 	else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int16)))
 		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16);
 	else
-		return vmc_compiler_message_not_implemented(&c->messages, t);
+		return vmc_compiler_message_not_implemented(s);
 	_vmc_emit_opcode(s, opcode);
 	return TRUE;
 }

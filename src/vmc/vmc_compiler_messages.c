@@ -39,8 +39,11 @@ BOOL vmc_compiler_message_expected_identifier(const vmc_compiler_scope* s)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_type(const vmc_compiler_scope* s)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -50,8 +53,11 @@ BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer_token* t)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_type_not_found(const vmc_compiler_scope* s)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -61,8 +67,11 @@ BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer_token* t)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_keyword(const vmc_compiler_scope* s)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -72,8 +81,11 @@ BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer_token* t)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_index(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_index(const vmc_compiler_scope* s)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -97,8 +109,11 @@ BOOL vmc_compiler_message_expected_int(const vmc_compiler_scope* s)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_string(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_string(const vmc_compiler_scope* s)
 {
+	const vmc_lexer_token* const t = s->token;
+	vm_messages* const m = &s->compiler->messages;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -108,8 +123,11 @@ BOOL vmc_compiler_message_expected_string(vm_messages* m, vmc_lexer_token* t)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_decimal(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_decimal(const vmc_compiler_scope* s)
 {
+	const vmc_lexer_token* const t = s->token;
+	vm_messages* const m = &s->compiler->messages;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -119,8 +137,11 @@ BOOL vmc_compiler_message_expected_decimal(vm_messages* m, vmc_lexer_token* t)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_not_implemented(const vmc_compiler_scope* s)
 {
+	const vmc_lexer_token* const t = s->token;
+	vm_messages* const m = &s->compiler->messages;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -130,8 +151,11 @@ BOOL vmc_compiler_message_not_implemented(vm_messages* m, vmc_lexer_token* t)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer_token* t, vm_int32 index, vm_int32 min, vm_int32 max)
+BOOL vmc_compiler_message_invalid_index(const vmc_compiler_scope* s, vm_int32 index, vm_int32 min, vm_int32 max)
 {
+	const vmc_lexer_token* const t = s->token;
+	vm_messages* const m = &s->compiler->messages;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -141,8 +165,11 @@ BOOL vmc_compiler_message_invalid_index(vm_messages* m, vmc_lexer_token* t, vm_i
 		index, min, max, line, line_offset);
 }
 
-BOOL vmc_compiler_message_invalid_size(vm_messages* m, vmc_lexer_token* t, vm_int32 size, vm_int32 min, vm_int32 max)
+BOOL vmc_compiler_message_invalid_size(const vmc_compiler_scope* s, vm_int32 size, vm_int32 min, vm_int32 max)
 {
+	const vmc_lexer_token* const t = s->token;
+	vm_messages* const m = &s->compiler->messages;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
