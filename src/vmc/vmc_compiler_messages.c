@@ -193,8 +193,11 @@ BOOL vmc_compiler_message_unexpected_eof(const vmc_compiler_scope* s)
 		line, line_offset);
 }
 
-BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer_token* t, char expected)
+BOOL vmc_compiler_message_syntax_error(const vmc_compiler_scope* s, char expected)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -204,8 +207,11 @@ BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer_token* t, char 
 		expected, vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer_token* t, const vm_string* signature)
+BOOL vmc_compiler_message_func_body_exists(const vmc_compiler_scope* s, const vm_string* signature)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -215,8 +221,11 @@ BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer_token* t, c
 		vm_string_length(signature), signature->start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer_token* t, const vm_string* memory_marker)
+BOOL vmc_compiler_message_memory_marker_exists(const vmc_compiler_scope* s, const vm_string* memory_marker)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -226,8 +235,11 @@ BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer_token* 
 		vm_string_length(memory_marker), memory_marker->start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer_token* t, vm_int32 size)
+BOOL vmc_compiler_message_defarray_to_small(const vmc_compiler_scope* s, vm_int32 size)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
@@ -237,8 +249,11 @@ BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer_token* t, 
 		size, line, line_offset);
 }
 
-BOOL vmc_compiler_message_unexpected_newline(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_unexpected_newline(const vmc_compiler_scope* s)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,

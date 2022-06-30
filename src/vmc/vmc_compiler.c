@@ -203,7 +203,7 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 		temp_token = *t;
 		vmc_lexer_next(t);
 		if (t->type != VMC_LEXER_TYPE_SQUARE_R) {
-			return vmc_compiler_message_syntax_error(&c->messages, t, ']');
+			return vmc_compiler_message_syntax_error(s, ']');
 		}
 		vmc_lexer_next(t);
 		
@@ -256,7 +256,7 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 		// Dot delimiter
 		vmc_lexer_next(t);
 		if (t->type != VMC_LEXER_TYPE_DOT) {
-			return vmc_compiler_message_syntax_error(&c->messages, t, '.');
+			return vmc_compiler_message_syntax_error(s, '.');
 		}
 		// Next keyword
 		vmc_lexer_next(t);
@@ -287,7 +287,7 @@ BOOL _vmc_compiler_parse_type_decl_without_name(const vmc_compiler_scope* s,
 
 	// Expected a '(' token
 	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_PARAN_L))
-		return vmc_compiler_message_syntax_error(&c->messages, t, '(');
+		return vmc_compiler_message_syntax_error(s, '(');
 
 	// Parse until we reach that end ')' token
 	while (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_PARAN_R)) {
@@ -329,7 +329,7 @@ BOOL _vmc_parse_keyword_fn_locals(const vmc_compiler_scope* s, vmc_func* func)
 
 	// Expected a '(' token
 	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_PARAN_L))
-		return vmc_compiler_message_syntax_error(&c->messages, t, '(');
+		return vmc_compiler_message_syntax_error(s, '(');
 
 	// Parse until we reach that end ')' token
 	while (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_PARAN_R)) {
@@ -384,7 +384,7 @@ BOOL _vmc_parse_function_arg_names(const vmc_compiler_scope* s, vmc_func* func)
 
 	// Expected a (
 	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_PARAN_L))
-		return vmc_compiler_message_syntax_error(&c->messages, t, '(');
+		return vmc_compiler_message_syntax_error(s, '(');
 	
 	// Read each argument name
 	for (int i = 0; i < func->args_count; ++i) {
@@ -399,7 +399,7 @@ BOOL _vmc_parse_function_arg_names(const vmc_compiler_scope* s, vmc_func* func)
 
 	// Expected a )
 	if (t->type != VMC_LEXER_TYPE_PARAN_R)
-		return vmc_compiler_message_syntax_error(&c->messages, t, ')');
+		return vmc_compiler_message_syntax_error(s, ')');
 	return TRUE;
 }
 
@@ -445,14 +445,15 @@ BOOL _vmc_func_add_unique_marker_addr(vmc_compiler* c, vmc_func* func, const vm_
 }
 
 // Parse the source code for a signature
-BOOL _vmc_seek_func_signature(vmc_compiler* c, vmc_lexer_token* t, vm_string* signature)
+BOOL _vmc_seek_func_signature(const vmc_compiler_scope* s, vm_string* signature)
 {
+	vmc_lexer_token* const t = s->token;
 	int num_params;
 	
 	// Seek until we've reached the end param for the args
 	signature->start = t->string.start;
 	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_PARAN_L)) {
-		return vmc_compiler_message_syntax_error(&c->messages, t, '(');
+		return vmc_compiler_message_syntax_error(s, '(');
 	}
 	num_params = 1;
 	while (num_params > 0) {
@@ -462,12 +463,12 @@ BOOL _vmc_seek_func_signature(vmc_compiler* c, vmc_lexer_token* t, vm_string* si
 		else if (t->type == VMC_LEXER_TYPE_PARAN_R)
 			num_params--;
 		else if (t->type == VMC_LEXER_TYPE_NEWLINE)
-			return vmc_compiler_message_unexpected_newline(&c->messages, t);
+			return vmc_compiler_message_unexpected_newline(s);
 	}
 
 	// Seek until we've reached the end param for the returns
 	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_PARAN_L)) {
-		return vmc_compiler_message_syntax_error(&c->messages, t, '(');
+		return vmc_compiler_message_syntax_error(s, '(');
 	}
 	num_params = 1;
 	while (num_params > 0) {
@@ -477,7 +478,7 @@ BOOL _vmc_seek_func_signature(vmc_compiler* c, vmc_lexer_token* t, vm_string* si
 		else if (t->type == VMC_LEXER_TYPE_PARAN_R)
 			num_params--;
 		else if (t->type == VMC_LEXER_TYPE_NEWLINE)
-			return vmc_compiler_message_unexpected_newline(&c->messages, t);
+			return vmc_compiler_message_unexpected_newline(s);
 	}
 	signature->end = t->string.end;
 	return TRUE;
@@ -526,7 +527,7 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 
 	// Expected a {
 	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_BRACKET_L))
-		return vmc_compiler_message_syntax_error(&c->messages, t, '{');
+		return vmc_compiler_message_syntax_error(s, '{');
 	vmc_lexer_next(t);
 
 	// Body is now definde and we know where the body bytecode starts
@@ -561,7 +562,7 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 			if (!vmc_lexer_type_is_keyword(t->type))
 				return vmc_compiler_message_expected_keyword(s);
 			if (!_vmc_func_add_unique_marker_addr(c, func, &t->string))
-				return vmc_compiler_message_memory_marker_exists(&c->messages, t, &t->string);
+				return vmc_compiler_message_memory_marker_exists(s, &t->string);
 			vmc_lexer_next(t);
 			continue;
 		}
@@ -686,7 +687,7 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 			if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_KEYWORD)) {
 				return vmc_compiler_message_expected_keyword(s);
 			}
-			if (!_vmc_seek_func_signature(c, t, &signature)) {
+			if (!_vmc_seek_func_signature(s, &signature)) {
 				return FALSE;
 			}
 			vmc_func* func2 = vmc_func_find(p, &signature);

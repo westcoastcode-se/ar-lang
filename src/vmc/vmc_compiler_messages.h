@@ -113,11 +113,11 @@ extern BOOL vmc_compiler_message_not_implemented(const vmc_compiler_scope* s);
 extern BOOL vmc_compiler_message_invalid_index(const vmc_compiler_scope* s, vm_int32 index, vm_int32 min, vm_int32 max);
 extern BOOL vmc_compiler_message_invalid_size(const vmc_compiler_scope* s, vm_int32 size, vm_int32 min, vm_int32 max);
 extern BOOL vmc_compiler_message_unexpected_eof(const vmc_compiler_scope* s);
-extern BOOL vmc_compiler_message_syntax_error(vm_messages* m, vmc_lexer_token* t, char expected);
-extern BOOL vmc_compiler_message_func_body_exists(vm_messages* m, vmc_lexer_token* t, const vm_string* signature);
-extern BOOL vmc_compiler_message_memory_marker_exists(vm_messages* m, vmc_lexer_token* t, const vm_string* memory_marker);
-extern BOOL vmc_compiler_message_defarray_to_small(vm_messages* m, vmc_lexer_token* t, vm_int32 size);
-extern BOOL vmc_compiler_message_unexpected_newline(vm_messages* m, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_syntax_error(const vmc_compiler_scope* s, char expected);
+extern BOOL vmc_compiler_message_func_body_exists(const vmc_compiler_scope* s, const vm_string* signature);
+extern BOOL vmc_compiler_message_memory_marker_exists(const vmc_compiler_scope* s, const vm_string* memory_marker);
+extern BOOL vmc_compiler_message_defarray_to_small(const vmc_compiler_scope* s, vm_int32 size);
+extern BOOL vmc_compiler_message_unexpected_newline(const vmc_compiler_scope* s);
 
 #endif
 
