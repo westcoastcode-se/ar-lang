@@ -99,9 +99,9 @@ enum vmc_compiler_messages
 // Functions which helps adding messages to the messages container
 //
 
-extern BOOL vmc_compiler_message_panic(vm_message* m, const char* str);
+extern BOOL vmc_compiler_message_panic(const vmc_compiler_scope* s, const char* str);
 extern BOOL vmc_compiler_message_unknown_token(const vmc_compiler_scope* s);
-extern BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer_token* t);
+extern BOOL vmc_compiler_message_expected_identifier(const vmc_compiler_scope* s);
 extern BOOL vmc_compiler_message_expected_type(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_type_not_found(vm_messages* m, vmc_lexer_token* t);
 extern BOOL vmc_compiler_message_expected_keyword(vm_messages* m, vmc_lexer_token* t);

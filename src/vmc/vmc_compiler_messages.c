@@ -1,7 +1,8 @@
 #include "vmc_compiler_messages.h"
 
-BOOL vmc_compiler_message_panic(vm_message* m, const char* str)
+BOOL vmc_compiler_message_panic(const vmc_compiler_scope* s, const char* str)
 {
+	vm_message* const m = &s->compiler->panic_error_message;
 	m->prefix = VMC_COMPILER_MESSAGE_PREFIX;
 	m->code = VMC_COMPILER_MSG_PANIC;
 	m->next = NULL;
@@ -24,8 +25,11 @@ BOOL vmc_compiler_message_unknown_token(const vmc_compiler_scope* s)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmc_compiler_message_expected_identifier(vm_messages* m, vmc_lexer_token* t)
+BOOL vmc_compiler_message_expected_identifier(const vmc_compiler_scope* s)
 {
+	vm_messages* const m = &s->compiler->messages;
+	const vmc_lexer_token* const t = s->token;
+
 	int line, line_offset, _;
 	vmc_lexer_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
