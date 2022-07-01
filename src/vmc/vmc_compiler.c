@@ -543,6 +543,61 @@ BOOL _vmc_parse_call(const vmc_compiler_scope* s, vmc_func* func)
 	return TRUE;
 }
 
+BOOL _vmc_parse_jmpt(const vmc_compiler_scope* s, vmc_func* func)
+{
+	vmc_compiler* const c = s->compiler;
+	vmc_lexer_token* const t = s->token;
+	vmc_package* const p = s->package;
+
+	vmi_instr_jmp instr;
+	vmc_linker_marker_addr* marker;
+	instr.opcode = 0;
+	instr.icode = VMI_JMP;
+	instr.props1 = VMI_INSTR_JMP_PROP1_TRUE;
+	instr.destination = 0; // Jump forward one instruction
+
+	vmc_lexer_next(t);
+	if (t->type != VMC_LEXER_TYPE_KEYWORD) {
+		return vmc_compiler_message_expected_keyword(s);
+	}
+
+	// Add a new marker. This is so that we can know the actual memory address during runtime.
+	marker = _vmc_func_add_marker_addr(c, func, &t->string);
+	if (marker == NULL) {
+		vmc_compiler_message_panic(s, "out of memory");
+		return FALSE;
+	}
+
+	if (vmc_linker_marker_add_inject_addr(&c->linker, marker,
+		vmc_compiler_bytecode_field_offset(c, OFFSETOF(vmi_instr_jmp, destination))) == NULL) {
+		vmc_compiler_message_panic(s, "out of memory");
+		return FALSE;
+	}
+	vmc_write(c, &instr, sizeof(vmi_instr_jmp));
+	return TRUE;
+}
+
+BOOL _vmc_parse_ret(const vmc_compiler_scope* s, vmc_func* func)
+{
+	vmc_compiler* const c = s->compiler;
+
+	vmi_instr_ret instr;
+	instr.opcode = 0;
+	instr.icode = VMI_RET;
+	instr.pop_stack_size = func->args_total_size;
+	instr.pop_locals_size = func->locals_total_size;
+#if defined(VM_STACK_DEBUG)
+	// The values pushed on the stack when the function starts are
+	// 1. Pointer to the return address location
+	// 2. The previous ebp
+	// 3. return values
+	// 4. arguments
+	instr.expected_ebp_offset = sizeof(vmi_ip) + sizeof(vm_byte*) + func->returns_total_size + func->args_total_size;
+#endif
+	vmc_write(c, &instr, sizeof(vmi_instr_ret));
+	return TRUE;
+}
+
 #include "vmc_compiler_instr.inc.c"
 
 BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
@@ -665,50 +720,15 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(jmpt))) {
 			// jmpt <destination>
-
-			vmi_instr_jmp instr;
-			vmc_linker_marker_addr* marker;
-			instr.opcode = 0;
-			instr.icode = VMI_JMP;
-			instr.props1 = VMI_INSTR_JMP_PROP1_TRUE;
-			instr.destination = 0; // Jump forward one instruction
-
-			vmc_lexer_next(t);
-			if (t->type != VMC_LEXER_TYPE_KEYWORD) {
-				return vmc_compiler_message_expected_keyword(s);
-			}
-
-			// Add a new marker. This is so that we can know the actual memory address during runtime.
-			marker = _vmc_func_add_marker_addr(c, func, &t->string);
-			if (marker == NULL) {
-				vmc_compiler_message_panic(s, "out of memory");
+			if (!_vmc_parse_jmpt(s, func)) {
 				return FALSE;
 			}
-
-			if (vmc_linker_marker_add_inject_addr(&c->linker, marker, 
-				vmc_compiler_bytecode_field_offset(c, OFFSETOF(vmi_instr_jmp, destination))) == NULL) {
-				vmc_compiler_message_panic(s, "out of memory");
-				return FALSE;
-			}
-			vmc_write(c, &instr, sizeof(vmi_instr_jmp));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(ret))) {
 			// ret
-
-			vmi_instr_ret instr;
-			instr.opcode = 0;
-			instr.icode = VMI_RET;
-			instr.pop_stack_size = func->args_total_size;
-			instr.pop_locals_size = func->locals_total_size;
-#if defined(VM_STACK_DEBUG)
-			// The values pushed on the stack when the function starts are
-			// 1. Pointer to the return address location
-			// 2. The previous ebp
-			// 3. return values
-			// 4. arguments
-			instr.expected_ebp_offset = sizeof(vmi_ip) + sizeof(vm_byte*) + func->returns_total_size + func->args_total_size;
-#endif
-			vmc_write(c, &instr, sizeof(vmi_instr_ret));
+			if (!_vmc_parse_ret(s, func)) {
+				return FALSE;
+			}
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
 			if (!_vmc_parse_call(s, func))
