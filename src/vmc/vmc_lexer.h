@@ -195,7 +195,7 @@ extern void vmc_lexer_next_newline(vmc_lexer_token* token);
 extern BOOL vmc_lexer_next_type(vmc_lexer_token* token, vmc_lexer_token_type type);
 
 // Peek at the next character
-extern char vmc_lexer_peek(vmc_lexer* l, vmc_lexer_token* t);
+extern char vmc_lexer_peek(vmc_lexer_token* t);
 
 // Get metadata where we are
 inline static void vmc_lexer_get_metadata(const vmc_lexer_token* t, int* line, int* line_offset, int* offset)

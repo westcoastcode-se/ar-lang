@@ -491,7 +491,7 @@ BOOL vmc_lexer_next_type(vmc_lexer_token* token, vmc_lexer_token_type type)
 	return token->type == type;
 }
 
-char vmc_lexer_peek(vmc_lexer* l, vmc_lexer_token* t)
+char vmc_lexer_peek(vmc_lexer_token* t)
 {
 	return *(t->source + 1);
 }
