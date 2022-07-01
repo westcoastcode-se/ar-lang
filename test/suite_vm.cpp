@@ -72,14 +72,6 @@ struct suite_vm_utils : utils_vm
 		}
 	}
 
-	void verify_stack_size(vmi_thread* t, size_t expected_size)
-	{
-		const size_t size = (size_t)(t->stack.top - t->stack.blocks);
-		if (expected_size != size) {
-			throw_(error() << "expected stack size to be " << expected_size << " but was " << size);
-		}
-	}
-
 	void push_value(vmi_thread* t, vm_int16 value)
 	{
 		vmi_thread_push_i16(t, value);

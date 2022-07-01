@@ -102,14 +102,6 @@ struct suite_vmp_tests : utils_vm
 		vmi_thread_push_ptr(t, ptr);
 	}
 
-	void verify_stack_size(vmi_thread* t, size_t expected_size)
-	{
-		const size_t size = (size_t)(t->stack.top - t->stack.blocks);
-		if (expected_size != size) {
-			throw_(error() << "expected stack size to be " << expected_size << " but was " << size);
-		}
-	}
-
 	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int8 value)
 	{
 		const vm_int8* byte = (vm_int8*)(t->stack.blocks + offset);
@@ -184,7 +176,8 @@ struct suite_vmp_tests : utils_vm
 		return vmp_package_find_type(p, &type_name_str);
 	}
 
-	void add()
+	template<typename T>
+	void add_test(T lhs, T rhs)
 	{
 		begin();
 
@@ -194,9 +187,9 @@ struct suite_vmp_tests : utils_vm
 
 		// Create the Add function and add two integer types
 		auto add = vmp_func_newsz("Add", 3);
-		auto arg1 = vmp_func_new_arg(add, get_type("vm", "int32"));
-		auto arg2 = vmp_func_new_arg(add, get_type("vm", "int32"));
-		auto ret1 = vmp_func_new_return(add, get_type("vm", "int32"));
+		auto arg1 = vmp_func_new_arg(add, get_type("vm", string(name<T>())));
+		auto arg2 = vmp_func_new_arg(add, get_type("vm", string(name<T>())));
+		auto ret1 = vmp_func_new_return(add, get_type("vm", string(name<T>())));
 		vmp_package_add_func(main_package, add);
 
 		// Add body:
@@ -208,7 +201,7 @@ struct suite_vmp_tests : utils_vm
 		vmp_func_begin_body(add);
 		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_lda(0));
-		vmp_func_add_instr(add, vmp_instr_add(VMI_INSTR_PROP_INT32));
+		vmp_func_add_instr(add, vmp_instr_add(props1<T>()));
 		vmp_func_add_instr(add, vmp_instr_str(0));
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
@@ -216,17 +209,23 @@ struct suite_vmp_tests : utils_vm
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
-		push_value(t, 10);
-		push_value(t, 20);
+		vmi_thread_reserve_stack(t, sizeof(T));
+		push_value(t, (T)lhs);
+		push_value(t, (T)rhs);
 		invoke(t, "Add");
 
-		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, 10 + 20);
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)(lhs + rhs));
 
 		destroy(t);
 
 		end();
+	}
+
+	void add()
+	{
+		TEST_FN(add_test<vm_int32>(10, 20));
+		TEST_FN(add_test<vm_int16>(10, 20));
 	}
 
 	void operator()()

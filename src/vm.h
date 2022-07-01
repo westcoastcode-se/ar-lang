@@ -5,5 +5,6 @@
 #include "vmc/vmc_compiler.h"
 #include "interpreter/vmi_thread.h"
 #include "interpreter/vmi_process.h"
+#include "vmp/vmp.h"
 
 #endif
