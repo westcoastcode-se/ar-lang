@@ -23,6 +23,10 @@ extern void vm_bytestream_init(vm_bytestream* b);
 // Release the internals of the supplied bytestream. This is only needed if the bytestream is initialized in the first place
 extern void vm_bytestream_release(vm_bytestream* b);
 
+// Detach the bytecode built by the bytestream. This ensures that the internals are not deleted when releasing the stream.
+// This means that the one calling this method is responsible for freeing the memory themselves
+extern vm_byte* vm_bytestream_detach(vm_bytestream* b);
+
 // Initialize the supplied bytestream by manually set the internals. You should not release this bytestream if you
 // are using this method
 extern void vm_bytestream_set(vm_bytestream* b, vm_byte* memory, vm_byte* end);
@@ -34,7 +38,7 @@ extern vm_int32 vm_bytestream_resize(vm_bytestream* b, vm_int32 size);
 extern vm_byte* vm_bytestream_reserve(vm_bytestream* b, vm_int32 size);
 
 // Write the supplied memory using the supplied bytes. Returns a pointer to where we've written the data
-extern vm_byte* vm_bytestream_write(vm_bytestream* b, void* bytes, vm_int32 size);
+extern vm_byte* vm_bytestream_write(vm_bytestream* b, const void* bytes, vm_int32 size);
 
 // Write a null value
 extern void vm_bytestream_write_null(vm_bytestream* b);

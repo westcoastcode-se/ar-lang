@@ -11,13 +11,23 @@ void vm_bytestream_init(vm_bytestream* b)
 
 void vm_bytestream_release(vm_bytestream* b)
 {
-	free(b->memory);
+	if (b->memory != NULL)
+		free(b->memory);
 }
 
 void vm_bytestream_set(vm_bytestream* b, vm_byte* memory, vm_byte* end)
 {
 	b->memory = b->current = memory;
 	b->end = end;
+}
+
+vm_byte* vm_bytestream_detach(vm_bytestream* b)
+{
+	vm_byte* const result = b->memory;
+	b->memory = NULL;
+	b->current = NULL;
+	b->end = NULL;
+	return result;
 }
 
 vm_int32 vm_bytestream_resize(vm_bytestream* b, vm_int32 size)
@@ -57,7 +67,7 @@ vm_byte* vm_bytestream_reserve(vm_bytestream* b, vm_int32 size)
 	return b->current - size;
 }
 
-vm_byte* vm_bytestream_write(vm_bytestream* b, void* bytes, vm_int32 size)
+vm_byte* vm_bytestream_write(vm_bytestream* b, const void* bytes, vm_int32 size)
 {
 	vm_byte* dest = vm_bytestream_reserve(b, size);
 	if (dest == NULL)

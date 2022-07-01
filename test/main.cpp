@@ -6,12 +6,15 @@ bool _tests_success = true;
 extern void suite_vm();
 // Verify lexer
 extern void suite_lexer();
+// Verify that you can build bytecode using the builder interface
+extern void suite_vmp();
 
 int main()
 {
 	// Suites
-	suite_vm();
 	suite_lexer();
+	suite_vm();
+	suite_vmp();
 
 	// Verify result
 	if (!_tests_success)

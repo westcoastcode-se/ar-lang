@@ -1,91 +1,8 @@
-#include "test.hpp"
-
-template<typename T>
-struct suite_vm_helper
-{
-};
-
-template<>
-struct suite_vm_helper<vm_int8>
-{
-	static constexpr auto name = "int8";
-	static constexpr auto shorthand = "i1";
-	static constexpr auto memory = "1";
-};
-
-template<>
-struct suite_vm_helper<vm_int16>
-{
-	static constexpr auto name = "int16";
-	static constexpr auto shorthand = "i2";
-	static constexpr auto memory = "2";
-};
-
-template<>
-struct suite_vm_helper<vm_int32>
-{
-	static constexpr auto name = "int32";
-	static constexpr auto shorthand = "i4";
-	static constexpr auto memory = "4";
-};
-
-template<>
-struct suite_vm_helper<vm_int64>
-{
-	static constexpr auto name = "int64";
-	static constexpr auto shorthand = "i8";
-	static constexpr auto memory = "8";
-};
-
-template<>
-struct suite_vm_helper<vm_float32>
-{
-	static constexpr auto name = "float32";
-	static constexpr auto shorthand = "f4";
-	static constexpr auto memory = "4";
-};
-
-template<>
-struct suite_vm_helper<vm_float64>
-{
-	static constexpr auto name = "float64";
-	static constexpr auto shorthand = "f8";
-	static constexpr auto memory = "8";
-};
+#include "utils.hpp"
 
 // Base class for all vm tests
-struct suite_vm_utils : test_utils
+struct suite_vm_utils : utils_vm
 {
-	template<typename T>
-	static const char* name() {
-		return suite_vm_helper<T>::name;
-	}
-
-	template<typename T>
-	static const char* name_of(T) {
-		return suite_vm_helper<T>::name;
-	}
-
-	template<typename T>
-	static const char* shorthand() {
-		return suite_vm_helper<T>::shorthand;
-	}
-
-	template<typename T>
-	static const char* shorthand_of(T) {
-		return suite_vm_helper<T>::shorthand;
-	}
-
-	template<typename T>
-	static const char* memory() {
-		return suite_vm_helper<T>::memory;
-	}
-
-	template<typename T>
-	static const char* memory_of(T) {
-		return suite_vm_helper<T>::memory;
-	}
-
 	void verify_compiler(vmc_compiler* c)
 	{
 		if (!vmc_compiler_success(c)) {
@@ -163,14 +80,6 @@ struct suite_vm_utils : test_utils
 		}
 	}
 
-	template<typename T>
-	void verify_value(T value, T expected)
-	{
-		if (value != expected) {
-			throw_(error() << "expected value to be " << expected << " but was " << value);
-		}
-	}
-
 	void push_value(vmi_thread* t, vm_int16 value)
 	{
 		vmi_thread_push_i16(t, value);
@@ -194,24 +103,6 @@ struct suite_vm_utils : test_utils
 		return compiler;
 	}
 
-	void destroy(vmc_compiler* c)
-	{
-		vmc_compiler_destroy(c);
-		if (vmc_memory_test_bytes_left() == FALSE) {
-			throw_(error() << "not all memory was released");
-		}
-	}
-
-	void destroy(vmi_process* p)
-	{
-		vmi_process_destroy(p);
-	}
-
-	void destroy(vmi_thread* p)
-	{
-		vmi_thread_destroy(p);
-	}
-
 	void invoke(vmi_process* p, vmi_thread* t)
 	{
 		invoke(p, t, "Main");
@@ -230,6 +121,24 @@ struct suite_vm_utils : test_utils
 		const auto result = vmi_process_exec(p, t, func);
 		if (result != 0)
 			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << t->exit_reason);
+	}
+
+	void destroy(vmc_compiler* c)
+	{
+		vmc_compiler_destroy(c);
+		if (vmc_memory_test_bytes_left() == FALSE) {
+			throw_(error() << "not all memory was released");
+		}
+	}
+
+	void destroy(vmi_process* p)
+	{
+		vmi_process_destroy(p);
+	}
+
+	void destroy(vmi_thread* p)
+	{
+		vmi_thread_destroy(p);
 	}
 
 	vmi_process* process(vmc_compiler* c)

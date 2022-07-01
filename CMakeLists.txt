@@ -50,11 +50,17 @@ add_library(vm "src/vm_config.h"
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
     "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" 
     "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" 
-     "src/vmc/vmc_linker_marker.c" "src/vmc/vmc_linker_messages.h" "src/vmc/vmc_linker_messages.c" "src/vmc/vmc_debug.h" "src/vmc/vmc_debug.c" "src/vmc/lists/packages_list.h" "src/vmc/lists/packages_list.c")
+     "src/vmc/vmc_linker_marker.c" "src/vmc/vmc_linker_messages.h" "src/vmc/vmc_linker_messages.c" "src/vmc/vmc_debug.h" "src/vmc/vmc_debug.c" 
+     "src/vmp/vmp_list_packages.h" "src/vmc/lists/packages_list.c" 
+     
+     "src/vmp/vmp.h" "src/vmp/vmp_types.h" "src/vmp/vmp_instr.h" "src/vmp/vmp_instr.c" 
+     "src/vmp/vmp.c" "src/vmp/vmp_list_args.h" "src/vmp/vmp_list_args.c" "src/vmp/vmp_types.c" 
+     "src/vmp/vmp_list_packages.c" "src/vmp/vmp_list_packages.h" "src/vmp/vmp_list_types.h" 
+     "src/vmp/vmp_list_types.c" "src/vmp/vmp_list_funcs.c" "src/vmp/vmp_list_funcs.h"  "src/vmp/vmp_list_returns.c" "src/vmp/vmp_list_returns.h" "src/vmp/vmp_messages.h" "src/vmp/vmp_messages.c")
 
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)
 include_directories("${VM_INCLUDE_DIRS}")
-add_executable(test "test/main.cpp" "test/test.hpp" "test/suite_vm.cpp" "test/suite_lexer.cpp")
+add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_vm.cpp" "test/suite_lexer.cpp" "test/suite_vmp.cpp")
 target_link_libraries(test vm)

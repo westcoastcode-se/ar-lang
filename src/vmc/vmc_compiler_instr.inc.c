@@ -721,9 +721,9 @@ FUNC_BODY(add)
 	if (t->type != VMC_LEXER_TYPE_KEYWORD)
 		return vmc_compiler_message_expected_type(s);
 	if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int32)))
-		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT32);
+		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32);
 	else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(int16)))
-		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_ADD_PROP1_INT16);
+		opcode |= VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT16);
 	else
 		return vmc_compiler_message_not_implemented(s);
 	_vmc_emit_opcode(s, opcode);
