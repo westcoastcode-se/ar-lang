@@ -166,7 +166,7 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 		// Try find the "pointer" type. If not found then add it to it's owner package
 		pointer_type_name = vmc_string_pool_stringsz(&c->string_pool, memory, vm_string_length(&var->definition->name) + 1);
 		if (pointer_type_name == NULL) {
-			return vmc_compiler_message_panic(s, "out of memory");
+			return vmc_compiler_message_out_of_memory(s);
 		}
 
 		// Reuse the type if found, otherwise create it and add it to the package
@@ -224,7 +224,7 @@ BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 		// Try find the "pointer" type. If not found then add it to it's owner package
 		array_type_name = vmc_string_pool_stringsz(&c->string_pool, memory, (int)(memory_ptr - memory));
 		if (array_type_name == NULL) {
-			return vmc_compiler_message_panic(s, "out of memory");
+			return vmc_compiler_message_out_of_memory(s);
 		}
 
 		// Reuse the type if found, otherwise create it and add it to the package
@@ -564,14 +564,12 @@ BOOL _vmc_parse_jmpt(const vmc_compiler_scope* s, vmc_func* func)
 	// Add a new marker. This is so that we can know the actual memory address during runtime.
 	marker = _vmc_func_add_marker_addr(c, func, &t->string);
 	if (marker == NULL) {
-		vmc_compiler_message_panic(s, "out of memory");
-		return FALSE;
+		return vmc_compiler_message_out_of_memory(s);
 	}
 
 	if (vmc_linker_marker_add_inject_addr(&c->linker, marker,
 		vmc_compiler_bytecode_field_offset(c, OFFSETOF(vmi_instr_jmp, destination))) == NULL) {
-		vmc_compiler_message_panic(s, "out of memory");
-		return FALSE;
+		return vmc_compiler_message_out_of_memory(s);
 	}
 	vmc_write(c, &instr, sizeof(vmi_instr_jmp));
 	return TRUE;
@@ -756,7 +754,7 @@ BOOL _vmc_parse_keyword_fn(const vmc_compiler_scope* s, vm_bits32 modifiers)
 
 	vmc_func* const func = vmc_func_malloc();
 	if (func == NULL) {
-		return vmc_compiler_message_panic(s, "out of memory");
+		return vmc_compiler_message_out_of_memory(s);
 	}
 
 	if (!_vmc_parse_func_signature(s, func)) {
@@ -832,7 +830,7 @@ BOOL _vmc_parse_keyword_package(const vmc_compiler_scope* s)
 	if (inner_scope.package == NULL) {
 		inner_scope.package = vmc_package_new(s->compiler, &t->string);
 		if (inner_scope.package == NULL) {
-			return vmc_compiler_message_panic(s, "out of memory");
+			return vmc_compiler_message_out_of_memory(s);
 		}
 	}
 	

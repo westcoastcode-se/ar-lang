@@ -100,6 +100,7 @@ enum vmc_compiler_messages
 //
 
 extern BOOL vmc_compiler_message_panic(const vmc_compiler_scope* s, const char* str);
+extern BOOL vmc_compiler_message_out_of_memory(const vmc_compiler_scope* s);
 extern BOOL vmc_compiler_message_unknown_token(const vmc_compiler_scope* s);
 extern BOOL vmc_compiler_message_expected_identifier(const vmc_compiler_scope* s);
 extern BOOL vmc_compiler_message_expected_type(const vmc_compiler_scope* s);

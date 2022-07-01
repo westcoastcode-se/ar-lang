@@ -11,6 +11,11 @@ BOOL vmc_compiler_message_panic(const vmc_compiler_scope* s, const char* str)
 	return FALSE;
 }
 
+BOOL vmc_compiler_message_out_of_memory(const vmc_compiler_scope* s)
+{
+	return vmc_compiler_message_panic(s, "out of memory");
+}
+
 BOOL vmc_compiler_message_unknown_token(const vmc_compiler_scope* s)
 {
 	const vmc_lexer_token* const t = s->token;
