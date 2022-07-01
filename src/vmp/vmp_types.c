@@ -93,6 +93,16 @@ void vmp_arg_free(vmp_arg* a)
 	vmc_free(a);
 }
 
+void vmp_arg_set_name(vmp_arg* a, const vm_string* name)
+{
+	a->name = *name;
+}
+
+void vmp_arg_set_namesz(vmp_arg* a, const char* name, vm_int32 len)
+{
+	vm_string_setsz(&a->name, name, len);
+}
+
 vmp_return* vmp_return_new()
 {
 	vmp_return* p = (vmp_return*)vmc_malloc(sizeof(vmp_return));

@@ -188,6 +188,12 @@ extern vmp_arg* vmp_arg_new();
 // Destroy arg
 extern void vmp_arg_free(vmp_arg* a);
 
+// Set the name of the argument
+extern void vmp_arg_set_name(vmp_arg* a, const vm_string* name);
+
+// Set the name of the argument
+extern void vmp_arg_set_namesz(vmp_arg* a, const char* name, vm_int32 len);
+
 // New return value
 extern vmp_return* vmp_return_new();
 

@@ -8,6 +8,7 @@ vmp_constant vmp_const_i1(vm_int8 value)
 {
 	vmp_constant c;
 	c.i1 = value;
+	c.type = VMI_INSTR_CONST_PROP1_INT8;
 	return c;
 }
 
@@ -15,6 +16,7 @@ vmp_constant vmp_const_i2(vm_int16 value)
 {
 	vmp_constant c;
 	c.i2 = value;
+	c.type = VMI_INSTR_CONST_PROP1_INT16;
 	return c;
 }
 
@@ -22,6 +24,7 @@ vmp_constant vmp_const_i4(vm_int32 value)
 {
 	vmp_constant c;
 	c.i4 = value;
+	c.type = VMI_INSTR_CONST_PROP1_INT32;
 	return c;
 }
 
@@ -29,6 +32,7 @@ vmp_constant vmp_const_i8(vm_int64 value)
 {
 	vmp_constant c;
 	c.i8 = value;
+	c.type = VMI_INSTR_CONST_PROP1_INT64;
 	return c;
 }
 
@@ -36,6 +40,7 @@ vmp_constant vmp_const_f4(vm_float32 value)
 {
 	vmp_constant c;
 	c.f4 = value;
+	c.type = VMI_INSTR_CONST_PROP1_FLOAT32;
 	return c;
 }
 
@@ -43,6 +48,7 @@ vmp_constant vmp_const_f8(vm_float64 value)
 {
 	vmp_constant c;
 	c.f8 = value;
+	c.type = VMI_INSTR_CONST_PROP1_FLOAT64;
 	return c;
 }
 
@@ -50,6 +56,11 @@ vmp_constant vmp_const_ptr(vm_byte* value)
 {
 	vmp_constant c;
 	c.ptr = value;
+#ifdef VM_32BIT
+	c.type = VMI_INSTR_CONST_PROP1_INT32;
+#else
+	c.type = VMI_INSTR_CONST_PROP1_INT64;
+#endif
 	return c;
 }
 
@@ -140,6 +151,19 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		break;
 	}
 	case VMP_INSTR_LDC:
+	{
+		const vmp_instr_def_ldc* const cmd = (vmp_instr_def_ldc*)h;
+
+		vmi_instr_ldc_i32 instr;
+		instr.opcode = 0;
+		instr.icode = VMI_LDC;
+		instr.props1 = cmd->constant.type;
+		instr.i32 = cmd->constant.i4;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldc_i32))) {
+			return NULL;
+		}
+		break;
+	}
 	case VMP_INSTR_LDC_S:
 	case VMP_INSTR_ADD:
 	{

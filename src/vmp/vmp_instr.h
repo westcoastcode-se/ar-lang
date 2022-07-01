@@ -57,6 +57,7 @@ struct vmp_constant
 		};
 #endif
 	};
+	vm_int32 type;
 };
 typedef struct vmp_constant vmp_constant;
 

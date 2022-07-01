@@ -102,52 +102,28 @@ struct suite_vmp_tests : utils_vm
 		vmi_thread_push_ptr(t, ptr);
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int8 value)
-	{
-		const vm_int8* byte = (vm_int8*)(t->stack.blocks + offset);
-		if (*byte != value) {
-			throw_(error() << "expected stack value at " << offset << " to be " << (vm_int32)value << " but was " << (vm_int32)*byte);
-		}
+	vmp_constant vmp_const(vm_int8 value) {
+		return vmp_const_i1(value);
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int16 value)
-	{
-		const vm_int16* byte = (vm_int16*)(t->stack.blocks + offset);
-		if (*byte != value) {
-			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
-		}
+	vmp_constant vmp_const(vm_int16 value) {
+		return vmp_const_i2(value);
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int32 value)
-	{
-		const vm_int32* byte = (vm_int32*)(t->stack.blocks + offset);
-		if (*byte != value) {
-			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
-		}
+	vmp_constant vmp_const(vm_int32 value) {
+		return vmp_const_i4(value);
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int64 value)
-	{
-		const vm_int64* byte = (vm_int64*)(t->stack.blocks + offset);
-		if (*byte != value) {
-			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
-		}
+	vmp_constant vmp_const(vm_int64 value) {
+		return vmp_const_i8(value);
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_float32 value)
-	{
-		const vm_float32* byte = (vm_float32*)(t->stack.blocks + offset);
-		if (abs(*byte - value) > FLT_EPSILON) {
-			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
-		}
+	vmp_constant vmp_const(vm_float32 value) {
+		return vmp_const_f4(value);
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_float64 value)
-	{
-		const vm_float64* byte = (vm_float64*)(t->stack.blocks + offset);
-		if (abs(*byte - value) > DBL_EPSILON) {
-			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
-		}
+	vmp_constant vmp_const(vm_float64 value) {
+		return vmp_const_f8(value);
 	}
 
 	void invoke(vmi_thread* t, const char* entry_point)
@@ -188,19 +164,26 @@ struct suite_vmp_tests : utils_vm
 		// Create the Add function and add two integer types
 		auto add = vmp_func_newsz("Add", 3);
 		auto arg1 = vmp_func_new_arg(add, get_type("vm", string(name<T>())));
+		vmp_arg_set_namesz(arg1, "lhs", 3);
 		auto arg2 = vmp_func_new_arg(add, get_type("vm", string(name<T>())));
+		vmp_arg_set_namesz(arg2, "rhs", 3);
 		auto ret1 = vmp_func_new_return(add, get_type("vm", string(name<T>())));
 		vmp_package_add_func(main_package, add);
 
-		// Add body:
-		// lda 1
-		// lda 0
-		// add int32
-		// str 0
-		// ret
+		// {
+		//	lda 1
+		//	lda 0
+		//	add int32
+		//	lda 1
+		//	add int32
+		//	str 0
+		//	ret
+		// }
 		vmp_func_begin_body(add);
 		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_lda(0));
+		vmp_func_add_instr(add, vmp_instr_add(props1<T>()));
+		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_add(props1<T>()));
 		vmp_func_add_instr(add, vmp_instr_str(0));
 		vmp_func_add_instr(add, vmp_instr_ret());
@@ -210,12 +193,12 @@ struct suite_vmp_tests : utils_vm
 
 		auto t = thread();
 		vmi_thread_reserve_stack(t, sizeof(T));
-		push_value(t, (T)lhs);
 		push_value(t, (T)rhs);
+		push_value(t, (T)lhs);
 		invoke(t, "Add");
 
 		verify_stack_size(t, sizeof(T));
-		verify_stack(t, 0, (T)(lhs + rhs));
+		verify_stack(t, 0, (T)(lhs + rhs + rhs));
 
 		destroy(t);
 
@@ -228,9 +211,59 @@ struct suite_vmp_tests : utils_vm
 		TEST_FN(add_test<vm_int16>(10, 20));
 	}
 
+	template<typename T>
+	void ldc_T(T value)
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		auto primitive_type = get_type("vm", string(name<T>()));
+
+		// Create the Get function that returns a constant value
+		auto add = vmp_func_newsz("Get", 3);
+		auto ret1 = vmp_func_new_return(add, primitive_type);
+		vmp_package_add_func(main_package, add);
+
+		// {
+		//	ldc_<T> $value
+		//	str 0
+		//	ret
+		// }
+		vmp_func_begin_body(add);
+		vmp_func_add_instr(add, vmp_instr_ldc(primitive_type, vmp_const((T)value)));
+		vmp_func_add_instr(add, vmp_instr_str(0));
+		vmp_func_add_instr(add, vmp_instr_ret());
+		vmp_func_begin_end(add);
+
+		compile();
+
+		auto t = thread();
+		vmi_thread_reserve_stack(t, sizeof(T));
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(T));
+		verify_stack(t, 0, (T)(value));
+
+		destroy(t);
+
+		end();
+	}
+
+	void ldc()
+	{
+		TEST_FN(ldc_T<vm_int8>(12));
+		TEST_FN(ldc_T<vm_int16>(INT16_MAX - 10));
+		TEST_FN(ldc_T<vm_int32>(INT32_MAX - 1234));
+		TEST_FN(ldc_T<vm_float32>(123.456f));
+	}
+
 	void operator()()
 	{
 		TEST(add);
+		TEST(ldc);
 	}
 };
 

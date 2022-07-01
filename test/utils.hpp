@@ -118,4 +118,52 @@ struct utils_vm : test_utils
 			throw_(error() << "expected stack size to be " << expected_size << " but was " << size);
 		}
 	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int8 value)
+	{
+		const vm_int8* byte = (vm_int8*)(t->stack.blocks + offset);
+		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << (vm_int32)value << " but was " << (vm_int32)*byte);
+		}
+	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int16 value)
+	{
+		const vm_int16* byte = (vm_int16*)(t->stack.blocks + offset);
+		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int32 value)
+	{
+		const vm_int32* byte = (vm_int32*)(t->stack.blocks + offset);
+		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int64 value)
+	{
+		const vm_int64* byte = (vm_int64*)(t->stack.blocks + offset);
+		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_float32 value)
+	{
+		const vm_float32* byte = (vm_float32*)(t->stack.blocks + offset);
+		if (abs(*byte - value) > FLT_EPSILON) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
+	void verify_stack(vmi_thread* t, vm_int32 offset, vm_float64 value)
+	{
+		const vm_float64* byte = (vm_float64*)(t->stack.blocks + offset);
+		if (abs(*byte - value) > DBL_EPSILON) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
 };
