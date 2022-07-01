@@ -100,13 +100,13 @@ void vmc_func_free(vmc_func* func)
 	vmc_free(func);
 }
 
-vmc_package* vmc_package_malloc(const char* name, int length)
+vmc_package* vmc_package_malloc(const vm_string* name)
 {
 	vmc_package* p = (vmc_package*)vmc_malloc(sizeof(vmc_package));
 	if (p == NULL)
 		return NULL;
 	VMC_INIT_TYPE_HEADER(p, VMC_TYPE_HEADER_PACKAGE, sizeof(void*));
-	vm_string_setsz(&p->name, name, length);
+	p->name = *name;
 	p->full_name = p->name;
 	vmc_types_list_init(&p->types);
 	p->data_offset = 0;

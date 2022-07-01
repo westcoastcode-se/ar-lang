@@ -2,7 +2,6 @@
 #define _VMC_COMPILER_TYPES_H_
 
 #include "../vm_string.h"
-#include "../vm_list.h"
 #include "lists/types_list.h"
 #include "vmc_linker.h"
 #include "vmc_linker_marker.h"
@@ -267,7 +266,7 @@ struct vmc_package
 typedef struct vmc_package vmc_package;
 
 // Allocate memory for a new package with the supplied name
-extern vmc_package* vmc_package_malloc(const char* name, int length);
+extern vmc_package* vmc_package_malloc(const vm_string* name);
 
 // Free the allocated package memory including everything associated with it
 extern void vmc_package_free(vmc_package* p);

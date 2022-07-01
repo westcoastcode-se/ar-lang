@@ -258,13 +258,15 @@ struct suite_vm_tests : suite_vm_utils
 	void calculate_return_two_values()
 	{
 		const auto source = R"(
-fn Get()(int32,int32) {
-	// return 123, 456
-	ldc_i4 123
-	str 0
-	ldc_i4 456
-	str 1
-	ret
+package main {
+	fn Get()(int32,int32) {
+		// return 123, 456
+		ldc_i4 123
+		str 0
+		ldc_i4 456
+		str 1
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -287,14 +289,16 @@ fn Get()(int32,int32) {
 	template<typename T>
 	void add_test(const char* type, T lhs, T rhs) {
 		const auto format = R"(
-fn Add(%s,%s)(%s) {
-	args (lhs, rhs)
-	// return lhs + rhs
-	lda 0
-	lda 1
-	add %s
-	str 0
-	ret
+package main {
+	fn Add(%s,%s)(%s) {
+		args (lhs, rhs)
+		// return lhs + rhs
+		lda 0
+		lda 1
+		add %s
+		str 0
+		ret
+	}
 }
 )";
 		char source[1024];
@@ -328,24 +332,26 @@ fn Add(%s,%s)(%s) {
 
 	void calculate_multiple_funcs() {
 		const auto source = R"(
-fn Add1(int32,int32)(int32) {
-	args (lhs, rhs)
-	// return lhs + rhs
-	lda 0
-	lda 1
-	add int32
-	str 0
-	ret
-}
+package main {
+	fn Add1(int32,int32)(int32) {
+		args (lhs, rhs)
+		// return lhs + rhs
+		lda 0
+		lda 1
+		add int32
+		str 0
+		ret
+	}
 
-fn Add2(int32,int32)(int32) {
-	args (lhs, rhs)
-	// return lhs + rhs
-	lda 0
-	lda 1
-	add int32
-	str 0
-	ret
+	fn Add2(int32,int32)(int32) {
+		args (lhs, rhs)
+		// return lhs + rhs
+		lda 0
+		lda 1
+		add int32
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -368,24 +374,26 @@ fn Add2(int32,int32)(int32) {
 
 	void calculate_two_int32_inner() {
 		const auto source = R"(
-fn Add(int32,int32)(int32) {
-	args (lhs, rhs)
-	// return lhs + rhs
-	lda 0
-	lda 1
-	add int32
-	str 0
-	ret
-}
+package main {
+	fn Add(int32,int32)(int32) {
+		args (lhs, rhs)
+		// return lhs + rhs
+		lda 0
+		lda 1
+		add int32
+		str 0
+		ret
+	}
 
-fn AddTwoInts()(int32) {
-	// return Add(10, 20)
-	allocs 4
-	ldc_i4 20
-	ldc_i4 10
-	call Add(int32,int32)(int32)
-	str 0
-	ret
+	fn AddTwoInts()(int32) {
+		// return Add(10, 20)
+		allocs 4
+		ldc_i4 20
+		ldc_i4 10
+		call Add(int32,int32)(int32)
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -418,13 +426,15 @@ struct suite_vm_memory : suite_vm_utils
 	void allocate_locals1()
 	{
 		const auto source = R"(
-fn Func()(int32) {
-	// var i int32
-	locals (i int32)
-	// return 5
-	ldc_i4 5
-	str 0
-	ret
+package main {
+	fn Func()(int32) {
+		// var i int32
+		locals (i int32)
+		// return 5
+		ldc_i4 5
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -447,20 +457,22 @@ fn Func()(int32) {
 	void allocate_locals2()
 	{
 		const auto source = R"(
-fn InnerFunc()(int32) {
-	// var i int32
-	locals (i int32)
-	// return 5
-	ldc_i4 5
-	str 0
-	ret
-}
-fn Func()(int32) {
-	// return InnerFunc()
-	allocs 4
-	call InnerFunc()(int32)
-	str 0
-	ret
+package main {
+	fn InnerFunc()(int32) {
+		// var i int32
+		locals (i int32)
+		// return 5
+		ldc_i4 5
+		str 0
+		ret
+	}
+	fn Func()(int32) {
+		// return InnerFunc()
+		allocs 4
+		call InnerFunc()(int32)
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -483,21 +495,23 @@ fn Func()(int32) {
 	void allocate_load_save_locals1()
 	{
 		const auto source = R"(
-fn Func()(int32) {
-	// var i int32
-	locals (i int32)
-	// i = 10
-	ldc_i4 10
-	stl 0
-	// i += 5
-	ldl 0
-	ldc_i4 5
-	add int32
-	stl 0
-	// return i
-	ldl 0
-	str 0
-	ret	
+package main {
+	fn Func()(int32) {
+		// var i int32
+		locals (i int32)
+		// i = 10
+		ldc_i4 10
+		stl 0
+		// i += 5
+		ldl 0
+		ldc_i4 5
+		add int32
+		stl 0
+		// return i
+		ldl 0
+		str 0
+		ret	
+	}
 }
 )";
 		auto c = compile(source);
@@ -520,31 +534,33 @@ fn Func()(int32) {
 	void allocate_load_save_locals2()
 	{
 		const auto source = R"(
-fn InnerFunc(int32)(int32) {
-	args (in)
-	// var i int32
-	locals (i int32)
-	// i = 10
-	ldc_i4 10
-	stl 0
-	// i += 5
-	ldl 0
-	ldc_i4 5
-	add int32
-	stl 0
-	// return i
-	ldl 0
-	str 0
-	ret
-}
+package main {
+	fn InnerFunc(int32)(int32) {
+		args (in)
+		// var i int32
+		locals (i int32)
+		// i = 10
+		ldc_i4 10
+		stl 0
+		// i += 5
+		ldl 0
+		ldc_i4 5
+		add int32
+		stl 0
+		// return i
+		ldl 0
+		str 0
+		ret
+	}
 
-fn Func()(int32) {
-	// InnerFunc(5)
-	allocs 4
-	ldc_i4 5
-	call InnerFunc(int32)(int32)
-	str 0
-	ret
+	fn Func()(int32) {
+		// InnerFunc(5)
+		allocs 4
+		ldc_i4 5
+		call InnerFunc(int32)(int32)
+		str 0
+		ret
+	}
 }
 )";
 		// push 20
@@ -574,14 +590,16 @@ fn Func()(int32) {
 	template<typename T>
 	void copy_s_test(const char* type, T in) {
 		const auto format = R"(
-fn Mul2(%s)(%s) {
-	args (in)
-	// return lhs+lhs
-	lda 0
-	copy_s %s
-	add %s
-	str 0
-	ret
+package main {
+	fn Mul2(%s)(%s) {
+		args (in)
+		// return lhs+lhs
+		lda 0
+		copy_s %s
+		add %s
+		str 0
+		ret
+	}
 }
 )";
 		char source[1024];
@@ -623,13 +641,15 @@ struct suite_vm_compare : suite_vm_utils
 	void clt()
 	{
 		const auto source = R"(
-fn Compare()(int32) {
-	// return 12 < 34
-	ldc_i4 34
-	ldc_i4 12
-	clt
-	str 0
-	ret
+package main {
+	fn Compare()(int32) {
+		// return 12 < 34
+		ldc_i4 34
+		ldc_i4 12
+		clt
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -652,13 +672,15 @@ fn Compare()(int32) {
 	void cgt()
 	{
 		const auto source = R"(
-fn Compare()(int32) {
-	// return 34 > 12
-	ldc_i4 12
-	ldc_i4 34
-	cgt
-	str 0
-	ret
+package main {
+	fn Compare()(int32) {
+		// return 34 > 12
+		ldc_i4 12
+		ldc_i4 34
+		cgt
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -681,21 +703,23 @@ fn Compare()(int32) {
 	void jmpt()
 	{
 		const auto source = R"(
-fn Test()(int32) {
-	ldc_i4 12
-	ldc_i4 34
-	cgt
-	jmpt marker
-	// return 20
-	ldc_i4 20
-	str 0
-	ret
-	// if 34 > 12 {
-#marker
-	// return 10
-	ldc_i4 10
-	str 0
-	ret
+package main {
+	fn Test()(int32) {
+		ldc_i4 12
+		ldc_i4 34
+		cgt
+		jmpt marker
+		// return 20
+		ldc_i4 20
+		str 0
+		ret
+		// if 34 > 12 {
+	#marker
+		// return 10
+		ldc_i4 10
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -727,18 +751,20 @@ fn Test()(int32) {
 		}
 		*/
 		const auto source = R"(
-fn Test()(int32) {
-	ldc_i4 12	// Push a constant
-	ldc_i4 34	// Push a constant
-	clt			// Compare 32 < 12
-	jmpt marker	// if > jmp marker
-	ldc_i4 20
-	str 0
-	ret			// return 20
-#marker 
-	ldc_i4 10
-	str 0
-	ret			// return 10
+package main {
+	fn Test()(int32) {
+		ldc_i4 12	// Push a constant
+		ldc_i4 34	// Push a constant
+		clt			// Compare 32 < 12
+		jmpt marker	// if > jmp marker
+		ldc_i4 20
+		str 0
+		ret			// return 20
+	#marker 
+		ldc_i4 10
+		str 0
+		ret			// return 10
+	}
 }
 )";
 		auto c = compile(source);
@@ -771,10 +797,12 @@ struct suite_vm_constants : suite_vm_utils
 	template<typename T>
 	void ldc_type(T value) {
 		const auto format = R"(
-fn Get()(%s) {
-	ldc_%s %d
-	str 0
-	ret
+package main {
+	fn Get()(%s) {
+		ldc_%s %d
+		str 0
+		ret
+	}
 }
 )";
 		char source[1024];
@@ -805,10 +833,12 @@ fn Get()(%s) {
 	void ldc_i64()
 	{
 		const auto source = R"(
-fn Get()(int64) {
-	ldc_i8 1234567890
-	str 0
-	ret
+package main {
+	fn Get()(int64) {
+		ldc_i8 1234567890
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -829,10 +859,12 @@ fn Get()(int64) {
 	void ldc_f32()
 	{
 		const auto source = R"(
-fn Get()(float32) {
-	ldc_f4 123.67f
-	str 0
-	ret
+package main {
+	fn Get()(float32) {
+		ldc_f4 123.67f
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -853,10 +885,12 @@ fn Get()(float32) {
 	void ldc_f64()
 	{
 		const auto source = R"(
-fn Get()(float64) {
-	ldc_f8 12345.6789
-	str 0
-	ret
+package main {
+	fn Get()(float64) {
+		ldc_f8 12345.6789
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -889,12 +923,14 @@ struct suite_vm_convert : suite_vm_utils
 	void conv_test(FROM from, TO to)
 	{
 		const auto format = R"(
-fn Convert()(%s) {
-	// return int32(int16(1234))
-	ldc_%s %d
-	conv_%s_%s
-	str 0
-	ret
+package main {
+	fn Convert()(%s) {
+		// return int32(int16(1234))
+		ldc_%s %d
+		conv_%s_%s
+		str 0
+		ret
+	}
 }
 )";
 		char source[1024];
@@ -934,25 +970,27 @@ struct suite_vm_pointer : suite_vm_utils
 	void call_fn_using_pointer()
 	{
 		const auto source= R"(
-fn InnerGet(*int32)() {
-	args (val)
-	// *val = 10
-	lda 0
-	ldc_i4 10
-	sturef int32
-	ret
-}
+package main {
+	fn InnerGet(*int32)() {
+		args (val)
+		// *val = 10
+		lda 0
+		ldc_i4 10
+		sturef int32
+		ret
+	}
 
-fn Get()(int32) {
-	// var value int32
-	locals (value int32)
-	// InnerGet(&value)
-	ldl_a 0
-	call InnerGet(*int32)()
-	// return value
-	ldl 0
-	str 0
-	ret
+	fn Get()(int32) {
+		// var value int32
+		locals (value int32)
+		// InnerGet(&value)
+		ldl_a 0
+		call InnerGet(*int32)()
+		// return value
+		ldl 0
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -974,12 +1012,14 @@ fn Get()(int32) {
 	void sturef_s_types(T value)
 	{
 		const auto format = R"(
-fn Get(*%s)() {
-	args (val)
-	lda 0
-	ldc_%s %d
-	sturef_s_%s
-	ret
+package main {
+	fn Get(*%s)() {
+		args (val)
+		lda 0
+		ldc_%s %d
+		sturef_s_%s
+		ret
+	}
 }
 )";
 		char source[1024];
@@ -1004,12 +1044,14 @@ fn Get(*%s)() {
 	void sturef_s_types_i64()
 	{
 		const auto source = R"(
-fn Get(*int64)() {
-	args (val)
-	lda 0
-	ldc_i8 1234567890
-	sturef_s_i8
-	ret
+package main {
+	fn Get(*int64)() {
+		args (val)
+		lda 0
+		ldc_i8 1234567890
+		sturef_s_i8
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1031,12 +1073,14 @@ fn Get(*int64)() {
 	void sturef_s_types_f32()
 	{
 		const auto source = R"(
-fn Get(*float32)() {
-	args (val)
-	lda 0
-	ldc_f4 123.45f
-	sturef_s_f4
-	ret
+package main {
+	fn Get(*float32)() {
+		args (val)
+		lda 0
+		ldc_f4 123.45f
+		sturef_s_f4
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1058,12 +1102,14 @@ fn Get(*float32)() {
 	void sturef_s_types_f64()
 	{
 		const auto source = R"(
-fn Get(*float64)() {
-	args (val)
-	lda 0
-	ldc_f8 12345.67890
-	sturef_s_f8
-	ret
+package main {
+	fn Get(*float64)() {
+		args (val)
+		lda 0
+		ldc_f8 12345.67890
+		sturef_s_f8
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1104,20 +1150,22 @@ struct suite_vm_arrays : suite_vm_utils
 	void load_and_store_array_value()
 	{
 		const auto source = R"(
-fn Get()(int32) {
-	// var value int32
-	locals (values [2]int32)
-	// values[0] = 10
-	ldl_a 0
-	ldc_i4 0
-	ldc_i4 10
-	stelem int32
-	// return values[0]
-	ldl_a 0
-	ldc_i4 0
-	ldelem int32
-	str 0
-	ret
+package main {
+	fn Get()(int32) {
+		// var value int32
+		locals (values [2]int32)
+		// values[0] = 10
+		ldl_a 0
+		ldc_i4 0
+		ldc_i4 10
+		stelem int32
+		// return values[0]
+		ldl_a 0
+		ldc_i4 0
+		ldelem int32
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1139,19 +1187,21 @@ fn Get()(int32) {
 	void array_test(T value)
 	{
 		const auto format = R"(
-fn Get()(%s) {
-	locals (values [2]%s)
-	// values[0] = ?
-	ldl_a 0
-	ldc_i4 0
-	ldc_%s %d
-	stelem %s
-	// return values[0]
-	ldl_a 0
-	ldc_i4 0
-	ldelem %s
-	str 0
-	ret
+package main {
+	fn Get()(%s) {
+		locals (values [2]%s)
+		// values[0] = ?
+		ldl_a 0
+		ldc_i4 0
+		ldc_%s %d
+		stelem %s
+		// return values[0]
+		ldl_a 0
+		ldc_i4 0
+		ldelem %s
+		str 0
+		ret
+	}
 }
 )";
 		char source[1024];
@@ -1175,19 +1225,21 @@ fn Get()(%s) {
 	void array_test_i64()
 	{
 		const auto source = R"(
-fn Get()(int64) {
-	locals (values [2]int64)
-	// values[0] = 1234567890
-	ldl_a 0
-	ldc_i4 0
-	ldc_i8 1234567890
-	stelem int64
-	// return values[0]
-	ldl_a 0
-	ldc_i4 0
-	ldelem int64
-	str 0
-	ret
+package main {
+	fn Get()(int64) {
+		locals (values [2]int64)
+		// values[0] = 1234567890
+		ldl_a 0
+		ldc_i4 0
+		ldc_i8 1234567890
+		stelem int64
+		// return values[0]
+		ldl_a 0
+		ldc_i4 0
+		ldelem int64
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1208,19 +1260,21 @@ fn Get()(int64) {
 	void array_test_f32()
 	{
 		const auto source = R"(
-fn Get()(float32) {
-	locals (values [2]float32)
-	// values[0] = 123.45f
-	ldl_a 0
-	ldc_i4 0
-	ldc_f4 123.45f
-	stelem float32
-	// return values[0]
-	ldl_a 0
-	ldc_i4 0
-	ldelem float32
-	str 0
-	ret
+package main {
+	fn Get()(float32) {
+		locals (values [2]float32)
+		// values[0] = 123.45f
+		ldl_a 0
+		ldc_i4 0
+		ldc_f4 123.45f
+		stelem float32
+		// return values[0]
+		ldl_a 0
+		ldc_i4 0
+		ldelem float32
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1241,19 +1295,21 @@ fn Get()(float32) {
 	void array_test_f64()
 	{
 		const auto source = R"(
-fn Get()(float64) {
-	locals (values [2]float64)
-	// values[0] = 12345.6789
-	ldl_a 0
-	ldc_i4 0
-	ldc_f8 12345.6789
-	stelem float64
-	// return values[0]
-	ldl_a 0
-	ldc_i4 0
-	ldelem float64
-	str 0
-	ret
+package main {
+	fn Get()(float64) {
+		locals (values [2]float64)
+		// values[0] = 12345.6789
+		ldl_a 0
+		ldc_i4 0
+		ldc_f8 12345.6789
+		stelem float64
+		// return values[0]
+		ldl_a 0
+		ldc_i4 0
+		ldelem float64
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1284,29 +1340,31 @@ fn Get()(float64) {
 	void return_two_values_from_array()
 	{
 		const auto source = R"(
-fn Get()(int32,int32) {
-	// var value int32
-	locals (values [2]int32)
-	// values[0] = 10
-	ldl_a 0
-	ldc_i4 0
-	ldc_i4 10
-	stelem int32
-	// values[1] = 20
-	ldl_a 0
-	ldc_i4 1
-	ldc_i4 20
-	stelem int32
-	// return values[0], values[1]
-	ldl_a 0
-	ldc_i4 0
-	ldelem int32
-	str 0
-	ldl_a 0
-	ldc_i4 1
-	ldelem int32
-	str 1
-	ret
+package main {
+	fn Get()(int32,int32) {
+		// var value int32
+		locals (values [2]int32)
+		// values[0] = 10
+		ldl_a 0
+		ldc_i4 0
+		ldc_i4 10
+		stelem int32
+		// values[1] = 20
+		ldl_a 0
+		ldc_i4 1
+		ldc_i4 20
+		stelem int32
+		// return values[0], values[1]
+		ldl_a 0
+		ldc_i4 0
+		ldelem int32
+		str 0
+		ldl_a 0
+		ldc_i4 1
+		ldelem int32
+		str 1
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1329,33 +1387,35 @@ fn Get()(int32,int32) {
 	void return_array_4int8()
 	{
 		const auto source = R"(
-fn Get()([4]int8) {
-	// var values [4]int8
-	locals (values [4]int8)
-	// values[0] = 10
-	ldl_a 0
-	ldc_i4 0
-	ldc_i1 10
-	stelem int8
-	// values[1] = 20
-	ldl_a 0
-	ldc_i4 1
-	ldc_i1 20
-	stelem int8
-	// values[2] = 30
-	ldl_a 0
-	ldc_i4 2
-	ldc_i1 30
-	stelem int8
-	// values[3] = 40
-	ldl_a 0
-	ldc_i4 3
-	ldc_i1 40
-	stelem int8
-	// return values
-	ldl 0
-	str 0
-	ret
+package main {
+	fn Get()([4]int8) {
+		// var values [4]int8
+		locals (values [4]int8)
+		// values[0] = 10
+		ldl_a 0
+		ldc_i4 0
+		ldc_i1 10
+		stelem int8
+		// values[1] = 20
+		ldl_a 0
+		ldc_i4 1
+		ldc_i1 20
+		stelem int8
+		// values[2] = 30
+		ldl_a 0
+		ldc_i4 2
+		ldc_i1 30
+		stelem int8
+		// values[3] = 40
+		ldl_a 0
+		ldc_i4 3
+		ldc_i1 40
+		stelem int8
+		// return values
+		ldl 0
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1379,33 +1439,35 @@ fn Get()([4]int8) {
 	void return_array_4int32()
 	{
 		const auto source = R"(
-fn Get()([4]int32) {
-	// var values [4]int32
-	locals (values [4]int32)
-	// values[0] = 10
-	ldl_a 0
-	ldc_i4 0
-	ldc_i4 10
-	stelem int32
-	// values[1] = 20
-	ldl_a 0
-	ldc_i4 1
-	ldc_i4 20
-	stelem int32
-	// values[2] = 30
-	ldl_a 0
-	ldc_i4 2
-	ldc_i4 30
-	stelem int32
-	// values[3] = 40
-	ldl_a 0
-	ldc_i4 3
-	ldc_i4 40
-	stelem int32
-	// return values
-	ldl 0
-	str 0
-	ret
+package main {
+	fn Get()([4]int32) {
+		// var values [4]int32
+		locals (values [4]int32)
+		// values[0] = 10
+		ldl_a 0
+		ldc_i4 0
+		ldc_i4 10
+		stelem int32
+		// values[1] = 20
+		ldl_a 0
+		ldc_i4 1
+		ldc_i4 20
+		stelem int32
+		// values[2] = 30
+		ldl_a 0
+		ldc_i4 2
+		ldc_i4 30
+		stelem int32
+		// values[3] = 40
+		ldl_a 0
+		ldc_i4 3
+		ldc_i4 40
+		stelem int32
+		// return values
+		ldl 0
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1429,41 +1491,43 @@ fn Get()([4]int32) {
 	void call_function_with_array_address()
 	{
 		const auto source = R"(
-fn InnerGet(*int32)() {
-	args (values)
-	// values[0] = 10
-	lda 0
-	ldc_i4 0
-	ldc_i4 10
-	stelem int32
-	// values[1] = 20
-	lda 0
-	ldc_i4 1
-	ldc_i4 20
-	stelem int32
-	// values[2] = 30
-	lda 0
-	ldc_i4 2
-	ldc_i4 30
-	stelem int32
-	// values[3] = 40
-	lda 0
-	ldc_i4 3
-	ldc_i4 40
-	stelem int32
-	ret
-}
+package main {
+	fn InnerGet(*int32)() {
+		args (values)
+		// values[0] = 10
+		lda 0
+		ldc_i4 0
+		ldc_i4 10
+		stelem int32
+		// values[1] = 20
+		lda 0
+		ldc_i4 1
+		ldc_i4 20
+		stelem int32
+		// values[2] = 30
+		lda 0
+		ldc_i4 2
+		ldc_i4 30
+		stelem int32
+		// values[3] = 40
+		lda 0
+		ldc_i4 3
+		ldc_i4 40
+		stelem int32
+		ret
+	}
 
-fn Get()([4]int32) {
-	// var values [4]int32
-	locals (values [4]int32)
-	// InnerGet(&values)
-	ldl_a 0
-	call InnerGet(*int32)()
-	// return values
-	ldl 0
-	str 0
-	ret
+	fn Get()([4]int32) {
+		// var values [4]int32
+		locals (values [4]int32)
+		// InnerGet(&values)
+		ldl_a 0
+		call InnerGet(*int32)()
+		// return values
+		ldl 0
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1487,72 +1551,74 @@ fn Get()([4]int32) {
 	void call_function_with_array_of_addresses()
 	{
 		const auto source = R"(
-fn InnerGet([4]*int32)() {
-	args (values)
-	// *values[0] = 10
-	lda_a 0
-	ldc_i4 0
-	ldelem *int32
-	ldc_i4 10
-	sturef_s_i4
-	// *values[1] = 20
-	lda_a 0
-	ldc_i4 1
-	ldelem *int32
-	ldc_i4 20
-	sturef_s_i4
-	// *values[2] = 30
-	lda_a 0
-	ldc_i4 2
-	ldelem *int32
-	ldc_i4 30
-	sturef_s_i4
-	// *values[3] = 40
-	lda_a 0
-	ldc_i4 3
-	ldelem *int32
-	ldc_i4 40
-	sturef_s_i4
-	ret
-}
+package main {
+	fn InnerGet([4]*int32)() {
+		args (values)
+		// *values[0] = 10
+		lda_a 0
+		ldc_i4 0
+		ldelem *int32
+		ldc_i4 10
+		sturef_s_i4
+		// *values[1] = 20
+		lda_a 0
+		ldc_i4 1
+		ldelem *int32
+		ldc_i4 20
+		sturef_s_i4
+		// *values[2] = 30
+		lda_a 0
+		ldc_i4 2
+		ldelem *int32
+		ldc_i4 30
+		sturef_s_i4
+		// *values[3] = 40
+		lda_a 0
+		ldc_i4 3
+		ldelem *int32
+		ldc_i4 40
+		sturef_s_i4
+		ret
+	}
 
-fn Get()(int32,int32,int32,int32) {
-	// var val0, val1, val2, val3 int32
-	// var values [4]*int32
-	locals (val0 int32, val1 int32, val2 int32, val3 int32, values [4]*int32)
-	// values[0] = &val0
-	ldl_a 4
-	ldc_i4 0
-	ldl_a 0
-	stelem *int32
-	// values[1] = &val1
-	ldl_a 4
-	ldc_i4 1
-	ldl_a 1
-	stelem *int32
-	// values[2] = &val2
-	ldl_a 4
-	ldc_i4 2
-	ldl_a 2
-	stelem *int32
-	// values[3] = &val3
-	ldl_a 4
-	ldc_i4 3
-	ldl_a 3
-	stelem *int32
-	// InnerGet(values)
-	ldl 4
-	call InnerGet([4]*int32)()
-	// return values
-	ldl 0
-	str 0
-	ldl 1
-	str 1
-	ldl 2
-	str 2
-	ldl 3
-	str 3
-	ret
+	fn Get()(int32,int32,int32,int32) {
+		// var val0, val1, val2, val3 int32
+		// var values [4]*int32
+		locals (val0 int32, val1 int32, val2 int32, val3 int32, values [4]*int32)
+		// values[0] = &val0
+		ldl_a 4
+		ldc_i4 0
+		ldl_a 0
+		stelem *int32
+		// values[1] = &val1
+		ldl_a 4
+		ldc_i4 1
+		ldl_a 1
+		stelem *int32
+		// values[2] = &val2
+		ldl_a 4
+		ldc_i4 2
+		ldl_a 2
+		stelem *int32
+		// values[3] = &val3
+		ldl_a 4
+		ldc_i4 3
+		ldl_a 3
+		stelem *int32
+		// InnerGet(values)
+		ldl 4
+		call InnerGet([4]*int32)()
+		// return values
+		ldl 0
+		str 0
+		ldl 1
+		str 1
+		ldl 2
+		str 2
+		ldl 3
+		str 3
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1594,10 +1660,12 @@ struct suite_vm_allocation : suite_vm_utils
 	void allocs_frees_type()
 	{
 		const auto format = R"(
-fn Do()() {
-	allocs %d
-	frees %d
-	ret
+package main {
+	fn Do()() {
+		allocs %d
+		frees %d
+		ret
+	}
 }
 )";
 		char source[1024];
@@ -1630,10 +1698,12 @@ fn Do()() {
 	void alloch_freeh_type()
 	{
 		const auto format = R"(
-fn Do()() {
-	alloch %d
-	freeh %d
-	ret
+package main {
+	fn Do()() {
+		alloch %d
+		freeh %d
+		ret
+	}
 }
 )";
 		char source[1024];
@@ -1665,20 +1735,22 @@ fn Do()() {
 	void alloch_from_param()
 	{
 		const auto source = R"(
-fn Get()(*int32) {
-	//var mem *int32
-	locals (mem *int32)
-	// mem = new int32
-	alloch int32
-	stl 0
-	// *mem = 10
-	ldl 0
-	ldc_i4 10
-	sturef_s_i4
-	//return mem
-	ldl 0
-	str 0
-	ret
+package main {
+	fn Get()(*int32) {
+		//var mem *int32
+		locals (mem *int32)
+		// mem = new int32
+		alloch int32
+		stl 0
+		// *mem = 10
+		ldl 0
+		ldc_i4 10
+		sturef_s_i4
+		//return mem
+		ldl 0
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);
@@ -1710,19 +1782,21 @@ struct suite_vm_functions : suite_vm_utils
 	void call()
 	{
 		const auto source = R"(
-fn Inner()(int32) {
-	// return 10
-	ldc_i4 10
-	str 0
-	ret
-}
+package main {
+	fn Inner()(int32) {
+		// return 10
+		ldc_i4 10
+		str 0
+		ret
+	}
 
-fn Outer()(int32) {
-	// return Inner()
-	allocs int32
-	call Inner()(int32)
-	str 0
-	ret
+	fn Outer()(int32) {
+		// return Inner()
+		allocs int32
+		call Inner()(int32)
+		str 0
+		ret
+	}
 }
 )";
 		auto c = compile(source);

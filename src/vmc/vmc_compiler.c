@@ -90,6 +90,7 @@ VM_STRING_CONST(jmpt, "jmpt", 4);
 VM_STRING_CONST(add, "add", 3);
 
 VM_STRING_CONST(empty, "", 0);
+VM_STRING_CONST(vm, "vm", 2);
 
 const vmc_compiler_config _vmc_compiler_config_default = {
 	NULL,
@@ -139,8 +140,10 @@ void _vmc_append_header(vmc_compiler* c)
 // *[INT]KEYWORD
 // [INT]*KEYWORD
 // *[INT]*KEYWORD
-// KEYWPORD<TYPE>
 // *PACKAGE.KEYWORD
+//
+// Not implemented:
+// KEYWPORD<TYPE>
 BOOL _vmc_parse_type(const vmc_compiler_scope* s, vmc_var* var) {
 	vmc_compiler* const c = s->compiler;
 	vmc_lexer_token* const t = s->token;
@@ -513,6 +516,33 @@ BOOL _vmc_parse_func_signature(const vmc_compiler_scope* s, vmc_func* func)
 	return TRUE;
 }
 
+BOOL _vmc_parse_call(const vmc_compiler_scope* s, vmc_func* func)
+{
+	vmc_compiler* const c = s->compiler;
+	vmc_lexer_token* const t = s->token;
+	vmc_package* const p = s->package;
+
+	// call <definition>
+	vmi_instr_call instr;
+	vm_string signature;
+	if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_KEYWORD)) {
+		return vmc_compiler_message_expected_keyword(s);
+	}
+	if (!_vmc_seek_func_signature(s, &signature)) {
+		return FALSE;
+	}
+	vmc_func* func2 = vmc_func_find(p, &signature);
+	if (func2 == NULL) {
+		return vmc_compiler_message_not_implemented(s);
+	}
+	instr.header.opcode = 0;
+	instr.header.icode = VMI_CALL;
+	instr.expected_stack_size = func2->args_total_size + func2->returns_total_size;
+	instr.addr = OFFSET(func2->offset);
+	vmc_write(c, &instr, sizeof(vmi_instr_call));
+	return TRUE;
+}
+
 #include "vmc_compiler_instr.inc.c"
 
 BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
@@ -681,24 +711,8 @@ BOOL _vmc_parse_keyword_fn_body(const vmc_compiler_scope* s, vmc_func* func)
 			vmc_write(c, &instr, sizeof(vmi_instr_ret));
 		}
 		else if (vm_string_cmp(&t->string, VM_STRING_CONST_GET(call))) {
-			// call <definition>
-			vmi_instr_call instr;
-			vm_string signature;
-			if (!vmc_lexer_next_type(t, VMC_LEXER_TYPE_KEYWORD)) {
-				return vmc_compiler_message_expected_keyword(s);
-			}
-			if (!_vmc_seek_func_signature(s, &signature)) {
+			if (!_vmc_parse_call(s, func))
 				return FALSE;
-			}
-			vmc_func* func2 = vmc_func_find(p, &signature);
-			if (func2 == NULL) {
-				return vmc_compiler_message_not_implemented(s);
-			}
-			instr.header.opcode = 0;
-			instr.header.icode = VMI_CALL;
-			instr.expected_stack_size = func2->args_total_size + func2->returns_total_size;
-			instr.addr = OFFSET(func2->offset);
-			vmc_write(c, &instr, sizeof(vmi_instr_call));
 		}
 		else {
 			return vmc_compiler_message_not_implemented(s);
@@ -785,13 +799,57 @@ BOOL _vmc_parse_keyword(const vmc_compiler_scope* s)
 	return FALSE;
 }
 
+BOOL _vmc_parse_keyword_package(const vmc_compiler_scope* s)
+{
+	vmc_lexer_token* const t = s->token;
+	vmc_compiler_scope inner_scope = *s;
+
+	if (!vmc_lexer_next_type(s->token, VMC_LEXER_TYPE_KEYWORD)) {
+		return vmc_compiler_message_expected_identifier(s);
+	}
+
+	inner_scope.package = vmc_compiler_find_package(s->compiler, &t->string);
+	if (inner_scope.package == NULL) {
+		inner_scope.package = vmc_package_new(s->compiler, &t->string);
+		if (inner_scope.package == NULL) {
+			return vmc_compiler_message_panic(s, "out of memory");
+		}
+	}
+	
+	// Start of the package block
+	if (!vmc_lexer_next_type(s->token, VMC_LEXER_TYPE_BRACKET_L)) {
+		return vmc_compiler_message_syntax_error(&inner_scope, '{');
+	}
+	vmc_lexer_next(s->token);
+
+	// Process each item in the package block
+	while (1) {
+		// Unexpected end of function body
+		if (t->type == VMC_LEXER_TYPE_EOF) {
+			return vmc_compiler_message_unexpected_eof(s);
+		}
+
+		// Break if we've reached the end of the package block
+		if (t->type == VMC_LEXER_TYPE_BRACKET_R) {
+			break;
+		}
+
+		if (!_vmc_parse_keyword(&inner_scope)) {
+			return FALSE;
+		}
+	}
+
+	vmc_lexer_next(s->token);
+	return TRUE;
+}
+
 // Parse the current lexers content and put the compiled byte-code into the compiler and put the metadata into the supplied package
-void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
+void _vmc_parse(vmc_compiler* c, vmc_lexer* l)
 {
 	vmc_lexer_token token;
 	vmc_lexer_token_init(l, &token);
 	const vmc_compiler_scope scope = {
-		c, &token, p, NULL
+		c, &token, NULL, NULL
 	};
 
 	// Ignore all newlines at the start of the content
@@ -803,10 +861,13 @@ void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 	{
 		// Is the supplied token a keyword?
 		if (vmc_lexer_type_is_keyword(token.type)) {
-			if (!_vmc_parse_keyword(&scope)) {
-				break;
+			if (token.type == VMC_LEXER_TYPE_KEYWORD_PACKAGE) {
+				if (!_vmc_parse_keyword_package(&scope)) {
+					break;
+				}
+				continue;
 			}
-			continue;
+			break;
 		}
 
 		// 
@@ -830,8 +891,8 @@ void _vmc_parse(vmc_compiler* c, vmc_lexer* l, vmc_package* p)
 void _vmc_compiler_register_builtins(vmc_compiler* c)
 {
 	// Register the "vm" package and all type definitions that's built-in
-	vmc_package* root = vmc_package_malloc("vm", 2);
-	VM_LIST_ADD(c->packages, root);
+	vmc_package* root = vmc_package_malloc(VM_STRING_CONST_GET(vm));
+	vmc_packages_list_add(&c->packages, root);
 
 	vmc_package_add_type(root, vmc_type_definition_new(VM_STRING_CONST_GET(int64), sizeof(vm_int64)));
 	vmc_package_add_type(root, vmc_type_definition_new(VM_STRING_CONST_GET(uint64), sizeof(vm_uint64)));
@@ -871,7 +932,7 @@ void _vmc_append_package_info(vmc_compiler* c)
 	// char[]	| name bytes
 
 	for (i = 0; i < size; ++i) {
-		package = VM_LIST_GET(c->packages, vmc_package, i);
+		package = c->packages.memory[i];
 		vmi_package_bytecode_header package_header = {
 			vm_string_length(&package->name),
 			vmc_types_list_count_type(&package->types, VMC_TYPE_HEADER_FUNC),
@@ -892,7 +953,7 @@ void _vmc_append_package_info(vmc_compiler* c)
 	// char[]	| name bytes
 
 	for (i = 0; i < size; ++i) {
-		package = VM_LIST_GET(c->packages, vmc_package, i);
+		package = c->packages.memory[i];
 		for (j = 0; j < package->types.count; ++j) {
 			vmc_type_header* header = package->types.memory[j];
 			if (header->type == VMC_TYPE_HEADER_FUNC) {
@@ -912,13 +973,7 @@ void _vmc_append_package_info(vmc_compiler* c)
 // Cleanup all packages
 void _vmc_compiler_destroy_packages(vmc_compiler* c)
 {
-	vmc_package* package;
-	const int size = c->packages.count;
-	for (int i = 0; i < size; ++i) {
-		package = VM_LIST_GET(c->packages, vmc_package, i);
-		vmc_package_free(package);
-	}
-	vm_list_destroy(&c->packages);
+	vmc_packages_list_destroy(&c->packages);
 }
 
 //
@@ -937,13 +992,12 @@ vmc_compiler* vmc_compiler_new(const vmc_compiler_config* config)
 	vm_bytestream_init(&c->bytecode);
 	vm_messages_init(&c->messages);
 	c->panic_error_message.code = VMC_COMPILER_MSG_NONE;
-	vm_list_init(&c->packages);
+	vmc_packages_list_init(&c->packages);
 	c->functions_count = 0;
 	vmc_string_pool_init(&c->string_pool);
 	vmc_linker_init(&c->linker);
 
 	_vmc_compiler_register_builtins(c);
-	vmc_package_new(c, "main", 4);
 	return c;
 }
 
@@ -962,8 +1016,7 @@ BOOL vmc_compiler_compile(vmc_compiler* c, const vm_byte* src)
 	vmc_lexer l;
 	vmc_lexer_init(&l, src);
 	_vmc_append_header(c);
-	// TODO: Handle packages better. Hardcoded to be the main package is the second package
-	_vmc_parse(c, &l, VM_LIST_GET(c->packages, vmc_package, 1));
+	_vmc_parse(c, &l);
 	vm_messages_move(&l.messages, &c->messages);
 	vmc_lexer_release(&l);
 	if (vmc_compiler_success(c)) {
@@ -981,14 +1034,19 @@ vm_int32 vmc_compiler_config_import(struct vmc_compiler* c, const vm_string* pat
 	return 0;
 }
 
-vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length)
+vmc_package* vmc_package_new(vmc_compiler* c, const vm_string* name)
 {
-	vmc_package* p = vmc_package_malloc(name, length);
+	vmc_package* p = vmc_package_malloc(name);
 	if (p == NULL)
 		return NULL;
-	p->global_package = VM_LIST_GET(c->packages, vmc_package, 0);
+	p->global_package = c->packages.memory[0];
 	// Always add the vm root scope as imported
 	//vmc_package_add_import_alias(p, VM_LIST_GET(c->packages, vmc_package, 0), VM_STRING_CONST_GET(empty));
-	p->id = vm_list_add(&c->packages, p);
+	vmc_packages_list_add(&c->packages, p);
 	return p;
+}
+
+vmc_package* vmc_compiler_find_package(vmc_compiler* c, const vm_string* name)
+{
+	return vmc_packages_list_find(&c->packages, name);
 }

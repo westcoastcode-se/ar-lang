@@ -2,7 +2,7 @@
 #define _VMC_COMPILER_H_
 
 #include "vmc_lexer.h"
-#include "../vm_list.h"
+#include "lists/packages_list.h"
 #include "../vm_bytestream.h"
 #include "vmc_string_pool.h"
 #include "vmc_linker.h"
@@ -42,7 +42,7 @@ struct vmc_compiler
 	vm_message panic_error_message;
 
 	// Packages
-	vm_list packages;
+	vmc_packages_list packages;
 
 	// Number of functions, in total
 	vm_uint32 functions_count;
@@ -118,7 +118,10 @@ inline static vm_byte* vmc_compiler_bytecode(vmc_compiler* c)
 extern vm_int32 vmc_compiler_config_import(vmc_compiler* c, const vm_string* path);
 
 // Create a new package
-extern vmc_package* vmc_package_new(vmc_compiler* c, const char* name, int length);
+extern vmc_package* vmc_package_new(vmc_compiler* c, const vm_string* name);
+
+// Search for a package
+extern vmc_package* vmc_compiler_find_package(vmc_compiler* c, const vm_string* name);
 
 // Figure out the offset in the bytestream where a specific field is located
 inline static vm_int32 vmc_compiler_bytecode_field_offset(vmc_compiler* c, vm_int32 field_offset)
