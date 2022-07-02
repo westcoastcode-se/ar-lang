@@ -238,6 +238,9 @@ extern vmp_instr* vmp_instr_cgt(const vmp_type* type);
 // Create a new jmp instruction and return it
 extern vmp_instr* vmp_instr_jmpt(const vmp_marker* marker);
 
+// Create a new jmp instruction and return it
+extern vmp_instr* vmp_instr_jmpf(const vmp_marker* marker);
+
 // Create a new ret instruction
 extern vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size);
 

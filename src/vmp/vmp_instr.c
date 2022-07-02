@@ -242,6 +242,17 @@ vmp_instr* vmp_instr_jmpt(const vmp_marker* marker)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_jmpf(const vmp_marker* marker)
+{
+	vmp_instr_def_jmp* instr = (vmp_instr_def_jmp*)vmc_malloc(sizeof(vmp_instr_def_jmp));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_JMP, sizeof(vmi_instr_jmp));
+	instr->op = VMI_INSTR_JMP_PROP1_FALSE;
+	instr->marker = marker;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 {
 	vmp_instr_def_basic* instr = (vmp_instr_def_basic*)vmc_malloc(sizeof(vmp_instr_def_basic));

@@ -550,6 +550,71 @@ struct suite_vmp_tests : utils_vm
 		TEST_FN(jmpt(-1));
 	}
 
+	void jmpf(const vm_int32 const_val)
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Get function and add two integer types
+		auto get = vmp_func_newsz("Get", 3);
+		vmp_func_new_arg(get, get_type("vm", string(name<vm_int32>())));
+		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, get);
+
+		// {
+		//	lda 0
+		//	ldc_i4 10
+		//	cgt
+		//	jmpt #marker
+		//	ldc_i4 50
+		//	str 0
+		//  ret
+		//	#marker
+		//	ldc_i4 150
+		//	str 0
+		//	ret
+		// }
+		vmp_func_begin_body(get);
+		auto marker = vmp_func_new_marker(get);
+		vmp_func_add_instr(get, vmp_instr_lda(0));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(10)));
+		vmp_func_add_instr(get, vmp_instr_cgt(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_jmpf(marker));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(50)));
+		vmp_func_add_instr(get, vmp_instr_str(0));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_marker_set_instr(marker,
+			vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(150)))
+		);
+		vmp_func_add_instr(get, vmp_instr_str(0));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		vmi_thread_push_i32(t, const_val);
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 10 < const_val ? 150 : 50);
+
+		destroy(t);
+
+		end();
+	}
+
+	void jmpf()
+	{
+		TEST_FN(jmpf(1));
+		TEST_FN(jmpf(100));
+		TEST_FN(jmpf(-1));
+	}
+
 	void operator()()
 	{
 		TEST(add);
@@ -559,6 +624,7 @@ struct suite_vmp_tests : utils_vm
 		TEST(cgt);
 		TEST(clt);
 		TEST(jmpt);
+		TEST(jmpf);
 	}
 };
 
