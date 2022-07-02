@@ -86,13 +86,33 @@ vmp_instr* vmp_instr_str(vm_uint32 index)
 
 vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant)
 {
-	vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmc_malloc(sizeof(vmp_instr_def_ldc));
-	if (instr == NULL)
-		return NULL;
-	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC, sizeof(vmi_instr_ldc_i32));
-	instr->type = type;
-	instr->constant = constant;
-	return VMC_PIPELINE_INSTR_BASE(instr);
+	switch (constant.type)
+	{
+	case VMI_INSTR_PROP_INT64:
+	case VMI_INSTR_PROP_UINT64:
+	case VMI_INSTR_PROP_FLOAT64:
+	{
+
+		vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmc_malloc(sizeof(vmp_instr_def_ldc));
+		if (instr == NULL)
+			return NULL;
+		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC_I8, sizeof(vmi_instr_ldc_i64));
+		instr->type = type;
+		instr->constant = constant;
+		return VMC_PIPELINE_INSTR_BASE(instr);
+	}
+	default:
+	{
+
+		vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmc_malloc(sizeof(vmp_instr_def_ldc));
+		if (instr == NULL)
+			return NULL;
+		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC, sizeof(vmi_instr_ldc_i32));
+		instr->type = type;
+		instr->constant = constant;
+		return VMC_PIPELINE_INSTR_BASE(instr);
+	}
+	}
 }
 
 vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant)
@@ -101,6 +121,17 @@ vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant)
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC_S, sizeof(vmi_instr_ldc_s));
+	instr->type = type;
+	instr->constant = constant;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)
+{
+	vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmc_malloc(sizeof(vmp_instr_def_ldc));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC_I8, sizeof(vmi_instr_ldc_i64));
 	instr->type = type;
 	instr->constant = constant;
 	return VMC_PIPELINE_INSTR_BASE(instr);
@@ -165,6 +196,23 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		break;
 	}
 	case VMP_INSTR_LDC_S:
+	{
+
+	}
+	case VMP_INSTR_LDC_I8:
+	{
+		const vmp_instr_def_ldc* const cmd = (vmp_instr_def_ldc*)h;
+
+		vmi_instr_ldc_i64 instr;
+		instr.opcode = 0;
+		instr.icode = VMI_LDC_I8;
+		instr.props1 = cmd->constant.type;
+		instr.i64 = cmd->constant.i8;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldc_i64))) {
+			return NULL;
+		}
+		break;
+	}
 	case VMP_INSTR_ADD:
 	{
 		const vmp_instr_def_add* const cmd = (vmp_instr_def_add*)h;

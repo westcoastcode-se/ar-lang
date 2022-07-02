@@ -257,7 +257,9 @@ struct suite_vmp_tests : utils_vm
 		TEST_FN(ldc_T<vm_int8>(12));
 		TEST_FN(ldc_T<vm_int16>(INT16_MAX - 10));
 		TEST_FN(ldc_T<vm_int32>(INT32_MAX - 1234));
+		TEST_FN(ldc_T<vm_int64>(INT64_MAX - 123456));
 		TEST_FN(ldc_T<vm_float32>(123.456f));
+		TEST_FN(ldc_T<vm_float64>(12345.6789));
 	}
 
 	void operator()()

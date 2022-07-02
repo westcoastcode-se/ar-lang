@@ -123,6 +123,9 @@ extern vmp_instr* vmp_instr_str(vm_uint32 index);
 // Create a constant value instruction
 extern vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant);
 
+// Create a constant value instruction put into a large container
+extern vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant);
+
 // Create a constant value instruction for smaller values, such as 16- and 8 bit constants
 extern vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant);
 
