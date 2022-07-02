@@ -1,4 +1,5 @@
 #include "vmp_types.h"
+#include "vmp_instr.h"
 #include "../vmc/vmc_debug.h"
 
 vmp_package* vmp_package_new(const vm_string* name)
@@ -253,6 +254,9 @@ BOOL vmp_func_add_instr(vmp_func* f, vmp_instr* instr)
 
 void vmp_func_begin_body(vmp_func* f)
 {
+	const vm_int32 size = f->locals.count;
+	if (size > 0)
+		vmp_func_add_instr(f, vmp_instr_locals(f));
 }
 
 void vmp_func_begin_end(vmp_func* f)

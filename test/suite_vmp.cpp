@@ -294,8 +294,7 @@ struct suite_vmp_tests : utils_vm
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
 
-
-		// Create the Add function and add two integer types
+		// Create the Get function and add two integer types
 		auto get = vmp_func_newsz("Get", 3);
 		auto get_ret1 = vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
 		vmp_package_add_func(main_package, get);
@@ -331,11 +330,65 @@ struct suite_vmp_tests : utils_vm
 		end();
 	}
 
+	void locals()
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Get function and add two integer types
+		auto get = vmp_func_newsz("Get", 3);
+		auto get_ret1 = vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		auto get_local1 = vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
+		vmp_local_set_namesz(get_local1, "i", 1);
+		vmp_package_add_func(main_package, get);
+
+		// {
+		//	locals (i int32)
+		//	ldc_i4 100
+		//	stl 0
+		//	ldl 0
+		//	ldc_i4 1
+		//	add int32
+		//	stl 0
+		//	ldl 0
+		//	str 0
+		//	ret
+		// }
+		vmp_func_begin_body(get);
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const((vm_int32)100)));
+		vmp_func_add_instr(get, vmp_instr_stl(0));
+		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const((vm_int32)1)));
+		vmp_func_add_instr(get, vmp_instr_add(props1<vm_int32>()));
+		vmp_func_add_instr(get, vmp_instr_stl(0));
+		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_str(0));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 100 + 1);
+
+		destroy(t);
+
+		end();
+	}
+
 	void operator()()
 	{
 		TEST(add);
 		TEST(ldc);
 		TEST(call);
+		TEST(locals);
 	}
 };
 

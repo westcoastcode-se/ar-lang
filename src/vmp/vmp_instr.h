@@ -25,6 +25,36 @@ struct vmp_instr_def_str
 };
 typedef struct vmp_instr_def_str vmp_instr_def_str;
 
+// stl <index>
+struct vmp_instr_def_stl
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Locals index to save
+	vm_uint32 index;
+};
+typedef struct vmp_instr_def_stl vmp_instr_def_stl;
+
+// locals
+struct vmp_instr_def_locals
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// How much memory should be reserved on the stack
+	vm_uint16 reserve_stack_size;
+};
+typedef struct vmp_instr_def_locals vmp_instr_def_locals;
+
+// ldl <index>
+struct vmp_instr_def_ldl
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Locals index to load
+	vm_uint32 index;
+};
+typedef struct vmp_instr_def_ldl vmp_instr_def_ldl;
+
 // Represents a constant value up to 8 bytes
 struct vmp_constant
 {
@@ -142,6 +172,15 @@ extern vmp_instr* vmp_instr_lda(vm_uint32 index);
 
 // Create a new str instruction and return it
 extern vmp_instr* vmp_instr_str(vm_uint32 index);
+
+// Create a new stl instruction and return it
+extern vmp_instr* vmp_instr_stl(vm_uint32 index);
+
+// Create a new stl instruction and return it
+extern vmp_instr* vmp_instr_ldl(vm_uint32 index);
+
+// Add an instruction to allocate local variable memory for the supplied function
+extern vmp_instr* vmp_instr_locals(const vmp_func* func);
 
 // Create a constant value instruction
 extern vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant);

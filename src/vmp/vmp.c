@@ -58,7 +58,7 @@ vmp_package* vmp_pipeline_find_packagesz(vmp_pipeline* p, const char* name, vm_i
 	return vmp_list_packages_find(&p->packages, &str);
 }
 
-BOOL vmp_pipeline_resolve_args(vmp_pipeline* p, vm_int32 offset, vmp_func* func)
+void vmp_pipeline_resolve_args(vmp_pipeline* p, vmp_func* func)
 {
 	// The offset represents where a specific argument can be found. The order is backwards, because 
 	// you push values from the right to the left (i.e. memory for the last return value is pushed first)
@@ -78,8 +78,20 @@ BOOL vmp_pipeline_resolve_args(vmp_pipeline* p, vm_int32 offset, vmp_func* func)
 		stack_offset -= ret->type->size;
 		ret->offset = stack_offset;
 	}
+}
 
-	return TRUE;
+void vmp_pipeline_resolve_locals(vmp_pipeline* p, vmp_func* func)
+{
+	// Augment offsets (where is the memory located from the "ebp"'s point of view).
+	// EBP points to where the stack is located 
+	const vm_int32 num_locals = func->locals.count;
+	vm_int32 i;
+	vm_int32 offset = func->returns_stack_size + func->args_stack_size + sizeof(vmi_ip) + sizeof(vm_byte*);
+	for (i = 0; i < num_locals; ++i) {
+		vmp_local* const local = vmp_list_locals_get(&func->locals, i);
+		local->offset = offset;
+		offset += local->type->size;
+	}
 }
 
 vm_int32 vmp_pipeline_resolve_package(vmp_pipeline* p, vm_int32 offset, vmp_package* pkg)
@@ -90,9 +102,9 @@ vm_int32 vmp_pipeline_resolve_package(vmp_pipeline* p, vm_int32 offset, vmp_pack
 	for (vm_int32 i = 0; i < num_funcs; ++i) {
 		vmp_func* const func = vmp_list_funcs_get(&pkg->funcs, i);
 		// Make sure that all information of the arguments are known
-		if (!vmp_pipeline_resolve_args(p, offset, func)) {
-			return FALSE;
-		}
+		vmp_pipeline_resolve_args(p, func);
+		// Make sure that local information is correct
+		vmp_pipeline_resolve_locals(p, func);
 		// Set function properties
 		func->offset = offset;
 		offset += func->body_size;

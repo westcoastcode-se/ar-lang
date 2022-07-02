@@ -31,6 +31,16 @@ BOOL vmp_builder_message_return_index_missing(struct vmp_builder* b, vm_int32 in
 		index);
 }
 
+BOOL vmp_builder_message_local_index_missing(struct vmp_builder* b, vm_int32 index)
+{
+	vm_messages* const m = &b->messages;
+	return vm_messages_add(m,
+		VMP_MESSAGE_PREFIX,
+		VMP_MESSAGE_LOCAL_INDEX_MISSING,
+		VMP_MESSAGE_LOCAL_INDEX_MISSING_STR,
+		index);
+}
+
 extern BOOL vmp_builder_panic_out_of_memory(struct vmp_builder* b)
 {
 	vm_message* const m = &b->panic_error_message;
