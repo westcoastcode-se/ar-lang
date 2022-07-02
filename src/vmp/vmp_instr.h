@@ -158,6 +158,19 @@ struct vmp_instr_def_add
 };
 typedef struct vmp_instr_def_add vmp_instr_def_add;
 
+// add <type>
+struct vmp_instr_def_cmp
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// The type of comparator used by this compare function
+	vm_int8 comparator;
+
+	// What type is compared
+	const vmp_type* compare_type;
+};
+typedef struct vmp_instr_def_cmp vmp_instr_def_cmp;
+
 // Represents a basic instruction with no arguments
 struct vmp_instr_def_basic
 {
@@ -202,6 +215,12 @@ extern vmp_instr* vmp_instr_call(const vmp_func* func);
 
 // Create a new add instruction and return it
 extern vmp_instr* vmp_instr_add(vm_int8 type);
+
+// Create a new cmp instruction and return it
+extern vmp_instr* vmp_instr_clt(const vmp_type* type);
+
+// Create a new cmp instruction and return it
+extern vmp_instr* vmp_instr_cgt(const vmp_type* type);
 
 // Create a new ret instruction
 extern vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size);

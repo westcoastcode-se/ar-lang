@@ -209,6 +209,28 @@ vmp_instr* vmp_instr_add(vm_int8 type)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_clt(const vmp_type* type)
+{
+	vmp_instr_def_cmp* instr = (vmp_instr_def_cmp*)vmc_malloc(sizeof(vmp_instr_def_cmp));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CMP, sizeof(vmi_instr_cmp));
+	instr->comparator = VMI_INSTR_CMP_PROP1_LT;
+	instr->compare_type = type;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_cgt(const vmp_type* type)
+{
+	vmp_instr_def_cmp* instr = (vmp_instr_def_cmp*)vmc_malloc(sizeof(vmp_instr_def_cmp));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CMP, sizeof(vmi_instr_cmp));
+	instr->comparator = VMI_INSTR_CMP_PROP1_GT;
+	instr->compare_type = type;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 {
 	vmp_instr_def_basic* instr = (vmp_instr_def_basic*)vmc_malloc(sizeof(vmp_instr_def_basic));
@@ -376,6 +398,20 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.icode = VMI_ADD;
 		instr.props1 = cmd->type;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_add))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_CMP:
+	{
+		const vmp_instr_def_cmp* const cmd = (vmp_instr_def_cmp*)h;
+
+		vmi_instr_cmp instr;
+		instr.opcode = 0;
+		instr.icode = VMI_CMP;
+		instr.props1 = cmd->comparator;
+		instr.props2 = VMI_INSTR_CMP_PROP2_SIGNED;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_cmp))) {
 			return NULL;
 		}
 		break;

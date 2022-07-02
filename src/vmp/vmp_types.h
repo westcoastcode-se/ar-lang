@@ -137,6 +137,7 @@ enum vmp_instr_type
 	VMP_INSTR_ALLOCS,
 	VMP_INSTR_CALL,
 	VMP_INSTR_ADD,
+	VMP_INSTR_CMP,
 	VMP_INSTR_EOE,
 };
 typedef enum vmp_instr_type vmp_instr_type;
