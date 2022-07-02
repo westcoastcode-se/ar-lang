@@ -132,7 +132,7 @@ struct suite_vmp_tests : utils_vm
 		if (package == NULL)
 			throw_(error() << "expected 'main' package but was not found");
 
-		const vmi_package_func* func = vmi_package_find_function_by_name(package, entry_point, strlen(entry_point));
+		const auto func = vmi_package_find_function_by_name(package, entry_point, strlen(entry_point));
 		if (func == NULL)
 			throw_(error() << "could not find function '" << entry_point << "'");
 
@@ -431,6 +431,7 @@ struct suite_vmp_tests : utils_vm
 	{
 		TEST_FN(cgt(100));
 		TEST_FN(cgt(1));
+		TEST_FN(cgt(-1));
 	}
 
 	void clt(const vm_int32 const_val)
@@ -481,6 +482,72 @@ struct suite_vmp_tests : utils_vm
 	{
 		TEST_FN(clt(100));
 		TEST_FN(clt(1));
+		TEST_FN(clt(-1));
+	}
+
+	void jmpt(const vm_int32 const_val)
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Get function and add two integer types
+		auto get = vmp_func_newsz("Get", 3);
+		vmp_func_new_arg(get, get_type("vm", string(name<vm_int32>())));
+		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, get);
+
+		// {
+		//	lda 0
+		//	ldc_i4 10
+		//	cgt
+		//	jmpt #marker
+		//	ldc_i4 50
+		//	str 0
+		//  ret
+		//	#marker
+		//	ldc_i4 150
+		//	str 0
+		//	ret
+		// }
+		vmp_func_begin_body(get);
+		auto marker = vmp_func_new_marker(get);
+		vmp_func_add_instr(get, vmp_instr_lda(0));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(10)));
+		vmp_func_add_instr(get, vmp_instr_cgt(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_jmpt(marker));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(50)));
+		vmp_func_add_instr(get, vmp_instr_str(0));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_marker_set_instr(marker,
+			vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(150)))
+		);
+		vmp_func_add_instr(get, vmp_instr_str(0));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		vmi_thread_push_i32(t, const_val);
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, 10 > const_val ? 150 : 50);
+
+		destroy(t);
+
+		end();
+	}
+
+	void jmpt()
+	{
+		TEST_FN(jmpt(1));
+		TEST_FN(jmpt(100));
+		TEST_FN(jmpt(-1));
 	}
 
 	void operator()()
@@ -491,6 +558,7 @@ struct suite_vmp_tests : utils_vm
 		TEST(locals);
 		TEST(cgt);
 		TEST(clt);
+		TEST(jmpt);
 	}
 };
 

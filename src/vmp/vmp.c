@@ -29,6 +29,8 @@ vmp_pipeline* vmp_pipeline_new()
 	if (p == NULL)
 		return NULL;
 	vmp_list_packages_init(&p->packages);
+	p->total_body_size = 0;
+	p->total_header_size = 0;
 	vmp_pipeline_add_vm_package(p);
 	return p;
 }
@@ -113,10 +115,35 @@ vm_int32 vmp_pipeline_resolve_package(vmp_pipeline* p, vm_int32 offset, vmp_pack
 	return offset;
 }
 
+void vmp_pipeline_resolve_header_size(vmp_pipeline* p)
+{
+	const vm_int32 num_packages = p->packages.count;
+	vm_int32 size = sizeof(vmi_process_header);
+	vm_int32 i, j;
+
+	for(i = 0; i < num_packages; ++i)
+	{
+		const vmp_package* const package = vmp_list_packages_get(&p->packages, i);
+		size += sizeof(vmi_package_bytecode_header) + vm_string_length(&package->name);
+
+		for(j = 0; j < package->funcs.count; ++j)
+		{
+			const vmp_func* const f = vmp_list_funcs_get(&package->funcs, j);
+			size += sizeof(vmi_package_func_bytecode_header) + vm_string_length(&f->name);
+		}
+	}
+	p->total_header_size = size;
+}
+
 BOOL vmp_pipeline_resolve(vmp_pipeline* p)
 {
 	const vm_int32 size = p->packages.count;
-	vm_int32 offset = sizeof(vmi_process_header);
+	vm_int32 offset = 0;
+
+	// Resolve how big the header is
+	vmp_pipeline_resolve_header_size(p);
+
+	offset = p->total_header_size;
 	for (vm_int32 i = 0; i < size; ++i) {
 		const vm_int32 result = vmp_pipeline_resolve_package(p, offset, vmp_list_packages_get(&p->packages, i));
 		if (result == -1) {
@@ -124,6 +151,7 @@ BOOL vmp_pipeline_resolve(vmp_pipeline* p)
 		}
 		offset = result;
 	}
+	p->total_body_size = offset;
 	return TRUE;
 }
 
@@ -150,7 +178,6 @@ BOOL vmp_builder_compile_package(vmp_builder* b, const vmp_package* p)
 		while (instr) {
 			instr = vmp_instr_build(instr, b);
 		}
-
 	}
 
 	return TRUE;
@@ -164,8 +191,8 @@ void vmp_builder_write_header(vmp_builder* b)
 	header.header[2] = '0';
 	header.version = VM_VERSION;
 	header.data_offset = 0;
-	header.code_offset = sizeof(vmi_process_header);
-	header.first_package_offset = 0;
+	header.code_offset = b->pipeline->total_header_size;
+	header.first_package_offset = sizeof(vmi_process_header);
 	header.packages_count = b->pipeline->packages.count;
 	vmp_builder_write(b, &header, sizeof(vmi_process_header));
 }
@@ -178,54 +205,39 @@ vmi_process_header* vmp_builder_get_header(vmp_builder* b)
 vm_int32 vmp_builder_get_num_functions(vmp_builder* b)
 {
 	const vm_int32 size = b->pipeline->packages.count;
-	const vmp_package* package;
 	vm_int32 i;
 	vm_int32 count = 0;
 
 	for (i = 0; i < size; ++i) {
-		package = vmp_list_packages_get(&b->pipeline->packages, i);
+		const vmp_package* const package = vmp_list_packages_get(&b->pipeline->packages, i);
 		count += package->funcs.count;
 	}
 
 	return count;
 }
 
-void vmp_builder_set_header_info(vmp_builder* b)
+void vmp_builder_write_metadata(vmp_builder* b)
 {
 	const vm_int32 size = b->pipeline->packages.count;
-	const vmp_package* package;
 	vm_int32 i, j;
-
-	// Set how many packages compiled into the bytecode
-	vmp_builder_get_header(b)->packages_count = size;
-	// Set how many functions compiled into the bytecode
-	vmp_builder_get_header(b)->functions_count = vmp_builder_get_num_functions(b);
-	// Set the actual offset of where the package information is found
-	vmp_builder_get_header(b)->first_package_offset = vm_bytestream_get_size(&b->bytestream);
-
+	
 	// Memory structure for package information:
 	// <Package Header>
 	// char[]	| name bytes
 
 	for (i = 0; i < size; ++i) {
-		package = vmp_list_packages_get(&b->pipeline->packages, i);
+		const vmp_package* const package = vmp_list_packages_get(&b->pipeline->packages, i);
 		vmi_package_bytecode_header package_header = {
 			vm_string_length(&package->name),
 			package->funcs.count,
-			package->types.count,
-			0,
-			0
+			package->types.count
 		};
 		vmp_builder_write(b, &package_header, sizeof(vmi_package_bytecode_header));
-		vmp_builder_write(b, (void*)package->name.start, vm_string_length(&package->name)); // name bytes
-	}
+		vmp_builder_write(b, package->name.start, vm_string_length(&package->name)); // name bytes
 
-	// Memory structure for function information:
-	// int32	| name length
-	// char[]	| name bytes
-
-	for (i = 0; i < size; ++i) {
-		package = vmp_list_packages_get(&b->pipeline->packages, i);
+		// Memory structure for function information:
+		// int32	| name length
+		// char[]	| name bytes
 		for (j = 0; j < package->funcs.count; ++j) {
 			const vmp_func* const f = vmp_list_funcs_get(&package->funcs, j);
 			vmi_package_func_bytecode_header func_header = {
@@ -234,27 +246,38 @@ void vmp_builder_set_header_info(vmp_builder* b)
 				f->args_stack_size + f->returns_stack_size
 			};
 			vmp_builder_write(b, &func_header, sizeof(vmi_package_func_bytecode_header));
-			vmp_builder_write(b, (void*)f->name.start, vm_string_length(&f->name)); // name bytes
+			vmp_builder_write(b, f->name.start, vm_string_length(&f->name)); // name bytes
 		}
-	}
 
-	// Memory structure for type information:
-	// int32	| name length
-	// char[]	| name bytes
+		// Memory structure for type information:
+		// int32	| name length
+		// char[]	| name bytes
+		// ???
+	}
 }
 
 BOOL vmp_builder_compile(vmp_builder* b)
 {
 	const vm_int32 size = b->pipeline->packages.count;
-	vmp_builder_write_header(b);
 
+	// The total size of the bytecode should be the header data + the total body size. We resize this right now
+	// so that we know that the memory is not moved due to a resize
+	vm_bytestream_resize(&b->bytestream, b->pipeline->total_header_size + b->pipeline->total_body_size);
+
+	vmp_builder_write_header(b);
+	vmp_builder_write_metadata(b);
+
+	// Verify that the header size is as large as what is written
+	if (vm_bytestream_get_size(&b->bytestream) != b->pipeline->total_header_size)
+		return FALSE;
+	
 	for (vm_int32 i = 0; i < size; ++i) {
 		const vmp_package* p = vmp_list_packages_get(&b->pipeline->packages, i);
 		if (!vmp_builder_compile_package(b, p)) {
 			return FALSE;
 		}
 	}
-	vmp_builder_set_header_info(b);
+
 	return TRUE;
 }
 

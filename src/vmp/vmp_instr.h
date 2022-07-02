@@ -171,6 +171,19 @@ struct vmp_instr_def_cmp
 };
 typedef struct vmp_instr_def_cmp vmp_instr_def_cmp;
 
+// jmp
+struct vmp_instr_def_jmp
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// The type of operator used by this jump function is using
+	vm_int8 op;
+
+	// Marker we want to jump to
+	const vmp_marker* marker;
+};
+typedef struct vmp_instr_def_jmp vmp_instr_def_jmp;
+
 // Represents a basic instruction with no arguments
 struct vmp_instr_def_basic
 {
@@ -221,6 +234,9 @@ extern vmp_instr* vmp_instr_clt(const vmp_type* type);
 
 // Create a new cmp instruction and return it
 extern vmp_instr* vmp_instr_cgt(const vmp_type* type);
+
+// Create a new jmp instruction and return it
+extern vmp_instr* vmp_instr_jmpt(const vmp_marker* marker);
 
 // Create a new ret instruction
 extern vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size);

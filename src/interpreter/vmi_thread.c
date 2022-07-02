@@ -349,7 +349,7 @@ vm_int32 vmi_thread_push_ptr(vmi_thread* t, void* value)
 	return 0;
 }
 
-vm_int32 vmi_thread_entrypoint(vmi_thread* t, const vmi_package_func* func)
+vm_int32 vmi_thread_entrypoint(vmi_thread* t, const vmi_function* func)
 {
 	t->ip = func->ptr;
 
@@ -376,7 +376,7 @@ vm_int32 vmi_thread_entrypoint(vmi_thread* t, const vmi_package_func* func)
 	return _vmi_thread_exec(t, t->ip);
 }
 
-vm_int32 vmi_thread_exec(vmi_thread* t, const vmi_package_func* func)
+vm_int32 vmi_thread_exec(vmi_thread* t, const vmi_function* func)
 {
 	return _vmi_thread_exec(t,
 		vmi_thread_begin_call(t, t->ip, func->ptr, func->expected_stack_size)

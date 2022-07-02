@@ -8,6 +8,7 @@
 #include "vmp_list_funcs.h"
 #include "vmp_list_returns.h"
 #include "vmp_list_locals.h"
+#include "vmp_list_markers.h"
 
 struct vmp_package
 {
@@ -65,6 +66,9 @@ struct vmp_func
 
 	// Locals
 	vmp_list_locals locals;
+
+	// Memory markers
+	vmp_list_markers markers;
 
 	// The stack size required for this function to work
 	vm_uint32 args_stack_size;
@@ -138,6 +142,7 @@ enum vmp_instr_type
 	VMP_INSTR_CALL,
 	VMP_INSTR_ADD,
 	VMP_INSTR_CMP,
+	VMP_INSTR_JMP,
 	VMP_INSTR_EOE,
 };
 typedef enum vmp_instr_type vmp_instr_type;
@@ -178,6 +183,13 @@ typedef struct vmp_instr_header vmp_instr;
 // Initialize object header
 #define VMC_PIPELINE_INIT_HEADER(PTR, TYPE, SIZE) PTR->func = NULL; PTR->instr_type = TYPE; PTR->instr_size = SIZE; vm_int32 instr_offset = 0; PTR->next = NULL
 #define VMC_PIPELINE_INSTR_BASE(PTR) (&PTR->header)
+
+struct vmp_marker
+{
+	const vmp_func* func;
+	vm_int32 instr_offset;
+};
+typedef struct vmp_marker vmp_marker;
 
 // New package
 extern vmp_package* vmp_package_new(const vm_string* name);
@@ -266,8 +278,17 @@ extern BOOL vmp_func_add_local(vmp_func* f, vmp_local* local);
 // Add a local variable for this function of a specific type
 extern vmp_local* vmp_func_new_local(vmp_func* f, vmp_type* type);
 
+// Add a memory marker
+extern vmp_marker* vmp_func_new_marker(vmp_func* f);
+
+// Set the first instruction to be called when jumping to the supplied marker
+extern void vmp_marker_set_instr(vmp_marker* m, vmp_instr* instr);
+
+// Remove memory marker
+extern void vmp_marker_free(vmp_marker* m);
+
 // Add a new instruction
-extern BOOL vmp_func_add_instr(vmp_func* f, vmp_instr* instr);
+extern vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr);
 
 extern void vmp_func_begin_body(vmp_func* f);
 

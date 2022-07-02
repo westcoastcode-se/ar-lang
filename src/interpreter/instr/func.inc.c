@@ -34,9 +34,7 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 vmi_ip _vmi_thread_call(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_call* instr = (const vmi_instr_call*)ip;
-	// TODO: Is it possible to make address be the actual bytecode address?
-	vmi_ip new_ip = (vmi_ip)(t->bytecode + (size_t)instr->addr);
-	return vmi_thread_begin_call(t, ip, new_ip, instr->expected_stack_size);
+	return vmi_thread_begin_call(t, ip, instr->addr, instr->expected_stack_size);
 }
 
 vmi_ip _vmi_thread_lda(vmi_thread* t, vmi_ip ip)

@@ -12,6 +12,12 @@ struct vmp_pipeline
 {
 	// All packages
 	vmp_list_packages packages;
+
+	// The total size, in bytes, that the header will take in the bytecode
+	vm_int32 total_header_size;
+
+	// The total size in bytes that the bytecode for all functions will take
+	vm_int32 total_body_size;
 };
 typedef struct vmp_pipeline vmp_pipeline;
 

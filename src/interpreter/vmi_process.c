@@ -7,52 +7,46 @@
 
 BOOL _vmi_process_load_package_info(vmi_process* p, const vm_byte* bytecode)
 {
-	vm_uint32 i;
-	vm_uint32 functions_start_index = 0;
-	const vm_byte* first_package_bytes = (p->bytecode + p->header.first_package_offset);
-
-	// Create an array containing information on all packages
-	p->packages = (vmi_package*)malloc(sizeof(vmi_package) * p->header.packages_count);
-	if (p->packages == NULL) {
-		return FALSE;
-	}
-
-	// Create memory for all functions
-	p->functions = (vmi_package_func*)malloc(sizeof(vmi_package_func) * p->header.functions_count);
-	if (p->functions == NULL) {
-		return FALSE;
-	}
-
+	vm_uint32 i, j;
+	const vm_byte* ptr = (p->bytecode + p->header.first_package_offset);
+	
 	// Prepare each package
 	for (i = 0; i < p->header.packages_count; ++i) {
-		const vmi_package_bytecode_header* header = (const vmi_package_bytecode_header*)(first_package_bytes);
-		const char* const name_start = first_package_bytes + sizeof(vmi_package_bytecode_header);
-		vmi_package* const current_package = &p->packages[i];
-		
-		current_package->id = i;
+		const vmi_package_bytecode_header* header = (const vmi_package_bytecode_header*)(ptr);
+		const char* name_start = ptr + sizeof(vmi_package_bytecode_header);
+		vmi_package* const current_package = vmi_package_new();
+
+		current_package->id = vmi_list_packages_add(&p->packages, current_package);
 		current_package->name.start = name_start;
 		current_package->name.end = name_start + header->name_length;
-		current_package->functions_start_index = functions_start_index;
-		current_package->functions_count = header->functions_count;
 		current_package->process = p;
 
-		first_package_bytes += sizeof(vmi_package_bytecode_header) + header->name_length;
-		functions_start_index += header->functions_count;
+		ptr += sizeof(vmi_package_bytecode_header) + header->name_length;
+
+		for(j = 0; j < header->functions_count; ++j) {
+			const vmi_package_func_bytecode_header* fh = (const vmi_package_func_bytecode_header*)(ptr);
+			name_start = ptr + sizeof(vmi_package_bytecode_header);
+			vmi_function* const current_func = vmi_function_new();
+			current_func->id = p->functions_count++;
+			current_func->name.start = name_start;
+			current_func->name.end = name_start + fh->name_length;
+			current_func->ptr = bytecode + fh->ptr_start;
+			current_func->expected_stack_size = fh->expected_stack_size;
+
+			vmi_list_functions_add(&current_package->functions, current_func);
+
+			ptr += sizeof(vmi_package_func_bytecode_header) + fh->name_length;
+		}
 	}
 
-	// Prepare each function
-	for (i = 0; i < p->header.functions_count; ++i) {
-		const vmi_package_func_bytecode_header* header = (const vmi_package_func_bytecode_header*)(first_package_bytes);
-		const char* const name_start = first_package_bytes + sizeof(vmi_package_func_bytecode_header);
-		vmi_package_func* const current_func = &p->functions[i];
-
-		current_func->id = i;
-		current_func->name.start = name_start;
-		current_func->name.end = name_start + header->name_length;
-		current_func->ptr = bytecode + header->ptr_start;
-		current_func->expected_stack_size = header->expected_stack_size;
-
-		first_package_bytes += sizeof(vmi_package_func_bytecode_header) + header->name_length;
+	// Set function in the global functions list
+	p->functions = malloc(sizeof(vmi_function*) * p->functions_count);
+	for (i = 0; i < p->packages.count; ++i) {
+		const vmi_package* package = vmi_list_packages_get(&p->packages, i);
+		for (j = 0; j < package->functions.count; ++j) {
+			const vmi_function* func = vmi_list_functions_get(&package->functions, j);
+			p->functions[func->id] = func;
+		}
 	}
 
 	return TRUE;
@@ -68,16 +62,16 @@ vmi_process* vmi_process_new()
 	if (p == NULL)
 		return NULL;
 	memset(p, 0, sizeof(vmi_process));
+	vmi_list_packages_init(&p->packages);
+	p->functions = NULL;
+	p->functions_count = 0;
 	return p;
 }
 
 void vmi_process_destroy(vmi_process* p)
 {
 	ASSERT_NOT_NULL(p);
-	if (p->packages != NULL) {
-		free(p->packages);
-		p->packages = NULL;
-	}
+	vmi_list_packages_release(&p->packages);
 	free(p);
 }
 
@@ -101,7 +95,7 @@ vm_int32 vmi_process_load(vmi_process* p, const vm_byte* bytecode)
 	return 0;
 }
 
-vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t, const vmi_package_func* func)
+vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t, const vmi_function* func)
 {
 	vm_int32 result;
 	// TODO: Add support for multiple threads
@@ -114,24 +108,25 @@ vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t, const vmi_packag
 
 const vmi_package* vmi_process_find_package_by_name(const vmi_process* p, const char* name, int len)
 {
+	const vm_uint32 num_packages = p->packages.count;
 	vm_uint32 i = 0;
-	for (i = 0; i < p->header.packages_count; ++i) {
-		if (vm_string_cmpsz(&p->packages[i].name, name, len)) {
-			return &p->packages[i];
+	for (i = 0; i < num_packages; ++i) {
+		const vmi_package* const package = vmi_list_packages_get(&p->packages, i);
+		if (vm_string_cmpsz(&package->name, name, len)) {
+			return package;
 		}
 	}
 	return NULL;
 }
 
-const vmi_package_func* vmi_package_find_function_by_name(const vmi_package* p, const char* name, int len)
+const vmi_function* vmi_package_find_function_by_name(const vmi_package* p, const char* name, int len)
 {
 	vm_uint32 i;
-	const vm_uint32 count = p->functions_count;
-	if (count == 0)
-		return NULL;
-	for (i = p->functions_start_index; i < count; ++i) {
-		if (vm_string_cmpsz(&p->process->functions[i].name, name, len)) {
-			return &p->process->functions[i];
+	const vm_uint32 count = p->functions.count;
+	for (i = 0; i < count; ++i) {
+		const vmi_function* const func = vmi_list_functions_get(&p->functions, i);
+		if (vm_string_cmpsz(&func->name, name, len)) {
+			return func;
 		}
 	}
 	return NULL;
@@ -139,14 +134,40 @@ const vmi_package_func* vmi_package_find_function_by_name(const vmi_package* p, 
 
 const vmi_package* vmi_process_find_package_by_id(const vmi_process* p, vm_uint32 id)
 {
-	if (p->header.packages_count >= id)
-		return NULL;
-	return &p->packages[id];
+	return vmi_list_packages_get(&p->packages, id);
 }
 
-const vmi_package_func* vmi_process_find_function_by_id(const vmi_process* p, vm_uint32 id)
+const vmi_function* vmi_process_find_function_by_id(const vmi_process* p, vm_uint32 id)
 {
-	if (p->header.functions_count >= id)
+	if (p->functions_count >= id)
 		return NULL;
-	return &p->functions[id];
+	return p->functions[id];
+}
+
+extern vmi_package* vmi_package_new()
+{
+	vmi_package* p = malloc(sizeof(vmi_package));
+	if (p == NULL)
+		return NULL;
+	vmi_list_functions_init(&p->functions);
+	return p;
+}
+
+extern void vmi_package_destroy(vmi_package* p)
+{
+	vmi_list_functions_release(&p->functions);
+	free(p);
+}
+
+extern vmi_function* vmi_function_new()
+{
+	vmi_function* f = malloc(sizeof(vmi_function));
+	if (f == NULL)
+		return NULL;
+	return f;
+}
+
+void vmi_function_destroy(vmi_function* f)
+{
+	free(f);	
 }

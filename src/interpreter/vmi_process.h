@@ -2,6 +2,8 @@
 #define _VMI_PROCESS_H_
 
 #include "vmi_config.h"
+#include "vmi_list_functions.h"
+#include "vmi_list_packages.h"
 #include "../vm_string.h"
 
 struct vmi_package_func_bytecode_header
@@ -14,6 +16,8 @@ struct vmi_package_func_bytecode_header
 
 	// How many bytes are expected to be pushed for this function to work
 	vm_int32 expected_stack_size;
+
+	// char name[]
 };
 typedef struct vmi_package_func_bytecode_header vmi_package_func_bytecode_header;
 
@@ -23,14 +27,13 @@ struct vmi_package_bytecode_header
 	vm_uint32 name_length;
 	vm_uint32 functions_count;
 	vm_uint32 types_count;
-	vm_uint32 type_offset;
-	vm_uint32 function_offset;
-	// char* name
+	// char name[]
+	// functions[]
 };
 typedef struct vmi_package_bytecode_header vmi_package_bytecode_header;
 
 // Information of a function inside a package
-struct vmi_package_func
+struct vmi_function
 {
 	// Unique id for this function
 	vm_uint32 id;
@@ -44,7 +47,7 @@ struct vmi_package_func
 	// How many bytes are expected to be pushed for this function to work
 	vm_int32 expected_stack_size;
 };
-typedef struct vmi_package_func vmi_package_func;
+typedef struct vmi_function vmi_function;
 
 // Package information
 struct vmi_package
@@ -55,11 +58,8 @@ struct vmi_package
 	// Name of the package
 	vm_string name;
 
-	// Start index where the first function is found in the entire function blob
-	vm_uint32 functions_start_index;
-	
-	// Number of functions in this package
-	vm_uint32 functions_count;
+	// All functions part of this package
+	vmi_list_functions functions;
 
 	// Process this package is part of
 	struct vmi_process* process;
@@ -86,9 +86,6 @@ struct vmi_process_header
 
 	// Offset where the first package is found
 	vm_uint32 first_package_offset;
-
-	// Number of functions in total
-	vm_uint32 functions_count;
 };
 typedef struct vmi_process_header vmi_process_header;
 
@@ -101,11 +98,12 @@ struct vmi_process
 	// Header
 	vmi_process_header header;
 
-	// All packages (number of packages can be found in the header)
-	vmi_package* packages;
+	// All packages
+	vmi_list_packages packages;
 
-	// All functions
-	vmi_package_func* functions;
+	// All functions part of this list
+	const vmi_function** functions;
+	vm_uint32 functions_count;
 
 	// The first thread managed by this process
 	struct vmi_thread* first_thread;
@@ -125,18 +123,28 @@ extern void vmi_process_destroy(vmi_process* p);
 extern vm_int32 vmi_process_load(vmi_process* p, const vm_byte* bytecode);
 
 // Execute the supplied thread
-extern vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t, const vmi_package_func* func);
+extern vm_int32 vmi_process_exec(vmi_process* p, struct vmi_thread* t, const vmi_function* func);
 
 // Search for a package with the supplied name
 extern const vmi_package* vmi_process_find_package_by_name(const vmi_process* p, const char* name, int len);
 
 // Search for a function with the supplied name
-extern const vmi_package_func* vmi_package_find_function_by_name(const vmi_package* p, const char* name, int len);
+extern const vmi_function* vmi_package_find_function_by_name(const vmi_package* p, const char* name, int len);
 
 // Search for a package with the supplied unique id
 extern const vmi_package* vmi_process_find_package_by_id(const vmi_process* p, vm_uint32 id);
 
 // Search for a function with the supplied unique id
-extern const vmi_package_func* vmi_process_find_function_by_id(const vmi_process* p, vm_uint32 id);
+extern const vmi_function* vmi_process_find_function_by_id(const vmi_process* p, vm_uint32 id);
+
+// Create a new package
+extern vmi_package* vmi_package_new();
+
+// Destroy the supplied package
+extern void vmi_package_destroy(vmi_package* p);
+
+extern vmi_function* vmi_function_new();
+
+extern void vmi_function_destroy(vmi_function* f);
 
 #endif

@@ -122,7 +122,6 @@ void _vmc_append_header(vmc_compiler* c)
 	header.data_offset = 0;
 	header.code_offset = sizeof(vmi_process_header);
 	header.packages_count = 0;
-	header.functions_count = 0;
 	header.first_package_offset = 0;
 	vmc_write(c, &header, sizeof(header));
 }
@@ -941,7 +940,7 @@ void _vmc_append_package_info(vmc_compiler* c)
 	// Set how many packages compiled into the bytecode
 	_vmc_compiler_get_header(c)->packages_count = size;
 	// Set how many functions compiled into the bytecode
-	_vmc_compiler_get_header(c)->functions_count = c->functions_count;
+	//_vmc_compiler_get_header(c)->functions_count = c->functions_count;
 	// Set the actual offset of where the package information is found
 	_vmc_compiler_get_header(c)->first_package_offset = vm_bytestream_get_size(&c->bytecode);
 
@@ -954,24 +953,15 @@ void _vmc_append_package_info(vmc_compiler* c)
 		vmi_package_bytecode_header package_header = {
 			vm_string_length(&package->name),
 			vmc_types_list_count_type(&package->types, VMC_TYPE_HEADER_FUNC),
-			vmc_types_list_count_type(&package->types, VMC_TYPE_HEADER_TYPE),
-			0,
-			0
+			vmc_types_list_count_type(&package->types, VMC_TYPE_HEADER_TYPE)
 		};
 		vmc_write(c, &package_header, sizeof(vmi_package_bytecode_header));
 		vmc_write(c, (void*)package->name.start, vm_string_length(&package->name)); // name bytes
-	}
 
-	// Memory structure for function information:
-	// int32	| name length
-	// char[]	| name bytes
-	// 
-	// Memory structure for type information:
-	// int32	| name length
-	// char[]	| name bytes
-
-	for (i = 0; i < size; ++i) {
-		package = c->packages.memory[i];
+		// Memory structure for function information:
+		// int32	| name length
+		// char[]	| name bytes
+		// 
 		for (j = 0; j < package->types.count; ++j) {
 			vmc_type_header* header = package->types.memory[j];
 			if (header->type == VMC_TYPE_HEADER_FUNC) {
@@ -985,6 +975,9 @@ void _vmc_append_package_info(vmc_compiler* c)
 				vmc_write(c, (void*)f->name.start, vm_string_length(&f->name)); // name bytes
 			}
 		}
+		// Memory structure for type information:
+		// int32	| name length
+		// char[]	| name bytes
 	}
 }
 

@@ -164,6 +164,7 @@ vmp_func* vmp_func_newsz(const char* name, vm_int32 name_len)
 	vmp_list_args_init(&p->args);
 	vmp_list_returns_init(&p->returns);
 	vmp_list_locals_init(&p->locals);
+	vmp_list_markers_init(&p->markers);
 	p->args_stack_size = 0;
 	p->returns_stack_size = 0;
 	p->locals_stack_size = 0;
@@ -181,6 +182,7 @@ void vmp_func_destroy(vmp_func* f)
 		instr = next;
 	}
 	f->first_instr = f->last_instr = NULL;
+	vmp_list_markers_release(&f->markers);
 	vmp_list_locals_release(&f->locals);
 	vmp_list_returns_release(&f->returns);
 	vmp_list_args_release(&f->args);
@@ -238,7 +240,27 @@ vmp_local* vmp_func_new_local(vmp_func* f, vmp_type* type)
 	return NULL;
 }
 
-BOOL vmp_func_add_instr(vmp_func* f, vmp_instr* instr)
+vmp_marker* vmp_func_new_marker(vmp_func* f)
+{
+	vmp_marker* p = (vmp_marker*)vmc_malloc(sizeof(vmp_marker));
+	if (p == NULL)
+		return NULL;
+	p->func = f;
+	vmp_list_markers_add(&f->markers, p);
+	return p;
+}
+
+void vmp_marker_set_instr(vmp_marker* m, vmp_instr* instr)
+{
+	m->instr_offset = instr->instr_offset;
+}
+
+void vmp_marker_free(vmp_marker* m)
+{
+	vmc_free(m);
+}
+
+vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr)
 {
 	if (f->first_instr == NULL)
 		f->first_instr = f->last_instr = instr;
@@ -249,7 +271,7 @@ BOOL vmp_func_add_instr(vmp_func* f, vmp_instr* instr)
 	instr->instr_offset = f->body_size;
 	instr->func = f;
 	f->body_size += instr->instr_size;
-	return TRUE;
+	return instr;
 }
 
 void vmp_func_begin_body(vmp_func* f)

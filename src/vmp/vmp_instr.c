@@ -231,6 +231,17 @@ vmp_instr* vmp_instr_cgt(const vmp_type* type)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_jmpt(const vmp_marker* marker)
+{
+	vmp_instr_def_jmp* instr = (vmp_instr_def_jmp*)vmc_malloc(sizeof(vmp_instr_def_jmp));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_JMP, sizeof(vmi_instr_jmp));
+	instr->op = VMI_INSTR_JMP_PROP1_TRUE;
+	instr->marker = marker;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 {
 	vmp_instr_def_basic* instr = (vmp_instr_def_basic*)vmc_malloc(sizeof(vmp_instr_def_basic));
@@ -383,8 +394,23 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.opcode = 0;
 		instr.icode = VMI_CALL;
 		instr.expected_stack_size = func->args_stack_size + func->returns_stack_size;
-		instr.addr = OFFSET(func->offset);
+		instr.addr = builder->bytestream.memory + func->offset;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_call))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_JMP:
+	{
+		const vmp_instr_def_jmp* const cmd = (vmp_instr_def_jmp*)h;
+		const vmp_marker* const marker = cmd->marker;
+
+		vmi_instr_jmp instr;
+		instr.opcode = 0;
+		instr.icode = VMI_JMP;
+		instr.props1 = cmd->op;
+		instr.destination = builder->bytestream.memory + marker->instr_offset + marker->func->offset;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_jmp))) {
 			return NULL;
 		}
 		break;
