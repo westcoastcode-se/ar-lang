@@ -7,6 +7,7 @@
 #include "vmp_list_types.h"
 #include "vmp_list_funcs.h"
 #include "vmp_list_returns.h"
+#include "vmp_list_locals.h"
 
 struct vmp_package
 {
@@ -62,6 +63,9 @@ struct vmp_func
 	// Return values
 	vmp_list_returns returns;
 
+	// Locals
+	vmp_list_locals locals;
+
 	// The stack size required for this function to work
 	vm_uint32 args_stack_size;
 	vm_uint32 returns_stack_size;
@@ -102,6 +106,22 @@ struct vmp_return
 	vm_uint32 offset;
 };
 typedef struct vmp_return vmp_return;
+
+struct vmp_local
+{
+	// Function this argument is part of
+	const vmp_func* func;
+
+	// The type this argument is
+	const vmp_type* type;
+
+	// The name of this argument, if any
+	vm_string name;
+
+	// Offset, in bytes, where this argument is located on the stack (from EPB's point of view)
+	vm_uint32 offset;
+};
+typedef struct vmp_local vmp_local;
 
 enum vmp_instr_type
 {
@@ -203,6 +223,18 @@ extern vmp_return* vmp_return_new();
 // Destroy return
 extern void vmp_return_free(vmp_return* a);
 
+// New arg
+extern vmp_local* vmp_local_new();
+
+// Destroy arg
+extern void vmp_local_free(vmp_local* l);
+
+// Set the name of the argument
+extern void vmp_local_set_name(vmp_local* l, const vm_string* name);
+
+// Set the name of the argument
+extern void vmp_local_set_namesz(vmp_local* l, const char* name, vm_int32 len);
+
 // New type
 extern vmp_func* vmp_func_new(const vm_string* name);
 
@@ -223,6 +255,12 @@ extern BOOL vmp_func_add_return(vmp_func* f, vmp_return* ret);
 
 // Add a return value from this function
 extern vmp_return* vmp_func_new_return(vmp_func* f, vmp_type* type);
+
+// Add a local variable to this function
+extern BOOL vmp_func_add_local(vmp_func* f, vmp_local* local);
+
+// Add a local variable for this function of a specific type
+extern vmp_local* vmp_func_new_local(vmp_func* f, vmp_type* type);
 
 // Add a new instruction
 extern BOOL vmp_func_add_instr(vmp_func* f, vmp_instr* instr);

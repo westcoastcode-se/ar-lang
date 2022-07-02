@@ -56,7 +56,9 @@ add_library(vm "src/vm_config.h"
      "src/vmp/vmp.h" "src/vmp/vmp_types.h" "src/vmp/vmp_instr.h" "src/vmp/vmp_instr.c" 
      "src/vmp/vmp.c" "src/vmp/vmp_list_args.h" "src/vmp/vmp_list_args.c" "src/vmp/vmp_types.c" 
      "src/vmp/vmp_list_packages.c" "src/vmp/vmp_list_packages.h" "src/vmp/vmp_list_types.h" 
-     "src/vmp/vmp_list_types.c" "src/vmp/vmp_list_funcs.c" "src/vmp/vmp_list_funcs.h"  "src/vmp/vmp_list_returns.c" "src/vmp/vmp_list_returns.h" "src/vmp/vmp_messages.h" "src/vmp/vmp_messages.c")
+     "src/vmp/vmp_list_types.c" "src/vmp/vmp_list_funcs.c" "src/vmp/vmp_list_funcs.h"  "src/vmp/vmp_list_returns.c" 
+     "src/vmp/vmp_list_returns.h" "src/vmp/vmp_messages.h" "src/vmp/vmp_messages.c" "src/vmp/vmp_list_locals.c" 
+     "src/vmp/vmp_list_locals.h")
 
 
 # Tests
