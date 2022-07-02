@@ -11,16 +11,17 @@ void vmp_pipeline_add_vm_package(vmp_pipeline* p)
 	vmp_pipeline_add_package(p, vm);
 
 	// Add default types
-	vmp_package_new_typesz(vm, "int8", 4, sizeof(vm_int8));
-	vmp_package_new_typesz(vm, "uint8", 5, sizeof(vm_uint8));
-	vmp_package_new_typesz(vm, "int16", 5, sizeof(vm_int16));
-	vmp_package_new_typesz(vm, "uint16", 6, sizeof(vm_uint16));
-	vmp_package_new_typesz(vm, "int32", 5, sizeof(vm_int32));
-	vmp_package_new_typesz(vm, "uint32", 6, sizeof(vm_uint32));
-	vmp_package_new_typesz(vm, "int64", 5, sizeof(vm_int64));
-	vmp_package_new_typesz(vm, "uint64", 6, sizeof(vm_uint64));
-	vmp_package_new_typesz(vm, "float32", 7, sizeof(vm_float32));
-	vmp_package_new_typesz(vm, "float64", 7, sizeof(vm_float64));
+	vmp_package_new_typesz(vm, "int8", 4, sizeof(vm_int8))->data_type = VMI_INSTR_PROP_INT8;
+	vmp_package_new_typesz(vm, "uint8", 5, sizeof(vm_uint8))->data_type = VMI_INSTR_PROP_UINT8;
+	vmp_package_new_typesz(vm, "int16", 5, sizeof(vm_int16))->data_type = VMI_INSTR_PROP_INT16;
+	vmp_package_new_typesz(vm, "uint16", 6, sizeof(vm_uint16))->data_type = VMI_INSTR_PROP_UINT16;
+	vmp_package_new_typesz(vm, "int32", 5, sizeof(vm_int32))->data_type = VMI_INSTR_PROP_INT32;
+	vmp_package_new_typesz(vm, "uint32", 6, sizeof(vm_uint32))->data_type = VMI_INSTR_PROP_UINT32;
+	vmp_package_new_typesz(vm, "int64", 5, sizeof(vm_int64))->data_type = VMI_INSTR_PROP_INT64;
+	vmp_package_new_typesz(vm, "uint64", 6, sizeof(vm_uint64))->data_type = VMI_INSTR_PROP_UINT64;
+	vmp_package_new_typesz(vm, "float32", 7, sizeof(vm_float32))->data_type = VMI_INSTR_PROP_FLOAT32;
+	vmp_package_new_typesz(vm, "float64", 7, sizeof(vm_float64))->data_type = VMI_INSTR_PROP_FLOAT64;
+	vmp_package_new_typesz(vm, "bool", 4, sizeof(vm_int32))->data_type = VMI_INSTR_PROP_INT32;
 }
 
 vmp_pipeline* vmp_pipeline_new()
@@ -268,9 +269,13 @@ BOOL vmp_builder_compile(vmp_builder* b)
 	vmp_builder_write_metadata(b);
 
 	// Verify that the header size is as large as what is written
-	if (vm_bytestream_get_size(&b->bytestream) != b->pipeline->total_header_size)
+	if (vm_bytestream_get_size(&b->bytestream) != b->pipeline->total_header_size) {
+		vmp_builder_message_header_prediction_failed(b, 
+			b->pipeline->total_header_size, vm_bytestream_get_size(&b->bytestream));
 		return FALSE;
+	}
 	
+	// Compile the eactual bytecode
 	for (vm_int32 i = 0; i < size; ++i) {
 		const vmp_package* p = vmp_list_packages_get(&b->pipeline->packages, i);
 		if (!vmp_builder_compile_package(b, p)) {

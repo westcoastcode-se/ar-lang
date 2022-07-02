@@ -184,6 +184,19 @@ struct vmp_instr_def_jmp
 };
 typedef struct vmp_instr_def_jmp vmp_instr_def_jmp;
 
+// conv
+struct vmp_instr_def_conv
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// The type we are converting from
+	const vmp_type* from_type;
+
+	// The type we are converting to
+	const vmp_type* to_type;
+};
+typedef struct vmp_instr_def_conv vmp_instr_def_conv;
+
 // Represents a basic instruction with no arguments
 struct vmp_instr_def_basic
 {
@@ -240,6 +253,9 @@ extern vmp_instr* vmp_instr_jmpt(const vmp_marker* marker);
 
 // Create a new jmp instruction and return it
 extern vmp_instr* vmp_instr_jmpf(const vmp_marker* marker);
+
+// Create a new conv instruction
+extern vmp_instr* vmp_instr_conv(const vmp_type* from, const vmp_type* to);
 
 // Create a new ret instruction
 extern vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size);

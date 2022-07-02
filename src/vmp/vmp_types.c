@@ -68,6 +68,8 @@ vmp_type* vmp_type_new(const vm_string* name)
 	p->package = NULL;
 	p->name = *name;
 	p->size = 0;
+	p->flags = 0;
+	p->data_type = 0;
 	p->parent_type = NULL;
 	return p;
 }
@@ -75,6 +77,12 @@ vmp_type* vmp_type_new(const vm_string* name)
 void vmp_type_destroy(vmp_type* p)
 {
 	vmc_free(p);
+}
+
+BOOL vmp_type_can_convert(const vmp_type* from, const vmp_type* to)
+{
+	// TODO: Flags should indicate if a type is complex (a struct) or a data type
+	return from->flags == 0 && to->flags == 0;
 }
 
 vmp_arg* vmp_arg_new()

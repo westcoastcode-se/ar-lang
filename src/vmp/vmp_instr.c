@@ -253,6 +253,17 @@ vmp_instr* vmp_instr_jmpf(const vmp_marker* marker)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_conv(const vmp_type* from, const vmp_type* to)
+{
+	vmp_instr_def_conv* instr = (vmp_instr_def_conv*)vmc_malloc(sizeof(vmp_instr_def_conv));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CONV, sizeof(vmi_instr_conv));
+	instr->from_type = from;
+	instr->to_type = to;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 {
 	vmp_instr_def_basic* instr = (vmp_instr_def_basic*)vmc_malloc(sizeof(vmp_instr_def_basic));
@@ -500,6 +511,24 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.size = ret->type->size;
 		instr.offset = ret->offset;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_str))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_CONV:
+	{
+		const vmp_instr_def_conv* const cmd = (vmp_instr_def_conv*)h;
+		if (vmp_type_can_convert(cmd->from_type, cmd->to_type) == FALSE) {
+			vmp_builder_message_types_not_compatible(builder, &cmd->from_type->name, &cmd->to_type->name);
+			return NULL;
+		}
+
+		vmi_instr_conv instr;
+		instr.opcode = 0;
+		instr.icode = VMI_CONV;
+		instr.props1 = cmd->from_type->data_type;
+		instr.props2 = cmd->to_type->data_type;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_conv))) {
 			return NULL;
 		}
 		break;

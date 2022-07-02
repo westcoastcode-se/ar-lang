@@ -37,6 +37,12 @@ struct vmp_type
 	// Size, in bytes, that this type takes. If the size is 0 then this type has an unknown size
 	vm_uint32 size;
 
+	// Flags
+	vm_uint32 flags;
+
+	// Information on the interpreters data type
+	vm_uint8 data_type;
+
 	// The parent type - if any
 	struct vmp_type* parent_type;
 };
@@ -143,6 +149,7 @@ enum vmp_instr_type
 	VMP_INSTR_ADD,
 	VMP_INSTR_CMP,
 	VMP_INSTR_JMP,
+	VMP_INSTR_CONV,
 	VMP_INSTR_EOE,
 };
 typedef enum vmp_instr_type vmp_instr_type;
@@ -220,6 +227,9 @@ extern vmp_type* vmp_type_new(const vm_string* name);
 
 // Destroy type
 extern void vmp_type_destroy(vmp_type* p);
+
+// Check if you can convert one type into another using convertion
+extern BOOL vmp_type_can_convert(const vmp_type* from, const vmp_type* to);
 
 // New arg
 extern vmp_arg* vmp_arg_new();
