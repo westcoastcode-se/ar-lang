@@ -95,6 +95,29 @@ struct vmp_instr_def_ldc_s
 };
 typedef struct vmp_instr_def_ldc_s vmp_instr_def_ldc_s;
 
+// allocs <value|type>
+struct vmp_instr_def_allocs
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// The amount, in bytes, that's allowed to be pushed on the stack
+	vm_int16 amount;
+
+	// Or alternatively a type
+	const vmp_type* type;
+};
+typedef struct vmp_instr_def_allocs vmp_instr_def_allocs;
+
+// call <func>
+struct vmp_instr_def_call
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// The function we are calling
+	const vmp_func* target_func;
+};
+typedef struct vmp_instr_def_call vmp_instr_def_call;
+
 // add <type>
 struct vmp_instr_def_add
 {
@@ -128,6 +151,15 @@ extern vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant);
 
 // Create a constant value instruction for smaller values, such as 16- and 8 bit constants
 extern vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant);
+
+// Create a allocation instruction on the stack
+extern vmp_instr* vmp_instr_allocs(const vmp_type* type);
+
+// Create a allocation instruction on the stack based on a constant amount
+extern vmp_instr* vmp_instr_allocs_const(vm_int16 amount);
+
+// Call the supplied function
+extern vmp_instr* vmp_instr_call(const vmp_func* func);
 
 // Create a new add instruction and return it
 extern vmp_instr* vmp_instr_add(vm_int8 type);

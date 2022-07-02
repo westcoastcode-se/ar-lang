@@ -126,6 +126,28 @@ vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_allocs(const vmp_type* type)
+{
+	vmp_instr_def_allocs* instr = (vmp_instr_def_allocs*)vmc_malloc(sizeof(vmp_instr_def_allocs));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ALLOCS, sizeof(vmi_instr_allocs));
+	instr->type = type;
+	instr->amount = 0;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_allocs_const(vm_int16 amount)
+{
+	vmp_instr_def_allocs* instr = (vmp_instr_def_allocs*)vmc_malloc(sizeof(vmp_instr_def_allocs));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ALLOCS, sizeof(vmi_instr_allocs));
+	instr->type = NULL;
+	instr->amount = amount;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)
 {
 	vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmc_malloc(sizeof(vmp_instr_def_ldc));
@@ -134,6 +156,16 @@ vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC_I8, sizeof(vmi_instr_ldc_i64));
 	instr->type = type;
 	instr->constant = constant;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_call(const vmp_func* func)
+{
+	vmp_instr_def_call* instr = (vmp_instr_def_call*)vmc_malloc(sizeof(vmp_instr_def_call));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CALL, sizeof(vmi_instr_call));
+	instr->target_func = func;
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
@@ -197,7 +229,17 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	}
 	case VMP_INSTR_LDC_S:
 	{
+		const vmp_instr_def_ldc_s* const cmd = (vmp_instr_def_ldc_s*)h;
 
+		vmi_instr_ldc_s instr;
+		instr.opcode = 0;
+		instr.icode = VMI_LDC_S;
+		instr.props1 = cmd->constant.type;
+		instr.i16 = cmd->constant.i2;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldc_s))) {
+			return NULL;
+		}
+		break;
 	}
 	case VMP_INSTR_LDC_I8:
 	{
@@ -209,6 +251,37 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.props1 = cmd->constant.type;
 		instr.i64 = cmd->constant.i8;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldc_i64))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_ALLOCS:
+	{
+		const vmp_instr_def_allocs* const cmd = (vmp_instr_def_allocs*)h;
+
+		vmi_instr_allocs instr;
+		instr.opcode = 0;
+		instr.icode = VMI_ALLOCS;
+		if (cmd->type != NULL)
+			instr.size = cmd->type->size;
+		else
+			instr.size = cmd->amount;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_allocs))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_CALL:
+	{
+		const vmp_instr_def_call* const cmd = (vmp_instr_def_call*)h;
+		const vmp_func* const func = cmd->target_func;
+
+		vmi_instr_call instr;
+		instr.opcode = 0;
+		instr.icode = VMI_CALL;
+		instr.expected_stack_size = func->args_stack_size + func->returns_stack_size;
+		instr.addr = OFFSET(func->offset);
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_call))) {
 			return NULL;
 		}
 		break;

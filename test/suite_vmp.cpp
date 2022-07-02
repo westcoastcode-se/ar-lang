@@ -262,10 +262,80 @@ struct suite_vmp_tests : utils_vm
 		TEST_FN(ldc_T<vm_float64>(12345.6789));
 	}
 
+	void call()
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Add function and add two integer types
+		auto add = vmp_func_newsz("Add", 3);
+		auto add_arg1 = vmp_func_new_arg(add, get_type("vm", string(name<vm_int32>())));
+		vmp_arg_set_namesz(add_arg1, "lhs", 3);
+		auto add_arg2 = vmp_func_new_arg(add, get_type("vm", string(name<vm_int32>())));
+		vmp_arg_set_namesz(add_arg2, "rhs", 3);
+		auto add_ret1 = vmp_func_new_return(add, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, add);
+
+		// {
+		//	lda 1
+		//	lda 0
+		//	add int32
+		//	str 0
+		//	ret
+		// }
+		vmp_func_begin_body(add);
+		vmp_func_add_instr(add, vmp_instr_lda(1));
+		vmp_func_add_instr(add, vmp_instr_lda(0));
+		vmp_func_add_instr(add, vmp_instr_add(props1<vm_int32>()));
+		vmp_func_add_instr(add, vmp_instr_str(0));
+		vmp_func_add_instr(add, vmp_instr_ret());
+		vmp_func_begin_end(add);
+
+
+		// Create the Add function and add two integer types
+		auto get = vmp_func_newsz("Get", 3);
+		auto get_ret1 = vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, get);
+
+		// {
+		//	allocs 4
+		//	call Add()(int32)
+		//	str 0
+		//	ret
+		// }
+		auto const_val1 = 10;
+		auto const_val2 = 20;
+		vmp_func_begin_body(get);
+		vmp_func_add_instr(get, vmp_instr_allocs_const(4));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
+		vmp_func_add_instr(get, vmp_instr_call(add));
+		vmp_func_add_instr(get, vmp_instr_str(0));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+		vmi_thread_reserve_stack(t, sizeof(vm_int32));
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack(t, 0, const_val1 + const_val2);
+
+		destroy(t);
+
+		end();
+	}
+
 	void operator()()
 	{
 		TEST(add);
 		TEST(ldc);
+		TEST(call);
 	}
 };
 
