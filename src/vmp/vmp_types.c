@@ -70,12 +70,16 @@ vmp_type* vmp_type_new(const vm_string* name)
 	p->size = 0;
 	p->flags = 0;
 	p->data_type = 0;
-	p->parent_type = NULL;
+	p->of_type = NULL;
+	vmp_list_inherits_from_init(&p->inherits_from);
+	vmp_list_inherited_by_init(&p->inherited_by);
 	return p;
 }
 
 void vmp_type_destroy(vmp_type* p)
 {
+	vmp_list_inherited_by_release(&p->inherited_by);
+	vmp_list_inherits_from_release(&p->inherits_from);
 	vmc_free(p);
 }
 

@@ -9,6 +9,8 @@
 #include "vmp_list_returns.h"
 #include "vmp_list_locals.h"
 #include "vmp_list_markers.h"
+#include "vmp_list_inherits_from.h"
+#include "vmp_list_inherited_by.h"
 
 struct vmp_package
 {
@@ -43,8 +45,14 @@ struct vmp_type
 	// Information on the interpreters data type
 	vm_uint8 data_type;
 
-	// The parent type - if any
-	struct vmp_type* parent_type;
+	// If this type is of another type. Normally used for pointer- and array types
+	struct vmp_type* of_type;
+
+	// What this type is inherited from
+	vmp_list_inherits_from inherits_from;
+
+	// What types this type is inherited by
+	vmp_list_inherited_by inherited_by;
 };
 typedef struct vmp_type vmp_type;
 

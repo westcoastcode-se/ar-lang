@@ -58,7 +58,7 @@ add_library(vm "src/vm_config.h"
      "src/vmp/vmp_list_packages.c" "src/vmp/vmp_list_packages.h" "src/vmp/vmp_list_types.h" 
      "src/vmp/vmp_list_types.c" "src/vmp/vmp_list_funcs.c" "src/vmp/vmp_list_funcs.h"  "src/vmp/vmp_list_returns.c" 
      "src/vmp/vmp_list_returns.h" "src/vmp/vmp_messages.h" "src/vmp/vmp_messages.c" "src/vmp/vmp_list_locals.c" 
-     "src/vmp/vmp_list_locals.h" "src/vmp/vmp_list_markers.c" "src/vmp/vmp_list_markers.h" "src/interpreter/vmi_list_packages.h" "src/interpreter/vmi_list_packages.c" "src/interpreter/vmi_list_functions.c" "src/interpreter/vmi_list_functions.h")
+     "src/vmp/vmp_list_locals.h" "src/vmp/vmp_list_markers.c" "src/vmp/vmp_list_markers.h" "src/interpreter/vmi_list_packages.h" "src/interpreter/vmi_list_packages.c" "src/interpreter/vmi_list_functions.c" "src/interpreter/vmi_list_functions.h" "src/vmp/vmp_list_inherits_from.c" "src/vmp/vmp_list_inherits_from.h" "src/vmp/vmp_list_inherited_by.c" "src/vmp/vmp_list_inherited_by.h")
 
 
 # Tests
