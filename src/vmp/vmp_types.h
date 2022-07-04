@@ -158,6 +158,7 @@ typedef struct vmp_local vmp_local;
 enum vmp_instr_type
 {
 	VMP_INSTR_LDA = 1,
+	VMP_INSTR_LDA_A,
 	VMP_INSTR_LDC,
 	VMP_INSTR_LDC_S,
 	VMP_INSTR_LDC_I8,
@@ -165,8 +166,10 @@ enum vmp_instr_type
 	VMP_INSTR_STR,
 	VMP_INSTR_STL,
 	VMP_INSTR_LDL,
+	VMP_INSTR_LDL_A,
 	VMP_INSTR_LOCALS,
 	VMP_INSTR_ALLOCS,
+	VMP_INSTR_STUREF,
 	VMP_INSTR_CALL,
 	VMP_INSTR_ADD,
 	VMP_INSTR_CMP,

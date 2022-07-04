@@ -15,6 +15,16 @@ struct vmp_instr_def_lda
 };
 typedef struct vmp_instr_def_lda vmp_instr_def_lda;
 
+// lda_a <index>
+struct vmp_instr_def_lda_a
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Argument index to load
+	vm_uint32 index;
+};
+typedef struct vmp_instr_def_lda_a vmp_instr_def_lda_a;
+
 // str <index>
 struct vmp_instr_def_str
 {
@@ -54,6 +64,16 @@ struct vmp_instr_def_ldl
 	vm_uint32 index;
 };
 typedef struct vmp_instr_def_ldl vmp_instr_def_ldl;
+
+// ldl_a <index>
+struct vmp_instr_def_ldl_a
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Locals index to load
+	vm_uint32 index;
+};
+typedef struct vmp_instr_def_ldl_a vmp_instr_def_ldl_a;
 
 // Represents a constant value up to 8 bytes
 struct vmp_constant
@@ -138,6 +158,16 @@ struct vmp_instr_def_allocs
 };
 typedef struct vmp_instr_def_allocs vmp_instr_def_allocs;
 
+// sturef <type>
+struct vmp_instr_def_sturef
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Or alternatively a type
+	const vmp_type* type;
+};
+typedef struct vmp_instr_def_sturef vmp_instr_def_sturef;
+
 // call <func>
 struct vmp_instr_def_call
 {
@@ -209,14 +239,20 @@ typedef struct vmp_instr_def_basic vmp_instr_def_eoe;
 // Create a new add instruction and return it
 extern vmp_instr* vmp_instr_lda(vm_uint32 index);
 
+// Create a new add instruction and return it
+extern vmp_instr* vmp_instr_lda_a(vm_uint32 index);
+
 // Create a new str instruction and return it
 extern vmp_instr* vmp_instr_str(vm_uint32 index);
 
 // Create a new stl instruction and return it
 extern vmp_instr* vmp_instr_stl(vm_uint32 index);
 
-// Create a new stl instruction and return it
+// Create a new ldl instruction and return it
 extern vmp_instr* vmp_instr_ldl(vm_uint32 index);
+
+// Create a new ldl_a instruction and return it
+extern vmp_instr* vmp_instr_ldl_a(vm_uint32 index);
 
 // Add an instruction to allocate local variable memory for the supplied function
 extern vmp_instr* vmp_instr_locals(const vmp_func* func);
@@ -235,6 +271,9 @@ extern vmp_instr* vmp_instr_allocs(const vmp_type* type);
 
 // Create a allocation instruction on the stack based on a constant amount
 extern vmp_instr* vmp_instr_allocs_const(vm_int16 amount);
+
+// Create a stunref instruction
+extern vmp_instr* vmp_instr_sturef(const vmp_type* type);
 
 // Call the supplied function
 extern vmp_instr* vmp_instr_call(const vmp_func* func);
