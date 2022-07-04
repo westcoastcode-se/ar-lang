@@ -206,6 +206,8 @@ struct vmp_instr_def_stelem
 };
 typedef struct vmp_instr_def_stelem vmp_instr_def_stelem;
 typedef struct vmp_instr_def_stelem vmp_instr_def_stelem_s;
+typedef struct vmp_instr_def_stelem vmp_instr_def_ldelem;
+typedef struct vmp_instr_def_stelem vmp_instr_def_ldelem_s;
 
 // call <func>
 struct vmp_instr_def_call
@@ -319,6 +321,9 @@ extern vmp_instr* vmp_instr_sturef(const vmp_type* type);
 
 // Create a stelem instruction for a specific array type
 extern vmp_instr* vmp_instr_stelem(const vmp_type* type);
+
+// Create a ldelem instruction for a specific array type
+extern vmp_instr* vmp_instr_ldelem(const vmp_type* type);
 
 // Call the supplied function
 extern vmp_instr* vmp_instr_call(const vmp_func* func);
