@@ -87,19 +87,10 @@ struct suite_vmp_tests : utils_vm
 		vmi_thread_destroy(p);
 	}
 
-	void push_value(vmi_thread* t, vm_int16 value)
+	template<typename T>
+	void push_value(vmi_thread* t, T value)
 	{
-		vmi_thread_push_i16(t, value);
-	}
-
-	void push_value(vmi_thread* t, vm_int32 value)
-	{
-		vmi_thread_push_i32(t, value);
-	}
-
-	void push_value(vmi_thread* t, void* ptr)
-	{
-		vmi_thread_push_ptr(t, ptr);
+		*(T*)vmi_thread_reserve_stack(t, sizeof(T)) = value;
 	}
 
 	vmp_constant vmp_const(vm_int8 value) {
@@ -173,9 +164,9 @@ struct suite_vmp_tests : utils_vm
 		// {
 		//	lda 1
 		//	lda 0
-		//	add int32
+		//	add T
 		//	lda 1
-		//	add int32
+		//	add T
 		//	str 0
 		//	ret
 		// }
@@ -207,8 +198,12 @@ struct suite_vmp_tests : utils_vm
 
 	void add()
 	{
-		TEST_FN(add_test<vm_int32>(10, 20));
+		TEST_FN(add_test<vm_int8>(1, 5));
 		TEST_FN(add_test<vm_int16>(10, 20));
+		TEST_FN(add_test<vm_int32>(10, 20));
+		TEST_FN(add_test<vm_int64>(10, 20));
+		TEST_FN(add_test<vm_float32>(10.0f, 20.0f));
+		TEST_FN(add_test<vm_float64>(10.0, 20.0));
 	}
 
 	template<typename T>

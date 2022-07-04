@@ -18,6 +18,16 @@ struct uitls_vm_type<vm_int8>
 };
 
 template<>
+struct uitls_vm_type<vm_uint8>
+{
+	static constexpr auto name = "uint8";
+	static constexpr auto ptr = "*uint8";
+	static constexpr auto shorthand = "ui1";
+	static constexpr auto memory = "1";
+	static constexpr auto props1 = VMI_INSTR_PROP_UINT8;
+};
+
+template<>
 struct uitls_vm_type<vm_int16>
 {
 	static constexpr auto name = "int16";
@@ -25,6 +35,16 @@ struct uitls_vm_type<vm_int16>
 	static constexpr auto shorthand = "i2";
 	static constexpr auto memory = "2";
 	static constexpr auto props1 = VMI_INSTR_PROP_INT16;
+};
+
+template<>
+struct uitls_vm_type<vm_uint16>
+{
+	static constexpr auto name = "uint16";
+	static constexpr auto ptr = "*uint16";
+	static constexpr auto shorthand = "ui2";
+	static constexpr auto memory = "2";
+	static constexpr auto props1 = VMI_INSTR_PROP_UINT16;
 };
 
 template<>
@@ -38,6 +58,16 @@ struct uitls_vm_type<vm_int32>
 };
 
 template<>
+struct uitls_vm_type<vm_uint32>
+{
+	static constexpr auto name = "uint32";
+	static constexpr auto ptr = "*uint32";
+	static constexpr auto shorthand = "ui4";
+	static constexpr auto memory = "4";
+	static constexpr auto props1 = VMI_INSTR_PROP_UINT32;
+};
+
+template<>
 struct uitls_vm_type<vm_int64>
 {
 	static constexpr auto name = "int64";
@@ -45,6 +75,16 @@ struct uitls_vm_type<vm_int64>
 	static constexpr auto shorthand = "i8";
 	static constexpr auto memory = "8";
 	static constexpr auto props1 = VMI_INSTR_PROP_INT64;
+};
+
+template<>
+struct uitls_vm_type<vm_uint64>
+{
+	static constexpr auto name = "uint64";
+	static constexpr auto ptr = "*uint64";
+	static constexpr auto shorthand = "ui8";
+	static constexpr auto memory = "8";
+	static constexpr auto props1 = VMI_INSTR_PROP_UINT64;
 };
 
 template<>

@@ -73,11 +73,23 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		// Process specialized instructions first
 		switch (header->opcode)
 		{
-		case VMI_OP_ADD_I16:
-			ip = _vmi_thread_addi16(t, ip);
+		case VMI_OP_ADD_I1:
+			ip = _vmi_thread_addi1(t, ip);
 			continue;
-		case VMI_OP_ADD_I32:
-			ip = _vmi_thread_addi32(t, ip);
+		case VMI_OP_ADD_I2:
+			ip = _vmi_thread_addi2(t, ip);
+			continue;
+		case VMI_OP_ADD_I4:
+			ip = _vmi_thread_addi4(t, ip);
+			continue;
+		case VMI_OP_ADD_I8:
+			ip = _vmi_thread_addi8(t, ip);
+			continue;
+		case VMI_OP_ADD_F4:
+			ip = _vmi_thread_addf4(t, ip);
+			continue;
+		case VMI_OP_ADD_F8:
+			ip = _vmi_thread_addf8(t, ip);
 			continue;
 
 		case VMI_OP_LDC_I1:
