@@ -199,11 +199,11 @@ struct suite_vmp_tests : utils_vm
 	void add()
 	{
 		TEST_FN(add_test<vm_int8>(1, 5));
-		TEST_FN(add_test<vm_int16>(10, 20));
-		TEST_FN(add_test<vm_int32>(10, 20));
-		TEST_FN(add_test<vm_int64>(10, 20));
-		TEST_FN(add_test<vm_float32>(10.0f, 20.0f));
-		TEST_FN(add_test<vm_float64>(10.0, 20.0));
+		TEST_FN(add_test<vm_int16>(10, INT8_MAX));
+		TEST_FN(add_test<vm_int32>(INT16_MAX, 20));
+		TEST_FN(add_test<vm_int64>(102, INT32_MAX));
+		TEST_FN(add_test<vm_float32>(1.0f, 20.0f));
+		TEST_FN(add_test<vm_float64>(-10.0, 203.0));
 	}
 
 	template<typename T>
