@@ -76,6 +76,43 @@ vmp_type* vmp_type_new(const vm_string* name)
 	return p;
 }
 
+vmp_type* vmp_type_new_from_props(const vmp_type_props* props)
+{
+	vmp_type* p = (vmp_type*)vmc_malloc(sizeof(vmp_type));
+	if (p == NULL)
+		return NULL;
+	p->package = NULL;
+	p->name = props->name;
+	p->size = props->size;
+	p->flags = props->flags;
+	p->data_type = props->data_type;
+	p->of_type = props->of_type;
+	vmp_list_inherits_from_init(&p->inherits_from);
+	vmp_list_inherited_by_init(&p->inherited_by);
+	return p;
+}
+
+const vmp_type_props* vmp_type_props_get(const vm_string* name, vm_uint32 size, vm_uint32 flags, vm_uint8 data_type, const vmp_type* of_type)
+{
+	static vmp_type_props p;
+	p.name = *name;
+	p.size = size;
+	p.flags = flags;
+	p.data_type = data_type;
+	p.of_type = of_type;
+	return &p;
+}
+
+// Mark the supplied type as an of type
+BOOL vmp_type_of_type(vmp_type* t, const vmp_type* of_type)
+{
+	if (t->of_type != NULL) {
+		return FALSE;
+	}
+	t->of_type = of_type;
+	return TRUE;
+}
+
 void vmp_type_destroy(vmp_type* p)
 {
 	vmp_list_inherited_by_release(&p->inherited_by);

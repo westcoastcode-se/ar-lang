@@ -66,7 +66,7 @@ typedef unsigned long long vm_uint64;
 #endif
 
 #ifndef BOOL
-#	define BOOL int
+#	define BOOL vm_int32
 #endif
 
 #ifndef TRUE

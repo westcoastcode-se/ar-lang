@@ -1675,7 +1675,7 @@ package main {
 
 void suite_vm()
 {
-	/*SUITE(suite_vm_tests);
+	SUITE(suite_vm_tests);
 	SUITE(suite_vm_compare);
 	SUITE(suite_vm_memory);
 	SUITE(suite_vm_constants);
@@ -1683,5 +1683,5 @@ void suite_vm()
 	SUITE(suite_vm_pointer);
 	SUITE(suite_vm_arrays);
 	SUITE(suite_vm_allocation);
-	SUITE(suite_vm_functions);*/
+	SUITE(suite_vm_functions);
 }

@@ -4,24 +4,99 @@
 #include "../interpreter/vmi_process.h"
 #include "../vmc/vmc_debug.h"
 
+//
+// Constants
+//
+
+VM_STRING_CONST(bool, "bool", 4);
+VM_STRING_CONST(pbool, "*bool", 5);
+VM_STRING_CONST(int8, "int8", 4);
+VM_STRING_CONST(pint8, "*int8", 5);
+VM_STRING_CONST(uint8, "uint8", 5);
+VM_STRING_CONST(puint8, "*uint8", 6);
+VM_STRING_CONST(int16, "int16", 5);
+VM_STRING_CONST(pint16, "*int16", 6);
+VM_STRING_CONST(uint16, "uint16", 6);
+VM_STRING_CONST(puint16, "*uint16", 7);
+VM_STRING_CONST(int32, "int32", 5);
+VM_STRING_CONST(pint32, "*int32", 6);
+VM_STRING_CONST(uint32, "uint32", 6);
+VM_STRING_CONST(puint32, "*uint32", 7);
+VM_STRING_CONST(int64, "int64", 5);
+VM_STRING_CONST(pint64, "*int64", 6);
+VM_STRING_CONST(uint64, "uint64", 6);
+VM_STRING_CONST(puint64, "*uint64", 7);
+VM_STRING_CONST(float32, "float32", 7);
+VM_STRING_CONST(pfloat32, "*float32", 8);
+VM_STRING_CONST(float64, "float64", 7);
+VM_STRING_CONST(pfloat64, "*float64", 8);
+
 void vmp_pipeline_add_vm_package(vmp_pipeline* p)
 {
+	vmp_type* type;
+
 	// Create vm package
 	vmp_package* const vm = vmp_package_newsz("vm", 2);
 	vmp_pipeline_add_package(p, vm);
 
+	//
 	// Add default types
-	vmp_package_new_typesz(vm, "int8", 4, sizeof(vm_int8))->data_type = VMI_INSTR_PROP_INT8;
-	vmp_package_new_typesz(vm, "uint8", 5, sizeof(vm_uint8))->data_type = VMI_INSTR_PROP_UINT8;
-	vmp_package_new_typesz(vm, "int16", 5, sizeof(vm_int16))->data_type = VMI_INSTR_PROP_INT16;
-	vmp_package_new_typesz(vm, "uint16", 6, sizeof(vm_uint16))->data_type = VMI_INSTR_PROP_UINT16;
-	vmp_package_new_typesz(vm, "int32", 5, sizeof(vm_int32))->data_type = VMI_INSTR_PROP_INT32;
-	vmp_package_new_typesz(vm, "uint32", 6, sizeof(vm_uint32))->data_type = VMI_INSTR_PROP_UINT32;
-	vmp_package_new_typesz(vm, "int64", 5, sizeof(vm_int64))->data_type = VMI_INSTR_PROP_INT64;
-	vmp_package_new_typesz(vm, "uint64", 6, sizeof(vm_uint64))->data_type = VMI_INSTR_PROP_UINT64;
-	vmp_package_new_typesz(vm, "float32", 7, sizeof(vm_float32))->data_type = VMI_INSTR_PROP_FLOAT32;
-	vmp_package_new_typesz(vm, "float64", 7, sizeof(vm_float64))->data_type = VMI_INSTR_PROP_FLOAT64;
-	vmp_package_new_typesz(vm, "bool", 4, sizeof(vm_int32))->data_type = VMI_INSTR_PROP_INT32;
+	//
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(bool), sizeof(vm_int32), 0, VMI_INSTR_PROP_BOOL, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pbool), sizeof(BOOL*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(int8), sizeof(vm_int8), 0, VMI_INSTR_PROP_INT8, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pint8), sizeof(vm_int8*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(uint8), sizeof(vm_uint8), 0, VMI_INSTR_PROP_UINT8, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(puint8), sizeof(vm_uint8*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(int16), sizeof(vm_int16), 0, VMI_INSTR_PROP_INT16, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pint16), sizeof(vm_int16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(uint16), sizeof(vm_uint16), 0, VMI_INSTR_PROP_UINT16, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(puint16), sizeof(vm_uint16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(int32), sizeof(vm_int32), 0, VMI_INSTR_PROP_INT32, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pint32), sizeof(vm_int32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(uint32), sizeof(vm_uint32), 0, VMI_INSTR_PROP_UINT32, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(puint32), sizeof(vm_uint32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(int64), sizeof(vm_int64), 0, VMI_INSTR_PROP_INT64, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pint64), sizeof(vm_int64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(uint64), sizeof(vm_uint64), 0, VMI_INSTR_PROP_UINT64, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(puint64), sizeof(vm_uint64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(float32), sizeof(vm_float32), 0, VMI_INSTR_PROP_FLOAT32, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pfloat32), sizeof(vm_float32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
+
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(float64), sizeof(vm_float64), 0, VMI_INSTR_PROP_FLOAT64, NULL));
+	vmp_package_add_type(vm, type);
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pfloat64), sizeof(vm_float64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmp_package_add_type(vm, type);
 }
 
 vmp_pipeline* vmp_pipeline_new()

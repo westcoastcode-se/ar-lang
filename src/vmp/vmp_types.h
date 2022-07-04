@@ -46,7 +46,7 @@ struct vmp_type
 	vm_uint8 data_type;
 
 	// If this type is of another type. Normally used for pointer- and array types
-	struct vmp_type* of_type;
+	const struct vmp_type* of_type;
 
 	// What this type is inherited from
 	vmp_list_inherits_from inherits_from;
@@ -55,6 +55,20 @@ struct vmp_type
 	vmp_list_inherited_by inherited_by;
 };
 typedef struct vmp_type vmp_type;
+
+#define VMP_TYPE_FLAGS_PTR (1 << 0)
+#define VMP_TYPE_FLAGS_ARRAY (1 << 1)
+
+// Structure used to help creating a type
+struct vmp_type_props
+{
+	vm_string name;
+	vm_uint32 size;
+	vm_uint32 flags;
+	vm_uint8 data_type;
+	const vmp_type* of_type;
+};
+typedef struct vmp_type_props vmp_type_props;
 
 struct vmp_func
 {
@@ -232,6 +246,16 @@ extern vmp_type* vmp_package_find_type(vmp_package* p, const vm_string* name);
 
 // New type
 extern vmp_type* vmp_type_new(const vm_string* name);
+
+// New type
+extern vmp_type* vmp_type_new_from_props(const vmp_type_props* props);
+
+// Get properties that can be used when creating a new type.
+// Important! This function is not thread-safe
+extern const vmp_type_props* vmp_type_props_get(const vm_string* name, vm_uint32 size, vm_uint32 flags, vm_uint8 data_type, const vmp_type* of_type);
+
+// Mark the supplied type as an of type
+extern BOOL vmp_type_of_type(vmp_type* t, const vmp_type* of_type);
 
 // Destroy type
 extern void vmp_type_destroy(vmp_type* p);

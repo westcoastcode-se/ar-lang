@@ -38,15 +38,6 @@ add_library(vm "src/vm_config.h"
     "src/vm_bytestream.h" "src/vm_bytestream.c"
     "src/vm_message.h" "src/vm_message.c"
 
-    "src/vmc/vmc_compiler.h" "src/vmc/vmc_compiler.c" 
-    "src/vmc/vmc_lexer.c" "src/vmc/vmc_lexer.h" "src/vmc/vmc_lexer_logic.h" "src/vmc/vmc_lexer_math.h"
-    "src/vmc/vmc_string_pool.h" "src/vmc/vmc_string_pool.c" 
-    "src/vmc/vmc_compiler_messages.h" "src/vmc/vmc_lexer_messages.h" "src/vmc/vmc_compiler_messages.c" "src/vmc/vmc_lexer_messages.c"
-    "src/vmc/vmc_linker.h" "src/vmc/vmc_linker.c"
-    "src/vmc/vmc_compiler_types.h" "src/vmc/vmc_compiler_types.c"   
-    "src/vmc/lists/types_list.h" "src/vmc/lists/types_list.c" "src/interpreter/vmi_utils.h" "src/vm_memory.h" "src/vm_memory.c" 
-    "src/vmc/vmc_linker_marker.h" 
-
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
     "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" 
     "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" 
@@ -64,5 +55,5 @@ add_library(vm "src/vm_config.h"
 # Tests
 set(CMAKE_CXX_STANDARD 17)
 include_directories("${VM_INCLUDE_DIRS}")
-add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_vm.cpp" "test/suite_lexer.cpp" "test/suite_vmp.cpp")
+add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_vmp.cpp")
 target_link_libraries(test vm)

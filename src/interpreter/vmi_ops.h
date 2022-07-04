@@ -32,6 +32,7 @@
 #define VMI_INSTR_PROP_UINT64 (8)
 #define VMI_INSTR_PROP_FLOAT32 (9)
 #define VMI_INSTR_PROP_FLOAT64 (10)
+#define VMI_INSTR_PROP_PTR (11)
 
 enum vmi_icodes
 {
