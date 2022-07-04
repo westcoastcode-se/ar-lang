@@ -41,15 +41,16 @@ add_library(vm "src/vm_config.h"
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
     "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" 
     "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" 
-     "src/vmc/vmc_linker_marker.c" "src/vmc/vmc_linker_messages.h" "src/vmc/vmc_linker_messages.c" "src/vmc/vmc_debug.h" "src/vmc/vmc_debug.c" 
-     "src/vmp/vmp_list_packages.h" "src/vmc/lists/packages_list.c" 
-     
+
      "src/vmp/vmp.h" "src/vmp/vmp_types.h" "src/vmp/vmp_instr.h" "src/vmp/vmp_instr.c" 
      "src/vmp/vmp.c" "src/vmp/vmp_list_args.h" "src/vmp/vmp_list_args.c" "src/vmp/vmp_types.c" 
      "src/vmp/vmp_list_packages.c" "src/vmp/vmp_list_packages.h" "src/vmp/vmp_list_types.h" 
      "src/vmp/vmp_list_types.c" "src/vmp/vmp_list_funcs.c" "src/vmp/vmp_list_funcs.h"  "src/vmp/vmp_list_returns.c" 
      "src/vmp/vmp_list_returns.h" "src/vmp/vmp_messages.h" "src/vmp/vmp_messages.c" "src/vmp/vmp_list_locals.c" 
-     "src/vmp/vmp_list_locals.h" "src/vmp/vmp_list_markers.c" "src/vmp/vmp_list_markers.h" "src/interpreter/vmi_list_packages.h" "src/interpreter/vmi_list_packages.c" "src/interpreter/vmi_list_functions.c" "src/interpreter/vmi_list_functions.h" "src/vmp/vmp_list_inherits_from.c" "src/vmp/vmp_list_inherits_from.h" "src/vmp/vmp_list_inherited_by.c" "src/vmp/vmp_list_inherited_by.h")
+     "src/vmp/vmp_list_locals.h" "src/vmp/vmp_list_markers.c" "src/vmp/vmp_list_markers.h" "src/interpreter/vmi_list_packages.h" "src/interpreter/vmi_list_packages.c" 
+     "src/interpreter/vmi_list_functions.c" "src/interpreter/vmi_list_functions.h" "src/vmp/vmp_list_inherits_from.c" "src/vmp/vmp_list_inherits_from.h" 
+     "src/vmp/vmp_list_inherited_by.c" "src/vmp/vmp_list_inherited_by.h" "src/vmp/vmp_string_pool.c" "src/vmp/vmp_string_pool.h" 
+     "src/vmp/vmp_debug.c" "src/vmp/vmp_debug.h")
 
 
 # Tests

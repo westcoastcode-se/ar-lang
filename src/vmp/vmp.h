@@ -7,6 +7,8 @@
 #include "vmp_types.h"
 #include "vmp_instr.h"
 #include "vmp_list_packages.h"
+#include "vmp_string_pool.h"
+#include "vmp_debug.h"
 
 struct vmp_pipeline
 {
@@ -18,6 +20,9 @@ struct vmp_pipeline
 
 	// The total size in bytes that the bytecode for all functions will take
 	vm_int32 total_body_size;
+
+	// A string pool that can be used to create strings
+	vmp_string_pool string_pool;
 };
 typedef struct vmp_pipeline vmp_pipeline;
 
@@ -54,6 +59,9 @@ extern vmp_package* vmp_pipeline_find_packagesz(vmp_pipeline* p, const char* nam
 
 // Resolve all information, sizes and offsets for types, functions etc.
 extern BOOL vmp_pipeline_resolve(vmp_pipeline* p);
+
+// Get a string
+extern const vm_string* vmp_pipeline_get_string(vmp_pipeline* p, const char* str, vm_int32 len);
 
 // Create a new virtual machine pipeline builder
 extern vmp_builder* vmp_builder_new(vmp_pipeline* p);

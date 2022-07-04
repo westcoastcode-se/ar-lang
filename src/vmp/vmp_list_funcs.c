@@ -1,6 +1,6 @@
 #include "vmp_list_funcs.h"
 #include "vmp_types.h"
-#include "../vmc/vmc_debug.h"
+#include "vmp_debug.h"
 
 #define CAPACITY (8)
 #define RESIZE (8)
@@ -9,7 +9,7 @@ BOOL vmp_list_funcs_init(vmp_list_funcs* l)
 {
 	l->count = 0;
 	l->capacity = CAPACITY;
-	l->memory = (vmp_func**)vmc_malloc(sizeof(vmp_func*) * l->capacity);
+	l->memory = (vmp_func**)vmp_malloc(sizeof(vmp_func*) * l->capacity);
 	return l->memory != NULL;
 }
 
@@ -20,7 +20,7 @@ void vmp_list_funcs_release(vmp_list_funcs* l)
 		vmp_func_destroy(p);
 	}
 
-	vmc_free(l->memory);
+	vmp_free(l->memory);
 	l->memory = NULL;
 	l->capacity = 0;
 	l->count = 0;
@@ -30,7 +30,7 @@ vm_int32 vmp_list_funcs_add(vmp_list_funcs* l, vmp_func* ptr)
 {
 	if (l->count >= l->capacity) {
 		l->capacity += RESIZE;
-		l->memory = (vmp_func**)vmc_realloc(l->memory, sizeof(vmp_func*) * l->capacity);
+		l->memory = (vmp_func**)vmp_realloc(l->memory, sizeof(vmp_func*) * l->capacity);
 		if (l->memory == NULL)
 			return -1;
 	}

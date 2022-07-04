@@ -36,7 +36,7 @@ struct suite_vmp_tests : utils_vm
 			pipeline = NULL;
 		}
 
-		if (vmc_memory_test_bytes_left() == FALSE) {
+		if (vmp_memory_test_bytes_left() == FALSE) {
 			throw_(error() << "not all memory was released");
 		}
 	}

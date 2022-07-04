@@ -1,6 +1,6 @@
 #include "vmp_list_inherited_by.h"
 #include "vmp_types.h"
-#include "../vmc/vmc_debug.h"
+#include "vmp_debug.h"
 
 #define CAPACITY (2)
 #define RESIZE (2)
@@ -9,13 +9,13 @@ BOOL vmp_list_inherited_by_init(vmp_list_inherited_by* l)
 {
 	l->count = 0;
 	l->capacity = CAPACITY;
-	l->memory = (vmp_type**)vmc_malloc(sizeof(vmp_type*) * l->capacity);
+	l->memory = (vmp_type**)vmp_malloc(sizeof(vmp_type*) * l->capacity);
 	return l->memory != NULL;
 }
 
 void vmp_list_inherited_by_release(vmp_list_inherited_by* l)
 {
-	vmc_free(l->memory);
+	vmp_free(l->memory);
 	l->memory = NULL;
 	l->capacity = 0;
 	l->count = 0;
@@ -25,7 +25,7 @@ vm_int32 vmp_list_inherited_by_add(vmp_list_inherited_by* l, vmp_type* ptr)
 {
 	if (l->count >= l->capacity) {
 		l->capacity += RESIZE;
-		l->memory = (vmp_type**)vmc_realloc(l->memory, sizeof(vmp_type*) * l->capacity);
+		l->memory = (vmp_type**)vmp_realloc(l->memory, sizeof(vmp_type*) * l->capacity);
 		if (l->memory == NULL)
 			return -1;
 	}
