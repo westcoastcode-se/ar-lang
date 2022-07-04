@@ -6,7 +6,7 @@
 #include "../vmi_utils.h"
 #endif
 
-vmi_ip _vmi_thread_sturef_s_i8(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_sturef_s_i1(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int8 value = *(vm_int8*)vmi_stack_pop(&t->stack, sizeof(vm_int8));
 	vm_int8* const ptr = *(vm_int8**)vmi_stack_pop(&t->stack, sizeof(vm_int8*));
@@ -14,7 +14,7 @@ vmi_ip _vmi_thread_sturef_s_i8(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_sturef_s);
 }
 
-vmi_ip _vmi_thread_sturef_s_i16(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_sturef_s_i2(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int16 value = *(vm_int16*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
 	vm_int16* const ptr = *(vm_int16**)vmi_stack_pop(&t->stack, sizeof(vm_int16*));
@@ -22,7 +22,7 @@ vmi_ip _vmi_thread_sturef_s_i16(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_sturef_s);
 }
 
-vmi_ip _vmi_thread_sturef_s_i32(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_sturef_s_i4(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int32 value = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	vm_int32* const ptr = *(vm_int32**)vmi_stack_pop(&t->stack, sizeof(vm_int32*));
@@ -30,7 +30,7 @@ vmi_ip _vmi_thread_sturef_s_i32(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_sturef_s);
 }
 
-vmi_ip _vmi_thread_sturef_s_i64(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_sturef_s_i8(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int64 value = *(vm_int64*)vmi_stack_pop(&t->stack, sizeof(vm_int64));
 	vm_int64* const ptr = *(vm_int64**)vmi_stack_pop(&t->stack, sizeof(vm_int64*));

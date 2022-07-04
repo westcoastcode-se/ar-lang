@@ -358,7 +358,7 @@ BOOL vmp_builder_compile(vmp_builder* b)
 		}
 	}
 
-	return TRUE;
+	return vmp_builder_success(b);
 }
 
 void vmp_builder_destroy(vmp_builder* b)

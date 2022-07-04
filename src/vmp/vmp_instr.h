@@ -185,6 +185,16 @@ struct vmp_instr_def_sturef
 };
 typedef struct vmp_instr_def_sturef vmp_instr_def_sturef;
 
+// sturef_s <type>
+struct vmp_instr_def_sturef_s
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Or alternatively a type
+	const vmp_type* type;
+};
+typedef struct vmp_instr_def_sturef_s vmp_instr_def_sturef_s;
+
 // call <func>
 struct vmp_instr_def_call
 {
@@ -291,6 +301,9 @@ extern vmp_instr* vmp_instr_allocs_const(vm_int16 amount);
 
 // Create a stunref instruction
 extern vmp_instr* vmp_instr_sturef(const vmp_type* type);
+
+// Create a stunref instruction
+extern vmp_instr* vmp_instr_sturef_s(const vmp_type* type);
 
 // Call the supplied function
 extern vmp_instr* vmp_instr_call(const vmp_func* func);

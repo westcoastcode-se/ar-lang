@@ -62,6 +62,17 @@ BOOL vmp_builder_message_types_not_compatible(struct vmp_builder* b, const vm_st
 		vm_string_length(to_name), to_name->start);
 }
 
+BOOL vmp_builder_message_type_too_large(struct vmp_builder* b, const vm_string* type_name, vm_int32 size, vm_int32 max_size)
+{
+	vm_messages* const m = &b->messages;
+	return vm_messages_add(m,
+		VMP_MESSAGE_PREFIX,
+		VMP_MESSAGE_TYPE_TOO_LARGE,
+		VMP_MESSAGE_TYPE_TOO_LARGE_STR,
+		vm_string_length(type_name), type_name->start,
+		size, max_size);
+}
+
 BOOL vmp_builder_panic_out_of_memory(struct vmp_builder* b)
 {
 	vm_message* const m = &b->panic_error_message;

@@ -56,7 +56,7 @@ vmi_ip _vmi_thread_ldelem(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldelem);
 }
 
-vmi_ip _vmi_thread_stelem_s_i8(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_stelem_s_i1(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int8* src = vmi_stack_pop(&t->stack, sizeof(vm_int8));
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
@@ -66,7 +66,7 @@ vmi_ip _vmi_thread_stelem_s_i8(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_stelem_s);
 }
 
-vmi_ip _vmi_thread_ldelem_s_i8(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldelem_s_i1(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	vm_byte* src = *(vm_byte**)vmi_stack_pop(&t->stack, sizeof(vm_byte*));
@@ -76,7 +76,7 @@ vmi_ip _vmi_thread_ldelem_s_i8(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldelem_s);
 }
 
-vmi_ip _vmi_thread_stelem_s_i16(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_stelem_s_i2(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int16* src = (const vm_int16*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
@@ -86,7 +86,7 @@ vmi_ip _vmi_thread_stelem_s_i16(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_stelem_s);
 }
 
-vmi_ip _vmi_thread_ldelem_s_i16(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldelem_s_i2(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	vm_int16* memory = *(vm_int16**)vmi_stack_pop(&t->stack, sizeof(vm_int16*));
@@ -96,7 +96,7 @@ vmi_ip _vmi_thread_ldelem_s_i16(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldelem_s);
 }
 
-vmi_ip _vmi_thread_stelem_s_i32(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_stelem_s_i4(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int32* src = (const vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
@@ -106,7 +106,7 @@ vmi_ip _vmi_thread_stelem_s_i32(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_stelem_s);
 }
 
-vmi_ip _vmi_thread_ldelem_s_i32(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldelem_s_i4(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	vm_int32* memory = *(vm_int32**)vmi_stack_pop(&t->stack, sizeof(vm_int32*));
@@ -116,7 +116,7 @@ vmi_ip _vmi_thread_ldelem_s_i32(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldelem_s);
 }
 
-vmi_ip _vmi_thread_stelem_s_i64(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_stelem_s_i8(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int64* src = (const vm_int64*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
@@ -126,7 +126,7 @@ vmi_ip _vmi_thread_stelem_s_i64(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_stelem_s);
 }
 
-vmi_ip _vmi_thread_ldelem_s_i64(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldelem_s_i8(vmi_thread* t, vmi_ip ip)
 {
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	vm_int64* memory = *(vm_int64**)vmi_stack_pop(&t->stack, sizeof(vm_int64*));

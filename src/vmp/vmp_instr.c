@@ -3,6 +3,7 @@
 #include "vmp_list_args.h"
 #include "vmp_messages.h"
 #include "../vmc/vmc_debug.h"
+#include <inttypes.h>
 
 vmp_constant vmp_const_i1(vm_int8 value)
 {
@@ -12,7 +13,7 @@ vmp_constant vmp_const_i1(vm_int8 value)
 	return c;
 }
 
-vmp_constant vmp_const_ui1(vm_int8 value)
+vmp_constant vmp_const_ui1(vm_uint8 value)
 {
 	vmp_constant c;
 	c.ui1 = value;
@@ -236,6 +237,16 @@ vmp_instr* vmp_instr_sturef(const vmp_type* type)
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STUREF, sizeof(vmi_instr_sturef));
+	instr->type = type;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_sturef_s(const vmp_type* type)
+{
+	vmp_instr_def_sturef_s* instr = (vmp_instr_def_sturef_s*)vmc_malloc(sizeof(vmp_instr_def_sturef_s));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STUREF_S, sizeof(vmi_instr_sturef_s));
 	instr->type = type;
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
@@ -516,6 +527,23 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.icode = VMI_STUREF;
 		instr.size = cmd->type->size;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_sturef))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_STUREF_S:
+	{
+		const vmp_instr_def_sturef_s* const cmd = (vmp_instr_def_sturef_s*)h;
+		if (cmd->type->size > UINT8_MAX) {
+			vmp_builder_message_type_too_large(builder, &cmd->type->name, cmd->type->size, UINT8_MAX);
+			return NULL;
+		}
+
+		vmi_instr_sturef_s instr;
+		instr.opcode = 0;
+		instr.icode = VMI_STUREF_S;
+		instr.size = cmd->type->size;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_sturef_s))) {
 			return NULL;
 		}
 		break;

@@ -221,42 +221,42 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 
 		case VMI_OP_STUREF_S_I1:
-			ip = _vmi_thread_sturef_s_i8(t, ip);
+			ip = _vmi_thread_sturef_s_i1(t, ip);
 			continue;
 		case VMI_OP_STUREF_S_I2:
-			ip = _vmi_thread_sturef_s_i16(t, ip);
+			ip = _vmi_thread_sturef_s_i2(t, ip);
 			continue;
 		case VMI_OP_STUREF_S_I4:
-			ip = _vmi_thread_sturef_s_i32(t, ip);
+			ip = _vmi_thread_sturef_s_i4(t, ip);
 			continue;
 		case VMI_OP_STUREF_S_I8:
-			ip = _vmi_thread_sturef_s_i64(t, ip);
+			ip = _vmi_thread_sturef_s_i8(t, ip);
 			continue;
 
 		case VMI_OP_STELEM_S_I1:
-			ip = _vmi_thread_stelem_s_i8(t, ip);
+			ip = _vmi_thread_stelem_s_i1(t, ip);
 			continue;
 		case VMI_OP_STELEM_S_I2:
-			ip = _vmi_thread_stelem_s_i16(t, ip);
+			ip = _vmi_thread_stelem_s_i2(t, ip);
 			continue;
 		case VMI_OP_STELEM_S_I4:
-			ip = _vmi_thread_stelem_s_i32(t, ip);
+			ip = _vmi_thread_stelem_s_i4(t, ip);
 			continue;
 		case VMI_OP_STELEM_S_I8:
-			ip = _vmi_thread_stelem_s_i64(t, ip);
+			ip = _vmi_thread_stelem_s_i8(t, ip);
 			continue;
 
 		case VMI_OP_LDELEM_S_I1:
-			ip = _vmi_thread_ldelem_s_i8(t, ip);
+			ip = _vmi_thread_ldelem_s_i1(t, ip);
 			continue;
 		case VMI_OP_LDELEM_S_I2:
-			ip = _vmi_thread_ldelem_s_i16(t, ip);
+			ip = _vmi_thread_ldelem_s_i2(t, ip);
 			continue;
 		case VMI_OP_LDELEM_S_I4:
-			ip = _vmi_thread_ldelem_s_i32(t, ip);
+			ip = _vmi_thread_ldelem_s_i4(t, ip);
 			continue;
 		case VMI_OP_LDELEM_S_I8:
-			ip = _vmi_thread_ldelem_s_i64(t, ip);
+			ip = _vmi_thread_ldelem_s_i8(t, ip);
 			continue;
 
 		default:
