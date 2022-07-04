@@ -127,6 +127,16 @@ vmp_instr* vmp_instr_str(vm_uint32 index)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_ldr_a(vm_uint32 index)
+{
+	vmp_instr_def_ldr_a* instr = (vmp_instr_def_ldr_a*)vmp_malloc(sizeof(vmp_instr_def_ldr_a));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDR_A, sizeof(vmi_instr_ldr_a));
+	instr->index = index;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_ldl(vm_uint32 index)
 {
 	vmp_instr_def_ldl* instr = (vmp_instr_def_ldl*)vmp_malloc(sizeof(vmp_instr_def_ldl));
@@ -249,6 +259,29 @@ vmp_instr* vmp_instr_sturef(const vmp_type* type)
 		instr->type = type;
 		return VMC_PIPELINE_INSTR_BASE(instr);
 	}	
+}
+
+vmp_instr* vmp_instr_stelem(const vmp_type* type)
+{
+	if (type->of_type == NULL)
+		return NULL;
+
+	if (type->of_type > UINT8_MAX) {
+		vmp_instr_def_stelem* instr = (vmp_instr_def_stelem*)vmp_malloc(sizeof(vmp_instr_def_stelem));
+		if (instr == NULL)
+			return NULL;
+		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STELEM, sizeof(vmi_instr_stelem));
+		instr->array_type = type;
+		return VMC_PIPELINE_INSTR_BASE(instr);
+	}
+	else {
+		vmp_instr_def_stelem_s* instr = (vmp_instr_def_stelem_s*)vmp_malloc(sizeof(vmp_instr_def_stelem_s));
+		if (instr == NULL)
+			return NULL;
+		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STELEM_S, sizeof(vmi_instr_sturef_s));
+		instr->array_type = type;
+		return VMC_PIPELINE_INSTR_BASE(instr);
+	}
 }
 
 vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)
@@ -548,6 +581,40 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		}
 		break;
 	}
+	case VMP_INSTR_STELEM:
+	{
+		const vmp_instr_def_stelem* const cmd = (vmp_instr_def_stelem*)h;
+		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			return NULL;
+		}
+
+		vmi_instr_stelem instr;
+		instr.opcode = 0;
+		instr.icode = VMI_STELEM;
+		instr.size_per_element = cmd->array_type->of_type->size;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_stelem))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_STELEM_S:
+	{
+		const vmp_instr_def_stelem* const cmd = (vmp_instr_def_stelem*)h;
+		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			return NULL;
+		}
+
+		vmi_instr_stelem_s instr;
+		instr.opcode = 0;
+		instr.icode = VMI_STELEM_S;
+		instr.size = cmd->array_type->of_type->size;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_stelem_s))) {
+			return NULL;
+		}
+		break;
+	}
 	case VMP_INSTR_CALL:
 	{
 		const vmp_instr_def_call* const cmd = (vmp_instr_def_call*)h;
@@ -652,6 +719,25 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.size = ret->type->size;
 		instr.offset = ret->offset;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_str))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_LDR_A:
+	{
+		const vmp_instr_def_ldr_a* const cmd = (vmp_instr_def_ldr_a*)h;
+		const vmp_return* const ret = vmp_list_returns_get(&func->returns, cmd->index);
+		if (ret == NULL) {
+			vmp_builder_message_return_index_missing(builder, cmd->index);
+			return NULL;
+		}
+
+		vmi_instr_ldr_a instr;
+		instr.opcode = 0;
+		instr.icode = VMI_LDR_A;
+		instr.size = ret->type->size;
+		instr.offset = ret->offset;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldr_a))) {
 			return NULL;
 		}
 		break;

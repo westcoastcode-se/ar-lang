@@ -37,6 +37,9 @@ enum vmc_lexer_messages
 	// A type is too large
 	VMP_MESSAGE_TYPE_TOO_LARGE,
 
+	// Message that's raised if a type is not an array type
+	VMP_MESSAGE_TYPE_NOT_ARRAY,
+
 	// PANIC!
 	VMP_MESSAGE_PANIC
 };
@@ -48,6 +51,7 @@ enum vmc_lexer_messages
 #define VMP_MESSAGE_HEADER_PREDICTION_FAILED_STR "expected header size to be %d but was %d"
 #define VMP_MESSAGE_TYPES_NOT_COMPATIBLE_STR "identifier '%.*s' is not compatible with '%.*s'"
 #define VMP_MESSAGE_TYPE_TOO_LARGE_STR "type '%.*s' is %d bytes but cannot be larger than %d"
+#define VMP_MESSAGE_TYPE_NOT_ARRAY_STR "type '%.*s' not an array type"
 
 // 
 // Functions which helps adding messages to the messages container
@@ -60,6 +64,7 @@ extern BOOL vmp_builder_message_local_index_missing(struct vmp_builder* b, vm_in
 extern BOOL vmp_builder_message_header_prediction_failed(struct vmp_builder* b, vm_uint32 expected, vm_uint32 was);
 extern BOOL vmp_builder_message_types_not_compatible(struct vmp_builder* b, const vm_string* from_name, const vm_string* to_name);
 extern BOOL vmp_builder_message_type_too_large(struct vmp_builder* b, const vm_string* type_name, vm_int32 size, vm_int32 max_size);
+extern BOOL vmp_builder_message_type_not_array(struct vmp_builder* b, const vm_string* type_name);
 extern BOOL vmp_builder_panic_out_of_memory(struct vmp_builder* b);
 
 #endif

@@ -757,6 +757,73 @@ struct suite_vmp_tests : utils_vm
 		TEST_FN(ldl_a_T<vm_float64>(1234.4567));
 	}
 
+	void arrays()
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create array type
+		auto array_type = vmp_type_new_from_props(
+			vmp_type_props_get(
+				vmp_pipeline_get_string(pipeline, "[2]int32", 8),
+				sizeof(vm_int32[2]),
+				VMP_TYPE_FLAGS_ARRAY,
+				VMI_INSTR_PROP_INT32,
+				get_type("vm", string("int32"))
+			)
+		);
+		vmp_package_add_type(vmp_pipeline_find_packagesz(pipeline, "vm", 2), array_type);
+
+		// Create the Get function and add two integer types
+		auto get = vmp_func_newsz("Get", 3);
+		auto get_ret1 = vmp_func_new_return(get, array_type);
+		vmp_package_add_func(main_package, get);
+
+		// func Get() ([2]int32) {
+		//	return [10, 20]
+		// }
+		// =>
+		// {
+		//	ldr_a 0
+		//	ldc_i4 0
+		//	ldc_i4 10
+		//	stelem [2]int32
+		//	ldr_a 0
+		//	ldc_i4 1
+		//	ldc_i4 20
+		//	stelem int32
+		//	ret
+		// }
+		vmp_func_begin_body(get);
+		vmp_func_add_instr(get, vmp_instr_ldr_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(0)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(10)));
+		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
+		vmp_func_add_instr(get, vmp_instr_ldr_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(20)));
+		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+		auto ret = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32[2]));
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32[2]));
+		verify_value(ret[0], 10);
+		verify_value(ret[1], 20);
+
+		destroy(t);
+
+		end();
+	}
+
 	void operator()()
 	{
 		TEST(add);
@@ -769,6 +836,7 @@ struct suite_vmp_tests : utils_vm
 		TEST(jmpf);
 		TEST(conv);
 		TEST(ldl_a);
+		TEST(arrays);
 	}
 };
 

@@ -35,6 +35,16 @@ struct vmp_instr_def_str
 };
 typedef struct vmp_instr_def_str vmp_instr_def_str;
 
+// ldr_a <index>
+struct vmp_instr_def_ldr_a
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Return index to load
+	vm_uint32 index;
+};
+typedef struct vmp_instr_def_ldr_a vmp_instr_def_ldr_a;
+
 // stl <index>
 struct vmp_instr_def_stl
 {
@@ -180,20 +190,22 @@ struct vmp_instr_def_sturef
 {
 	VMC_PIPELINE_INSTR_HEADER;
 
-	// Or alternatively a type
+	// Type to unref and set
 	const vmp_type* type;
 };
 typedef struct vmp_instr_def_sturef vmp_instr_def_sturef;
+typedef struct vmp_instr_def_sturef vmp_instr_def_sturef_s;
 
 // sturef_s <type>
-struct vmp_instr_def_sturef_s
+struct vmp_instr_def_stelem
 {
 	VMC_PIPELINE_INSTR_HEADER;
 
-	// Or alternatively a type
-	const vmp_type* type;
+	// Array type to set
+	const vmp_type* array_type;
 };
-typedef struct vmp_instr_def_sturef_s vmp_instr_def_sturef_s;
+typedef struct vmp_instr_def_stelem vmp_instr_def_stelem;
+typedef struct vmp_instr_def_stelem vmp_instr_def_stelem_s;
 
 // call <func>
 struct vmp_instr_def_call
@@ -263,14 +275,17 @@ typedef struct vmp_instr_def_basic vmp_instr_def_basic;
 typedef struct vmp_instr_def_basic vmp_instr_def_ret;
 typedef struct vmp_instr_def_basic vmp_instr_def_eoe;
 
-// Create a new add instruction and return it
+// Create a new lda instruction and return it
 extern vmp_instr* vmp_instr_lda(vm_uint32 index);
 
-// Create a new add instruction and return it
+// Create a new lda_a instruction and return it
 extern vmp_instr* vmp_instr_lda_a(vm_uint32 index);
 
 // Create a new str instruction and return it
 extern vmp_instr* vmp_instr_str(vm_uint32 index);
+
+// Create a new ldr_a instruction and return it
+extern vmp_instr* vmp_instr_ldr_a(vm_uint32 index);
 
 // Create a new stl instruction and return it
 extern vmp_instr* vmp_instr_stl(vm_uint32 index);
@@ -301,6 +316,9 @@ extern vmp_instr* vmp_instr_allocs_const(vm_int16 amount);
 
 // Create a stunref instruction
 extern vmp_instr* vmp_instr_sturef(const vmp_type* type);
+
+// Create a stelem instruction for a specific array type
+extern vmp_instr* vmp_instr_stelem(const vmp_type* type);
 
 // Call the supplied function
 extern vmp_instr* vmp_instr_call(const vmp_func* func);

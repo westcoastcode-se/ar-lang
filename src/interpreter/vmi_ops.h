@@ -45,6 +45,9 @@ enum vmi_icodes
 	// Store the value on the stack into the reserved return block
 	VMI_STR,
 
+	// Load the address of the return value and push it to the stack
+	VMI_LDR_A,
+
 	// Allocate memory on the stack
 	VMI_ALLOCS,
 
@@ -199,6 +202,7 @@ struct vmi_instr_str
 	};
 };
 typedef struct vmi_instr_str vmi_instr_str;
+typedef struct vmi_instr_str vmi_instr_ldr_a;
 
 // A ldl instruction
 struct vmi_instr_ldl

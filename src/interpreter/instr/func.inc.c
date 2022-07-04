@@ -153,3 +153,14 @@ vmi_ip _vmi_thread_str(vmi_thread* t, vmi_ip ip)
 	}
 	return ip + sizeof(vmi_instr_str);
 }
+
+vmi_ip _vmi_thread_ldr_a(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_ldr_a* instr = (const vmi_instr_ldr_a*)ip;
+	vm_byte* src = t->ebp + instr->offset;
+	vm_byte** dest = (vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*));
+	if (dest == NULL)
+		return _vmi_thread_stack_out_of_memory(t, ip);
+	*dest = src;
+	return ip + sizeof(vmi_instr_ldr_a);
+}

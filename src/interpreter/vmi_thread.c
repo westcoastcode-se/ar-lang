@@ -293,6 +293,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_STR:
 			ip = _vmi_thread_str(t, ip);
 			continue;
+		case VMI_LDR_A:
+			ip = _vmi_thread_ldr_a(t, ip);
+			continue;
 		case VMI_LDL:
 			ip = _vmi_thread_ldl(t, ip);
 			continue;
