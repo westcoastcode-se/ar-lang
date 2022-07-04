@@ -76,14 +76,26 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_OP_ADD_I1:
 			ip = _vmi_thread_addi1(t, ip);
 			continue;
+		case VMI_OP_ADD_UI1:
+			ip = _vmi_thread_addui1(t, ip);
+			continue;
 		case VMI_OP_ADD_I2:
 			ip = _vmi_thread_addi2(t, ip);
+			continue;
+		case VMI_OP_ADD_UI2:
+			ip = _vmi_thread_addui2(t, ip);
 			continue;
 		case VMI_OP_ADD_I4:
 			ip = _vmi_thread_addi4(t, ip);
 			continue;
+		case VMI_OP_ADD_UI4:
+			ip = _vmi_thread_addui4(t, ip);
+			continue;
 		case VMI_OP_ADD_I8:
 			ip = _vmi_thread_addi8(t, ip);
+			continue;
+		case VMI_OP_ADD_UI8:
+			ip = _vmi_thread_addui8(t, ip);
 			continue;
 		case VMI_OP_ADD_F4:
 			ip = _vmi_thread_addf4(t, ip);

@@ -116,6 +116,9 @@ BOOL vmc_memory_test_bytes_left()
 			h = h->next;
 		}
 		printf("===================\n");
+		_vmc_memory_manager.first = NULL;
+		_vmc_memory_manager.last = NULL;
+		_vmc_memory_manager.total_bytes = 0;
 		return FALSE;
 	}
 	return TRUE;

@@ -90,7 +90,7 @@ struct suite_vmp_tests : utils_vm
 	template<typename T>
 	void push_value(vmi_thread* t, T value)
 	{
-		*(T*)vmi_thread_reserve_stack(t, sizeof(T)) = value;
+		*(T*)vmi_thread_reserve_stack(t, sizeof(T)) = (T)value;
 	}
 
 	vmp_constant vmp_const(vm_int8 value) {
@@ -199,9 +199,13 @@ struct suite_vmp_tests : utils_vm
 	void add()
 	{
 		TEST_FN(add_test<vm_int8>(1, 5));
+		TEST_FN(add_test<vm_uint8>(1, 5));
 		TEST_FN(add_test<vm_int16>(10, INT8_MAX));
+		TEST_FN(add_test<vm_uint16>(10, INT8_MAX));
 		TEST_FN(add_test<vm_int32>(INT16_MAX, 20));
+		TEST_FN(add_test<vm_uint32>(INT16_MAX, INT16_MAX));
 		TEST_FN(add_test<vm_int64>(102, INT32_MAX));
+		TEST_FN(add_test<vm_uint64>(INT32_MAX, INT32_MAX));
 		TEST_FN(add_test<vm_float32>(1.0f, 20.0f));
 		TEST_FN(add_test<vm_float64>(-10.0, 203.0));
 	}
