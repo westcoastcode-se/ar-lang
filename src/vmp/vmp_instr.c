@@ -233,22 +233,22 @@ vmp_instr* vmp_instr_allocs_const(vm_int16 amount)
 
 vmp_instr* vmp_instr_sturef(const vmp_type* type)
 {
-	vmp_instr_def_sturef* instr = (vmp_instr_def_sturef*)vmc_malloc(sizeof(vmp_instr_def_sturef));
-	if (instr == NULL)
-		return NULL;
-	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STUREF, sizeof(vmi_instr_sturef));
-	instr->type = type;
-	return VMC_PIPELINE_INSTR_BASE(instr);
-}
-
-vmp_instr* vmp_instr_sturef_s(const vmp_type* type)
-{
-	vmp_instr_def_sturef_s* instr = (vmp_instr_def_sturef_s*)vmc_malloc(sizeof(vmp_instr_def_sturef_s));
-	if (instr == NULL)
-		return NULL;
-	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STUREF_S, sizeof(vmi_instr_sturef_s));
-	instr->type = type;
-	return VMC_PIPELINE_INSTR_BASE(instr);
+	if (type->size > UINT8_MAX) {
+		vmp_instr_def_sturef* instr = (vmp_instr_def_sturef*)vmc_malloc(sizeof(vmp_instr_def_sturef));
+		if (instr == NULL)
+			return NULL;
+		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STUREF, sizeof(vmi_instr_sturef));
+		instr->type = type;
+		return VMC_PIPELINE_INSTR_BASE(instr);
+	}
+	else {
+		vmp_instr_def_sturef_s* instr = (vmp_instr_def_sturef_s*)vmc_malloc(sizeof(vmp_instr_def_sturef_s));
+		if (instr == NULL)
+			return NULL;
+		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STUREF_S, sizeof(vmi_instr_sturef_s));
+		instr->type = type;
+		return VMC_PIPELINE_INSTR_BASE(instr);
+	}	
 }
 
 vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)

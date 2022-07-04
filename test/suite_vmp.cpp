@@ -757,80 +757,6 @@ struct suite_vmp_tests : utils_vm
 		TEST_FN(ldl_a_T<vm_float64>(1234.4567));
 	}
 
-	template<typename T>
-	void sturef_s_T(T value)
-	{
-		begin();
-
-		// Create the main package
-		auto main_package = vmp_package_newsz("main", 4);
-		vmp_pipeline_add_package(pipeline, main_package);
-
-		// Create the Get function and add two integer types
-		auto inner_get = vmp_func_newsz("innerGet", 8);
-		vmp_func_new_arg(inner_get, get_type("vm", string(ptr<T>())));
-		vmp_package_add_func(main_package, inner_get);
-
-		// {
-		//	lda 0
-		//	ldc_T 100
-		//	stunref int32
-		//	ret
-		// }
-		vmp_func_begin_body(inner_get);
-		vmp_func_add_instr(inner_get, vmp_instr_lda(0));
-		vmp_func_add_instr(inner_get, vmp_instr_ldc(get_type("vm", string(name<T>())), vmp_const((T)value)));
-		vmp_func_add_instr(inner_get, vmp_instr_sturef_s(get_type("vm", string(name<T>()))));
-		vmp_func_add_instr(inner_get, vmp_instr_ret());
-		vmp_func_begin_end(inner_get);
-
-		// Create the Get function and add two integer types
-		auto get = vmp_func_newsz("Get", 3);
-		auto get_ret1 = vmp_func_new_return(get, get_type("vm", string(name<T>())));
-		auto get_local1 = vmp_func_new_local(get, get_type("vm", string(name<T>())));
-		vmp_local_set_namesz(get_local1, "i", 1);
-		vmp_package_add_func(main_package, get);
-
-		// {
-		//	locals (i T)
-		//	ldl_a 0
-		//	call innerGet(*T)()
-		//	ldl 0
-		//	str 0
-		//	ret
-		// }
-		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldl_a(0));
-		vmp_func_add_instr(get, vmp_instr_call(inner_get));
-		vmp_func_add_instr(get, vmp_instr_ldl(0));
-		vmp_func_add_instr(get, vmp_instr_str(0));
-		vmp_func_add_instr(get, vmp_instr_ret());
-		vmp_func_begin_end(get);
-
-		compile();
-
-		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(T));
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(T));
-		verify_stack(t, 0, (T)value);
-
-		destroy(t);
-
-		end();
-	}
-
-	void sturef_s()
-	{
-		TEST_FN(sturef_s_T<vm_int8>((vm_int8)-120));
-		TEST_FN(sturef_s_T<vm_int16>(INT16_MAX - 100));
-		TEST_FN(sturef_s_T<vm_int32>((vm_int32)(INT32_MAX * 0.98)));
-		TEST_FN(sturef_s_T<vm_int64>(INT64_MAX - INT16_MAX));
-		TEST_FN(sturef_s_T<vm_float32>(123.45f));
-		TEST_FN(sturef_s_T<vm_float64>(1234.4567));
-	}
-
 	void operator()()
 	{
 		TEST(add);
@@ -843,7 +769,6 @@ struct suite_vmp_tests : utils_vm
 		TEST(jmpf);
 		TEST(conv);
 		TEST(ldl_a);
-		TEST(sturef_s);
 	}
 };
 

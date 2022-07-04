@@ -302,9 +302,6 @@ extern vmp_instr* vmp_instr_allocs_const(vm_int16 amount);
 // Create a stunref instruction
 extern vmp_instr* vmp_instr_sturef(const vmp_type* type);
 
-// Create a stunref instruction
-extern vmp_instr* vmp_instr_sturef_s(const vmp_type* type);
-
 // Call the supplied function
 extern vmp_instr* vmp_instr_call(const vmp_func* func);
 
