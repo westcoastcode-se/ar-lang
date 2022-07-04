@@ -2,7 +2,7 @@
 #include "../vmi_thread.h"
 #endif
 
-vmi_ip _vmi_thread_ldc_i8(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldc_i1(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_ldc_i32* instr = (const vmi_instr_ldc_i32*)ip;
 	vm_int8* result = (vm_int8*)vmi_stack_push(&t->stack, sizeof(vm_int8));
@@ -10,7 +10,7 @@ vmi_ip _vmi_thread_ldc_i8(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldc_i32);
 }
 
-vmi_ip _vmi_thread_ldc_i16(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldc_i2(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_ldc_i32* instr = (const vmi_instr_ldc_i32*)ip;
 	vm_int16* result = (vm_int16*)vmi_stack_push(&t->stack, sizeof(vm_int16));
@@ -18,7 +18,7 @@ vmi_ip _vmi_thread_ldc_i16(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldc_i32);
 }
 
-vmi_ip _vmi_thread_ldc_i32(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldc_i4(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_ldc_i32* instr = (const vmi_instr_ldc_i32*)ip;
 	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
@@ -26,7 +26,7 @@ vmi_ip _vmi_thread_ldc_i32(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldc_i32);
 }
 
-vmi_ip _vmi_thread_ldc_i64(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldc_i8(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_ldc_i64* instr = (const vmi_instr_ldc_i64*)ip;
 	vm_int64* result = (vm_int64*)vmi_stack_push(&t->stack, sizeof(vm_int64));
@@ -34,7 +34,7 @@ vmi_ip _vmi_thread_ldc_i64(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldc_i64);
 }
 
-vmi_ip _vmi_thread_ldc_f32(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldc_f4(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_ldc_i32* instr = (const vmi_instr_ldc_i32*)ip;
 	vm_float32* result = (vm_float32*)vmi_stack_push(&t->stack, sizeof(vm_float32));
@@ -42,7 +42,7 @@ vmi_ip _vmi_thread_ldc_f32(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldc_i32);
 }
 
-vmi_ip _vmi_thread_ldc_f64(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_ldc_f8(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_ldc_i64* instr = (const vmi_instr_ldc_i64*)ip;
 	vm_float64* result = (vm_float64*)vmi_stack_push(&t->stack, sizeof(vm_float64));
@@ -50,7 +50,7 @@ vmi_ip _vmi_thread_ldc_f64(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_ldc_i64);
 }
 
-vmi_ip _vmi_thread_ldc_s_i8(vmi_thread* t, vmi_ip ip, vm_int8 value)
+vmi_ip _vmi_thread_ldc_s_i1(vmi_thread* t, vmi_ip ip, vm_int8 value)
 {
 	const vmi_instr_ldc_s* instr = (const vmi_instr_ldc_s*)ip;
 	vm_int8* result = (vm_int8*)vmi_stack_push(&t->stack, sizeof(vm_int8));
@@ -58,7 +58,7 @@ vmi_ip _vmi_thread_ldc_s_i8(vmi_thread* t, vmi_ip ip, vm_int8 value)
 	return ip + sizeof(vmi_instr_ldc_s);
 }
 
-vmi_ip _vmi_thread_ldc_s_i16(vmi_thread* t, vmi_ip ip, vm_int16 value)
+vmi_ip _vmi_thread_ldc_s_i2(vmi_thread* t, vmi_ip ip, vm_int16 value)
 {
 	const vmi_instr_ldc_s* instr = (const vmi_instr_ldc_s*)ip;
 	vm_int16* result = (vm_int16*)vmi_stack_push(&t->stack, sizeof(vm_int16));
@@ -66,7 +66,7 @@ vmi_ip _vmi_thread_ldc_s_i16(vmi_thread* t, vmi_ip ip, vm_int16 value)
 	return ip + sizeof(vmi_instr_ldc_s);
 }
 
-vmi_ip _vmi_thread_ldc_s_i32(vmi_thread* t, vmi_ip ip, vm_int32 value)
+vmi_ip _vmi_thread_ldc_s_i4(vmi_thread* t, vmi_ip ip, vm_int32 value)
 {
 	const vmi_instr_ldc_s* instr = (const vmi_instr_ldc_s*)ip;
 	vm_int32* result = (vm_int32*)vmi_stack_push(&t->stack, sizeof(vm_int32));
@@ -74,7 +74,7 @@ vmi_ip _vmi_thread_ldc_s_i32(vmi_thread* t, vmi_ip ip, vm_int32 value)
 	return ip + sizeof(vmi_instr_ldc_s);
 }
 
-vmi_ip _vmi_thread_ldc_s_i64(vmi_thread* t, vmi_ip ip, vm_int64 value)
+vmi_ip _vmi_thread_ldc_s_i8(vmi_thread* t, vmi_ip ip, vm_int64 value)
 {
 	const vmi_instr_ldc_s* instr = (const vmi_instr_ldc_s*)ip;
 	vm_int64* result = (vm_int64*)vmi_stack_push(&t->stack, sizeof(vm_int64));
@@ -82,7 +82,7 @@ vmi_ip _vmi_thread_ldc_s_i64(vmi_thread* t, vmi_ip ip, vm_int64 value)
 	return ip + sizeof(vmi_instr_ldc_s);
 }
 
-vmi_ip _vmi_thread_ldc_s_f32(vmi_thread* t, vmi_ip ip, vm_float32 value)
+vmi_ip _vmi_thread_ldc_s_f4(vmi_thread* t, vmi_ip ip, vm_float32 value)
 {
 	const vmi_instr_ldc_s* instr = (const vmi_instr_ldc_s*)ip;
 	vm_float32* result = (vm_float32*)vmi_stack_push(&t->stack, sizeof(vm_float32));
@@ -90,7 +90,7 @@ vmi_ip _vmi_thread_ldc_s_f32(vmi_thread* t, vmi_ip ip, vm_float32 value)
 	return ip + sizeof(vmi_instr_ldc_s);
 }
 
-vmi_ip _vmi_thread_ldc_s_f64(vmi_thread* t, vmi_ip ip, vm_float64 value)
+vmi_ip _vmi_thread_ldc_s_f8(vmi_thread* t, vmi_ip ip, vm_float64 value)
 {
 	const vmi_instr_ldc_s* instr = (const vmi_instr_ldc_s*)ip;
 	vm_float64* result = (vm_float64*)vmi_stack_push(&t->stack, sizeof(vm_float64));

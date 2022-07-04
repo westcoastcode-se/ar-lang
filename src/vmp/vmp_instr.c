@@ -12,11 +12,27 @@ vmp_constant vmp_const_i1(vm_int8 value)
 	return c;
 }
 
+vmp_constant vmp_const_ui1(vm_int8 value)
+{
+	vmp_constant c;
+	c.ui1 = value;
+	c.type = VMI_INSTR_CONST_PROP1_UINT8;
+	return c;
+}
+
 vmp_constant vmp_const_i2(vm_int16 value)
 {
 	vmp_constant c;
 	c.i2 = value;
 	c.type = VMI_INSTR_CONST_PROP1_INT16;
+	return c;
+}
+
+vmp_constant vmp_const_ui2(vm_uint16 value)
+{
+	vmp_constant c;
+	c.ui2 = value;
+	c.type = VMI_INSTR_CONST_PROP1_UINT16;
 	return c;
 }
 
@@ -28,11 +44,27 @@ vmp_constant vmp_const_i4(vm_int32 value)
 	return c;
 }
 
+vmp_constant vmp_const_ui4(vm_uint32 value)
+{
+	vmp_constant c;
+	c.ui4 = value;
+	c.type = VMI_INSTR_CONST_PROP1_UINT32;
+	return c;
+}
+
 vmp_constant vmp_const_i8(vm_int64 value)
 {
 	vmp_constant c;
 	c.i8 = value;
 	c.type = VMI_INSTR_CONST_PROP1_INT64;
+	return c;
+}
+
+vmp_constant vmp_const_ui8(vm_uint64 value)
+{
+	vmp_constant c;
+	c.ui8 = value;
+	c.type = VMI_INSTR_CONST_PROP1_UINT64;
 	return c;
 }
 

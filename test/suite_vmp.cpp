@@ -97,16 +97,32 @@ struct suite_vmp_tests : utils_vm
 		return vmp_const_i1(value);
 	}
 
+	vmp_constant vmp_const(vm_uint8 value) {
+		return vmp_const_ui1(value);
+	}
+
 	vmp_constant vmp_const(vm_int16 value) {
 		return vmp_const_i2(value);
+	}
+
+	vmp_constant vmp_const(vm_uint16 value) {
+		return vmp_const_ui2(value);
 	}
 
 	vmp_constant vmp_const(vm_int32 value) {
 		return vmp_const_i4(value);
 	}
 
+	vmp_constant vmp_const(vm_uint32 value) {
+		return vmp_const_ui4(value);
+	}
+
 	vmp_constant vmp_const(vm_int64 value) {
 		return vmp_const_i8(value);
+	}
+
+	vmp_constant vmp_const(vm_uint64 value) {
+		return vmp_const_ui8(value);
 	}
 
 	vmp_constant vmp_const(vm_float32 value) {
@@ -254,9 +270,13 @@ struct suite_vmp_tests : utils_vm
 	void ldc()
 	{
 		TEST_FN(ldc_T<vm_int8>(12));
+		TEST_FN(ldc_T<vm_uint8>(UINT8_MAX - 10));
 		TEST_FN(ldc_T<vm_int16>(INT16_MAX - 10));
+		TEST_FN(ldc_T<vm_uint16>(UINT16_MAX - 10));
 		TEST_FN(ldc_T<vm_int32>(INT32_MAX - 1234));
+		TEST_FN(ldc_T<vm_uint32>(UINT32_MAX - 1234));
 		TEST_FN(ldc_T<vm_int64>(INT64_MAX - 123456));
+		TEST_FN(ldc_T<vm_uint64>(UINT64_MAX - 123456));
 		TEST_FN(ldc_T<vm_float32>(123.456f));
 		TEST_FN(ldc_T<vm_float64>(12345.6789));
 	}
