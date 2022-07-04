@@ -52,3 +52,15 @@ vmp_type* vmp_list_inherits_from_get(const vmp_list_inherits_from* l, vm_int32 i
 		return NULL;
 	return l->memory[index];
 }
+
+BOOL vmp_list_inherits_from_contains(const vmp_list_inherits_from* l, const struct vmp_type* ptr)
+{
+	struct vmp_type** item = &l->memory[0];
+	struct vmp_type** const end = &l->memory[l->count];
+	for (; item != end; ++item) {
+		if (*item == ptr) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}

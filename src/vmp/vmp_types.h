@@ -236,6 +236,12 @@ extern vmp_type* vmp_type_new(const vm_string* name);
 // Destroy type
 extern void vmp_type_destroy(vmp_type* p);
 
+// Check to see if the supplied type inherits from the test
+extern BOOL vmp_type_test_inherits_from(const vmp_type* type, const vmp_type* inherits_from);
+
+// Tell the pipeline that the supplied inherits from another type. Returns FALSE if the inheritence is not allowed
+extern BOOL vmp_type_inherit_from(vmp_type* type, vmp_type* inherits_from);
+
 // Check if you can convert one type into another using convertion
 extern BOOL vmp_type_can_convert(const vmp_type* from, const vmp_type* to);
 

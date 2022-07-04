@@ -27,4 +27,7 @@ extern struct vmp_type* vmp_list_inherits_from_find(const vmp_list_inherits_from
 // Get a type of a specific index
 extern struct vmp_type* vmp_list_inherits_from_get(const vmp_list_inherits_from* l, vm_int32 index);
 
+// check to see if the supplied list contains the supplied item
+extern BOOL vmp_list_inherits_from_contains(const vmp_list_inherits_from* l, const struct vmp_type* ptr);
+
 #endif

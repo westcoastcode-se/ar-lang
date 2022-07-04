@@ -83,6 +83,32 @@ void vmp_type_destroy(vmp_type* p)
 	vmc_free(p);
 }
 
+BOOL vmp_type_test_inherits_from(const vmp_type* type, const vmp_type* inherits_from)
+{
+	if (vmp_list_inherits_from_contains(&type->inherits_from, inherits_from)) {
+		return TRUE;
+	}
+	const vm_int32 count = type->inherits_from.count;
+	for (vm_int32 i = 0; i < count; ++i) {
+		if (vmp_type_test_inherits_from(vmp_list_inherits_from_get(&type->inherits_from, i), inherits_from)) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+BOOL vmp_type_inherit_from(vmp_type* type, vmp_type* inherits_from)
+{
+	// Don't allow for cirtcular dependencies
+	if (vmp_type_test_inherits_from(inherits_from, type)) {
+		return FALSE;
+	}
+
+	vmp_list_inherits_from_add(&type->inherits_from, inherits_from);
+	vmp_list_inherited_by_add(&inherits_from->inherited_by, type);
+	return TRUE;
+}
+
 BOOL vmp_type_can_convert(const vmp_type* from, const vmp_type* to)
 {
 	// TODO: Flags should indicate if a type is complex (a struct) or a data type
