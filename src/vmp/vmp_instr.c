@@ -266,7 +266,7 @@ vmp_instr* vmp_instr_stelem(const vmp_type* type)
 	if (type->of_type == NULL)
 		return NULL;
 
-	if (type->of_type > UINT8_MAX) {
+	if (type->of_type->size > UINT8_MAX) {
 		vmp_instr_def_stelem* instr = (vmp_instr_def_stelem*)vmp_malloc(sizeof(vmp_instr_def_stelem));
 		if (instr == NULL)
 			return NULL;

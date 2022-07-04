@@ -9,6 +9,7 @@ extern "C"
 #include <stdexcept>
 #include <cstdarg>
 #include <sstream>
+#include <array>
 
 using namespace std;
 

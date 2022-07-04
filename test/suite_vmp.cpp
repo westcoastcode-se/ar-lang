@@ -757,7 +757,8 @@ struct suite_vmp_tests : utils_vm
 		TEST_FN(ldl_a_T<vm_float64>(1234.4567));
 	}
 
-	void arrays()
+	template<typename T>
+	void stelem_T(const std::array<T, 2>& values)
 	{
 		begin();
 
@@ -765,14 +766,16 @@ struct suite_vmp_tests : utils_vm
 		auto main_package = vmp_package_newsz("main", 4);
 		vmp_pipeline_add_package(pipeline, main_package);
 
+		const auto array_type_name = string("[2]") + string(name<T>());
+
 		// Create array type
 		auto array_type = vmp_type_new_from_props(
 			vmp_type_props_get(
-				vmp_pipeline_get_string(pipeline, "[2]int32", 8),
-				sizeof(vm_int32[2]),
+				vmp_pipeline_get_string(pipeline, array_type_name.c_str(), array_type_name.length()),
+				sizeof(T[2]),
 				VMP_TYPE_FLAGS_ARRAY,
-				VMI_INSTR_PROP_INT32,
-				get_type("vm", string("int32"))
+				props1<T>(),
+				get_type("vm", string(name<T>()))
 			)
 		);
 		vmp_package_add_type(vmp_pipeline_find_packagesz(pipeline, "vm", 2), array_type);
@@ -782,29 +785,25 @@ struct suite_vmp_tests : utils_vm
 		auto get_ret1 = vmp_func_new_return(get, array_type);
 		vmp_package_add_func(main_package, get);
 
-		// func Get() ([2]int32) {
-		//	return [10, 20]
-		// }
-		// =>
 		// {
 		//	ldr_a 0
 		//	ldc_i4 0
 		//	ldc_i4 10
-		//	stelem [2]int32
+		//	stelem [2]T
 		//	ldr_a 0
 		//	ldc_i4 1
 		//	ldc_i4 20
-		//	stelem int32
+		//	stelem [2]T
 		//	ret
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_ldr_a(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(0)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(10)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<T>())), vmp_const((T)values[0])));
 		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
 		vmp_func_add_instr(get, vmp_instr_ldr_a(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(1)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(20)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<T>())), vmp_const((T)values[1])));
 		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
@@ -812,16 +811,30 @@ struct suite_vmp_tests : utils_vm
 		compile();
 
 		auto t = thread();
-		auto ret = (vm_int32*)vmi_thread_reserve_stack(t, sizeof(vm_int32[2]));
+		auto ret = (T*)vmi_thread_reserve_stack(t, sizeof(T[2]));
 		invoke(t, "Get");
 
-		verify_stack_size(t, sizeof(vm_int32[2]));
-		verify_value(ret[0], 10);
-		verify_value(ret[1], 20);
+		verify_stack_size(t, sizeof(T[2]));
+		verify_value(ret[0], values[0]);
+		verify_value(ret[1], values[1]);
 
 		destroy(t);
 
 		end();
+	}
+
+	void stelem()
+	{
+		TEST_FN(stelem_T<vm_int8>({ 1, -1 }));
+		TEST_FN(stelem_T<vm_uint8>({ INT8_MAX + 1, UINT8_MAX - 1 }));
+		TEST_FN(stelem_T<vm_int16>({ UINT8_MAX + 1, INT16_MAX - 100 }));
+		TEST_FN(stelem_T<vm_uint16>({ INT16_MAX + 1, UINT16_MAX - 1 }));
+		TEST_FN(stelem_T<vm_int32>({ UINT16_MAX + 1, INT32_MAX - 100 }));
+		TEST_FN(stelem_T<vm_uint32>({ INT32_MAX + 1u, UINT32_MAX - 100u }));
+		TEST_FN(stelem_T<vm_int64>({ UINT32_MAX + 1l, INT64_MAX - 100l }));
+		TEST_FN(stelem_T<vm_uint64>({ INT64_MAX + 1ull, UINT64_MAX - 100ull }));
+		TEST_FN(stelem_T<vm_float32>({ 123.43f, 657.123f }));
+		TEST_FN(stelem_T<vm_float64>({ 123.4345, 657.12312 }));
 	}
 
 	void operator()()
@@ -836,7 +849,7 @@ struct suite_vmp_tests : utils_vm
 		TEST(jmpf);
 		TEST(conv);
 		TEST(ldl_a);
-		TEST(arrays);
+		TEST(stelem);
 	}
 };
 

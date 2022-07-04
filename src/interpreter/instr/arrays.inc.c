@@ -98,7 +98,7 @@ vmi_ip _vmi_thread_ldelem_s_i2(vmi_thread* t, vmi_ip ip)
 
 vmi_ip _vmi_thread_stelem_s_i4(vmi_thread* t, vmi_ip ip)
 {
-	const vm_int32* src = (const vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
+	const vm_int32* src = (const vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	vm_int32* dest = *(vm_int32**)vmi_stack_pop(&t->stack, sizeof(vm_int32*));
 
@@ -118,7 +118,7 @@ vmi_ip _vmi_thread_ldelem_s_i4(vmi_thread* t, vmi_ip ip)
 
 vmi_ip _vmi_thread_stelem_s_i8(vmi_thread* t, vmi_ip ip)
 {
-	const vm_int64* src = (const vm_int64*)vmi_stack_pop(&t->stack, sizeof(vm_int16));
+	const vm_int64* src = (const vm_int64*)vmi_stack_pop(&t->stack, sizeof(vm_int64));
 	const vm_int32 index = *(vm_int32*)vmi_stack_pop(&t->stack, sizeof(vm_int32));
 	vm_int64* dest = *(vm_int64**)vmi_stack_pop(&t->stack, sizeof(vm_int64*));
 
