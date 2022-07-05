@@ -1,10 +1,6 @@
 #pragma once
 
-extern "C"
-{
-#	include <vm.h>
-}
-
+#include <vm.h>
 #include <iostream>
 #include <stdexcept>
 #include <cstdarg>

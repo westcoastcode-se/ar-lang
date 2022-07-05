@@ -1,11 +1,6 @@
 #include "utils.hpp"
 
-extern "C"
-{
-#	include <vmp/vmp.h>
-}
-
-struct suite_vmp_tests : utils_vm
+struct utils_vmp : utils_vm
 {
 	vmp_pipeline* pipeline;
 	vmp_builder* builder;
@@ -158,7 +153,10 @@ struct suite_vmp_tests : utils_vm
 		}
 		return vmp_package_find_type(p, &type_name_str);
 	}
+};
 
+struct suite_vmp_tests : utils_vmp
+{
 	template<typename T>
 	void add_test(T lhs, T rhs)
 	{
@@ -937,7 +935,6 @@ struct suite_vmp_tests : utils_vm
 		TEST(ldelem);
 	}
 };
-
 
 void suite_vmp()
 {
