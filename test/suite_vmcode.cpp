@@ -77,7 +77,7 @@ struct utils_vmcode : utils_vm
 	}
 };
 
-struct suite_vmp_tests : utils_vmcode
+struct suite_vmcode_tests : utils_vmcode
 {
 	void get_const()
 	{
@@ -97,5 +97,5 @@ func Get() int32 {
 
 void suite_vmcode()
 {
-	SUITE(suite_vmp_tests);
+	SUITE(suite_vmcode_tests);
 }
