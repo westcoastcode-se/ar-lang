@@ -406,12 +406,73 @@ vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 
 BOOL vmp_instr_test_prev_count(const vmp_instr* instr, vm_int32 count)
 {
+	ASSERT_NOT_NULL(instr);
+
 	vm_int32 i;
 	for (i = 0; i < count; ++i) {
 		if (instr == NULL) {
 			return FALSE;
 		}
 		instr = instr->prev;
+	}
+	return TRUE;
+}
+
+BOOL vmp_instr_ldc_i8_leq(const vmp_instr* instr, BOOL ret_if_not_constant, vm_int64 value)
+{
+	ASSERT_NOT_NULL(instr);
+
+	switch (instr->instr_type)
+	{
+	case VMP_INSTR_LDC_S:
+	{
+		const vmp_instr_def_ldc* const cmd = (const vmp_instr_def_ldc*)instr;
+		if (cmd->constant.i2 > value)
+			return FALSE;
+		break;
+	}
+	case VMP_INSTR_LDC:
+	{
+		const vmp_instr_def_ldc* const cmd = (const vmp_instr_def_ldc*)instr;
+		if (cmd->constant.i4 > value)
+			return FALSE;
+		break;
+	}
+	case VMP_INSTR_LDC_I8:
+	{
+		const vmp_instr_def_ldc* const cmd = (const vmp_instr_def_ldc*)instr;
+		if (cmd->constant.i8 > value)
+			return FALSE;
+		break;
+	}
+	default:
+		return ret_if_not_constant;
+	}
+	return TRUE;
+}
+
+vm_int64 vmp_instr_ldc_i8_get(const vmp_instr* instr)
+{
+	ASSERT_NOT_NULL(instr);
+	switch (instr->instr_type)
+	{
+	case VMP_INSTR_LDC_S:
+	{
+		const vmp_instr_def_ldc* const cmd = (const vmp_instr_def_ldc*)instr;
+		return (vm_int64)cmd->constant.i2;
+	}
+	case VMP_INSTR_LDC:
+	{
+		const vmp_instr_def_ldc* const cmd = (const vmp_instr_def_ldc*)instr;
+		return (vm_int64)cmd->constant.i4;
+	}
+	case VMP_INSTR_LDC_I8:
+	{
+		const vmp_instr_def_ldc* const cmd = (const vmp_instr_def_ldc*)instr;
+		return (vm_int64)cmd->constant.i8;
+	}
+	default:
+		return -1;
 	}
 	return TRUE;
 }
@@ -633,10 +694,18 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 
 		// If this is an array type then the size is known from the beginning
 		if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
-			const int count = array_type->size / array_type->of_type->size;
+			const vm_int64 count = array_type->size / array_type->of_type->size;
+			// If -2 is a constant value then verify that it doesn't exceed count
+			if (!vmp_instr_ldc_i8_leq(h->prev->prev, TRUE, count - 1)) {
+				vmp_builder_message_expected_const_smaller_than(builder, vmp_instr_ldc_i8_get(h->prev->prev), count);
+				break;
+			}
 		}
-
-		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+		else if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_PTR)) {
+			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			break;
+		}
+		else {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
 			break;
 		}
@@ -663,7 +732,20 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			break;
 		}
 
-		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+		// If this is an array type then the size is known from the beginning
+		if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+			const vm_int64 count = array_type->size / array_type->of_type->size;
+			// If -2 is a constant value then verify that it doesn't exceed count
+			if (!vmp_instr_ldc_i8_leq(h->prev->prev, TRUE, count - 1)) {
+				vmp_builder_message_expected_const_smaller_than(builder, vmp_instr_ldc_i8_get(h->prev->prev), count);
+				break;
+			}
+		}
+		else if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_PTR)) {
+			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			break;
+		}
+		else {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
 			break;
 		}
@@ -690,7 +772,20 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			break;
 		}
 
-		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+		// If this is an array type then the size is known from the beginning
+		if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+			const vm_int64 count = array_type->size / array_type->of_type->size;
+			// If -2 is a constant value then verify that it doesn't exceed count
+			if (!vmp_instr_ldc_i8_leq(h->prev->prev, TRUE, count - 1)) {
+				vmp_builder_message_expected_const_smaller_than(builder, vmp_instr_ldc_i8_get(h->prev->prev), count);
+				break;
+			}
+		}
+		else if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_PTR)) {
+			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			break;
+		}
+		else {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
 			break;
 		}
@@ -717,7 +812,20 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			break;
 		}
 
-		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+		// If this is an array type then the size is known from the beginning
+		if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+			const vm_int64 count = array_type->size / array_type->of_type->size;
+			// If -2 is a constant value then verify that it doesn't exceed count
+			if (!vmp_instr_ldc_i8_leq(h->prev->prev, TRUE, count - 1)) {
+				vmp_builder_message_expected_const_smaller_than(builder, vmp_instr_ldc_i8_get(h->prev->prev), count);
+				break;
+			}
+		}
+		else if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_PTR)) {
+			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			break;
+		}
+		else {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
 			break;
 		}

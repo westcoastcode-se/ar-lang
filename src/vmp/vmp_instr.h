@@ -158,19 +158,7 @@ struct vmp_instr_def_ldc
 	vmp_constant constant;
 };
 typedef struct vmp_instr_def_ldc vmp_instr_def_ldc;
-
-// ldc_s <type> <value>
-struct vmp_instr_def_ldc_s
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// The constant type
-	const vmp_type* type;
-
-	// The constant value
-	vmp_constant constant;
-};
-typedef struct vmp_instr_def_ldc_s vmp_instr_def_ldc_s;
+typedef struct vmp_instr_def_ldc vmp_instr_def_ldc_s;
 
 // allocs <value|type>
 struct vmp_instr_def_allocs
@@ -361,6 +349,12 @@ inline static vmp_instr* vmp_instr_eoe() {
 
 // Test how many previous instructions there are and if they are at least count
 extern BOOL vmp_instr_test_prev_count(const vmp_instr* instr, vm_int32 count);
+
+// Verify if the instruction is a constant and that it doesn't exceed the supplied value
+extern BOOL vmp_instr_ldc_i8_leq(const vmp_instr* instr, BOOL ret_if_not_constant, vm_int64 value);
+
+// Get the i8 value from the supplied instruction
+extern vm_int64 vmp_instr_ldc_i8_get(const vmp_instr* instr);
 
 // Build the bytecode for the supplied instruction and then 
 extern const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder);
