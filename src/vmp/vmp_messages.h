@@ -58,7 +58,7 @@ enum vmc_lexer_messages
 #define VMP_MESSAGE_TYPES_NOT_COMPATIBLE_STR "identifier '%.*s' is not compatible with '%.*s'"
 #define VMP_MESSAGE_TYPE_TOO_LARGE_STR "type '%.*s' is %d bytes but cannot be larger than %d"
 #define VMP_MESSAGE_TYPE_NOT_ARRAY_STR "type '%.*s' not an array type"
-#define VMP_MESSAGE_INSTR_REQUIRES_PREV_INSTR_STR "'%s' must be executed before '%s'"
+#define VMP_MESSAGE_INSTR_REQUIRES_PREV_INSTR_STR "'%s' requires instructions beforehand"
 #define VMP_MESSAGE_EXPECTED_VALUE_ON_STACK_STR "expected a '%.*s' to be on the stack"
 
 // 
@@ -73,7 +73,7 @@ extern BOOL vmp_builder_message_header_prediction_failed(struct vmp_builder* b, 
 extern BOOL vmp_builder_message_types_not_compatible(struct vmp_builder* b, const vm_string* from_name, const vm_string* to_name);
 extern BOOL vmp_builder_message_type_too_large(struct vmp_builder* b, const vm_string* type_name, vm_int32 size, vm_int32 max_size);
 extern BOOL vmp_builder_message_type_not_array(struct vmp_builder* b, const vm_string* type_name);
-extern BOOL vmp_builder_message_instr_requires_prev_instr(struct vmp_builder* b, const char* instr_name, const char* prev_name);
+extern BOOL vmp_builder_message_instr_requires_prev_instr(struct vmp_builder* b, const char* instr_name);
 extern BOOL vmp_builder_message_expected_value_on_stack(struct vmp_builder* b, const vm_string* type_name);
 extern BOOL vmp_builder_panic_out_of_memory(struct vmp_builder* b);
 

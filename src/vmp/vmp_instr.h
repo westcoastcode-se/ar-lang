@@ -359,6 +359,9 @@ inline static vmp_instr* vmp_instr_eoe() {
 	return vmp_instr_basic(VMP_INSTR_EOE, sizeof(vmi_instr_eoe));
 }
 
+// Test how many previous instructions there are and if they are at least count
+extern BOOL vmp_instr_test_prev_count(const vmp_instr* instr, vm_int32 count);
+
 // Build the bytecode for the supplied instruction and then 
 extern const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder);
 

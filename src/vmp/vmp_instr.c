@@ -243,6 +243,8 @@ vmp_instr* vmp_instr_allocs_const(vm_int16 amount)
 
 vmp_instr* vmp_instr_sturef(const vmp_type* type)
 {
+	ASSERT_NOT_NULL(type);
+
 	if (type->size > UINT8_MAX) {
 		vmp_instr_def_sturef* instr = (vmp_instr_def_sturef*)vmp_malloc(sizeof(vmp_instr_def_sturef));
 		if (instr == NULL)
@@ -263,8 +265,7 @@ vmp_instr* vmp_instr_sturef(const vmp_type* type)
 
 vmp_instr* vmp_instr_stelem(const vmp_type* type)
 {
-	if (type->of_type == NULL)
-		return NULL;
+	ASSERT_NOT_NULL(type);
 
 	if (type->of_type->size > UINT8_MAX) {
 		vmp_instr_def_stelem* instr = (vmp_instr_def_stelem*)vmp_malloc(sizeof(vmp_instr_def_stelem));
@@ -286,8 +287,7 @@ vmp_instr* vmp_instr_stelem(const vmp_type* type)
 
 vmp_instr* vmp_instr_ldelem(const vmp_type* type)
 {
-	if (type->of_type == NULL)
-		return NULL;
+	ASSERT_NOT_NULL(type);
 
 	if (type->of_type->size > UINT8_MAX) {
 		vmp_instr_def_ldelem* instr = (vmp_instr_def_ldelem*)vmp_malloc(sizeof(vmp_instr_def_ldelem));
@@ -309,6 +309,8 @@ vmp_instr* vmp_instr_ldelem(const vmp_type* type)
 
 vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)
 {
+	ASSERT_NOT_NULL(type);
+
 	vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmp_malloc(sizeof(vmp_instr_def_ldc));
 	if (instr == NULL)
 		return NULL;
@@ -400,6 +402,18 @@ vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, type, size);
 	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+BOOL vmp_instr_test_prev_count(const vmp_instr* instr, vm_int32 count)
+{
+	vm_int32 i;
+	for (i = 0; i < count; ++i) {
+		if (instr == NULL) {
+			return FALSE;
+		}
+		instr = instr->prev;
+	}
+	return TRUE;
 }
 
 const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder)
@@ -607,6 +621,21 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_STELEM:
 	{
 		const vmp_instr_def_stelem* const cmd = (vmp_instr_def_stelem*)h;
+		const vmp_type* array_type = cmd->array_type;
+
+		// requires:
+		// -1 = value
+		// -2 = index
+		if (!vmp_instr_test_prev_count(h, 2)) {
+			vmp_builder_message_instr_requires_prev_instr(builder, "stelem");
+			break;
+		}
+
+		// If this is an array type then the size is known from the beginning
+		if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
+			const int count = array_type->size / array_type->of_type->size;
+		}
+
 		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
 			break;
@@ -624,6 +653,16 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_STELEM_S:
 	{
 		const vmp_instr_def_stelem_s* const cmd = (vmp_instr_def_stelem_s*)h;
+		const vmp_type* array_type = cmd->array_type;
+
+		// requires:
+		// -1 = value
+		// -2 = index
+		if (!vmp_instr_test_prev_count(h, 2)) {
+			vmp_builder_message_instr_requires_prev_instr(builder, "stelem_s");
+			break;
+		}
+
 		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
 			break;
@@ -641,6 +680,16 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_LDELEM:
 	{
 		const vmp_instr_def_ldelem* const cmd = (vmp_instr_def_ldelem*)h;
+		const vmp_type* array_type = cmd->array_type;
+
+		// requires:
+		// -1 = value
+		// -2 = index
+		if (!vmp_instr_test_prev_count(h, 2)) {
+			vmp_builder_message_instr_requires_prev_instr(builder, "ldelem");
+			break;
+		}
+
 		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
 			break;
@@ -658,6 +707,16 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_LDELEM_S:
 	{
 		const vmp_instr_def_ldelem_s* const cmd = (vmp_instr_def_ldelem_s*)h;
+		const vmp_type* array_type = cmd->array_type;
+
+		// requires:
+		// -1 = value
+		// -2 = index
+		if (!vmp_instr_test_prev_count(h, 2)) {
+			vmp_builder_message_instr_requires_prev_instr(builder, "ldelem_s");
+			break;
+		}
+
 		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
 			break;

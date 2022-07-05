@@ -354,8 +354,10 @@ extern vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr);
 // Remove the instruction and return it for deletion
 extern vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr);
 
+// Begin writing the body instructions
 extern void vmp_func_begin_body(vmp_func* f);
 
+// Instructions written to the body is now complete
 extern void vmp_func_begin_end(vmp_func* f);
 
 #endif

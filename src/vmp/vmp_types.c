@@ -343,6 +343,7 @@ vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr)
 	if (f->first_instr == NULL)
 		f->first_instr = f->last_instr = instr;
 	else {
+		instr->prev = f->last_instr;
 		f->last_instr->next = instr;
 		f->last_instr = instr;
 	}
