@@ -26,25 +26,37 @@ void vmp_package_destroy(vmp_package* p)
 	vmp_free(p);
 }
 
-BOOL vmp_package_add_func(vmp_package* p, vmp_func* func)
+int vmp_package_add_func(vmp_package* p, vmp_func* func)
 {
+	ASSERT_NOT_NULL(p);
+	ASSERT_NOT_NULL(func);
+
 	if (func->package != NULL)
-		return FALSE;
-	return vmp_list_funcs_add(&p->funcs, func) >= 0;
+		return VMP_LIST_ALREADY_ADDED;
+	if (vmp_list_funcs_add(&p->funcs, func) < 0)
+		return VMP_LIST_OUT_OF_MEMORY;
+	return VMP_LIST_ADDED;
 }
 
-BOOL vmp_package_add_type(vmp_package* p, vmp_type* type)
+int vmp_package_add_type(vmp_package* p, vmp_type* type)
 {
+	ASSERT_NOT_NULL(p);
+	ASSERT_NOT_NULL(type);
+
 	if (type->package != NULL)
-		return FALSE;
-	return vmp_list_types_add(&p->types, type) >= 0;
+		return VMP_LIST_ALREADY_ADDED;
+	if (vmp_list_types_find(&p->types, &type->name) != NULL)
+		return VMP_LIST_ALREADY_EXISTS;
+	if (vmp_list_types_add(&p->types, type) < 0)
+		return VMP_LIST_OUT_OF_MEMORY;
+	return VMP_LIST_ADDED;
 }
 
 vmp_type* vmp_package_new_type(vmp_package* p, const vm_string* name, vm_uint32 size)
 {
 	vmp_type* type = vmp_type_new(name);
 	type->size = size;
-	if (vmp_package_add_type(p, type))
+	if (vmp_package_add_type(p, type) == VMP_LIST_ADDED)
 		return type;
 	return NULL;
 }

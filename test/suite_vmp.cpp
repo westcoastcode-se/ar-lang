@@ -905,6 +905,76 @@ struct suite_vmp_tests : utils_vmp
 		end();
 	}
 
+	template<typename T>
+	void ldelem_ptr_T(const std::array<T, 2>& values)
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		const auto array_type_name = string("*") + string(name<T>());
+
+		// Create array type
+		auto array_type = vmp_type_new_from_props(
+			vmp_type_props_get(
+				vmp_pipeline_get_string(pipeline, array_type_name.c_str(), (vm_int32)array_type_name.length()),
+				sizeof(T[2]),
+				VMP_TYPE_FLAGS_ARRAY,
+				props1<T>(),
+				get_type("vm", string(name<T>()))
+			)
+		);
+		vmp_package_add_type(vmp_pipeline_find_packagesz(pipeline, "vm", 2), array_type);
+
+		// Create the Get function and add two integer types
+		auto get = vmp_func_newsz("Get", 3);
+		auto get_arg1 = vmp_func_new_arg(get, array_type);
+		auto get_ret1 = vmp_func_new_return(get, get_type("vm", string(name<T>())));
+		auto get_ret2 = vmp_func_new_return(get, get_type("vm", string(name<T>())));
+		vmp_package_add_func(main_package, get);
+
+		// {
+		//	lda_a 0
+		//	ldc_i4 0
+		//	ldelem [2]T
+		//	str 0
+		//	lda_a 0
+		//	ldc_i4 1
+		//	ldelem [2]T
+		//	str 1
+		//	ret
+		// }
+		vmp_func_begin_body(get);
+		vmp_func_add_instr(get, vmp_instr_lda_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(0)));
+		vmp_func_add_instr(get, vmp_instr_ldelem(array_type));
+		vmp_func_add_instr(get, vmp_instr_str(0));
+		vmp_func_add_instr(get, vmp_instr_lda_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(1)));
+		vmp_func_add_instr(get, vmp_instr_ldelem(array_type));
+		vmp_func_add_instr(get, vmp_instr_str(1));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+		auto ret2 = (T*)vmi_thread_reserve_stack(t, sizeof(T));
+		auto ret1 = (T*)vmi_thread_reserve_stack(t, sizeof(T));
+		auto args = (T*)vmi_thread_reserve_stack(t, sizeof(T[2])); args[0] = values[0]; args[1] = values[1];
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(T) * 2);
+		verify_value(*ret1, values[0]);
+		verify_value(*ret2, values[1]);
+
+		destroy(t);
+
+		end();
+	}
+
 	void ldelem()
 	{
 		TEST_FN(ldelem_T<vm_int8>({ 1, -1 }));

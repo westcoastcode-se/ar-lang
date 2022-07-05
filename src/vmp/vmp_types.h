@@ -12,6 +12,18 @@
 #include "vmp_list_inherits_from.h"
 #include "vmp_list_inherited_by.h"
 
+// Return value indicating that the item is already added once
+#define VMP_LIST_ADDED (0)
+
+// Return value indicating that the item is already added once
+#define VMP_LIST_OUT_OF_MEMORY (1)
+
+// Return value indicating that the item is already added once
+#define VMP_LIST_ALREADY_ADDED (2)
+
+// Return value indicating that the another item with the same identifier already exist
+#define VMP_LIST_ALREADY_EXISTS (3)
+
 struct vmp_package
 {
 	struct vmp_pipeline* pipeline;
@@ -243,10 +255,10 @@ extern vmp_package* vmp_package_newsz(const char* name, vm_int32 len);
 extern void vmp_package_destroy(vmp_package* p);
 
 // Add the supplied function to this package
-extern BOOL vmp_package_add_func(vmp_package* p, vmp_func* func);
+extern int vmp_package_add_func(vmp_package* p, vmp_func* func);
 
-// Add the supplied type to this package
-extern BOOL vmp_package_add_type(vmp_package* p, vmp_type* type);
+// Add the supplied type to this package. This function will return FALSE if the supplied type is already added to a package or if a type with the supplied name exists already
+extern int vmp_package_add_type(vmp_package* p, vmp_type* type);
 
 // Add the supplied type to this package
 extern vmp_type* vmp_package_new_type(vmp_package* p, const vm_string* name, vm_uint32 size);
