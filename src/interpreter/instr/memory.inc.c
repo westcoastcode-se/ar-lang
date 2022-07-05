@@ -16,17 +16,17 @@ vmi_ip _vmi_thread_frees(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_frees);
 }
 
-vmi_ip _vmi_thread_alloch(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_alloch_c(vmi_thread* t, vmi_ip ip)
 {
-	const vmi_instr_alloch* instr = (const vmi_instr_alloch*)ip;
+	const vmi_instr_alloch_c* instr = (const vmi_instr_alloch_c*)ip;
 	vm_byte* ptr = (vm_byte*)malloc(instr->size);
 	*(vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*)) = ptr;
-	return ip + sizeof(vmi_instr_alloch);
+	return ip + sizeof(vmi_instr_alloch_c);
 }
 
-vmi_ip _vmi_thread_freeh(vmi_thread* t, vmi_ip ip)
+vmi_ip _vmi_thread_freeh_c(vmi_thread* t, vmi_ip ip)
 {
-	const vmi_instr_freeh* instr = (const vmi_instr_freeh*)ip;
+	const vmi_instr_freeh_c* instr = (const vmi_instr_freeh_c*)ip;
 	vm_byte* ptr = *(vm_byte**)vmi_stack_pop(&t->stack, sizeof(vm_byte*));
-	return ip + sizeof(vmi_instr_freeh);
+	return ip + sizeof(vmi_instr_freeh_c);
 }
