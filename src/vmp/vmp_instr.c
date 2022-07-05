@@ -702,8 +702,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			}
 		}
 		else if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_PTR)) {
-			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
-			break;
+			// Allow pointers
 		}
 		else {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
@@ -742,8 +741,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			}
 		}
 		else if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_PTR)) {
-			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
-			break;
+			// Allow pointers
 		}
 		else {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
@@ -782,8 +780,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			}
 		}
 		else if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_PTR)) {
-			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
-			break;
+			// Allow pointers
 		}
 		else {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
@@ -822,8 +819,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			}
 		}
 		else if (BIT_ISSET(array_type->flags, VMP_TYPE_FLAGS_PTR)) {
-			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
-			break;
+			// Allow pointers
 		}
 		else {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);

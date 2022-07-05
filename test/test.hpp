@@ -6,6 +6,7 @@
 #include <cstdarg>
 #include <sstream>
 #include <array>
+#include <vector>
 
 using namespace std;
 

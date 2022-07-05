@@ -254,10 +254,10 @@ extern vmp_package* vmp_package_newsz(const char* name, vm_int32 len);
 // Destroy package
 extern void vmp_package_destroy(vmp_package* p);
 
-// Add the supplied function to this package
+// Add the supplied function to this package. This function will return 0 we added the type successfully
 extern int vmp_package_add_func(vmp_package* p, vmp_func* func);
 
-// Add the supplied type to this package. This function will return FALSE if the supplied type is already added to a package or if a type with the supplied name exists already
+// Add the supplied type to this package. This function will return 0 we added the type successfully
 extern int vmp_package_add_type(vmp_package* p, vmp_type* type);
 
 // Add the supplied type to this package
