@@ -278,11 +278,14 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_FREES:
 			ip = _vmi_thread_frees(t, ip);
 			continue;
+		case VMI_ALLOCH:
+			ip = _vmi_thread_alloch(t, ip);
+			continue;
 		case VMI_ALLOCH_C:
 			ip = _vmi_thread_alloch_c(t, ip);
 			continue;
-		case VMI_FREEH_C:
-			ip = _vmi_thread_freeh_c(t, ip);
+		case VMI_FREEH:
+			ip = _vmi_thread_freeh(t, ip);
 			continue;
 		case VMI_LDA:
 			ip = _vmi_thread_lda(t, ip);

@@ -113,6 +113,16 @@ BOOL vmp_builder_message_expected_const_smaller_than(struct vmp_builder* b, vm_i
 		value, max_value);
 }
 
+BOOL vmp_builder_message_expected_const_larger_than(struct vmp_builder* b, vm_int64 value, vm_int64 min_value)
+{
+	vm_messages* const m = &b->messages;
+	return vm_messages_add(m,
+		VMP_MESSAGE_PREFIX,
+		VMP_MESSAGE_EXPECTED_CONST_LARGER_THAN,
+		VMP_MESSAGE_EXPECTED_CONST_LARGER_THAN_STR,
+		value, min_value);
+}
+
 BOOL vmp_builder_panic_out_of_memory(struct vmp_builder* b)
 {
 	vm_message* const m = &b->panic_error_message;

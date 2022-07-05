@@ -49,6 +49,9 @@ enum vmc_lexer_messages
 	// Verify that a constant must be smaller than another value
 	VMP_MESSAGE_EXPECTED_CONST_SMALLER_THAN,
 
+	// Verify that a constant must be larger than another value
+	VMP_MESSAGE_EXPECTED_CONST_LARGER_THAN,
+
 	// PANIC!
 	VMP_MESSAGE_PANIC
 };
@@ -64,6 +67,7 @@ enum vmc_lexer_messages
 #define VMP_MESSAGE_INSTR_REQUIRES_PREV_INSTR_STR "'%s' requires instructions beforehand"
 #define VMP_MESSAGE_EXPECTED_VALUE_ON_STACK_STR "expected a '%.*s' to be on the stack"
 #define VMP_MESSAGE_EXPECTED_CONST_SMALLER_THAN_STR "constant %lld must be smaller than %lld"
+#define VMP_MESSAGE_EXPECTED_CONST_LARGER_THAN_STR "constant %lld must be larger than %lld"
 
 // 
 // Functions which helps adding messages to the messages container
@@ -80,6 +84,7 @@ extern BOOL vmp_builder_message_type_not_array(struct vmp_builder* b, const vm_s
 extern BOOL vmp_builder_message_instr_requires_prev_instr(struct vmp_builder* b, const char* instr_name);
 extern BOOL vmp_builder_message_expected_value_on_stack(struct vmp_builder* b, const vm_string* type_name);
 extern BOOL vmp_builder_message_expected_const_smaller_than(struct vmp_builder* b, vm_int64 value, vm_int64 max_value);
+extern BOOL vmp_builder_message_expected_const_larger_than(struct vmp_builder* b, vm_int64 value, vm_int64 min_value);
 extern BOOL vmp_builder_panic_out_of_memory(struct vmp_builder* b);
 
 #endif

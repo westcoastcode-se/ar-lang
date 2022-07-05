@@ -55,10 +55,13 @@ enum vmi_icodes
 	VMI_FREES,
 
 	// Allocate memory on the heap
+	VMI_ALLOCH,
+
+	// Allocate memory on the heap based on a constant value
 	VMI_ALLOCH_C,
 
-	// Free memory from the heap
-	VMI_FREEH_C,
+	// Free memory from the heap based on a constant value
+	VMI_FREEH,
 
 	// Call a function
 	VMI_CALL,
@@ -412,10 +415,12 @@ struct vmi_instr_mem_size2
 typedef struct vmi_instr_mem_size2 vmi_instr_allocs;
 // A frees(tack) instruction
 typedef struct vmi_instr_mem_size2 vmi_instr_frees;
-// A alloch(eap) instruction
+// A alloch(eap)_c(onst) instruction
 typedef struct vmi_instr_mem_size2 vmi_instr_alloch_c;
+// A alloch(eap) instruction
+typedef struct vmi_instr_single_instruction vmi_instr_alloch;
 // A freeh(eap) instruction
-typedef struct vmi_instr_mem_size2 vmi_instr_freeh_c;
+typedef struct vmi_instr_single_instruction vmi_instr_freeh;
 
 // A call instruction
 struct vmi_instr_call

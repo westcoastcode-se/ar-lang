@@ -1158,12 +1158,12 @@ struct suite_vmp_tests : utils_vmp
 
 		// {
 		//	alloch 4
-		//	freeh 4
+		//	freeh
 		//	ret
 		// }
 		vmp_func_begin_body(_do);
 		vmp_func_add_instr(_do, vmp_instr_alloch_const(4));
-		vmp_func_add_instr(_do, vmp_instr_freeh_const(4));
+		vmp_func_add_instr(_do, vmp_instr_freeh());
 		vmp_func_add_instr(_do, vmp_instr_ret());
 		vmp_func_begin_end(_do);
 
@@ -1195,13 +1195,15 @@ struct suite_vmp_tests : utils_vmp
 		vmp_package_add_func(main_package, _do);
 
 		// {
+		//	ldc_i4 sizeof(T)
 		//	alloch T
 		//	freeh T
 		//	ret
 		// }
 		vmp_func_begin_body(_do);
-		vmp_func_add_instr(_do, vmp_instr_alloch(type));
-		vmp_func_add_instr(_do, vmp_instr_freeh(type));
+		vmp_func_add_instr(_do, vmp_instr_ldc(get_type("vm", string("int32")), vmp_const((vm_int32)sizeof(T))));
+		vmp_func_add_instr(_do, vmp_instr_alloch());
+		vmp_func_add_instr(_do, vmp_instr_freeh());
 		vmp_func_add_instr(_do, vmp_instr_ret());
 		vmp_func_begin_end(_do);
 
@@ -1231,6 +1233,58 @@ struct suite_vmp_tests : utils_vmp
 		TEST_FN(alloch_T<vm_float64>());
 	}
 
+	template<typename T>
+	void alloch_type_T()
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		auto type = get_type("vm", string(name<T>()));
+
+		// Create the Get function and add two integer types
+		auto _do = vmp_func_newsz("Do", 2);
+		vmp_package_add_func(main_package, _do);
+
+		// {
+		//	alloch T
+		//	freeh T
+		//	ret
+		// }
+		vmp_func_begin_body(_do);
+		vmp_func_add_instr(_do, vmp_instr_alloch_type(type));
+		vmp_func_add_instr(_do, vmp_instr_freeh());
+		vmp_func_add_instr(_do, vmp_instr_ret());
+		vmp_func_begin_end(_do);
+
+		compile();
+
+		auto t = thread();
+		invoke(t, "Do");
+
+		verify_stack_size(t, 0);
+
+		destroy(t);
+
+		end();
+	}
+
+	void alloch_type()
+	{
+		TEST_FN(alloch_type_T<vm_int8>());
+		TEST_FN(alloch_type_T<vm_uint8>());
+		TEST_FN(alloch_type_T<vm_int16>());
+		TEST_FN(alloch_type_T<vm_uint16>());
+		TEST_FN(alloch_type_T<vm_int32>());
+		TEST_FN(alloch_type_T<vm_uint32>());
+		TEST_FN(alloch_type_T<vm_int64>());
+		TEST_FN(alloch_type_T<vm_uint64>());
+		TEST_FN(alloch_type_T<vm_float32>());
+		TEST_FN(alloch_type_T<vm_float64>());
+	}
+
 	void operator()()
 	{
 		TEST(add);
@@ -1247,6 +1301,7 @@ struct suite_vmp_tests : utils_vmp
 		TEST(ldelem);
 		TEST(allocs_const);
 		TEST(allocs);
+		TEST(alloch_type);
 		TEST(alloch_const);
 		TEST(alloch);
 	}
