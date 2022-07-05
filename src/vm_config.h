@@ -28,6 +28,8 @@ typedef unsigned long long vm_uint64;
 #	define VM_64BIT
 #elif defined(_WIN32)
 #	define VM_32BIT
+#elif defined(__MACOSX__)
+#	define VM_64BIT
 #else
 #	error "No valid CPU target is set"
 #endif
@@ -35,6 +37,11 @@ typedef unsigned long long vm_uint64;
 // Default the initial stack stack size in bytes
 #if !defined(VM_STACK_DEFAULT_SIZE)
 #	define VM_STACK_DEFAULT_SIZE (32768)
+#endif
+
+// How many functions are allowed to be called recursivelly
+#if !defined(VM_RECURSIVE_FN_CALLFRAMES)
+#	define VM_RECURSIVE_FN_CALLFRAMES (128)
 #endif
 
 // Enable memory tracking. This is enabled by default when compiling in debug mode

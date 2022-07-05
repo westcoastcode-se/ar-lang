@@ -21,13 +21,11 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 		return _vmi_thread_stack_mismanaged_ret(t, ip, (vm_int32)(expected - t->ebp));
 #endif
 
-	// Pop the stack pointer and return return the next instruction pointer to be executed
-	t->ebp = *(vm_byte**)vmi_stack_pop(&t->stack, sizeof(vm_byte*));
-	next_ip = *(vmi_ip*)vmi_stack_pop(&t->stack, sizeof(vmi_ip));
-	// Pop a pre-defined amount of bytes from the stack. The amount is normally the arguments, but
-	// not the return values
-	vmi_stack_pop(&t->stack, instr->pop_stack_size);
+	next_ip = t->cf.ret;
+	t->cf_pos--;
+	t->cf = *t->cf_pos;
 
+	vmi_stack_pop(&t->stack, instr->pop_stack_size);
 	return next_ip;
 }
 

@@ -352,7 +352,9 @@ vmi_thread* vmi_thread_new(vmi_process* process)
 	t->process = process;
 	t->bytecode = process->bytecode;
 	vmi_stack_init(&t->stack);
-	t->ebp = NULL;
+	t->cf_pos = NULL;
+	t->cf.ebp = NULL; t->cf.ret = NULL;
+	memset(t->call_frames, 0, sizeof(t->call_frames));
 
 	// TODO: Add support for multiple threads
 	process->first_thread = t;
@@ -404,17 +406,11 @@ vm_int32 vmi_thread_entrypoint(vmi_thread* t, const vmi_function* func)
 		return t->flags;
 	}
 #endif
-
-	// New ebp is where the arguments and the return values can be found.
-	t->ebp = t->stack.top - func->expected_stack_size;
-
-	// Push the address where the application should continue executing when the function returns - i.e.
-	// an end-of-execution
-	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (vmi_ip)&_vmi_force_eoe;
-
-	// There is no previous EBP, so push NULL
-	*(vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*)) = NULL;
-
+	// Setup call frame
+	t->cf_pos = t->call_frames;
+	t->cf_pos->ret = (vmi_ip)&_vmi_force_eoe;
+	t->cf_pos->ebp = t->stack.top - func->expected_stack_size;
+	t->cf = *t->cf_pos;
 	return _vmi_thread_exec(t, t->ip);
 }
 
@@ -431,24 +427,21 @@ vmi_ip vmi_thread_begin_call(vmi_thread* t, vmi_ip current_ip, vmi_ip next_ip, v
 	// Verify that we've pushed the bare-minimum data on the stack for the function to work
 	// 
 	// We must've pushed at least "expected_stack_size" in bytes (we also ignore the required function call stack values)
-	const vm_byte* expected = t->stack.top - sizeof(vmi_ip) - sizeof(vm_byte*) - expected_stack_size;
+	const vm_byte* expected = t->stack.top - expected_stack_size;
 	if (t->ebp > expected) {
 		const vm_int32 stack_size = (vm_int32)(t->stack.top - t->ebp);
 		return _vmi_thread_stack_mismanaged_begin(t, current_ip, expected_stack_size, stack_size);
 	}
 #endif
+	// Prepare the current call frame
+	t->cf_pos++;
 
-	// Push the address where the application should continue executing when the function returns
-	*(vmi_ip*)vmi_stack_push(&t->stack, sizeof(vmi_ip)) = (current_ip + sizeof(vmi_instr_call));
+	// New ebp is where the arguments can be found.
+	t->cf_pos->ebp = t->stack.top - expected_stack_size;
 
-	// Push the previous stack pointer and set where arguments and 
-	// return value slots are located on the stack
-	*(vm_byte**)vmi_stack_push(&t->stack, sizeof(vm_byte*)) = t->ebp;
-
-	// New ebp is where the arguments and the return values can be found.
-	// It is on before the previous ebp, the return value address and at the start of all (assumed)
-	// allocated memory on the stack
-	t->ebp = t->stack.top - sizeof(vmi_ip) - sizeof(vm_byte*) - expected_stack_size;
+	// The address where the application should continue executing when the function returns
+	t->cf_pos->ret = (current_ip + sizeof(vmi_instr_call));
+	t->cf = *t->cf_pos;
 	return next_ip;
 }
 

@@ -1048,7 +1048,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		// 2. The previous ebp
 		// 3. return values
 		// 4. arguments
-		instr.expected_ebp_offset = sizeof(vmi_ip) + sizeof(vm_byte*) + func->returns_stack_size + func->args_stack_size;
+		instr.expected_ebp_offset = func->returns_stack_size + func->args_stack_size;
 #endif
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ret))) {
 			return NULL;
