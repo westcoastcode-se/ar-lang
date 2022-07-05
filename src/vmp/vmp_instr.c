@@ -241,6 +241,28 @@ vmp_instr* vmp_instr_allocs_const(vm_int16 amount)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_frees(const vmp_type* type)
+{
+	vmp_instr_def_frees* instr = (vmp_instr_def_frees*)vmp_malloc(sizeof(vmp_instr_def_frees));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_FREES, sizeof(vmi_instr_frees));
+	instr->type = type;
+	instr->amount = 0;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_frees_const(vm_int16 amount)
+{
+	vmp_instr_def_frees* instr = (vmp_instr_def_frees*)vmp_malloc(sizeof(vmp_instr_def_frees));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_FREES, sizeof(vmi_instr_frees));
+	instr->type = NULL;
+	instr->amount = amount;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_sturef(const vmp_type* type)
 {
 	ASSERT_NOT_NULL(type);
@@ -645,6 +667,22 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		else
 			instr.size = cmd->amount;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_allocs))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_FREES:
+	{
+		const vmp_instr_def_frees* const cmd = (vmp_instr_def_frees*)h;
+
+		vmi_instr_frees instr;
+		instr.opcode = 0;
+		instr.icode = VMI_FREES;
+		if (cmd->type != NULL)
+			instr.size = cmd->type->size;
+		else
+			instr.size = cmd->amount;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_frees))) {
 			return NULL;
 		}
 		break;

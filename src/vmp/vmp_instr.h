@@ -172,7 +172,9 @@ struct vmp_instr_def_allocs
 	const vmp_type* type;
 };
 typedef struct vmp_instr_def_allocs vmp_instr_def_allocs;
-
+typedef struct vmp_instr_def_allocs vmp_instr_def_frees;
+typedef struct vmp_instr_def_allocs vmp_instr_def_alloch;
+typedef struct vmp_instr_def_allocs vmp_instr_def_freeh;
 // sturef <type>
 struct vmp_instr_def_sturef
 {
@@ -303,6 +305,12 @@ extern vmp_instr* vmp_instr_allocs(const vmp_type* type);
 
 // Create a allocation instruction on the stack based on a constant amount
 extern vmp_instr* vmp_instr_allocs_const(vm_int16 amount);
+
+// Create a free instruction on the stack
+extern vmp_instr* vmp_instr_frees(const vmp_type* type);
+
+// Create a free instruction on the stack based on a constant amount
+extern vmp_instr* vmp_instr_frees_const(vm_int16 amount);
 
 // Create a stunref instruction
 extern vmp_instr* vmp_instr_sturef(const vmp_type* type);
