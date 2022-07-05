@@ -352,6 +352,23 @@ vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr)
 	return instr;
 }
 
+vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr)
+{
+	if (f->first_instr == instr) {
+		f->first_instr = instr->next;
+	}
+	if (f->last_instr == instr) {
+		f->last_instr = instr->prev;
+	}
+	if (instr->prev != NULL) {
+		instr->prev->next = instr->next;
+	}
+	if (instr->next != NULL) {
+		instr->next->prev = instr->prev;
+	}
+	return instr;
+}
+
 void vmp_func_begin_body(vmp_func* f)
 {
 	const vm_int32 size = f->locals.count;

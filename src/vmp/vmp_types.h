@@ -199,6 +199,9 @@ struct vmp_instr_header
 	// Offset, in the function, where this instruction starts
 	vm_int32 instr_offset;
 
+	// The previous instruction
+	struct vmp_instr_header* prev;
+
 	// The next instruction
 	struct vmp_instr_header* next;
 };
@@ -214,12 +217,13 @@ typedef struct vmp_instr_header vmp_instr;
 			vmp_instr_type instr_type; \
 			vm_int32 instr_size;\
 			vm_int32 instr_offset;\
+			struct vmp_instr_header* prev;\
 			struct vmp_instr_header* next;\
 		}; \
 	}
 
 // Initialize object header
-#define VMC_PIPELINE_INIT_HEADER(PTR, TYPE, SIZE) PTR->func = NULL; PTR->instr_type = TYPE; PTR->instr_size = SIZE; vm_int32 instr_offset = 0; PTR->next = NULL
+#define VMC_PIPELINE_INIT_HEADER(PTR, TYPE, SIZE) PTR->func = NULL; PTR->instr_type = TYPE; PTR->instr_size = SIZE; vm_int32 instr_offset = 0; PTR->next = NULL; PTR->prev = NULL
 #define VMC_PIPELINE_INSTR_BASE(PTR) (&PTR->header)
 
 struct vmp_marker
@@ -346,6 +350,9 @@ extern void vmp_marker_free(vmp_marker* m);
 
 // Add a new instruction
 extern vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr);
+
+// Remove the instruction and return it for deletion
+extern vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr);
 
 extern void vmp_func_begin_body(vmp_func* f);
 

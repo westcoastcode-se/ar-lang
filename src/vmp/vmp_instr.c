@@ -414,7 +414,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_arg* const arg = vmp_list_args_get(&func->args, cmd->index);
 		if (arg == NULL) {
 			vmp_builder_message_arg_index_missing(builder, cmd->index);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_lda instr;
@@ -433,7 +433,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_arg* const arg = vmp_list_args_get(&func->args, cmd->index);
 		if (arg == NULL) {
 			vmp_builder_message_arg_index_missing(builder, cmd->index);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_lda_a instr;
@@ -484,7 +484,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.props1 = cmd->constant.type;
 		instr.i64 = cmd->constant.i8;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldc_i64))) {
-			return NULL;
+			break;
 		}
 		break;
 	}
@@ -494,7 +494,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_local* const local = vmp_list_locals_get(&func->locals, cmd->index);
 		if (local == NULL) {
 			vmp_builder_message_local_index_missing(builder, cmd->index);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_stl instr;
@@ -513,7 +513,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_local* const local = vmp_list_locals_get(&func->locals, cmd->index);
 		if (local == NULL) {
 			vmp_builder_message_local_index_missing(builder, cmd->index);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_ldl instr;
@@ -532,7 +532,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_local* const local = vmp_list_locals_get(&func->locals, cmd->index);
 		if (local == NULL) {
 			vmp_builder_message_local_index_missing(builder, cmd->index);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_ldl_a instr;
@@ -592,7 +592,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_instr_def_sturef_s* const cmd = (vmp_instr_def_sturef_s*)h;
 		if (cmd->type->size > UINT8_MAX) {
 			vmp_builder_message_type_too_large(builder, &cmd->type->name, cmd->type->size, UINT8_MAX);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_sturef_s instr;
@@ -609,7 +609,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_instr_def_stelem* const cmd = (vmp_instr_def_stelem*)h;
 		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_stelem instr;
@@ -626,7 +626,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_instr_def_stelem_s* const cmd = (vmp_instr_def_stelem_s*)h;
 		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_stelem_s instr;
@@ -643,7 +643,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_instr_def_ldelem* const cmd = (vmp_instr_def_ldelem*)h;
 		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_ldelem instr;
@@ -660,7 +660,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_instr_def_ldelem_s* const cmd = (vmp_instr_def_ldelem_s*)h;
 		if (!BIT_ISSET(cmd->array_type->flags, VMP_TYPE_FLAGS_ARRAY)) {
 			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_ldelem_s instr;
@@ -767,7 +767,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_return* const ret = vmp_list_returns_get(&func->returns, cmd->index);
 		if (ret == NULL) {
 			vmp_builder_message_return_index_missing(builder, cmd->index);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_str instr;
@@ -786,7 +786,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_return* const ret = vmp_list_returns_get(&func->returns, cmd->index);
 		if (ret == NULL) {
 			vmp_builder_message_return_index_missing(builder, cmd->index);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_ldr_a instr;
@@ -804,7 +804,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		const vmp_instr_def_conv* const cmd = (vmp_instr_def_conv*)h;
 		if (vmp_type_can_convert(cmd->from_type, cmd->to_type) == FALSE) {
 			vmp_builder_message_types_not_compatible(builder, &cmd->from_type->name, &cmd->to_type->name);
-			return NULL;
+			break;
 		}
 
 		vmi_instr_conv instr;

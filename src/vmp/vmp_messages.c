@@ -83,6 +83,26 @@ BOOL vmp_builder_message_type_not_array(struct vmp_builder* b, const vm_string* 
 		vm_string_length(type_name), type_name->start);
 }
 
+BOOL vmp_builder_message_instr_requires_prev_instr(struct vmp_builder* b, const char* instr_name, const char* prev_name)
+{
+	vm_messages* const m = &b->messages;
+	return vm_messages_add(m,
+		VMP_MESSAGE_PREFIX,
+		VMP_MESSAGE_INSTR_REQUIRES_PREV_INSTR,
+		VMP_MESSAGE_INSTR_REQUIRES_PREV_INSTR_STR,
+		prev_name, instr_name);
+}
+
+BOOL vmp_builder_message_expected_value_on_stack(struct vmp_builder* b, const vm_string* type_name)
+{
+	vm_messages* const m = &b->messages;
+	return vm_messages_add(m,
+		VMP_MESSAGE_PREFIX,
+		VMP_MESSAGE_EXPECTED_VALUE_ON_STACK,
+		VMP_MESSAGE_EXPECTED_VALUE_ON_STACK_STR,
+		vm_string_length(type_name), type_name->start);
+}
+
 BOOL vmp_builder_panic_out_of_memory(struct vmp_builder* b)
 {
 	vm_message* const m = &b->panic_error_message;
