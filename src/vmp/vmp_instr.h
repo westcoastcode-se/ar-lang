@@ -300,17 +300,29 @@ extern vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant);
 // Create a constant value instruction for smaller values, such as 16- and 8 bit constants
 extern vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant);
 
-// Create a allocation instruction on the stack
+// Create a allocation instruction on the stack based on a type
 extern vmp_instr* vmp_instr_allocs(const vmp_type* type);
 
 // Create a allocation instruction on the stack based on a constant amount
 extern vmp_instr* vmp_instr_allocs_const(vm_int16 amount);
 
-// Create a free instruction on the stack
+// Create a free instruction on the stack based on a type
 extern vmp_instr* vmp_instr_frees(const vmp_type* type);
 
 // Create a free instruction on the stack based on a constant amount
 extern vmp_instr* vmp_instr_frees_const(vm_int16 amount);
+
+// Create a allocation instruction on the heap based on a type
+extern vmp_instr* vmp_instr_alloch(const vmp_type* type);
+
+// Create a allocation instruction on the heap based on a constant amount
+extern vmp_instr* vmp_instr_alloch_const(vm_int16 amount);
+
+// Create a free instruction on the heap based on a type
+extern vmp_instr* vmp_instr_freeh(const vmp_type* type);
+
+// Create a free instruction on the heap based on a constant amount
+extern vmp_instr* vmp_instr_freeh_const(vm_int16 amount);
 
 // Create a stunref instruction
 extern vmp_instr* vmp_instr_sturef(const vmp_type* type);

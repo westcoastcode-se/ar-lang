@@ -1057,7 +1057,7 @@ struct suite_vmp_tests : utils_vmp
 		TEST_FN(ldelem_ptr_T<vm_float64>({ 123.4345, 657.12312 }));
 	}
 
-	void allocs()
+	void allocs_const()
 	{
 		begin();
 
@@ -1092,6 +1092,41 @@ struct suite_vmp_tests : utils_vmp
 		end();
 	}
 
+	void alloch_const()
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Get function and add two integer types
+		auto _do = vmp_func_newsz("Do", 2);
+		vmp_package_add_func(main_package, _do);
+
+		// {
+		//	allocs 4
+		//	frees 4
+		//	ret
+		// }
+		vmp_func_begin_body(_do);
+		vmp_func_add_instr(_do, vmp_instr_alloch_const(4));
+		vmp_func_add_instr(_do, vmp_instr_freeh_const(4));
+		vmp_func_add_instr(_do, vmp_instr_ret());
+		vmp_func_begin_end(_do);
+
+		compile();
+
+		auto t = thread();
+		invoke(t, "Do");
+
+		verify_stack_size(t, 0);
+
+		destroy(t);
+
+		end();
+	}
+
 	void operator()()
 	{
 		TEST(add);
@@ -1106,7 +1141,8 @@ struct suite_vmp_tests : utils_vmp
 		TEST(ldl_a);
 		TEST(stelem);
 		TEST(ldelem);
-		TEST(allocs);
+		TEST(allocs_const);
+		TEST(alloch_const);
 	}
 };
 
