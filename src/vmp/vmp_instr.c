@@ -1036,6 +1036,14 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_RET:
 	{
 		const vmp_instr_def_ret* const cmd = (vmp_instr_def_ret*)h;
+		if (func->args_stack_size > UINT16_MAX) {
+			vmp_builder_message_not_implemented(builder, "arguments stack size larger than UINT16_MAX");
+			break;
+		}
+		if (func->locals_stack_size > UINT16_MAX) {
+			vmp_builder_message_not_implemented(builder, "local stack size larger than UINT16_MAX");
+			break;
+		}
 
 		vmi_instr_ret instr;
 		instr.opcode = 0;

@@ -433,7 +433,7 @@ vmi_ip vmi_thread_begin_call(vmi_thread* t, vmi_ip current_ip, vmi_ip next_ip, v
 		return _vmi_thread_stack_mismanaged_begin(t, current_ip, expected_stack_size, stack_size);
 	}
 #endif
-	// Prepare the current call frame
+	// Prepare the next call frame
 	t->cf_pos++;
 
 	// New ebp is where the arguments can be found.

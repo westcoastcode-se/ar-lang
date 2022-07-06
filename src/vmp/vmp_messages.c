@@ -123,6 +123,16 @@ BOOL vmp_builder_message_expected_const_larger_than(struct vmp_builder* b, vm_in
 		value, min_value);
 }
 
+BOOL vmp_builder_message_not_implemented(struct vmp_builder* b, const char* implementation)
+{
+	vm_messages* const m = &b->messages;
+	return vm_messages_add(m,
+		VMP_MESSAGE_PREFIX,
+		VMP_MESSAGE_NOT_IMPLEMENTED,
+		VMP_MESSAGE_NOT_IMPLEMENTED_STR,
+		implementation);
+}
+
 BOOL vmp_builder_panic_out_of_memory(struct vmp_builder* b)
 {
 	vm_message* const m = &b->panic_error_message;
