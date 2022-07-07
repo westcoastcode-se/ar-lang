@@ -370,6 +370,9 @@ extern BOOL vmp_instr_test_prev_count(const vmp_instr* instr, vm_int32 count);
 // Verify if the instruction is a constant and that it doesn't exceed the supplied value
 extern BOOL vmp_instr_ldc_i8_leq(const vmp_instr* instr, BOOL ret_if_not_constant, vm_int64 value);
 
+// Check if two instructions are of the same type
+extern BOOL vmp_instr_test_type_eq(const vmp_instr* instr1, const vmp_instr* instr2);
+
 // Get the i8 value from the supplied instruction
 extern vm_int64 vmp_instr_ldc_i8_get(const vmp_instr* instr);
 

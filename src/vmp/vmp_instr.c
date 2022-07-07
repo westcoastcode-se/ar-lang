@@ -221,6 +221,18 @@ vmp_instr* vmp_instr_allocs_const(vm_int16 amount)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vm_int32 vmp_instr_allocs_get_size(const vmp_instr_def_frees* cmd)
+{
+	if (cmd->type == NULL && cmd->amount <= 0) {
+		return 0;
+	}
+
+	if (cmd->type != NULL)
+		return cmd->type->size;
+	else
+		return cmd->amount;
+}
+
 vmp_instr* vmp_instr_frees(const vmp_type* type)
 {
 	vmp_instr_def_frees* instr = (vmp_instr_def_frees*)vmp_malloc(sizeof(vmp_instr_def_frees));
@@ -507,6 +519,13 @@ BOOL vmp_instr_ldc_i8_leq(const vmp_instr* instr, BOOL ret_if_not_constant, vm_i
 	return TRUE;
 }
 
+BOOL vmp_instr_test_type_eq(const vmp_instr* instr1, const vmp_instr* instr2)
+{
+	if (instr2 == NULL)
+		return FALSE;
+	return instr1->instr_type == instr2->instr_type;
+}
+
 vm_int64 vmp_instr_ldc_i8_get(const vmp_instr* instr)
 {
 	ASSERT_NOT_NULL(instr);
@@ -711,19 +730,49 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	}
 	case VMP_INSTR_FREES:
 	{
-		const vmp_instr_def_frees* const cmd = (vmp_instr_def_frees*)h;
+		const vmp_instr_def_frees* cmd = (vmp_instr_def_frees*)h;
+		vm_uint32 size = vmp_instr_allocs_get_size(cmd);
+		if (size <= 0) {
+			vmp_builder_message_expected_const_larger_than(builder, 0, 0);
+			break;
+		}
+		else if (size > UINT16_MAX) {
+			vmp_builder_message_expected_const_smaller_than(builder, 0, UINT16_MAX);
+			break;
+		}
+
 		if (cmd->type == NULL && cmd->amount <= 0) {
 			vmp_builder_message_expected_const_larger_than(builder, 0, 0);
 			break;
 		}
 
+		// Merge adjacent frees into one instruction
+		if (builder->opt_level > 0) {
+			while (vmp_instr_test_type_eq(VMC_PIPELINE_INSTR_BASE(cmd), cmd->next)) {
+				cmd = (vmp_instr_def_frees*)cmd->next;
+				const vm_int16 merge_size = vmp_instr_allocs_get_size(cmd);
+				if (merge_size <= 0) {
+					vmp_builder_message_expected_const_larger_than(builder, 0, 0);
+					break;
+				}
+				else if (merge_size > UINT16_MAX) {
+					vmp_builder_message_expected_const_smaller_than(builder, 0, UINT16_MAX);
+					break;
+				}
+				size += merge_size;
+			}
+			// Validation if merged
+			if (size > UINT16_MAX) {
+				vmp_builder_message_expected_const_smaller_than(builder, 0, UINT16_MAX);
+				break;
+			}
+		}
+
 		vmi_instr_frees instr;
 		instr.opcode = 0;
 		instr.icode = VMI_FREES;
-		if (cmd->type != NULL)
-			instr.size = cmd->type->size;
-		else
-			instr.size = cmd->amount;
+		instr.size = (vm_uint16)size;
+		
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_frees))) {
 			return NULL;
 		}

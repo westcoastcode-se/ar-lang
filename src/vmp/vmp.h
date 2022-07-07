@@ -31,6 +31,9 @@ struct vmp_builder
 	// The pipeline
 	const vmp_pipeline* pipeline;
 
+	// Optimization level
+	int opt_level;
+
 	// Stream where the actual data will be put
 	vm_bytestream bytestream;
 
@@ -65,6 +68,9 @@ extern const vm_string* vmp_pipeline_get_string(vmp_pipeline* p, const char* str
 
 // Create a new virtual machine pipeline builder
 extern vmp_builder* vmp_builder_new(vmp_pipeline* p);
+
+// Set the optimization level for the builder
+extern void vmp_builder_set_opt_level(vmp_builder* b, vm_int32 opt_level);
 
 // Compile the builder content into bytecode that the virtual machine understands
 extern BOOL vmp_builder_compile_package(vmp_builder* b, const struct vmp_package* p);

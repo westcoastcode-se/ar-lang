@@ -34,7 +34,7 @@ struct utils_vmp : utils_vm
 		vmp_memory_test_bytes_left();
 	}
 
-	void compile()
+	void compile(vm_int32 opt_level = 0)
 	{
 		if (!vmp_pipeline_resolve(pipeline)) {
 			end();
@@ -42,6 +42,7 @@ struct utils_vmp : utils_vm
 		}
 
 		builder = vmp_builder_new(pipeline);
+		vmp_builder_set_opt_level(builder, opt_level);
 		if (!vmp_builder_compile(builder)) {
 			error_string_stream e;
 			e << "could not compile pipeline: [";

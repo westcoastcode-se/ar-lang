@@ -259,11 +259,16 @@ vmp_builder* vmp_builder_new(vmp_pipeline* p)
 	if (b == NULL)
 		return NULL;
 	b->pipeline = p;
-
+	b->opt_level = 0;
 	vm_bytestream_init(&b->bytestream);
 	vm_messages_init(&b->messages);
 	b->panic_error_message.code = VMP_MESSAGE_NONE;
 	return b;
+}
+
+void vmp_builder_set_opt_level(vmp_builder* b, vm_int32 opt_level)
+{
+	b->opt_level = opt_level;
 }
 
 BOOL vmp_builder_compile_package(vmp_builder* b, const vmp_package* p)
