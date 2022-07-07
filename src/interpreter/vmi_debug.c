@@ -9,7 +9,6 @@ void vmi_debug_instruction(vmi_ip ip)
 	switch (header->icode) {
 		VMI_DEBUG_INSTR(VMI_LDA);
 		VMI_DEBUG_INSTR(VMI_LDA_A);
-		VMI_DEBUG_INSTR(VMI_STR);
 		VMI_DEBUG_INSTR(VMI_ALLOCS);
 		VMI_DEBUG_INSTR(VMI_FREES);
 		VMI_DEBUG_INSTR(VMI_ALLOCH);

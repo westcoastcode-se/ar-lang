@@ -42,12 +42,6 @@ enum vmi_icodes
 	// Load the address one of the arguments
 	VMI_LDA_A,
 	
-	// Store the value on the stack into the reserved return block
-	VMI_STR,
-
-	// Load the address of the return value and push it to the stack
-	VMI_LDR_A,
-
 	// Allocate memory on the stack
 	VMI_ALLOCS,
 
@@ -187,25 +181,6 @@ struct vmi_instr_lda
 };
 typedef struct vmi_instr_lda vmi_instr_lda;
 typedef struct vmi_instr_lda vmi_instr_lda_a;
-
-// A str instruction
-struct vmi_instr_str
-{
-	union
-	{
-		vmi_opcode_header header;
-		vmi_opcode opcode;
-		struct
-		{
-			vm_uint8 icode;
-			vm_uint8 size;
-			vm_uint8 offset;
-			vm_uint8 props3;
-		};
-	};
-};
-typedef struct vmi_instr_str vmi_instr_str;
-typedef struct vmi_instr_str vmi_instr_ldr_a;
 
 // A ldl instruction
 struct vmi_instr_ldl
