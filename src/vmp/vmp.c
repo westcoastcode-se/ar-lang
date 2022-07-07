@@ -145,7 +145,7 @@ void vmp_pipeline_resolve_args(vmp_pipeline* p, vmp_func* func)
 	const vm_int32 num_args = func->args.count;
 	const vm_int32 num_rets = func->returns.count;
 	vm_int32 i;
-	vm_int32 stack_offset = func->args_stack_size + func->returns_stack_size;
+	vm_int32 stack_offset = func->args_stack_size;
 
 	for (i = 0; i < num_args; ++i) {
 		vmp_arg* const arg = vmp_list_args_get(&func->args, i);
@@ -326,7 +326,7 @@ void vmp_builder_write_metadata(vmp_builder* b)
 			vmi_package_func_bytecode_header func_header = {
 				vm_string_length(&f->name),
 				f->offset,
-				f->args_stack_size + f->returns_stack_size
+				f->args_stack_size
 			};
 			vmp_builder_write(b, &func_header, sizeof(vmi_package_func_bytecode_header));
 			vmp_builder_write(b, f->name.start, vm_string_length(&f->name)); // name bytes

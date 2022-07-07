@@ -25,16 +25,6 @@ struct vmp_instr_def_lda_a
 };
 typedef struct vmp_instr_def_lda_a vmp_instr_def_lda_a;
 
-// str <index>
-struct vmp_instr_def_str
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// Return index to save
-	vm_uint32 index;
-};
-typedef struct vmp_instr_def_str vmp_instr_def_str;
-
 // ldr_a <index>
 struct vmp_instr_def_ldr_a
 {
@@ -272,12 +262,6 @@ extern vmp_instr* vmp_instr_lda(vm_uint32 index);
 
 // Create a new lda_a instruction and return it
 extern vmp_instr* vmp_instr_lda_a(vm_uint32 index);
-
-// Create a new str instruction and return it
-extern vmp_instr* vmp_instr_str(vm_uint32 index);
-
-// Create a new ldr_a instruction and return it
-extern vmp_instr* vmp_instr_ldr_a(vm_uint32 index);
 
 // Create a new stl instruction and return it
 extern vmp_instr* vmp_instr_stl(vm_uint32 index);

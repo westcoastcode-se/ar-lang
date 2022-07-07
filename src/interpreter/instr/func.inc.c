@@ -26,8 +26,6 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 	next_ip = t->cf.ret;
 	t->cf_pos--;
 	t->cf = *t->cf_pos;
-
-	vmi_stack_pop(&t->stack, instr->pop_stack_size);
 	return next_ip;
 }
 

@@ -117,26 +117,6 @@ vmp_instr* vmp_instr_lda_a(vm_uint32 index)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
-vmp_instr* vmp_instr_str(vm_uint32 index)
-{
-	vmp_instr_def_str* instr = (vmp_instr_def_str*)vmp_malloc(sizeof(vmp_instr_def_str));
-	if (instr == NULL)
-		return NULL;
-	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STR, sizeof(vmi_instr_lda));
-	instr->index = index;
-	return VMC_PIPELINE_INSTR_BASE(instr);
-}
-
-vmp_instr* vmp_instr_ldr_a(vm_uint32 index)
-{
-	vmp_instr_def_ldr_a* instr = (vmp_instr_def_ldr_a*)vmp_malloc(sizeof(vmp_instr_def_ldr_a));
-	if (instr == NULL)
-		return NULL;
-	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDR_A, sizeof(vmi_instr_ldr_a));
-	instr->index = index;
-	return VMC_PIPELINE_INSTR_BASE(instr);
-}
-
 vmp_instr* vmp_instr_ldl(vm_uint32 index)
 {
 	vmp_instr_def_ldl* instr = (vmp_instr_def_ldl*)vmp_malloc(sizeof(vmp_instr_def_ldl));
@@ -984,7 +964,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		vmi_instr_call instr;
 		instr.opcode = 0;
 		instr.icode = VMI_CALL;
-		instr.expected_stack_size = func->args_stack_size + func->returns_stack_size;
+		instr.expected_stack_size = func->args_stack_size;
 		instr.addr = builder->bytestream.memory + func->offset;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_call))) {
 			return NULL;
@@ -1048,14 +1028,11 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		vmi_instr_ret instr;
 		instr.opcode = 0;
 		instr.icode = VMI_RET;
-		instr.pop_stack_size = func->args_stack_size;
 		instr.pop_locals_size = func->locals_stack_size;
 #if defined(VM_STACK_DEBUG)
 		// The values pushed on the stack when the function starts are
-		// 1. Pointer to the return address location
-		// 2. The previous ebp
-		// 3. return values
-		// 4. arguments
+		// 1. arguments
+		// 2. return values
 		instr.expected_ebp_offset = func->returns_stack_size + func->args_stack_size;
 #endif
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ret))) {
@@ -1069,44 +1046,6 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.opcode = 0;
 		instr.icode = VMI_EOE;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_eoe))) {
-			return NULL;
-		}
-		break;
-	}
-	case VMP_INSTR_STR:
-	{
-		const vmp_instr_def_str* const cmd = (vmp_instr_def_str*)h;
-		const vmp_return* const ret = vmp_list_returns_get(&func->returns, cmd->index);
-		if (ret == NULL) {
-			vmp_builder_message_return_index_missing(builder, cmd->index);
-			break;
-		}
-
-		vmi_instr_str instr;
-		instr.opcode = 0;
-		instr.icode = VMI_STR;
-		instr.size = ret->type->size;
-		instr.offset = ret->offset;
-		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_str))) {
-			return NULL;
-		}
-		break;
-	}
-	case VMP_INSTR_LDR_A:
-	{
-		const vmp_instr_def_ldr_a* const cmd = (vmp_instr_def_ldr_a*)h;
-		const vmp_return* const ret = vmp_list_returns_get(&func->returns, cmd->index);
-		if (ret == NULL) {
-			vmp_builder_message_return_index_missing(builder, cmd->index);
-			break;
-		}
-
-		vmi_instr_ldr_a instr;
-		instr.opcode = 0;
-		instr.icode = VMI_LDR_A;
-		instr.size = ret->type->size;
-		instr.offset = ret->offset;
-		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldr_a))) {
 			return NULL;
 		}
 		break;

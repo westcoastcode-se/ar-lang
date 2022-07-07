@@ -445,14 +445,17 @@ typedef struct vmi_instr_call vmi_instr_call;
 
 struct vmi_instr_ret
 {
-	OPCODE_HEADER;
 	union
 	{
-		vm_uint32 _pop_memory;
+		vmi_opcode_header header;
+		vmi_opcode opcode;
 		struct
 		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+
+			// Local memory to give back when returning from a function
 			vm_uint16 pop_locals_size;
-			vm_uint16 pop_stack_size;
 		};
 	};
 #if defined(VM_STACK_DEBUG)

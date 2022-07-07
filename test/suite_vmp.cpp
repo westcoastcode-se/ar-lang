@@ -85,7 +85,28 @@ struct utils_vmp : utils_vm
 	template<typename T>
 	void push_value(vmi_thread* t, T value)
 	{
-		*(T*)vmi_thread_reserve_stack(t, sizeof(T)) = (T)value;
+		*(T*)vmi_thread_push_stack(t, sizeof(T)) = (T)value;
+	}
+
+	template<typename T, int SIZE>
+	void push_value(vmi_thread* t, T value[SIZE])
+	{
+		T* p = (T*)vmi_thread_push_stack(t, sizeof(T[SIZE]));
+		for (int i = 0; i < SIZE; ++i) 
+			p[i] = value[i];
+	}
+
+	template<typename T>
+	T pop_value(vmi_thread* t)
+	{
+		return *(T*)vmi_thread_pop_stack(t, sizeof(T));
+	}
+
+	template<typename T, int SIZE>
+	vector<T> pop_value(vmi_thread* t)
+	{
+		T* arr = (T*)vmi_thread_pop_stack(t, sizeof(T[2]));
+		return std::vector<T>(arr, arr + SIZE);
 	}
 
 	vmp_constant vmp_const(vm_int8 value) {
@@ -181,7 +202,6 @@ struct suite_vmp_tests : utils_vmp
 		//	add T
 		//	lda 1
 		//	add T
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(add);
@@ -190,20 +210,20 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(add, vmp_instr_add(props1<T>()));
 		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_add(props1<T>()));
-		vmp_func_add_instr(add, vmp_instr_str(0));
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(T));
 		push_value(t, (T)rhs);
 		push_value(t, (T)lhs);
 		invoke(t, "Add");
 
-		verify_stack_size(t, sizeof(T));
-		verify_stack(t, 0, (T)(lhs + rhs + rhs));
+		verify_stack_size(t, sizeof(T) * 3);
+		verify_value(pop_value<T>(t), (T)(lhs + rhs + rhs));
+		verify_value(pop_value<T>(t), (T)(lhs));
+		verify_value(pop_value<T>(t), (T)(rhs));
 
 		destroy(t);
 
@@ -242,23 +262,20 @@ struct suite_vmp_tests : utils_vmp
 
 		// {
 		//	ldc_<T> $value
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(add);
 		vmp_func_add_instr(add, vmp_instr_ldc(primitive_type, vmp_const((T)value)));
-		vmp_func_add_instr(add, vmp_instr_str(0));
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(T));
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(T));
-		verify_stack(t, 0, (T)(value));
+		verify_value(pop_value<T>(t), (T)value);
 
 		destroy(t);
 
@@ -293,54 +310,58 @@ struct suite_vmp_tests : utils_vmp
 		vmp_arg_set_namesz(add_arg1, "lhs", 3);
 		auto add_arg2 = vmp_func_new_arg(add, get_type("vm", string(name<vm_int32>())));
 		vmp_arg_set_namesz(add_arg2, "rhs", 3);
-		auto add_ret1 = vmp_func_new_return(add, get_type("vm", string(name<vm_int32>())));
+		vmp_func_new_return(add, get_type("vm", string(name<vm_int32>())));
 		vmp_package_add_func(main_package, add);
 
 		// {
 		//	lda 1
 		//	lda 0
 		//	add int32
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(add);
 		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_lda(0));
 		vmp_func_add_instr(add, vmp_instr_add(props1<vm_int32>()));
-		vmp_func_add_instr(add, vmp_instr_str(0));
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
 
 		// Create the Get function and add two integer types
 		auto get = vmp_func_newsz("Get", 3);
-		auto get_ret1 = vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
 		vmp_package_add_func(main_package, get);
 
 		// {
-		//	allocs 4
+		//	locals (_1 int32)
+		//	ldc_i4 <const_val2>
+		//  ldc_i4 <const_val1>
 		//	call Add()(int32)
-		//	str 0
+		//	stl 0
+		//	frees int32 * 2
+		//  ldl 0
 		//	ret
 		// }
 		auto const_val1 = 10;
 		auto const_val2 = 20;
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_allocs_const(4));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
 		vmp_func_add_instr(get, vmp_instr_call(add));
-		vmp_func_add_instr(get, vmp_instr_str(0));
+		vmp_func_add_instr(get, vmp_instr_stl(0));
+		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_ldl(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, const_val1 + const_val2);
+		verify_value(pop_value<vm_int32>(t), (vm_int32)(const_val1 + const_val2));
 
 		destroy(t);
 
@@ -371,7 +392,6 @@ struct suite_vmp_tests : utils_vmp
 		//	add int32
 		//	stl 0
 		//	ldl 0
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(get);
@@ -382,18 +402,16 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(get, vmp_instr_add(props1<vm_int32>()));
 		vmp_func_add_instr(get, vmp_instr_stl(0));
 		vmp_func_add_instr(get, vmp_instr_ldl(0));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, 100 + 1);
+		verify_value(pop_value<vm_int32>(t), 100 + 1);
 
 		destroy(t);
 
@@ -418,26 +436,24 @@ struct suite_vmp_tests : utils_vmp
 		//	lda 0
 		//	ldc_i4 10
 		//	cgt
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(10)));
 		vmp_func_add_instr(get, vmp_instr_cgt(get_type("vm", string(name<vm_int32>()))));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
 		vmi_thread_push_i32(t, const_val);
 		invoke(t, "Get");
 
-		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, 10 > const_val ? TRUE : FALSE);
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		verify_value(pop_value<vm_int32>(t), 10 > const_val ? TRUE : FALSE);
+		verify_value(pop_value<vm_int32>(t), const_val);
 
 		destroy(t);
 
@@ -469,26 +485,24 @@ struct suite_vmp_tests : utils_vmp
 		//	lda 0
 		//	ldc_i4 10
 		//	clt
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(10)));
 		vmp_func_add_instr(get, vmp_instr_clt(get_type("vm", string(name<vm_int32>()))));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
 		vmi_thread_push_i32(t, const_val);
 		invoke(t, "Get");
 
-		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, 10 < const_val ? TRUE : FALSE);
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		verify_value(pop_value<vm_int32>(t), 10 < const_val ? TRUE : FALSE);
+		verify_value(pop_value<vm_int32>(t), const_val);
 
 		destroy(t);
 
@@ -522,11 +536,9 @@ struct suite_vmp_tests : utils_vmp
 		//	cgt
 		//	jmpt #marker
 		//	ldc_i4 50
-		//	str 0
 		//  ret
 		//	#marker
 		//	ldc_i4 150
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(get);
@@ -536,24 +548,22 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(get, vmp_instr_cgt(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_jmpt(marker));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(50)));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_marker_set_instr(marker,
 			vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(150)))
 		);
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
-		vmi_thread_push_i32(t, const_val);
+		push_value(t, const_val);
 		invoke(t, "Get");
 
-		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, 10 > const_val ? 150 : 50);
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		verify_value(pop_value<vm_int32>(t), 10 > const_val ? 150 : 50);
+		verify_value(pop_value<vm_int32>(t), const_val);
 
 		destroy(t);
 
@@ -587,11 +597,9 @@ struct suite_vmp_tests : utils_vmp
 		//	cgt
 		//	jmpt #marker
 		//	ldc_i4 50
-		//	str 0
 		//  ret
 		//	#marker
 		//	ldc_i4 150
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(get);
@@ -601,24 +609,22 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(get, vmp_instr_cgt(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_jmpf(marker));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(50)));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_marker_set_instr(marker,
 			vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(150)))
 		);
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(vm_int32));
-		vmi_thread_push_i32(t, const_val);
+		push_value(t, const_val);
 		invoke(t, "Get");
 
-		verify_stack_size(t, sizeof(vm_int32));
-		verify_stack(t, 0, 10 < const_val ? 150 : 50);
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		verify_value(pop_value<vm_int32>(t), 10 < const_val ? 150 : 50);
+		verify_value(pop_value<vm_int32>(t), const_val);
 
 		destroy(t);
 
@@ -650,25 +656,23 @@ struct suite_vmp_tests : utils_vmp
 		// {
 		//	lda 0
 		//  conv_%FROM_%TO
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda(0));
 		vmp_func_add_instr(get, vmp_instr_conv(get_type("vm", string(name<FROM>())), get_type("vm", string(name<TO>()))));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(TO));
-		*((FROM*)vmi_thread_reserve_stack(t, sizeof(FROM))) = from;
+		push_value(t, from);
 		invoke(t, "Get");
 
-		verify_stack_size(t, sizeof(TO));
-		verify_stack(t, 0, (TO)to);
+		verify_stack_size(t, sizeof(FROM) + sizeof(TO));
+		verify_value(pop_value<TO>(t), (TO)to);
+		verify_value(pop_value<FROM>(t), (FROM)from);
 
 		destroy(t);
 
@@ -719,26 +723,25 @@ struct suite_vmp_tests : utils_vmp
 		//	locals (i T)
 		//	ldl_a 0
 		//	call innerGet(*T)()
+		//  frees *T
 		//	ldl 0
-		//	str 0
 		//	ret
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_ldl_a(0));
 		vmp_func_add_instr(get, vmp_instr_call(inner_get));
+		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(ptr<T>()))));
 		vmp_func_add_instr(get, vmp_instr_ldl(0));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		vmi_thread_reserve_stack(t, sizeof(T));
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(T));
-		verify_stack(t, 0, (T)value);
+		verify_value(pop_value<T>(t), (T)value);
 
 		destroy(t);
 
@@ -780,39 +783,43 @@ struct suite_vmp_tests : utils_vmp
 
 		// Create the Get function and add two integer types
 		auto get = vmp_func_newsz("Get", 3);
-		auto get_ret1 = vmp_func_new_return(get, array_type);
+		vmp_func_new_return(get, array_type);
+		vmp_func_new_local(get, array_type);
 		vmp_package_add_func(main_package, get);
 
 		// {
-		//	ldr_a 0
+		//	locals (_1 [2]T)
+		//	ldl_a 0
 		//	ldc_i4 0
 		//	ldc_i4 values[0]
 		//	stelem [2]T
-		//	ldr_a 0
+		//	ldl_a 0
 		//	ldc_i4 1
 		//	ldc_i4 values[0]
 		//	stelem [2]T
+		//	ldl [2]T
 		//	ret
 		// }
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldr_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldl_a(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(0)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<T>())), vmp_const((T)values[0])));
 		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
-		vmp_func_add_instr(get, vmp_instr_ldr_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldl_a(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(1)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<T>())), vmp_const((T)values[1])));
 		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
+		vmp_func_add_instr(get, vmp_instr_ldl(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		auto ret = (T*)vmi_thread_reserve_stack(t, sizeof(T[2]));
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(T[2]));
+		auto ret = pop_value<T, 2>(t);
 		verify_value(ret[0], values[0]);
 		verify_value(ret[1], values[1]);
 
@@ -864,11 +871,11 @@ struct suite_vmp_tests : utils_vmp
 		compile();
 
 		auto t = thread();
-		T* ret_as_arg = new T[values.size()];
-		auto arg1 = (T**)vmi_thread_reserve_stack(t, sizeof(T*)); *arg1 = ret_as_arg;
+		push_value<T*>(t, new T[values.size()]);
 		invoke(t, "Get");
 
-		verify_stack_size(t, 0);
+		verify_stack_size(t, sizeof(T*));
+		auto ret_as_arg = pop_value<T*>(t);
 		verify_value(ret_as_arg[0], values[0]);
 		verify_value(ret_as_arg[1], values[1]);
 		delete[] ret_as_arg;
@@ -937,36 +944,34 @@ struct suite_vmp_tests : utils_vmp
 		//	lda_a 0
 		//	ldc_i4 0
 		//	ldelem [2]T
-		//	str 0
 		//	lda_a 0
 		//	ldc_i4 1
 		//	ldelem [2]T
-		//	str 1
 		//	ret
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda_a(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(0)));
 		vmp_func_add_instr(get, vmp_instr_ldelem(array_type));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_lda_a(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(1)));
 		vmp_func_add_instr(get, vmp_instr_ldelem(array_type));
-		vmp_func_add_instr(get, vmp_instr_str(1));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		auto ret2 = (T*)vmi_thread_reserve_stack(t, sizeof(T));
-		auto ret1 = (T*)vmi_thread_reserve_stack(t, sizeof(T));
-		auto args = (T*)vmi_thread_reserve_stack(t, sizeof(T[2])); args[0] = values[0]; args[1] = values[1];
+		T values_as_array[2] = { values[0], values[1] };
+		push_value<T, 2>(t, values_as_array);
 		invoke(t, "Get");
 
-		verify_stack_size(t, sizeof(T) * 2);
-		verify_value(*ret1, values[0]);
-		verify_value(*ret2, values[1]);
+		verify_stack_size(t, sizeof(T) * 4);
+		verify_value(pop_value<T>(t), values[1]);
+		verify_value(pop_value<T>(t), values[0]);
+		auto popped_in = pop_value<T, 2>(t);
+		verify_value(popped_in[1], values[1]);
+		verify_value(popped_in[0], values[0]);
 
 		destroy(t);
 
@@ -996,36 +1001,33 @@ struct suite_vmp_tests : utils_vmp
 		//	lda 0
 		//	ldc_i4 0
 		//	ldelem *T
-		//	str 0
 		//	lda 0
 		//	ldc_i4 1
 		//	ldelem *T
-		//	str 1
 		//	ret
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(0)));
 		vmp_func_add_instr(get, vmp_instr_ldelem(ptr_type));
-		vmp_func_add_instr(get, vmp_instr_str(0));
 		vmp_func_add_instr(get, vmp_instr_lda(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(1)));
 		vmp_func_add_instr(get, vmp_instr_ldelem(ptr_type));
-		vmp_func_add_instr(get, vmp_instr_str(1));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
 		compile();
 
 		auto t = thread();
-		auto ret2 = (T*)vmi_thread_reserve_stack(t, sizeof(T));
-		auto ret1 = (T*)vmi_thread_reserve_stack(t, sizeof(T));
-		auto args = (const T**)vmi_thread_reserve_stack(t, sizeof(T*)); *args = values.data();
+		push_value<T*>(t, (T*)values.data());
 		invoke(t, "Get");
 
-		verify_stack_size(t, sizeof(T) * 2);
-		verify_value(*ret1, values[0]);
-		verify_value(*ret2, values[1]);
+		verify_stack_size(t, sizeof(T*) + sizeof(T) * 2);
+		verify_value(pop_value<T>(t), values[1]);
+		verify_value(pop_value<T>(t), values[0]);
+		T* popped_in = pop_value<T*>(t);
+		verify_value(popped_in[1], values[1]);
+		verify_value(popped_in[0], values[0]);
 
 		destroy(t);
 

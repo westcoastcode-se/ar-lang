@@ -376,9 +376,14 @@ vmi_thread* vmi_thread_new(vmi_process* process)
 	return t;
 }
 
-vm_byte* vmi_thread_reserve_stack(vmi_thread* t, vm_int32 value)
+vm_byte* vmi_thread_push_stack(vmi_thread* t, vm_int32 value)
 {
 	return vmi_stack_push(&t->stack, value);
+}
+
+vm_byte* vmi_thread_pop_stack(vmi_thread* t, vm_int32 value)
+{
+	return vmi_stack_pop(&t->stack, value);
 }
 
 vm_int32 vmi_thread_push_i16(vmi_thread* t, vm_int16 value)
