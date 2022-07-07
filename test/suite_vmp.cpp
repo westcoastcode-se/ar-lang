@@ -225,14 +225,14 @@ struct suite_vmp_tests : utils_vmp
 		compile();
 
 		auto t = thread();
-		push_value(t, (T)rhs);
 		push_value(t, (T)lhs);
+		push_value(t, (T)rhs);
 		invoke(t, "Add");
 
 		verify_stack_size(t, sizeof(T) * 3);
 		verify_value(pop_value<T>(t), (T)(lhs + rhs + rhs));
-		verify_value(pop_value<T>(t), (T)(lhs));
 		verify_value(pop_value<T>(t), (T)(rhs));
+		verify_value(pop_value<T>(t), (T)(lhs));
 
 		destroy(t);
 
@@ -291,14 +291,14 @@ struct suite_vmp_tests : utils_vmp
 		compile();
 
 		auto t = thread();
-		push_value(t, (T)rhs);
 		push_value(t, (T)lhs);
+		push_value(t, (T)rhs);
 		invoke(t, "Add");
 
 		verify_stack_size(t, sizeof(T) * 3);
 		verify_value(pop_value<T>(t), (T)(lhs - rhs - rhs));
-		verify_value(pop_value<T>(t), (T)(lhs));
 		verify_value(pop_value<T>(t), (T)(rhs));
+		verify_value(pop_value<T>(t), (T)(lhs));
 
 		destroy(t);
 
@@ -420,8 +420,8 @@ struct suite_vmp_tests : utils_vmp
 		auto const_val1 = 10;
 		auto const_val2 = 20;
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_call(add));
 		vmp_func_add_instr(get, vmp_instr_stl(0));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
@@ -488,8 +488,8 @@ struct suite_vmp_tests : utils_vmp
 		auto const_val1 = 10;
 		auto const_val2 = 20;
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_callnative(add));
 		vmp_func_add_instr(get, vmp_instr_stl(0));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
@@ -595,7 +595,7 @@ struct suite_vmp_tests : utils_vmp
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32) * 2);
-		verify_value(pop_value<vm_int32>(t), 10 > const_val ? TRUE : FALSE);
+		verify_value(pop_value<vm_int32>(t), const_val > 10 ? TRUE : FALSE);
 		verify_value(pop_value<vm_int32>(t), const_val);
 
 		destroy(t);
@@ -644,7 +644,7 @@ struct suite_vmp_tests : utils_vmp
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32) * 2);
-		verify_value(pop_value<vm_int32>(t), 10 < const_val ? TRUE : FALSE);
+		verify_value(pop_value<vm_int32>(t), const_val < 10 ? TRUE : FALSE);
 		verify_value(pop_value<vm_int32>(t), const_val);
 
 		destroy(t);
@@ -676,7 +676,7 @@ struct suite_vmp_tests : utils_vmp
 		// {
 		//	lda 0
 		//	ldc_i4 10
-		//	cgt
+		//	clt
 		//	jmpt #marker
 		//	ldc_i4 50
 		//  ret
@@ -688,7 +688,7 @@ struct suite_vmp_tests : utils_vmp
 		auto marker = vmp_func_new_marker(get);
 		vmp_func_add_instr(get, vmp_instr_lda(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(10)));
-		vmp_func_add_instr(get, vmp_instr_cgt(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_clt(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_jmpt(marker));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(50)));
 		vmp_func_add_instr(get, vmp_instr_ret());
@@ -705,7 +705,7 @@ struct suite_vmp_tests : utils_vmp
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32) * 2);
-		verify_value(pop_value<vm_int32>(t), 10 > const_val ? 150 : 50);
+		verify_value(pop_value<vm_int32>(t), const_val < 10 ? 150 : 50);
 		verify_value(pop_value<vm_int32>(t), const_val);
 
 		destroy(t);
@@ -737,8 +737,8 @@ struct suite_vmp_tests : utils_vmp
 		// {
 		//	lda 0
 		//	ldc_i4 10
-		//	cgt
-		//	jmpt #marker
+		//	clt
+		//	jmpf #marker
 		//	ldc_i4 50
 		//  ret
 		//	#marker
@@ -749,7 +749,7 @@ struct suite_vmp_tests : utils_vmp
 		auto marker = vmp_func_new_marker(get);
 		vmp_func_add_instr(get, vmp_instr_lda(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(10)));
-		vmp_func_add_instr(get, vmp_instr_cgt(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_clt(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_jmpf(marker));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(50)));
 		vmp_func_add_instr(get, vmp_instr_ret());
@@ -766,7 +766,7 @@ struct suite_vmp_tests : utils_vmp
 		invoke(t, "Get");
 
 		verify_stack_size(t, sizeof(vm_int32) * 2);
-		verify_value(pop_value<vm_int32>(t), 10 < const_val ? 150 : 50);
+		verify_value(pop_value<vm_int32>(t), !(const_val < 10) ? 150 : 50);
 		verify_value(pop_value<vm_int32>(t), const_val);
 
 		destroy(t);

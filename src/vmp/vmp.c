@@ -145,19 +145,21 @@ void vmp_pipeline_resolve_args(vmp_pipeline* p, vmp_func* func)
 	const vm_int32 num_args = func->args.count;
 	const vm_int32 num_rets = func->returns.count;
 	vm_int32 i;
-	vm_int32 stack_offset = func->args_stack_size;
+	vm_int32 stack_offset = 0;
 
 	for (i = 0; i < num_args; ++i) {
 		vmp_arg* const arg = vmp_list_args_get(&func->args, i);
-		stack_offset -= arg->type->size;
 		arg->offset = stack_offset;
+		stack_offset += arg->type->size;
 	}
-
+	func->args_stack_size = stack_offset;
+	
+	stack_offset = 0;
 	for (i = 0; i < num_rets; ++i) {
 		vmp_return* const ret = vmp_list_returns_get(&func->returns, i);
-		stack_offset -= ret->type->size;
-		ret->offset = stack_offset;
+		stack_offset += ret->type->size;
 	}
+	func->returns_stack_size = stack_offset;
 }
 
 void vmp_pipeline_resolve_locals(vmp_pipeline* p, vmp_func* func)

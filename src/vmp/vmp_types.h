@@ -154,9 +154,6 @@ struct vmp_return
 
 	// The type this return is
 	const vmp_type* type;
-
-	// Offset, in bytes, where this return block is located on the stack (from EPB's point of view)
-	vm_uint32 offset;
 };
 typedef struct vmp_return vmp_return;
 

@@ -198,7 +198,6 @@ vmp_return* vmp_return_new()
 		return NULL;
 	p->func = NULL;
 	p->type = NULL;
-	p->offset = 0;
 	return p;
 }
 
@@ -295,7 +294,6 @@ BOOL vmp_func_add_arg(vmp_func* f, vmp_arg* arg)
 	if (arg->func != NULL)
 		return FALSE;
 	arg->func = f;
-	f->args_stack_size += arg->type->size;
 	return vmp_list_args_add(&f->args, arg) >= 0;
 }
 
@@ -313,7 +311,6 @@ BOOL vmp_func_add_return(vmp_func* f, vmp_return* ret)
 	if (ret->func != NULL)
 		return FALSE;
 	ret->func = f;
-	f->returns_stack_size += ret->type->size;
 	return vmp_list_returns_add(&f->returns, ret) >= 0;
 }
 
