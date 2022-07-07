@@ -206,16 +206,16 @@ struct suite_vmp_tests : utils_vmp
 		vmp_package_add_func(main_package, add);
 
 		// {
-		//	lda 1
 		//	lda 0
+		//	lda 1
 		//	add T
 		//	lda 1
 		//	add T
 		//	ret
 		// }
 		vmp_func_begin_body(add);
-		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_lda(0));
+		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_add(get_type("vm", string(name<T>()))));
 		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_add(get_type("vm", string(name<T>()))));
@@ -389,14 +389,14 @@ struct suite_vmp_tests : utils_vmp
 		vmp_package_add_func(main_package, add);
 
 		// {
-		//	lda 1
 		//	lda 0
+		//	lda 1
 		//	add int32
 		//	ret
 		// }
 		vmp_func_begin_body(add);
-		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_lda(0));
+		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_add(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
