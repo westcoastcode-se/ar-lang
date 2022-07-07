@@ -252,6 +252,8 @@ vmp_func* vmp_func_newsz(const char* name, vm_int32 name_len)
 	vmp_list_returns_init(&p->returns);
 	vmp_list_locals_init(&p->locals);
 	vmp_list_markers_init(&p->markers);
+	p->native_func = NULL;
+	p->flags = 0;
 	p->args_stack_size = 0;
 	p->returns_stack_size = 0;
 	p->locals_stack_size = 0;
@@ -274,6 +276,18 @@ void vmp_func_destroy(vmp_func* f)
 	vmp_list_returns_release(&f->returns);
 	vmp_list_args_release(&f->args);
 	vmp_free(f);
+}
+
+
+void vmp_func_add_flag(vmp_func* p, vm_int32 flag)
+{
+	p->flags |= flag;
+}
+
+void vmp_func_set_nativefunc(vmp_func* p, vm_nativefunc func)
+{
+	p->native_func = func;
+	p->flags |= VMP_FUNC_FLAGS_EXTERN;
 }
 
 BOOL vmp_func_add_arg(vmp_func* f, vmp_arg* arg)

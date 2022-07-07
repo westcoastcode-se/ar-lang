@@ -121,6 +121,9 @@ typedef struct vmi_thread vmi_thread;
 // Create a new thread
 extern vmi_thread* vmi_thread_new(vmi_process* process);
 
+// Get an argument with the supplied offset
+extern vm_byte* vmi_thread_getarg(vmi_thread* t, vm_int32 offset);
+
 // Reserve the supplied amount of memory on the stack
 extern vm_byte* vmi_thread_push_stack(vmi_thread* t, vm_int32 size);
 

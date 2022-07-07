@@ -187,6 +187,21 @@ vm_int32 vmp_pipeline_resolve_package(vmp_pipeline* p, vm_int32 offset, vmp_pack
 		vmp_pipeline_resolve_locals(p, func);
 		// Set function properties
 		func->offset = offset;
+
+		// If no body size is found then figure out how to call it
+		if (func->body_size == 0) {
+			if (func->native_func == NULL) {
+				// TODO: Figure out how to raise an error that we cant link this function
+				return -1;
+			}
+		}
+		else {
+			if (func->native_func != NULL) {
+				// TODO: Figure out how to raise an error that tells us that we have a body and a native function
+				return -1;
+			}
+		}
+
 		offset += func->body_size;
 		// TODO: Add support for function type information
 	}

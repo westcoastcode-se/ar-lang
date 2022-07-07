@@ -19,6 +19,7 @@ typedef unsigned int vm_bits32;
 typedef unsigned int vm_hash32;
 typedef long long vm_int64;
 typedef unsigned long long vm_uint64;
+typedef int (*vm_nativefunc)(struct vmi_thread*);
 
 #ifndef VM_VERSION
 #	define VM_VERSION 1

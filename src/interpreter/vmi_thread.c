@@ -283,6 +283,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_CALL:
 			ip = _vmi_thread_call(t, ip);
 			continue;
+		case VMI_CALLNATIVE:
+			ip = _vmi_thread_callnative(t, ip);
+			continue;
 		case VMI_LOCALS:
 			ip = _vmi_thread_locals(t, ip);
 			continue;
@@ -368,6 +371,11 @@ vmi_thread* vmi_thread_new(vmi_process* process)
 	// TODO: Add support for multiple threads
 	process->first_thread = t;
 	return t;
+}
+
+vm_byte* vmi_thread_getarg(vmi_thread* t, vm_int32 offset)
+{
+	return t->ebp + offset;
 }
 
 vm_byte* vmi_thread_push_stack(vmi_thread* t, vm_int32 value)

@@ -31,9 +31,7 @@ struct utils_vmp : utils_vm
 			pipeline = NULL;
 		}
 
-		if (vmp_memory_test_bytes_left() == FALSE) {
-			throw_(error() << "not all memory was released");
-		}
+		vmp_memory_test_bytes_left();
 	}
 
 	void compile()
@@ -65,15 +63,19 @@ struct utils_vmp : utils_vm
 			throw_(error() << "could not create a new VM process");
 
 		const auto result = vmi_process_load(process, vmp_builder_get_bytecode(builder));
-		if (result != 0)
+		if (result != 0) {
+			end();
 			throw_(error() << "failed to load bytecode because: " << result);
+		}
 	}
 
 	vmi_thread* thread()
 	{
 		auto const t = vmi_thread_new(process);
-		if (t == nullptr)
+		if (t == nullptr) {
+			end();
 			throw_(error() << "could not spawn a new VM thread");
+		}
 		return t;
 	}
 
@@ -152,16 +154,22 @@ struct utils_vmp : utils_vm
 	void invoke(vmi_thread* t, const char* entry_point)
 	{
 		const vmi_package* package = vmi_process_find_package_by_name(process, "main", 4);
-		if (package == NULL)
+		if (package == NULL) {
+			end();
 			throw_(error() << "expected 'main' package but was not found");
+		}
 
 		const auto func = vmi_package_find_function_by_name(package, entry_point, (vm_int32)strlen(entry_point));
-		if (func == NULL)
+		if (func == NULL) {
+			end();
 			throw_(error() << "could not find function '" << entry_point << "'");
+		}
 
 		const auto result = vmi_process_exec(process, t, func);
-		if (result != 0)
+		if (result != 0) {
+			end();
 			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << t->exit_reason);
+		}
 	}
 
 	vmp_type* get_type(const string package, const string type_name) {
@@ -348,6 +356,74 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
 		vmp_func_add_instr(get, vmp_instr_call(add));
+		vmp_func_add_instr(get, vmp_instr_stl(0));
+		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_value(pop_value<vm_int32>(t), (vm_int32)(const_val1 + const_val2));
+
+		destroy(t);
+
+		end();
+	}
+
+	static int callnative_add(vmi_thread* t)
+	{
+		const auto rhs = *(vm_int32*)vmi_thread_getarg(t, 0);
+		const auto lhs = *(vm_int32*)vmi_thread_getarg(t, 4);
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = lhs + rhs;
+		return 0;
+	}
+
+	void callnative()
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Add function and add two integer types
+		auto add = vmp_func_newsz("Add", 3);
+		auto add_arg1 = vmp_func_new_arg(add, get_type("vm", string(name<vm_int32>())));
+		vmp_arg_set_namesz(add_arg1, "lhs", 3);
+		auto add_arg2 = vmp_func_new_arg(add, get_type("vm", string(name<vm_int32>())));
+		vmp_arg_set_namesz(add_arg2, "rhs", 3);
+		vmp_func_new_return(add, get_type("vm", string(name<vm_int32>())));
+		vmp_func_set_nativefunc(add, &callnative_add);
+		vmp_package_add_func(main_package, add);
+
+		// Create the Get function and add two integer types
+		auto get = vmp_func_newsz("Get", 3);
+		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, get);
+
+		// {
+		//	locals (_1 int32)
+		//	ldc_i4 <const_val2>
+		//  ldc_i4 <const_val1>
+		//	callnative Add()(int32)
+		//	stl 0
+		//	frees int32 * 2
+		//  ldl 0
+		//	ret
+		// }
+		auto const_val1 = 10;
+		auto const_val2 = 20;
+		vmp_func_begin_body(get);
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
+		vmp_func_add_instr(get, vmp_instr_callnative(add));
 		vmp_func_add_instr(get, vmp_instr_stl(0));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
@@ -1292,6 +1368,7 @@ struct suite_vmp_tests : utils_vmp
 		TEST(add);
 		TEST(ldc);
 		TEST(call);
+		TEST(callnative);
 		TEST(locals);
 		TEST(cgt);
 		TEST(clt);

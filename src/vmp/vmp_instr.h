@@ -199,6 +199,16 @@ struct vmp_instr_def_call
 };
 typedef struct vmp_instr_def_call vmp_instr_def_call;
 
+// callnative <func>
+struct vmp_instr_def_callnative
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Definition
+	const vmp_func* func_def;
+};
+typedef struct vmp_instr_def_callnative vmp_instr_def_callnative;
+
 // add <type>
 struct vmp_instr_def_add
 {
@@ -319,6 +329,9 @@ extern vmp_instr* vmp_instr_ldelem(const vmp_type* type);
 
 // Call the supplied function
 extern vmp_instr* vmp_instr_call(const vmp_func* func);
+
+// Call the supplied function
+extern vmp_instr* vmp_instr_callnative(const vmp_func* func);
 
 // Create a new add instruction and return it
 extern vmp_instr* vmp_instr_add(vm_int8 type);

@@ -60,6 +60,9 @@ enum vmi_icodes
 	// Call a function
 	VMI_CALL,
 
+	// Call a native (C) function
+	VMI_CALLNATIVE,
+
 	// Return the the caller instruction pointer
 	VMI_RET,
 
@@ -417,6 +420,28 @@ struct vmi_instr_call
 	vmi_ip addr;
 };
 typedef struct vmi_instr_call vmi_instr_call;
+
+// A callnative instruction
+struct vmi_instr_callnative
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+
+			// The expected (incoming) stack size that's required by the function - such as the arguments and the 
+			// return values.
+			vm_uint16 expected_stack_size;
+		};
+	};
+	// Pointer to the C-function
+	vm_nativefunc func_ptr;
+};
+typedef struct vmi_instr_callnative vmi_instr_callnative;
 
 struct vmi_instr_ret
 {

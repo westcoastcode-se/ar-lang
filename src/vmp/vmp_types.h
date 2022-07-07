@@ -110,6 +110,12 @@ struct vmp_func
 	// Memory markers
 	vmp_list_markers markers;
 
+	// A reference to a native function if one exist
+	vm_nativefunc native_func;
+
+	// Flags used to define the function
+	vm_int32 flags;
+
 	// The stack size required for this function to work
 	vm_uint32 args_stack_size;
 	vm_uint32 returns_stack_size;
@@ -120,6 +126,9 @@ struct vmp_func
 	struct vmp_instr_header* last_instr;
 };
 typedef struct vmp_func vmp_func;
+
+// A function is marked as an external function
+#define VMP_FUNC_FLAGS_EXTERN (1 << 0)
 
 struct vmp_arg
 {
@@ -191,6 +200,7 @@ enum vmp_instr_type
 	VMP_INSTR_LDELEM,
 	VMP_INSTR_LDELEM_S,
 	VMP_INSTR_CALL,
+	VMP_INSTR_CALLNATIVE,
 	VMP_INSTR_ADD,
 	VMP_INSTR_CMP,
 	VMP_INSTR_JMP,
@@ -334,6 +344,12 @@ extern vmp_func* vmp_func_newsz(const char* name, vm_int32 name_len);
 
 // Destroy type
 extern void vmp_func_destroy(vmp_func* p);
+
+// Add a specific flag
+extern void vmp_func_add_flag(vmp_func* p, vm_int32 flag);
+
+// Set the function
+extern void vmp_func_set_nativefunc(vmp_func* p, vm_nativefunc func);
 
 // Add an argument to this function
 extern BOOL vmp_func_add_arg(vmp_func* f, vmp_arg* arg);

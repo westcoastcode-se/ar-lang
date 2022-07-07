@@ -35,6 +35,32 @@ vmi_ip _vmi_thread_call(vmi_thread* t, vmi_ip ip)
 	return vmi_thread_begin_call(t, ip, instr->addr, instr->expected_stack_size);
 }
 
+vmi_ip _vmi_thread_callnative(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_callnative* instr = (const vmi_instr_callnative*)ip;
+
+#if defined(VM_STACK_DEBUG)
+	// Verify that we've pushed the bare-minimum data on the stack for the function to work
+	// 
+	// We must've pushed at least "expected_stack_size" in bytes (we also ignore the required function call stack values)
+	const vm_byte* expected = t->stack.top - instr->expected_stack_size;
+	if (t->ebp > expected) {
+		const vm_int32 stack_size = (vm_int32)(t->stack.top - t->ebp);
+		return _vmi_thread_stack_mismanaged_begin(t, ip, instr->expected_stack_size, stack_size);
+	}
+#endif
+	t->ip = ip;
+	switch (instr->func_ptr(t)) {
+	default:
+		break;
+	}
+	// If a halt happened then make sure to call the next IP
+	if (t->halt_pos != NULL) {
+		return t->ip;
+	}
+	return ip + sizeof(vmi_instr_callnative);
+}
+
 vmi_ip _vmi_thread_lda(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_lda* instr = (const vmi_instr_lda*)ip;

@@ -376,6 +376,16 @@ vmp_instr* vmp_instr_call(const vmp_func* func)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_callnative(const vmp_func* func)
+{
+	vmp_instr_def_callnative* instr = (vmp_instr_def_callnative*)vmp_malloc(sizeof(vmp_instr_def_callnative));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CALLNATIVE, sizeof(vmi_instr_callnative));
+	instr->func_def = func;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_add(vm_int8 type)
 {
 	vmp_instr_def_add* instr = (vmp_instr_def_add*)vmp_malloc(sizeof(vmp_instr_def_add));
@@ -966,6 +976,20 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.icode = VMI_CALL;
 		instr.expected_stack_size = func->args_stack_size;
 		instr.addr = builder->bytestream.memory + func->offset;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_call))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_CALLNATIVE:
+	{
+		const vmp_instr_def_callnative* const cmd = (vmp_instr_def_callnative*)h;
+
+		vmi_instr_callnative instr;
+		instr.opcode = 0;
+		instr.icode = VMI_CALLNATIVE;
+		instr.expected_stack_size = cmd->func_def->args_stack_size;
+		instr.func_ptr = cmd->func_def->native_func;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_call))) {
 			return NULL;
 		}
