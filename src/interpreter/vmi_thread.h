@@ -3,16 +3,18 @@
 
 #include "vmi_process.h"
 #include "vmi_stack.h"
+#include "vmi_locals.h"
 
 // Flags that can happen during the execution of the virtual machine
 enum vmi_thread_flags
 {
 	VMI_THREAD_FLAG_UNKNOWN_INSTRUCTION = 1,
-	VMI_THREAD_FLAG_STACK_OUT_OF_MEMORY = 2,
+	VMI_THREAD_FLAG_OUT_OF_MEMORY = 2,
 	VMI_THREAD_FLAG_INVALID_LOCAL = 4,
 	VMI_THREAD_FLAG_STACK_MISMANAGED = 8,
-	VMI_THREAD_FLAG_NOT_IMPLEMENTED = 16,
-	VMI_THREAD_FLAG_MANUAL_HALT = 32
+	VMI_THREAD_FLAG_LOCALS_MISMANAGED = 16,
+	VMI_THREAD_FLAG_NOT_IMPLEMENTED = 32,
+	VMI_THREAD_FLAG_MANUAL_HALT = 64
 };
 
 // A block of memory stored on the stack. Every block is guaranteed to allow 8 bytes of memory
@@ -59,6 +61,9 @@ struct vmi_thread_call_frame
 	// Where arguments can be found
 	vm_byte* ebp;
 
+	// Where local variables can be found
+	vm_byte* locals_ptr;
+
 	// The next instruction to be called when returning
 	vmi_ip ret;
 };
@@ -91,12 +96,16 @@ struct vmi_thread
 		vmi_thread_call_frame cf;
 		struct {
 			vm_byte* ebp;
+			vm_byte* locals_ptr;
 			vmi_ip ret;
 		};
 	};
 
 	// Stack
 	vmi_stack stack;
+
+	// Container for local variables
+	vmi_locals locals;
 
 	// Reason set when the process stops
 	char exit_reason[4096];

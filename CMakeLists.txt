@@ -40,7 +40,7 @@ add_library(vm "src/vm_config.h"
 
     "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
     "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" 
-    "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" 
+    "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" "src/interpreter/vmi_locals.h" "src/interpreter/vmi_locals.c"
 
      "src/vmp/vmp.h" "src/vmp/vmp_types.h" "src/vmp/vmp_instr.h" "src/vmp/vmp_instr.c" 
      "src/vmp/vmp.c" "src/vmp/vmp_list_args.h" "src/vmp/vmp_list_args.c" "src/vmp/vmp_types.c" 

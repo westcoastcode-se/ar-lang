@@ -166,7 +166,7 @@ void vmp_pipeline_resolve_locals(vmp_pipeline* p, vmp_func* func)
 	// EBP points to where the stack is located 
 	const vm_int32 num_locals = func->locals.count;
 	vm_int32 i;
-	vm_int32 offset = func->returns_stack_size + func->args_stack_size;
+	vm_int32 offset = 0;
 	for (i = 0; i < num_locals; ++i) {
 		vmp_local* const local = vmp_list_locals_get(&func->locals, i);
 		local->offset = offset;

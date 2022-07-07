@@ -37,9 +37,23 @@ vmi_ip _vmi_thread_stack_mismanaged_ret(vmi_thread* t, vmi_ip ip, vm_int32 bytes
 	return (vmi_ip)&_vmi_force_eoe;
 }
 
+vmi_ip _vmi_thread_locals_mismanaged_ret(vmi_thread* t, vmi_ip ip)
+{
+	vmi_thread_shalti(t,
+		VMI_THREAD_FLAG_LOCALS_MISMANAGED,
+		"the local variables are mismanaged");
+	t->halt_pos = ip;
+	return (vmi_ip)&_vmi_force_eoe;
+}
+
+vmi_ip _vmi_thread_locals_out_of_memory(vmi_thread* t, vmi_ip ip)
+{
+	return _vmi_thread_halt(t, ip, VMI_THREAD_FLAG_OUT_OF_MEMORY, "locals out of memory");
+}
+
 vmi_ip _vmi_thread_stack_out_of_memory(vmi_thread* t, vmi_ip ip)
 {
-	return _vmi_thread_halt(t, ip, VMI_THREAD_FLAG_STACK_OUT_OF_MEMORY, "out of memory");
+	return _vmi_thread_halt(t, ip, VMI_THREAD_FLAG_OUT_OF_MEMORY, "stack out of memory");
 }
 
 vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
@@ -352,6 +366,7 @@ vmi_thread* vmi_thread_new(vmi_process* process)
 	t->process = process;
 	t->bytecode = process->bytecode;
 	vmi_stack_init(&t->stack);
+	vmi_locals_init(&t->locals);
 	t->cf_pos = NULL;
 	t->cf.ebp = NULL; t->cf.ret = NULL;
 	memset(t->call_frames, 0, sizeof(t->call_frames));
@@ -410,6 +425,7 @@ vm_int32 vmi_thread_entrypoint(vmi_thread* t, const vmi_function* func)
 	t->cf_pos = t->call_frames;
 	t->cf_pos->ret = (vmi_ip)&_vmi_force_eoe;
 	t->cf_pos->ebp = t->stack.top - func->expected_stack_size;
+	t->cf_pos->locals_ptr = NULL;
 	t->cf = *t->cf_pos;
 	return _vmi_thread_exec(t, t->ip);
 }
@@ -449,6 +465,7 @@ void vmi_thread_destroy(vmi_thread* t)
 {
 	// TODO: Add support for multiple threads
 	t->process->first_thread = NULL;
+	vmi_locals_release(&t->locals);
 	vmi_stack_release(&t->stack);
 	free(t);
 }

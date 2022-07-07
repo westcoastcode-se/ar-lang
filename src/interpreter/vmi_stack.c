@@ -4,7 +4,7 @@ void vmi_stack_init(vmi_stack* s)
 {
 	s->top = s->blocks;
 	s->end = s->blocks + VM_STACK_DEFAULT_SIZE;
-#ifndef NDEBUG
+#ifdef VM_STACK_DEBUG
 	memset(s->blocks, 0xFFFFFFFF, VM_STACK_DEFAULT_SIZE);
 #endif
 }
@@ -20,6 +20,9 @@ char* vmi_stack_push(vmi_stack* s, vm_int32 size)
 	if (top + size >= s->end)
 		return NULL;
 	s->top += size;
+#ifdef VM_STACK_DEBUG
+	memset(top, 0xFFFFFFFF, (size_t)(s->top - top));
+#endif
 	return top;
 }
 

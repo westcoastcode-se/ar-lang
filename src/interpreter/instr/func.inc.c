@@ -12,7 +12,9 @@ vmi_ip _vmi_thread_ret(vmi_thread* t, vmi_ip ip)
 #endif
 
 	// Remove memory for all local variables
-	vmi_stack_pop(&t->stack, instr->pop_locals_size);
+	if (vmi_locals_give_back(&t->locals, instr->pop_locals_size) == FALSE) {
+		return _vmi_thread_locals_mismanaged_ret(t, ip);
+	}
 
 #if defined(VM_STACK_DEBUG)
 	expected = t->stack.top - instr->expected_ebp_offset;

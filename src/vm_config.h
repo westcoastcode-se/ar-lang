@@ -44,6 +44,16 @@ typedef unsigned long long vm_uint64;
 #	define VM_RECURSIVE_FN_CALLFRAMES (128)
 #endif
 
+// How many local blocks should be allowed
+#if !defined(VM_LOCALS_BLOCK_COUNT)
+#	define VM_LOCALS_BLOCK_COUNT (32)
+#endif
+
+// The minimum size of a local variable
+#if !defined(VM_LOCALS_MIN_SIZE)
+#	define VM_LOCALS_MIN_SIZE (32768)
+#endif
+
 // Enable memory tracking. This is enabled by default when compiling in debug mode
 #if !defined(VM_MEMORY_TRACKING)
 #	if !defined(NDEBUG)
@@ -57,6 +67,13 @@ typedef unsigned long long vm_uint64;
 #if !defined(VM_STACK_DEBUG)
 #	if !defined(NDEBUG)
 #		define VM_STACK_DEBUG 1
+#	endif
+#endif
+
+// Enable runtime locals validation. This is enabled by default when building in debug mode
+#if !defined(VM_LOCALS_DEBUG)
+#	if !defined(NDEBUG)
+#		define VM_LOCALS_DEBUG 1
 #	endif
 #endif
 
