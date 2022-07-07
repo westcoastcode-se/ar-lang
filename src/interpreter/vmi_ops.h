@@ -108,6 +108,9 @@ enum vmi_icodes
 	// Add two values on the stack
 	VMI_ADD,
 
+	// Subtract two types
+	VMI_SUB,
+
 	// Convert a value on the stack and push the converted value to the stack
 	VMI_CONV,
 
@@ -165,6 +168,7 @@ struct vmi_instr_single_instruction
 };
 typedef struct vmi_instr_single_instruction vmi_instr_single_instruction;
 typedef struct vmi_instr_single_instruction vmi_instr_add;
+typedef struct vmi_instr_single_instruction vmi_instr_sub;
 
 // A lda(rgument) instruction
 struct vmi_instr_lda
@@ -556,6 +560,17 @@ enum vmi_ocodes
 	VMI_OP_ADD_UI8 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT64)),
 	VMI_OP_ADD_F4 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_FLOAT32)),
 	VMI_OP_ADD_F8 = (VMI_ADD | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_FLOAT64)),
+
+	VMI_OP_SUB_I1 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT8)),
+	VMI_OP_SUB_UI1 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT8)),
+	VMI_OP_SUB_I2 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT16)),
+	VMI_OP_SUB_UI2 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT16)),
+	VMI_OP_SUB_I4 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32)),
+	VMI_OP_SUB_UI4 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT32)),
+	VMI_OP_SUB_I8 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT64)),
+	VMI_OP_SUB_UI8 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT64)),
+	VMI_OP_SUB_F4 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_FLOAT32)),
+	VMI_OP_SUB_F8 = (VMI_SUB | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_FLOAT64)),
 
 	VMI_OP_CONV_I2_I4 = (VMI_CONV | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT16) | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT32)),
 	VMI_OP_CONV_I4_I2 = (VMI_CONV | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32) | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT16)),

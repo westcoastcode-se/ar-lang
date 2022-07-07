@@ -216,9 +216,9 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_begin_body(add);
 		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_lda(0));
-		vmp_func_add_instr(add, vmp_instr_add(props1<T>()));
+		vmp_func_add_instr(add, vmp_instr_add(get_type("vm", string(name<T>()))));
 		vmp_func_add_instr(add, vmp_instr_lda(1));
-		vmp_func_add_instr(add, vmp_instr_add(props1<T>()));
+		vmp_func_add_instr(add, vmp_instr_add(get_type("vm", string(name<T>()))));
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
 
@@ -251,6 +251,72 @@ struct suite_vmp_tests : utils_vmp
 		TEST_FN(add_test<vm_uint64>(INT32_MAX, INT32_MAX));
 		TEST_FN(add_test<vm_float32>(1.0f, 20.0f));
 		TEST_FN(add_test<vm_float64>(-10.0, 203.0));
+	}
+
+	template<typename T>
+	void sub_T(T lhs, T rhs)
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Add function and add two integer types
+		auto add = vmp_func_newsz("Add", 3);
+		auto arg1 = vmp_func_new_arg(add, get_type("vm", string(name<T>())));
+		vmp_arg_set_namesz(arg1, "lhs", 3);
+		auto arg2 = vmp_func_new_arg(add, get_type("vm", string(name<T>())));
+		vmp_arg_set_namesz(arg2, "rhs", 3);
+		auto ret1 = vmp_func_new_return(add, get_type("vm", string(name<T>())));
+		vmp_package_add_func(main_package, add);
+
+		// {
+		//	lda 0
+		//	lda 1
+		//	sub T
+		//	lda 1
+		//	sub T
+		//	ret
+		// }
+		vmp_func_begin_body(add);
+		vmp_func_add_instr(add, vmp_instr_lda(0));
+		vmp_func_add_instr(add, vmp_instr_lda(1));
+		vmp_func_add_instr(add, vmp_instr_sub(get_type("vm", string(name<T>()))));
+		vmp_func_add_instr(add, vmp_instr_lda(1));
+		vmp_func_add_instr(add, vmp_instr_sub(get_type("vm", string(name<T>()))));
+		vmp_func_add_instr(add, vmp_instr_ret());
+		vmp_func_begin_end(add);
+
+		compile();
+
+		auto t = thread();
+		push_value(t, (T)rhs);
+		push_value(t, (T)lhs);
+		invoke(t, "Add");
+
+		verify_stack_size(t, sizeof(T) * 3);
+		verify_value(pop_value<T>(t), (T)(lhs - rhs - rhs));
+		verify_value(pop_value<T>(t), (T)(lhs));
+		verify_value(pop_value<T>(t), (T)(rhs));
+
+		destroy(t);
+
+		end();
+	}
+
+	void sub()
+	{
+		TEST_FN(sub_T<vm_int8>(1, 5));
+		TEST_FN(sub_T<vm_uint8>(1, 5));
+		TEST_FN(sub_T<vm_int16>(10, INT8_MAX));
+		TEST_FN(sub_T<vm_uint16>(10, INT8_MAX));
+		TEST_FN(sub_T<vm_int32>(INT16_MAX, 20));
+		TEST_FN(sub_T<vm_uint32>(INT16_MAX, INT16_MAX));
+		TEST_FN(sub_T<vm_int64>(102, INT32_MAX));
+		TEST_FN(sub_T<vm_uint64>(INT32_MAX, INT32_MAX));
+		TEST_FN(sub_T<vm_float32>(1.0f, 20.0f));
+		TEST_FN(sub_T<vm_float64>(-10.0, 203.0));
 	}
 
 	template<typename T>
@@ -331,7 +397,7 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_begin_body(add);
 		vmp_func_add_instr(add, vmp_instr_lda(1));
 		vmp_func_add_instr(add, vmp_instr_lda(0));
-		vmp_func_add_instr(add, vmp_instr_add(props1<vm_int32>()));
+		vmp_func_add_instr(add, vmp_instr_add(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
 
@@ -476,7 +542,7 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(get, vmp_instr_stl(0));
 		vmp_func_add_instr(get, vmp_instr_ldl(0));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const((vm_int32)1)));
-		vmp_func_add_instr(get, vmp_instr_add(props1<vm_int32>()));
+		vmp_func_add_instr(get, vmp_instr_add(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_stl(0));
 		vmp_func_add_instr(get, vmp_instr_ldl(0));
 		vmp_func_add_instr(get, vmp_instr_ret());
@@ -1367,6 +1433,7 @@ struct suite_vmp_tests : utils_vmp
 	void operator()()
 	{
 		TEST(add);
+		TEST(sub);
 		TEST(ldc);
 		TEST(call);
 		TEST(callnative);

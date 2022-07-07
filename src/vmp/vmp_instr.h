@@ -215,9 +215,10 @@ struct vmp_instr_def_add
 	VMC_PIPELINE_INSTR_HEADER;
 
 	// The types available are defined by the interpreter
-	vm_int8 type;
+	const vmp_type* type;
 };
 typedef struct vmp_instr_def_add vmp_instr_def_add;
+typedef struct vmp_instr_def_add vmp_instr_def_sub;
 
 // add <type>
 struct vmp_instr_def_cmp
@@ -334,7 +335,10 @@ extern vmp_instr* vmp_instr_call(const vmp_func* func);
 extern vmp_instr* vmp_instr_callnative(const vmp_func* func);
 
 // Create a new add instruction and return it
-extern vmp_instr* vmp_instr_add(vm_int8 type);
+extern vmp_instr* vmp_instr_add(const vmp_type* type);
+
+// Create a new sub instruction and return it
+extern vmp_instr* vmp_instr_sub(const vmp_type* type);
 
 // Create a new cmp instruction and return it
 extern vmp_instr* vmp_instr_clt(const vmp_type* type);

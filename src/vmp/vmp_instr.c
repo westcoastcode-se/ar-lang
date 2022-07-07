@@ -398,12 +398,22 @@ vmp_instr* vmp_instr_callnative(const vmp_func* func)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
-vmp_instr* vmp_instr_add(vm_int8 type)
+vmp_instr* vmp_instr_add(const vmp_type* type)
 {
 	vmp_instr_def_add* instr = (vmp_instr_def_add*)vmp_malloc(sizeof(vmp_instr_def_add));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ADD, sizeof(vmi_instr_add));
+	instr->type = type;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_sub(const vmp_type* type)
+{
+	vmp_instr_def_sub* instr = (vmp_instr_def_sub*)vmp_malloc(sizeof(vmp_instr_def_sub));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_SUB, sizeof(vmi_instr_sub));
 	instr->type = type;
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
@@ -1066,8 +1076,21 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		vmi_instr_add instr;
 		instr.opcode = 0;
 		instr.icode = VMI_ADD;
-		instr.props1 = cmd->type;
+		instr.props1 = cmd->type->data_type;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_add))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_SUB:
+	{
+		const vmp_instr_def_sub* const cmd = (vmp_instr_def_sub*)h;
+
+		vmi_instr_sub instr;
+		instr.opcode = 0;
+		instr.icode = VMI_SUB;
+		instr.props1 = cmd->type->data_type;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_sub))) {
 			return NULL;
 		}
 		break;

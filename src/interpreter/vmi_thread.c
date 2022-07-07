@@ -62,6 +62,7 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 }
 
 #include "instr/add.inc.c"
+#include "instr/sub.inc.c"
 #include "instr/const.inc.c"
 #include "instr/conv.inc.c"
 #include "instr/cmp.inc.c"
@@ -116,6 +117,37 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_OP_ADD_F8:
 			ip = _vmi_thread_addf8(t, ip);
+			continue;
+
+		case VMI_OP_SUB_I1:
+			ip = _vmi_thread_subi1(t, ip);
+			continue;
+		case VMI_OP_SUB_UI1:
+			ip = _vmi_thread_subui1(t, ip);
+			continue;
+		case VMI_OP_SUB_I2:
+			ip = _vmi_thread_subi2(t, ip);
+			continue;
+		case VMI_OP_SUB_UI2:
+			ip = _vmi_thread_subui2(t, ip);
+			continue;
+		case VMI_OP_SUB_I4:
+			ip = _vmi_thread_subi4(t, ip);
+			continue;
+		case VMI_OP_SUB_UI4:
+			ip = _vmi_thread_subui4(t, ip);
+			continue;
+		case VMI_OP_SUB_I8:
+			ip = _vmi_thread_subi8(t, ip);
+			continue;
+		case VMI_OP_SUB_UI8:
+			ip = _vmi_thread_subui8(t, ip);
+			continue;
+		case VMI_OP_SUB_F4:
+			ip = _vmi_thread_subf4(t, ip);
+			continue;
+		case VMI_OP_SUB_F8:
+			ip = _vmi_thread_subf8(t, ip);
 			continue;
 
 		case VMI_OP_LDC_I1:
