@@ -55,6 +55,11 @@ enum vmcd_token_type
 	// }
 	VMCD_TOKEN_BRACKET_R,
 
+	// ==
+	VMCD_TOKEN_EQUALS,
+	// !=
+	VMCD_TOKEN_NOT_EQUALS,
+
 	// ,
 	VMCD_TOKEN_COMMA,
 	// .

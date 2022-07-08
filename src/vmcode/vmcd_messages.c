@@ -45,7 +45,7 @@ BOOL vmcd_message_package_not_found(const struct vmcd_scope* s)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL vmcd_message_local_not_found(const struct vmcd_scope* s, const vm_string* local)
+BOOL vmcd_message_variable_not_found(const struct vmcd_scope* s, const vm_string* local)
 {
 	const vmcd_token* const t = s->token;
 	vm_messages* const m = &s->vmcd->messages;
@@ -54,9 +54,23 @@ BOOL vmcd_message_local_not_found(const struct vmcd_scope* s, const vm_string* l
 	vmcd_token_get_metadata(t, &line, &line_offset, &_);
 	return vm_messages_add(m,
 		VMCD_MESSAGE_PREFIX,
-		VMC_MESSAGE_LOCAL_NOT_FOUND,
-		VMC_MESSAGE_LOCAL_NOT_FOUND_STR,
+		VMC_MESSAGE_VARIABLE_NOT_FOUND,
+		VMC_MESSAGE_VARIABLE_NOT_FOUND_STR,
 		vm_string_length(local), local->start, line, line_offset);
+}
+
+BOOL vmcd_message_not_assignable(const struct vmcd_scope* s, const vm_string* keyword)
+{
+	const vmcd_token* const t = s->token;
+	vm_messages* const m = &s->vmcd->messages;
+
+	int line, line_offset, _;
+	vmcd_token_get_metadata(t, &line, &line_offset, &_);
+	return vm_messages_add(m,
+		VMCD_MESSAGE_PREFIX,
+		VMC_MESSAGE_KEYWORD_NOT_ASSIGNABLE,
+		VMC_MESSAGE_KEYWORD_NOT_ASSIGNABLE_STR,
+		vm_string_length(keyword), keyword->start, line, line_offset);
 }
 
 BOOL vmcd_message_type_not_found(const struct vmcd_scope* s, const vm_string* type)

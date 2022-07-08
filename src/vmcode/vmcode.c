@@ -4,7 +4,6 @@
 vmp_type* vmcd_parse_type(const vmcd_scope* s, BOOL include_imports)
 {
 	vmcd_token* const t = s->token;
-	vmcd_token_next(t);
 	if (t->type == VMCD_TOKEN_PTR) {
 		vmp_type* base_type = vmcd_parse_type(s, include_imports);
 		if (base_type == NULL)
@@ -100,6 +99,7 @@ BOOL vmcd_parse_assign_local(const vmcd_scope* s, vmp_local* local)
 		type = vmp_package_find_type_include_imports(s->package, &type_name);
 		vmp_func_add_instr(f, vmp_instr_ldc(type, vmp_const_i4(vmcd_token_i4(t))));
 		vmp_func_add_instr(f, vmp_instr_stl(local->index));
+		return TRUE;
 	default:
 		return vmcd_message_not_implemented(s);
 	}
@@ -124,41 +124,116 @@ BOOL vmcd_parse_decl_assign_local(const vmcd_scope* s, vmp_local* local)
 		local->type = type;
 		vmp_func_add_instr(f, vmp_instr_ldc(type, vmp_const_i4(vmcd_token_i4(t))));
 		vmp_func_add_instr(f, vmp_instr_stl(local->index));
+		return TRUE;
 	default:
 		return vmcd_message_not_implemented(s);
 	}
 }
 
-BOOL vmcd_parse_keyword(vm_string keyword, const vmcd_scope* s)
+BOOL vmcd_parse_return(const vmcd_scope* s)
 {
 	vmcd_token* const t = s->token;
+	if (s->func->returns.count > 0) {
+		vmcd_token_next(t);
+
+		// Each return is separated with a comma(,)
+		const int num_returns = s->func->returns.count;
+		for (int i = 0; i < num_returns; ++i) {
+			vmp_return* const ret = vmp_list_returns_get(&s->func->returns, i);
+
+			switch (t->type) {
+			case VMCD_TOKEN_KEYWORD:
+			{
+				vmp_keyword* const keyword = vmp_func_find_keyword(s->func, &t->string);
+				if (keyword == NULL) {
+					return vmcd_message_expected_identifier(s);
+				}
+
+				switch (keyword->keyword_type) {
+				case VMP_KEYWORD_LOCAL:
+				{
+					const vmp_local* const local = (vmp_local*)keyword;
+					vmp_func_add_instr(s->func, vmp_instr_ldl(local->index));
+					break;
+				}
+				default:
+					return vmcd_message_not_implemented(s);
+				}
+				break;
+			}
+			default:
+				return vmcd_message_not_implemented(s);
+			};
+
+			if (i < (num_returns - 1)) {
+				if (!vmcd_token_next_type(t, VMCD_TOKEN_COMMA))
+					return vmcd_message_syntax_error(s, ',');
+				vmcd_token_next(t);
+			}
+		}
+	}
+	vmp_func_add_instr(s->func, vmp_instr_ret());
+	return TRUE;
+}
+
+BOOL vmcd_parse_keyword(vm_string keyword_name, const vmcd_scope* s)
+{
+	vmcd_token* const t = s->token;
+	vmp_keyword* const keyword = vmp_func_find_keyword(s->func, &keyword_name);
+
 	vmcd_token_next(t);
 	if (t->type == VMCD_TOKEN_PARAN_L) {
-		// function call
+		vmp_func* func = (vmp_func*)keyword;
+		// function call in the same package
+		if (func == NULL) {
+			// Create it and add it to the package
+			func = vmp_func_new(&t->string);
+			switch (vmp_package_add_func(s->package, func)) {
+			case VMP_LIST_ADDED:
+				break;
+			default:
+				// Could not add function. TODO: Add better message
+				return vmcd_message_not_implemented(s);
+			}
+		}
+
+		// Arguments are, indirectly, created using the arguments supplied to it!
+		return vmcd_message_not_implemented(s);
+	}
+	else if (t->type == VMCD_TOKEN_DOT) {
+		// Keyword in another package
+		return vmcd_message_not_implemented(s);
 	}
 	else if (t->type == VMCD_TOKEN_ASSIGN) {
-		vmp_local* local = vmp_func_find_local(s->func, &keyword);
-		if (local == NULL) {
-			vmcd_message_local_not_found(s, &keyword);
+		if (keyword == NULL) {
+			vmcd_message_variable_not_found(s, &keyword_name);
+			return FALSE;
+		}
+		if (!vmp_keyword_is_assignable(keyword)) {
+			vmcd_message_not_assignable(s, &keyword_name);
+			return FALSE;
+		}
+		
+		if (keyword->keyword_type == VMP_KEYWORD_LOCAL) {
+			vmp_local* const local = (vmp_local*)keyword;
+			return vmcd_parse_assign_local(s, local);
 		}
 		else {
-			return vmcd_parse_assign_local(s, local);
+			return vmcd_message_not_implemented(s);
 		}
 	}
 	else if (t->type == VMCD_TOKEN_DECL_ASSIGN) {
-		// declare and assign the variable
-		vmp_local* local = vmp_func_find_local(s->func, &keyword);
-		if (local != NULL) {
-			vmcd_message_duplicated_declaration(s, &keyword);
+		if (keyword != NULL) {
+			vmcd_message_duplicated_declaration(s, &keyword_name);
 		}
 		else {
 			// The type is not known yet
-			local = vmp_local_new();
+			vmp_local* local = vmp_local_new();
 			if (vmp_func_add_local(s->func, local) == FALSE) {
 				vmcd_message_out_of_memory(s);
 				return FALSE;
 			}
-			vmp_local_set_name(local, &keyword);
+			vmp_local_set_name(local, &keyword_name);
 			return vmcd_parse_decl_assign_local(s, local);
 		}
 	}
@@ -172,15 +247,23 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 	if (!vmcd_token_next_type(t, VMCD_TOKEN_KEYWORD))
 		return vmcd_message_expected_identifier(s);
 
-	vmp_func* func = vmp_func_new(&t->string);
-	switch (vmp_package_add_func(s->package, func)) {
-	case VMP_LIST_ADDED:
-		break;
-	default:
-		// Could not add function. TODO: Add better message
+	// This function might've been declared indirectly through a function call
+	vmp_func* func = vmp_package_find_func(s->package, &t->string);
+	if (func == NULL) {
+		func = vmp_func_new(&t->string);
+		switch (vmp_package_add_func(s->package, func)) {
+		case VMP_LIST_ADDED:
+			break;
+		default:
+			// Could not add function. TODO: Add better message
+			return vmcd_message_not_implemented(s);
+		}
+		vmp_func_add_flag(func, VMP_FUNC_FLAGS_PUBLIC);
+	}
+	if (func->body_size > 0) {
+		// Body declared twice? This might be a function with another signature
 		return vmcd_message_not_implemented(s);
 	}
-	vmp_func_add_flag(func, VMP_FUNC_FLAGS_PUBLIC);
 
 	// Expected a '(' token
 	if (!vmcd_token_next_type(t, VMCD_TOKEN_PARAN_L))
@@ -208,7 +291,7 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 
 	vmcd_token_next(t);
 
-	// Function has return values
+	// Function might have one or multiple return values
 	if (t->type == VMCD_TOKEN_PARAN_L) {
 		// Parse until we reach that end ')' token
 		while (!vmcd_token_next_type(t, VMCD_TOKEN_PARAN_R)) {
@@ -228,6 +311,20 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 			}
 			ret->type = type;
 		}
+	}
+	else if (t->type == VMCD_TOKEN_KEYWORD) {
+		// One return value
+		// Identity first
+		vmp_return* ret = vmp_return_new();
+		if (!vmp_func_add_return(func, ret)) {
+			return vmcd_message_out_of_memory(s);
+		}
+		vmp_type* type = vmcd_parse_type(s, TRUE);
+		if (type == NULL) {
+			return vmcd_message_not_implemented(s);
+		}
+		ret->type = type;
+		vmcd_token_next(t);
 	}
 
 	if (t->type != VMCD_TOKEN_BRACKET_L) {
@@ -269,6 +366,9 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 		case VMCD_TOKEN_KEYWORD_ELSE:
 		case VMCD_TOKEN_KEYWORD_CONST:
 		case VMCD_TOKEN_KEYWORD_RETURN:
+			if (!vmcd_parse_return(&inner_scope)) {
+				break;
+			}
 		case VMCD_TOKEN_KEYWORD_STRUCT:
 		case VMCD_TOKEN_KEYWORD_IMPORT:
 		case VMCD_TOKEN_KEYWORD_EXTERN:
@@ -362,7 +462,7 @@ BOOL vmcd_begin(vmcode* p, vmcd_token* t)
 		if (t->type == VMCD_TOKEN_KEYWORD_PACKAGE) {
 			// First token has to be a package. If this failed then abort the parsing of the source code
 			if (!vmcd_parse_package(&scope)) {
-				continue;
+				return FALSE;
 			}
 		}
 		else if (t->type == VMCD_TOKEN_NEWLINE || t->type == VMCD_TOKEN_COMMENT) {
@@ -379,7 +479,7 @@ BOOL vmcd_begin(vmcode* p, vmcd_token* t)
 		vmcd_token_next(t);
 	}
 
-	return FALSE;
+	return TRUE;
 }
 
 vmcode* vmcode_new()
@@ -388,6 +488,7 @@ vmcode* vmcode_new()
 	if (p == NULL)
 		return NULL;
 	p->pipeline = vmp_pipeline_new();
+	p->builder = NULL;
 	vm_messages_init(&p->messages);
 	p->panic_error_message.code = VMCD_MESSAGE_NONE;
 	return p;
@@ -396,7 +497,12 @@ vmcode* vmcode_new()
 void vmcode_destroy(vmcode* p)
 {
 	vm_messages_destroy(&p->messages);
-	vmp_pipeline_destroy(p->pipeline);
+	if (p->builder != NULL) {
+		vmp_builder_destroy(p->builder);
+	}
+	if (p->pipeline != NULL) {
+		vmp_pipeline_destroy(p->pipeline);
+	}
 	free(p);
 }
 
@@ -416,25 +522,25 @@ BOOL vmcode_parse(vmcode* p, const vm_byte* source_code)
 		return FALSE;
 	}
 
-	// Generate the actual bytecode
-	vmp_builder* builder = vmp_builder_new(p->pipeline);
-	vmp_builder_set_opt_level(builder, 0);
-	if (!vmp_builder_compile(builder)) {
-		vm_messages_move(&builder->messages, &p->messages);
-		vmp_builder_destroy(builder);
-		return FALSE;
-	}
-
 	vmcd_token_release(&t);
 	return TRUE;
 }
 
 BOOL vmcode_link(vmcode* p)
 {
-
+	// Generate the actual bytecode
+	p->builder = vmp_builder_new(p->pipeline);
+	vmp_builder_set_opt_level(p->builder, 0);
+	if (!vmp_builder_compile(p->builder)) {
+		vm_messages_move(&p->builder->messages, &p->messages);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 const vm_byte* vmcode_get_bytecode(vmcode* p)
 {
-
+	if (p->builder == NULL)
+		return NULL;
+	return vmp_builder_get_bytecode(p->builder);
 }

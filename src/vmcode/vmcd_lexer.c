@@ -51,6 +51,52 @@ void vmcd_token_eof(vmcd_token* t)
 	t->type = VMCD_TOKEN_EOF;
 }
 
+void vmcd_assign_or_equals(vmcd_token* t)
+{
+	const char* start = t->source++;
+	char c = *t->source;
+
+	switch (c)
+	{
+	case '=':
+		t->source++;
+		t->type = VMCD_TOKEN_EQUALS;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	default:
+		t->type = VMCD_TOKEN_ASSIGN;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	}
+}
+
+void vmcd_colon_or_declassign(vmcd_token* t)
+{
+	const char* start = t->source++;
+	char c = *t->source;
+
+	switch (c)
+	{
+	case '=':
+		t->source++;
+		t->type = VMCD_TOKEN_DECL_ASSIGN;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	default:
+		t->type = VMCD_TOKEN_COLON;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	}
+}
+
 vmcd_token_type vmcd_token_find_keyword_type(const vm_string* str)
 {
 	const int len = vm_string_length(str);
@@ -229,6 +275,12 @@ void vmcd_token_next0(vmcd_token* t)
 		return;
 	case ',':
 		vmcd_token_atom(VMCD_TOKEN_COMMA, t);
+		return;
+	case '=':
+		vmcd_assign_or_equals(t);
+		return;
+	case ':':
+		vmcd_colon_or_declassign(t);
 		return;
 	//case '&':
 	//	_vmc_lexer_bitand_or_and(token);

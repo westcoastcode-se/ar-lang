@@ -49,6 +49,19 @@ struct vmp_keyword
 };
 typedef struct vmp_keyword vmp_keyword;
 
+// Is the supplied keyword assignable
+static inline BOOL vmp_keyword_is_assignable(vmp_keyword* k)
+{
+	switch (k->keyword_type) {
+	case VMP_KEYWORD_ARG:
+	case VMP_KEYWORD_RETURN:
+	case VMP_KEYWORD_LOCAL:
+		return TRUE;
+	default:
+		return FALSE;
+	}
+}
+
 struct vmp_package
 {
 	// Header
@@ -483,6 +496,9 @@ extern void vmp_marker_free(vmp_marker* m);
 
 // Add a new instruction
 extern vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr);
+
+// Inject a new instruction after another instruction. If NULL then it will be put at the beginning
+extern vmp_instr* vmp_func_inject_after(vmp_func* f, vmp_instr* after, vmp_instr* instr);
 
 // Remove the instruction and return it for deletion
 extern vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr);

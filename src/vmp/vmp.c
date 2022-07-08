@@ -187,6 +187,8 @@ void vmp_pipeline_resolve_locals(vmp_pipeline* p, vmp_func* func)
 		offset += local->type->size;
 	}
 	func->locals_stack_size = offset;
+	if (num_locals > 0)
+		vmp_func_inject_after(func, NULL, vmp_instr_locals(func));
 }
 
 vm_int32 vmp_pipeline_resolve_package(vmp_pipeline* p, vm_int32 offset, vmp_package* pkg)

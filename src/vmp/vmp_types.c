@@ -38,6 +38,7 @@ int vmp_package_add_func(vmp_package* p, vmp_func* func)
 		return VMP_LIST_ALREADY_ADDED;
 	if (vmp_list_funcs_add(&p->funcs, func) < 0)
 		return VMP_LIST_OUT_OF_MEMORY;
+	func->package = p;
 	return VMP_LIST_ADDED;
 }
 
@@ -453,6 +454,45 @@ vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr)
 	return instr;
 }
 
+vmp_instr* vmp_func_inject_after(vmp_func* f, vmp_instr* after, vmp_instr* instr)
+{
+	if (after == NULL) {
+		if (f->first_instr == NULL) {
+			f->first_instr = f->last_instr = instr;
+		}
+		else {
+			f->first_instr->prev = instr;
+			instr->next = f->first_instr;
+			f->first_instr = instr;
+		}
+	}
+	else {
+		if (after->next != NULL) {
+			instr->next = after->next;
+			instr->prev = after;
+			instr->prev->next = instr;
+			instr->next->prev = instr;
+		}
+		else {
+			after->next = instr;
+			instr->prev = after;
+			f->last_instr = instr;
+		}
+	}
+	instr->func = f;
+
+	// recalculate the instructions offset because of this
+	after = f->first_instr;
+	f->body_size = 0;
+	while (after != NULL) {
+		after->instr_offset = f->body_size;
+		f->body_size += after->instr_size;
+		after = after->next;
+	}
+
+	return instr;
+}
+
 vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr)
 {
 	if (f->first_instr == instr) {
@@ -483,9 +523,6 @@ vmp_keyword* vmp_func_find_keyword(vmp_func* f, const vm_string* name)
 
 void vmp_func_begin_body(vmp_func* f)
 {
-	const vm_int32 size = f->locals.count;
-	if (size > 0)
-		vmp_func_add_instr(f, vmp_instr_locals(f));
 }
 
 void vmp_func_begin_end(vmp_func* f)

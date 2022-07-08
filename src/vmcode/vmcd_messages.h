@@ -25,7 +25,10 @@ enum vmcd_messages
 	VMC_MESSAGE_PACKAGE_NOT_FOUND,
 
 	// Could not find a required local variable
-	VMC_MESSAGE_LOCAL_NOT_FOUND,
+	VMC_MESSAGE_VARIABLE_NOT_FOUND,
+
+	// The specified keyword is not an assignable type
+	VMC_MESSAGE_KEYWORD_NOT_ASSIGNABLE,
 
 	// Could not find a type
 	VMC_MESSAGE_TYPE_NOT_FOUND,
@@ -48,7 +51,8 @@ typedef enum vmcd_messages vmcd_messages;
 #define VMC_MESSAGE_UNKNOWN_TOKEN_STR "unknown token: '%.*s' at %d:%d"
 #define VMCD_MESSAGE_EXPECTED_IDENTIFIER_STR "expected identifier but was: '%.*s' at %d:%d"
 #define VMC_MESSAGE_PACKAGE_NOT_FOUND_STR "could not find package: '%.*s' at %d:%d"
-#define VMC_MESSAGE_LOCAL_NOT_FOUND_STR "could not find local variable: '%.*s' at %d:%d"
+#define VMC_MESSAGE_VARIABLE_NOT_FOUND_STR "could not find variable: '%.*s' at %d:%d"
+#define VMC_MESSAGE_KEYWORD_NOT_ASSIGNABLE_STR "keyword: '%.*s' is not assignable at %d:%d"
 #define VMC_MESSAGE_TYPE_NOT_FOUND_STR "could not find local variable: '%.*s' at %d:%d"
 #define VMCD_MESSAGE_EXPECTED_TOKEN_STR "syntax error: missing '%c' before '%.*s' at %d:%d"
 #define VMCD_MESSAGE_NOT_IMPLEMENTED_STR "not implemented: '%.*s' at %d:%d"
@@ -58,7 +62,8 @@ extern BOOL vmcd_message_panic(const struct vmcd_scope* s, const char* str);
 extern BOOL vmcd_message_out_of_memory(const struct vmcd_scope* s);
 extern BOOL vmcd_message_unknown_token(const struct vmcd_scope* s);
 extern BOOL vmcd_message_package_not_found(const struct vmcd_scope* s);
-extern BOOL vmcd_message_local_not_found(const struct vmcd_scope* s, const vm_string* local);
+extern BOOL vmcd_message_variable_not_found(const struct vmcd_scope* s, const vm_string* local);
+extern BOOL vmcd_message_not_assignable(const struct vmcd_scope* s, const vm_string* keyword);
 extern BOOL vmcd_message_type_not_found(const struct vmcd_scope* s, const vm_string* type);
 extern BOOL vmcd_message_expected_identifier(const struct vmcd_scope* s);
 extern BOOL vmcd_message_syntax_error(const struct vmcd_scope* s, char c);

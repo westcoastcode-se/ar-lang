@@ -707,13 +707,14 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_LOCALS:
 	{
 		const vmp_instr_def_locals* const cmd = (vmp_instr_def_locals*)h;
-
-		vmi_instr_locals instr;
-		instr.opcode = 0;
-		instr.icode = VMI_LOCALS;
-		instr.size = h->func->locals_stack_size;
-		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_locals))) {
-			return NULL;
+		if (h->func->locals.count > 0) {
+			vmi_instr_locals instr;
+			instr.opcode = 0;
+			instr.icode = VMI_LOCALS;
+			instr.size = h->func->locals_stack_size;
+			if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_locals))) {
+				return NULL;
+			}
 		}
 		break;
 	}

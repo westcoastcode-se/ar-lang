@@ -8,9 +8,11 @@
 struct vmcode
 {
 	vmp_pipeline* pipeline;
+	vmp_builder* builder;
 
 	// Messages raised by the processor
 	vm_messages messages;
+
 	// If a panic error has occurred, such as if the computer is out of memory
 	vm_message panic_error_message;
 };

@@ -27,10 +27,37 @@ struct utils_vmcode : utils_vm
 	void compile(const vm_byte* source_code)
 	{
 		if (!vmcode_parse(vmcd, source_code)) {
+			error_string_stream e;
+			e << "could not parse source code: [";
+			auto message = vmcd->messages.first;
+			while (message != nullptr) {
+				e << "\n" << message->message;
+				message = message->next;
+			}
+			if (vmcd->panic_error_message.code != 0) {
+				e << "\n" << vmcd->panic_error_message.message;
+			}
+			e << "\n]";
 			end();
-			throw_(error() << "could not parse source code");
+			throw_(e);
 		}
-		
+
+		if (!vmcode_link(vmcd)) {
+			error_string_stream e;
+			e << "could not link source code: [";
+			auto message = vmcd->messages.first;
+			while (message != nullptr) {
+				e << "\n" << message->message;
+				message = message->next;
+			}
+			if (vmcd->panic_error_message.code != 0) {
+				e << "\n" << vmcd->panic_error_message.message;
+			}
+			e << "\n]";
+			end();
+			throw_(e);
+		}
+
 		process = vmi_process_new();
 		if (process == nullptr) {
 			end();
@@ -83,6 +110,31 @@ struct utils_vmcode : utils_vm
 
 struct suite_vmcode_tests : utils_vmcode
 {
+	void get_local()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
+	ret := 12345
+	return ret
+}
+)";
+		begin();
+		compile(source);
+
+		auto t = thread();
+
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, 12345);
+
+		destroy(t);
+		end();
+	}
+
 	void mult2()
 	{
 		static const auto source = R"(
@@ -103,9 +155,11 @@ func Mult2(value int32) int32 {
 		
 		invoke(t, "Mult2");
 
-		verify_stack_size(t, sizeof(vm_int32));
+		verify_stack_size(t, sizeof(vm_int32) * 2);
 		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
 		verify_value(ret, value);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
 		
 		destroy(t);
 		end();
@@ -176,6 +230,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 
 	void operator()()
 	{
+		TEST(get_local);
 		//TEST(mult2);
 		//TEST(quicksort);
 	}
