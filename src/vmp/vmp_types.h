@@ -25,12 +25,44 @@
 // Return value indicating that the another item with the same identifier already exist
 #define VMP_LIST_ALREADY_EXISTS (3)
 
+// Different types of keywords
+enum vmp_keyword_type
+{
+	VMP_KEYWORD_PACKAGE,
+	VMP_KEYWORD_TYPE,
+	VMP_KEYWORD_FUNC,
+	VMP_KEYWORD_ARG,
+	VMP_KEYWORD_RETURN,
+	VMP_KEYWORD_LOCAL,
+	VMP_KEYWORD_CONST
+};
+typedef enum vmp_keyword_type vmp_keyword_type;
+
+// Represents a generic keyword
+struct vmp_keyword
+{
+	// Type
+	vmp_keyword_type keyword_type;
+
+	// The name of the keyword
+	vm_string name;
+};
+typedef struct vmp_keyword vmp_keyword;
+
 struct vmp_package
 {
-	struct vmp_pipeline* pipeline;
+	// Header
+	union
+	{
+		vmp_keyword header;
+		struct
+		{
+			vmp_keyword_type keyword_type;
+			vm_string name;
+		};
+	};
 
-	// The name of the package
-	vm_string name;
+	struct vmp_pipeline* pipeline;
 
 	// All types in this package
 	vmp_list_types types;
@@ -46,11 +78,19 @@ typedef struct vmp_package vmp_package;
 // A type such as an int32. It can also be a more complex struct type
 struct vmp_type
 {
+	// Header
+	union
+	{
+		vmp_keyword header;
+		struct
+		{
+			vmp_keyword_type keyword_type;
+			vm_string name;
+		};
+	};
+
 	// The package this type is part of
 	vmp_package* package;
-
-	// The name for this type
-	vm_string name;
 
 	// Size, in bytes, that this type takes. If the size is 0 then this type has an unknown size
 	vm_uint32 size;
@@ -88,11 +128,19 @@ typedef struct vmp_type_props vmp_type_props;
 
 struct vmp_func
 {
+	// Header
+	union
+	{
+		vmp_keyword header;
+		struct
+		{
+			vmp_keyword_type keyword_type;
+			vm_string name;
+		};
+	};
+
 	// The package this function is part of
 	vmp_package* package;
-
-	// The name for this function
-	vm_string name;
 
 	// Offset where the bytecode for this function is found. Will be -1 if the offset
 	// is now known yet. The compiler will try to resolve the offset during the
@@ -138,14 +186,22 @@ typedef struct vmp_func vmp_func;
 
 struct vmp_arg
 {
+	// Header
+	union
+	{
+		vmp_keyword header;
+		struct
+		{
+			vmp_keyword_type keyword_type;
+			vm_string name;
+		};
+	};
+
 	// Function this argument is part of
 	const vmp_func* func;
 
 	// The type this argument is
 	const vmp_type* type;
-
-	// The name of this argument, if any
-	vm_string name;
 
 	// Offset, in bytes, where this argument is located on the stack (from EPB's point of view)
 	vm_uint32 offset;
@@ -155,6 +211,17 @@ typedef struct vmp_arg vmp_arg;
 // Represents a return value from a function
 struct vmp_return
 {
+	// Header
+	union
+	{
+		vmp_keyword header;
+		struct
+		{
+			vmp_keyword_type keyword_type;
+			vm_string name;
+		};
+	};
+
 	// Function this return property is part of
 	const vmp_func* func;
 
@@ -165,14 +232,22 @@ typedef struct vmp_return vmp_return;
 
 struct vmp_local
 {
+	// Header
+	union
+	{
+		vmp_keyword header;
+		struct
+		{
+			vmp_keyword_type keyword_type;
+			vm_string name;
+		};
+	};
+
 	// Function this argument is part of
 	const vmp_func* func;
 
 	// The type this argument is
 	const vmp_type* type;
-
-	// The name of this argument, if any
-	vm_string name;
 
 	// Offset, in bytes, where this argument is located on the stack (from EPB's point of view)
 	vm_uint32 offset;
@@ -291,11 +366,17 @@ extern vmp_type* vmp_package_new_typesz(vmp_package* p, const char* name, int le
 // Search for a type 
 extern vmp_type* vmp_package_find_type(vmp_package* p, const vm_string* name);
 
+// Search for a function
+extern vmp_func* vmp_package_find_func(vmp_package* p, const vm_string* name);
+
 // Search for an import
 extern vmp_package* vmp_package_find_import(vmp_package* p, const vm_string* name);
 
 // Search for a type in the supplied package or any of the imported packages
 extern vmp_type* vmp_package_find_type_include_imports(vmp_package* p, const vm_string* name);
+
+// Find a generic keyword in the supplied package
+extern vmp_keyword* vmp_package_find_keyword(vmp_package* p, const vm_string* name);
 
 // New type
 extern vmp_type* vmp_type_new(const vm_string* name);
@@ -405,6 +486,9 @@ extern vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr);
 
 // Remove the instruction and return it for deletion
 extern vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr);
+
+// Find a generic keyword in the supplied package
+extern vmp_keyword* vmp_func_find_keyword(vmp_func* f, const vm_string* name);
 
 // Begin writing the body instructions
 extern void vmp_func_begin_body(vmp_func* f);

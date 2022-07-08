@@ -12,6 +12,7 @@ vmp_package* vmp_package_newsz(const char* name, vm_int32 len)
 	vmp_package* p = (vmp_package*)vmp_malloc(sizeof(vmp_package));
 	if (p == NULL)
 		return NULL;
+	p->header.keyword_type = VMP_KEYWORD_PACKAGE;
 	p->pipeline = NULL;
 	vm_string_setsz(&p->name, name, len);
 	vmp_list_types_init(&p->types);
@@ -86,6 +87,11 @@ vmp_type* vmp_package_find_type(vmp_package* p, const vm_string* name)
 	return vmp_list_types_find(&p->types, name);
 }
 
+vmp_func* vmp_package_find_func(vmp_package* p, const vm_string* name)
+{
+	return vmp_list_funcs_find(&p->funcs, name);
+}
+
 vmp_package* vmp_package_find_import(vmp_package* p, const vm_string* name)
 {
 	return vmp_list_imports_find(&p->imports, name);
@@ -107,11 +113,26 @@ vmp_type* vmp_package_find_type_include_imports(vmp_package* p, const vm_string*
 	return NULL;
 }
 
+vmp_keyword* vmp_package_find_keyword(vmp_package* p, const vm_string* name)
+{
+	vmp_type* const type = vmp_package_find_type(p, name);
+	if (type != NULL)
+		return &type->header;
+	vmp_func* func = vmp_package_find_func(p, name);
+	if (func != NULL)
+		return &func->header;
+	vmp_package* const imports = vmp_package_find_import(p, name);
+	if (imports != NULL)
+		return &imports->header;
+	return NULL;
+}
+
 vmp_type* vmp_type_new(const vm_string* name)
 {
 	vmp_type* p = (vmp_type*)vmp_malloc(sizeof(vmp_type));
 	if (p == NULL)
 		return NULL;
+	p->header.keyword_type = VMP_KEYWORD_TYPE;
 	p->package = NULL;
 	p->name = *name;
 	p->size = 0;
@@ -128,6 +149,7 @@ vmp_type* vmp_type_new_from_props(const vmp_type_props* props)
 	vmp_type* p = (vmp_type*)vmp_malloc(sizeof(vmp_type));
 	if (p == NULL)
 		return NULL;
+	p->header.keyword_type = VMP_KEYWORD_TYPE;
 	p->package = NULL;
 	p->name = props->name;
 	p->size = props->size;
@@ -204,6 +226,7 @@ vmp_arg* vmp_arg_new()
 	vmp_arg* p = (vmp_arg*)vmp_malloc(sizeof(vmp_arg));
 	if (p == NULL)
 		return NULL;
+	p->header.keyword_type = VMP_KEYWORD_ARG;
 	p->func = NULL;
 	p->type = NULL;
 	vm_string_zero(&p->name);
@@ -231,6 +254,8 @@ vmp_return* vmp_return_new()
 	vmp_return* p = (vmp_return*)vmp_malloc(sizeof(vmp_return));
 	if (p == NULL)
 		return NULL;
+	p->header.keyword_type = VMP_KEYWORD_RETURN;
+	vm_string_zero(&p->name);
 	p->func = NULL;
 	p->type = NULL;
 	return p;
@@ -246,6 +271,7 @@ vmp_local* vmp_local_new()
 	vmp_local* p = (vmp_local*)vmp_malloc(sizeof(vmp_local));
 	if (p == NULL)
 		return NULL;
+	p->header.keyword_type = VMP_KEYWORD_LOCAL;
 	p->func = NULL;
 	p->type = NULL;
 	vm_string_zero(&p->name);
@@ -279,6 +305,7 @@ vmp_func* vmp_func_newsz(const char* name, vm_int32 name_len)
 	vmp_func* p = (vmp_func*)vmp_malloc(sizeof(vmp_func));
 	if (p == NULL)
 		return NULL;
+	p->header.keyword_type = VMP_KEYWORD_FUNC;
 	p->package = NULL;
 	vm_string_setsz(&p->name, name, name_len);
 	p->offset = 0;
@@ -441,6 +468,17 @@ vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr)
 		instr->next->prev = instr->prev;
 	}
 	return instr;
+}
+
+vmp_keyword* vmp_func_find_keyword(vmp_func* f, const vm_string* name)
+{
+	vmp_arg* const arg = vmp_func_find_arg(f, name);
+	if (arg != NULL)
+		return &arg->header;
+	vmp_local* const local = vmp_func_find_local(f, name);
+	if (local != NULL)
+		return &local->header;
+	return vmp_package_find_keyword(f->package, name);
 }
 
 void vmp_func_begin_body(vmp_func* f)
