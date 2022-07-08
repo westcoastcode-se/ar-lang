@@ -2,33 +2,21 @@
 
 struct utils_vmcode : utils_vm
 {
-	vmp_pipeline* pipeline;
-	vmp_builder* builder;
+	vmcode* vmcd;
 	vmi_process* process;
 
 	void begin()
 	{
 		// Create a new pipeline to put bytecode into
-		pipeline = vmp_pipeline_new();
-		builder = NULL;
+		vmcd = vmcode_new();
 		process = NULL;
 	}
 
 	void end()
 	{
-		if (process != NULL) {
-			vmi_process_destroy(process);
-			process = NULL;
-		}
-
-		if (builder != NULL) {
-			vmp_builder_destroy(builder);
-			builder = NULL;
-		}
-
-		if (pipeline != NULL) {
-			vmp_pipeline_destroy(pipeline);
-			pipeline = NULL;
+		if (vmcd != NULL) {
+			vmcode_destroy(vmcd);
+			vmcd = NULL;
 		}
 
 		if (vmp_memory_test_bytes_left() == FALSE) {
@@ -36,23 +24,33 @@ struct utils_vmcode : utils_vm
 		}
 	}
 
-	void compile()
+	void compile(const vm_byte* source_code)
 	{
+		if (!vmcode_parse(vmcd, source_code)) {
+			end();
+			throw_(error() << "could not parse source code");
+		}
 		
 		process = vmi_process_new();
-		if (process == nullptr)
+		if (process == nullptr) {
+			end();
 			throw_(error() << "could not create a new VM process");
+		}
 
-		const auto result = vmi_process_load(process, vmp_builder_get_bytecode(builder));
-		if (result != 0)
+		const auto result = vmi_process_load(process, vmcode_get_bytecode(vmcd));
+		if (result != 0) {
+			end();
 			throw_(error() << "failed to load bytecode because: " << result);
+		}
 	}
 
 	vmi_thread* thread()
 	{
 		auto const t = vmi_thread_new(process);
-		if (t == nullptr)
+		if (t == nullptr) {
+			end();
 			throw_(error() << "could not spawn a new VM thread");
+		}
 		return t;
 	}
 
@@ -64,34 +62,122 @@ struct utils_vmcode : utils_vm
 	void invoke(vmi_thread* t, const char* entry_point)
 	{
 		const vmi_package* package = vmi_process_find_package_by_name(process, "main", 4);
-		if (package == NULL)
+		if (package == NULL) {
+			end();
 			throw_(error() << "expected 'main' package but was not found");
+		}
 
 		const auto func = vmi_package_find_function_by_name(package, entry_point, (vm_int32)strlen(entry_point));
-		if (func == NULL)
+		if (func == NULL) {
+			end();
 			throw_(error() << "could not find function '" << entry_point << "'");
+		}
 
 		const auto result = vmi_process_exec(process, t, func);
-		if (result != 0)
+		if (result != 0) {
+			end();
 			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << t->exit_reason);
+		}
 	}
 };
 
 struct suite_vmcode_tests : utils_vmcode
 {
-	void get_const()
+	void mult2()
 	{
 		static const auto source = R"(
 package main
 
-func Get() int32 {
-	return 12345
+func Mult2(value int32) int32 {
+	ret := value * 2
+	return ret
 }
 )";
+		begin();
+		compile(source);
+
+		auto t = thread();
+
+		static constexpr auto value = 10000;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		
+		invoke(t, "Mult2");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, value);
+		
+		destroy(t);
+		end();
+	}
+
+	void quicksort()
+	{
+		static const auto source = R"(
+package main
+
+func swap(a *int32, b *int32) {
+	t := *a
+	*a = *b
+	*b = t
+}
+
+func partition(arr *int32, low int32, high int32) {
+	pivot := arr{high]
+	i := low - 1
+	for j := 0; j <= high; ++j) {
+		if arr[i] < pivot) {
+			++i
+			swap(&arr[i], &arr[j])
+		}
+	}
+	swap(&arr[i + 1], &arr[high])
+	return i + 1
+}
+
+// QuickSort the supplied array. low is the starting index and high is the ending index
+func QuickSort(arr *int32, low int32, high int32) {
+	if low < high {
+		pi := partition(arr, low, high)
+		QuickSort(arr, low, pi - 1)
+		QuickSort(arr, pi + 1, high)
+	}
+}
+)";
+		begin();
+		compile(source);
+		
+		auto t = thread();
+
+		static constexpr auto COUNT = 10000;
+
+		// 10000 values to sort
+		auto arr = new vm_int32[COUNT];
+		srand(0);
+		for (int i = 0; i < COUNT; ++i) {
+			arr[i] = rand() % 1000;
+		}
+		*(vm_int32**)vmi_thread_push_stack(t, sizeof(vm_int32*)) = arr;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = 0;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = COUNT - 1;
+		invoke(t, "QuickSort");
+		destroy(t);
+		vm_int32 tmp = 0;
+		for (int i = 0; i < COUNT; ++i) {
+			if (arr[i] < tmp) {
+				throw_(error() << "failed to quicksort values");
+			}
+			tmp = arr[i];
+		}
+		delete[] arr;
+		verify_stack_size(t, sizeof(vm_int32*) + sizeof(vm_int32) + sizeof(vm_int32));
+		end();
 	}
 
 	void operator()()
 	{
+		//TEST(mult2);
+		//TEST(quicksort);
 	}
 };
 

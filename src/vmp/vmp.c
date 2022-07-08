@@ -97,6 +97,8 @@ void vmp_pipeline_add_vm_package(vmp_pipeline* p)
 	vmp_package_add_type(vm, type);
 	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pfloat64), sizeof(vm_float64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	vmp_package_add_type(vm, type);
+
+	p->vm_package = vm;
 }
 
 vmp_pipeline* vmp_pipeline_new()
@@ -108,12 +110,16 @@ vmp_pipeline* vmp_pipeline_new()
 	p->total_body_size = 0;
 	p->total_header_size = 0;
 	vmp_string_pool_init(&p->string_pool);
+	p->vm_package = NULL;
+	vm_messages_init(&p->messages);
+	p->panic_error_message.code = VMP_MESSAGE_NONE;
 	vmp_pipeline_add_vm_package(p);
 	return p;
 }
 
 void vmp_pipeline_destroy(vmp_pipeline* p)
 {
+	vm_messages_destroy(&p->messages);
 	vmp_string_pool_destroy(&p->string_pool);
 	vmp_list_packages_release(&p->packages);
 	vmp_free(p);
@@ -124,6 +130,12 @@ BOOL vmp_pipeline_add_package(vmp_pipeline* p, vmp_package* pkg)
 	if (pkg->pipeline != NULL)
 		return FALSE;
 	pkg->pipeline = p;
+	if (p->vm_package) {
+		const int ret = vmp_list_imports_add(&pkg->imports, p->vm_package);
+		if (ret != VMP_LIST_ADDED) {
+			return ret;
+		}
+	}
 	return vmp_list_packages_add(&p->packages, pkg) >= 0;
 }
 
@@ -174,6 +186,7 @@ void vmp_pipeline_resolve_locals(vmp_pipeline* p, vmp_func* func)
 		local->offset = offset;
 		offset += local->type->size;
 	}
+	func->locals_stack_size = offset;
 }
 
 vm_int32 vmp_pipeline_resolve_package(vmp_pipeline* p, vm_int32 offset, vmp_package* pkg)

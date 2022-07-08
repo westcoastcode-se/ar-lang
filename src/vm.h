@@ -9,6 +9,7 @@ extern "C"
 #include "interpreter/vmi_thread.h"
 #include "interpreter/vmi_process.h"
 #include "vmp/vmp.h"
+#include "vmcode/vmcode.h"
 
 #if defined(__cplusplus)
 }

@@ -1,7 +1,7 @@
 #ifndef _VMP_LIST_LOCALS_H_
 #define _VMP_LIST_LOCALS_H_
 
-#include "../vm_config.h"
+#include "../vm_string.h"
 
 // List
 struct vmp_list_locals
@@ -23,5 +23,8 @@ extern vm_int32 vmp_list_locals_add(vmp_list_locals* l, struct vmp_local* local)
 
 // Get an local using the supplied index
 extern struct vmp_local* vmp_list_locals_get(const vmp_list_locals* l, vm_int32 index);
+
+// Search for a local variable with the supplied name
+extern struct vmp_local* vmp_list_locals_find(const vmp_list_locals* l, const vm_string* name);
 
 #endif

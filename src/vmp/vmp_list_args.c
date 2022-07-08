@@ -44,3 +44,16 @@ vmp_arg* vmp_list_args_get(const vmp_list_args* l, vm_int32 index)
 		return NULL;
 	return l->memory[index];
 }
+
+vmp_arg* vmp_list_args_find(const vmp_list_args* l, const vm_string* name)
+{
+	struct vmp_arg** item = &l->memory[0];
+	struct vmp_arg** const end = &l->memory[l->count];
+	for (; item != end; ++item) {
+		struct vmp_arg* p = *item;
+		if (vm_string_cmp(&p->name, name)) {
+			return p;
+		}
+	}
+	return NULL;
+}

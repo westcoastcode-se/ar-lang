@@ -49,9 +49,6 @@ typedef struct vmp_instr_def_stl vmp_instr_def_stl;
 struct vmp_instr_def_locals
 {
 	VMC_PIPELINE_INSTR_HEADER;
-
-	// How much memory should be reserved on the stack
-	vm_uint16 reserve_stack_size;
 };
 typedef struct vmp_instr_def_locals vmp_instr_def_locals;
 

@@ -16,11 +16,13 @@ vmp_package* vmp_package_newsz(const char* name, vm_int32 len)
 	vm_string_setsz(&p->name, name, len);
 	vmp_list_types_init(&p->types);
 	vmp_list_funcs_init(&p->funcs);
+	vmp_list_imports_init(&p->imports);
 	return p;
 }
 
 void vmp_package_destroy(vmp_package* p)
 {
+	vmp_list_imports_release(&p->imports);
 	vmp_list_funcs_release(&p->funcs);
 	vmp_list_types_release(&p->types);
 	vmp_free(p);
@@ -49,6 +51,18 @@ int vmp_package_add_type(vmp_package* p, vmp_type* type)
 		return VMP_LIST_ALREADY_EXISTS;
 	if (vmp_list_types_add(&p->types, type) < 0)
 		return VMP_LIST_OUT_OF_MEMORY;
+	type->package = p;
+	return VMP_LIST_ADDED;
+}
+
+int vmp_package_add_import(vmp_package* p, vmp_package* imported)
+{
+	ASSERT_NOT_NULL(p);
+	ASSERT_NOT_NULL(imported);
+
+	// TODO: Verify that circular dependencies doesnt exist
+	if (vmp_list_imports_add(&p->imports, imported) < 0)
+		return VMP_LIST_OUT_OF_MEMORY;
 	return VMP_LIST_ADDED;
 }
 
@@ -70,6 +84,27 @@ vmp_type* vmp_package_new_typesz(vmp_package* p, const char* name, int len, vm_u
 vmp_type* vmp_package_find_type(vmp_package* p, const vm_string* name)
 {
 	return vmp_list_types_find(&p->types, name);
+}
+
+vmp_package* vmp_package_find_import(vmp_package* p, const vm_string* name)
+{
+	return vmp_list_imports_find(&p->imports, name);
+}
+
+vmp_type* vmp_package_find_type_include_imports(vmp_package* p, const vm_string* name)
+{
+	vmp_type* type = vmp_package_find_type(p, name);
+	if (type != NULL)
+		return type;
+	const vm_int32 count = p->imports.count;
+	for (vm_int32 i = 0; i < count; ++i) {
+		p = vmp_list_imports_get(&p->imports, i);
+		type = vmp_package_find_type_include_imports(p, name);
+		if (type != NULL) {
+			return type;
+		}
+	}
+	return NULL;
 }
 
 vmp_type* vmp_type_new(const vm_string* name)
@@ -215,6 +250,7 @@ vmp_local* vmp_local_new()
 	p->type = NULL;
 	vm_string_zero(&p->name);
 	p->offset = 0;
+	p->index = 0;
 	return p;
 }
 
@@ -306,6 +342,11 @@ vmp_arg* vmp_func_new_arg(vmp_func* f, vmp_type* type)
 	return NULL;
 }
 
+vmp_arg* vmp_func_find_arg(vmp_func* f, const vm_string* name)
+{
+	return vmp_list_args_find(&f->args, name);
+}
+
 BOOL vmp_func_add_return(vmp_func* f, vmp_return* ret)
 {
 	if (ret->func != NULL)
@@ -328,8 +369,17 @@ BOOL vmp_func_add_local(vmp_func* f, vmp_local* l)
 	if (l->func != NULL)
 		return FALSE;
 	l->func = f;
-	f->locals_stack_size += l->type->size;
-	return vmp_list_locals_add(&f->locals, l) >= 0;
+	const vm_int32 ret = vmp_list_locals_add(&f->locals, l);
+	if (ret >= 0) {
+		l->index = ret;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+vmp_local* vmp_func_find_local(vmp_func* f, const vm_string* name)
+{
+	return vmp_list_locals_find(&f->locals, name);
 }
 
 vmp_local* vmp_func_new_local(vmp_func* f, vmp_type* type)

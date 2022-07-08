@@ -1,7 +1,7 @@
 #ifndef _VMP_LIST_ARGS_H_
 #define _VMP_LIST_ARGS_H_
 
-#include "../vm_config.h"
+#include "../vm_string.h"
 
 // List
 struct vmp_list_args
@@ -23,5 +23,8 @@ extern vm_int32 vmp_list_args_add(vmp_list_args* l, struct vmp_arg* arg);
 
 // Get an argument using the supplied index
 extern struct vmp_arg* vmp_list_args_get(const vmp_list_args* l, vm_int32 index);
+
+// Search for an argument with the supplied name
+extern struct vmp_arg* vmp_list_args_find(const vmp_list_args* l, const vm_string* name);
 
 #endif

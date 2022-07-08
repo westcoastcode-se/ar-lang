@@ -23,6 +23,15 @@ struct vmp_pipeline
 
 	// A string pool that can be used to create strings
 	vmp_string_pool string_pool;
+
+	// Global virtual machine package
+	vmp_package* vm_package;
+
+	// Messages raised during the build process
+	vm_messages messages;
+
+	// If a panic error has occurred, such as if the computer is out of memory
+	vm_message panic_error_message;
 };
 typedef struct vmp_pipeline vmp_pipeline;
 

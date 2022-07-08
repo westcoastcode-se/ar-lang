@@ -11,6 +11,7 @@
 #include "vmp_list_markers.h"
 #include "vmp_list_inherits_from.h"
 #include "vmp_list_inherited_by.h"
+#include "vmp_list_imports.h"
 
 // Return value indicating that the item is already added once
 #define VMP_LIST_ADDED (0)
@@ -36,6 +37,9 @@ struct vmp_package
 
 	// All functions in this package
 	vmp_list_funcs funcs;
+
+	// Imports
+	vmp_list_imports imports;
 };
 typedef struct vmp_package vmp_package;
 
@@ -127,8 +131,10 @@ struct vmp_func
 };
 typedef struct vmp_func vmp_func;
 
+// A function is public
+#define VMP_FUNC_FLAGS_PUBLIC (1 << 0)
 // A function is marked as an external function
-#define VMP_FUNC_FLAGS_EXTERN (1 << 0)
+#define VMP_FUNC_FLAGS_EXTERN (1 << 1)
 
 struct vmp_arg
 {
@@ -170,6 +176,9 @@ struct vmp_local
 
 	// Offset, in bytes, where this argument is located on the stack (from EPB's point of view)
 	vm_uint32 offset;
+
+	// The index where the local variable exist
+	vm_uint32 index;
 };
 typedef struct vmp_local vmp_local;
 
@@ -270,6 +279,9 @@ extern int vmp_package_add_func(vmp_package* p, vmp_func* func);
 // Add the supplied type to this package. This function will return 0 we added the type successfully
 extern int vmp_package_add_type(vmp_package* p, vmp_type* type);
 
+// Add another package as an import. It's not allowed to have circular imports 
+extern int vmp_package_add_import(vmp_package* p, vmp_package* imported);
+
 // Add the supplied type to this package
 extern vmp_type* vmp_package_new_type(vmp_package* p, const vm_string* name, vm_uint32 size);
 
@@ -278,6 +290,12 @@ extern vmp_type* vmp_package_new_typesz(vmp_package* p, const char* name, int le
 
 // Search for a type 
 extern vmp_type* vmp_package_find_type(vmp_package* p, const vm_string* name);
+
+// Search for an import
+extern vmp_package* vmp_package_find_import(vmp_package* p, const vm_string* name);
+
+// Search for a type in the supplied package or any of the imported packages
+extern vmp_type* vmp_package_find_type_include_imports(vmp_package* p, const vm_string* name);
 
 // New type
 extern vmp_type* vmp_type_new(const vm_string* name);
@@ -355,6 +373,9 @@ extern BOOL vmp_func_add_arg(vmp_func* f, vmp_arg* arg);
 // Add an argument to this function
 extern vmp_arg* vmp_func_new_arg(vmp_func* f, vmp_type* type);
 
+// Search for an argument with the supplied name
+extern vmp_arg* vmp_func_find_arg(vmp_func* f, const vm_string* name);
+
 // Add an return value to this function
 extern BOOL vmp_func_add_return(vmp_func* f, vmp_return* ret);
 
@@ -363,6 +384,9 @@ extern vmp_return* vmp_func_new_return(vmp_func* f, vmp_type* type);
 
 // Add a local variable to this function
 extern BOOL vmp_func_add_local(vmp_func* f, vmp_local* local);
+
+// Search for a local variable with the supplied name
+extern vmp_local* vmp_func_find_local(vmp_func* f, const vm_string* name);
 
 // Add a local variable for this function of a specific type
 extern vmp_local* vmp_func_new_local(vmp_func* f, vmp_type* type);

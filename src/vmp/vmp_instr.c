@@ -153,7 +153,6 @@ vmp_instr* vmp_instr_locals(const vmp_func* func)
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LOCALS, sizeof(vmi_instr_locals));
-	instr->reserve_stack_size = (vm_int16)func->locals_stack_size;
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
@@ -712,7 +711,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		vmi_instr_locals instr;
 		instr.opcode = 0;
 		instr.icode = VMI_LOCALS;
-		instr.size = cmd->reserve_stack_size;
+		instr.size = h->func->locals_stack_size;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_locals))) {
 			return NULL;
 		}

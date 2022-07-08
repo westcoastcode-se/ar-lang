@@ -44,3 +44,16 @@ vmp_local* vmp_list_locals_get(const vmp_list_locals* l, vm_int32 index)
 		return NULL;
 	return l->memory[index];
 }
+
+vmp_local* vmp_list_locals_find(const vmp_list_locals* l, const vm_string* name)
+{
+	struct vmp_local** item = &l->memory[0];
+	struct vmp_local** const end = &l->memory[l->count];
+	for (; item != end; ++item) {
+		struct vmp_local* p = *item;
+		if (vm_string_cmp(&p->name, name)) {
+			return p;
+		}
+	}
+	return NULL;
+}
