@@ -165,6 +165,72 @@ func Mult2(value int32) int32 {
 		end();
 	}
 
+	static vm_int32 c_complex1(vm_int32 value) {
+		return (((++value * 10) + (value++)) - --value) * 2;
+	}
+
+	void complex1()
+	{
+		static const auto source = R"(
+package main
+
+func Complex(value int32) int32 {
+	return (((++value * 10) + (value++)) - --value) * 2
+}
+)";
+		begin();
+		compile(source);
+
+		auto t = thread();
+
+		static constexpr auto value = 123;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "Complex");
+
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, c_complex1(value));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+		end();
+	}
+
+	static vm_int32 c_complex2(vm_int32 value) {
+		return (vm_int32)((((++value / 2.0f) + (value++)) - --value) * 10);
+	}
+
+	void complex2()
+	{
+		static const auto source = R"(
+package main
+
+func Complex(value int32) int32 {
+	return (int32)((((++value / 2.0f) + (value++)) - --value) * 10)
+}
+)";
+		begin();
+		compile(source);
+
+		auto t = thread();
+
+		static constexpr auto value = 123;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "Complex");
+
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, c_complex2(value));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+		end();
+	}
+
 	void quicksort()
 	{
 		static const auto source = R"(
@@ -231,7 +297,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 	void operator()()
 	{
 		TEST(get_local);
-		//TEST(mult2);
+		TEST(mult2);
 		//TEST(quicksort);
 	}
 };

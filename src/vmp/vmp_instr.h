@@ -377,6 +377,9 @@ extern BOOL vmp_instr_test_type_eq(const vmp_instr* instr1, const vmp_instr* ins
 // Get the i8 value from the supplied instruction
 extern vm_int64 vmp_instr_ldc_i8_get(const vmp_instr* instr);
 
+// Link two instructions together
+extern vmp_instr* vmp_instr_link(vmp_instr* instr, vmp_instr* next);
+
 // Build the bytecode for the supplied instruction and then 
 extern const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder);
 

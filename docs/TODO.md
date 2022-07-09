@@ -11,5 +11,3 @@
 * Reflection support
 
 ## Investigate
-
-* Check to see if it's possible to have a push based return system instead of 

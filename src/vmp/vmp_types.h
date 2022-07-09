@@ -218,6 +218,9 @@ struct vmp_arg
 
 	// Offset, in bytes, where this argument is located on the stack (from EPB's point of view)
 	vm_uint32 offset;
+
+	// The index of the argument
+	vm_uint32 index;
 };
 typedef struct vmp_arg vmp_arg;
 
@@ -494,7 +497,8 @@ extern void vmp_marker_set_instr(vmp_marker* m, vmp_instr* instr);
 // Remove memory marker
 extern void vmp_marker_free(vmp_marker* m);
 
-// Add a new instruction
+// Add a new instruction. If the there's followup instructions attached to the instruction then those will be added
+// as well. Returns the last added instruction
 extern vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr);
 
 // Inject a new instruction after another instruction. If NULL then it will be put at the beginning

@@ -232,6 +232,7 @@ vmp_arg* vmp_arg_new()
 	p->type = NULL;
 	vm_string_zero(&p->name);
 	p->offset = 0;
+	p->index = 0;
 	return p;
 }
 
@@ -358,7 +359,12 @@ BOOL vmp_func_add_arg(vmp_func* f, vmp_arg* arg)
 	if (arg->func != NULL)
 		return FALSE;
 	arg->func = f;
-	return vmp_list_args_add(&f->args, arg) >= 0;
+	const vm_int32 ret = vmp_list_args_add(&f->args, arg);
+	if (ret >= 0) {
+		arg->index = (vm_uint32)ret;
+		return TRUE;
+	}
+	return FALSE;
 }
 
 vmp_arg* vmp_func_new_arg(vmp_func* f, vmp_type* type)
@@ -441,56 +447,131 @@ void vmp_marker_free(vmp_marker* m)
 
 vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr)
 {
-	if (f->first_instr == NULL)
-		f->first_instr = f->last_instr = instr;
-	else {
-		instr->prev = f->last_instr;
-		f->last_instr->next = instr;
-		f->last_instr = instr;
-	}
 	instr->instr_offset = f->body_size;
 	instr->func = f;
 	f->body_size += instr->instr_size;
+
+	if (f->first_instr == NULL) {
+		f->first_instr = instr;
+	}
+	else {
+		// Add the instruction to the linked list
+		instr->prev = f->last_instr;
+		f->last_instr->next = instr;
+	}
+
+	// Attach the rest of the instructions part of the execution chain until
+	// we get the last instruction
+	while (instr->next != NULL) {
+		instr = instr->next;
+
+		instr->instr_offset = f->body_size;
+		instr->func = f;
+		f->body_size += instr->instr_size;
+	}
+
+	// Figure out the last index
+	f->last_instr = instr;
+
+	return instr;
+}
+
+vmp_instr* vmp_func_inject_at_start(vmp_func* f, vmp_instr* instr)
+{
+	vmp_instr* const add_to_end = f->first_instr;
+	instr->func = f;
+	instr->instr_offset = 0;
+	f->first_instr = instr;
+	f->body_size = instr->instr_size;
+
+	// Add the rest of the instructions
+	while (instr->next != NULL) {
+		instr = instr->next;
+		instr->func = f;
+		instr->instr_offset = f->body_size;
+		f->body_size += instr->instr_size;
+	}
+
+	if (add_to_end != NULL) {
+		add_to_end->prev = instr;
+		instr->next = add_to_end;
+
+		// Recalculate the offset and body size using the already added instructions
+		instr = instr->next;
+		while (instr != NULL) {
+			instr->instr_offset = f->body_size;
+			f->body_size += instr->instr_size;
+			instr = instr->next;
+		}
+		return add_to_end->prev;
+	}
+	else {
+		f->last_instr = instr;
+	}
+	return instr;
+}
+
+vmp_instr* vmp_func_inject_at_end(vmp_func* f, vmp_instr* instr)
+{
+	// Add the instruction to the end
+	f->last_instr->next = instr;
+	instr->prev = f->last_instr;
+
+	f->last_instr = instr;
+	instr->func = f;
+	instr->instr_offset = f->body_size;
+	f->body_size += instr->instr_size;
+
+	// Add the rest of the instructions and calculate the instruction offset
+	while (instr->next != NULL) {
+		instr = instr->next;
+		instr->func = f;
+		instr->instr_offset = f->body_size;
+		f->body_size += instr->instr_size;
+	}
+	f->last_instr = instr;
 	return instr;
 }
 
 vmp_instr* vmp_func_inject_after(vmp_func* f, vmp_instr* after, vmp_instr* instr)
 {
-	if (after == NULL) {
-		if (f->first_instr == NULL) {
-			f->first_instr = f->last_instr = instr;
-		}
-		else {
-			f->first_instr->prev = instr;
-			instr->next = f->first_instr;
-			f->first_instr = instr;
-		}
+	if (after == NULL)
+		return vmp_func_inject_at_start(f, instr);
+	else if (after == f->last_instr) {
+		return vmp_func_inject_at_end(f, instr);
 	}
 	else {
-		if (after->next != NULL) {
-			instr->next = after->next;
-			instr->prev = after;
-			instr->prev->next = instr;
-			instr->next->prev = instr;
-		}
-		else {
-			after->next = instr;
-			instr->prev = after;
-			f->last_instr = instr;
-		}
-	}
-	instr->func = f;
+		// We are adding the instruction in the middle, where instructions exist both before and
+		// after the supplied instruction.
+		vm_int32 offset = after->instr_offset + after->instr_size;
+		vmp_instr* const add_to_end = after->next;
+		f->body_size = offset;
+		
+		instr->func = f;
+		instr->instr_offset = f->body_size;
+		f->body_size += instr->instr_size;
+		instr->prev = after;
+		after->next = instr;
 
-	// recalculate the instructions offset because of this
-	after = f->first_instr;
-	f->body_size = 0;
-	while (after != NULL) {
-		after->instr_offset = f->body_size;
-		f->body_size += after->instr_size;
-		after = after->next;
-	}
+		// Figure out the offset and the size of the function body
+		while (instr->next != NULL) {
+			instr = instr->next;
+			instr->func = f;
+			instr->instr_offset = f->body_size;
+			f->body_size += instr->instr_size;
+		}
+		instr->next = add_to_end;
+		add_to_end->prev = instr;
 
-	return instr;
+		// Recalculate the offset after the injection is done
+		instr = add_to_end;
+		while (instr != NULL) {
+			instr->instr_offset = f->body_size;
+			f->body_size += instr->instr_size;
+			instr = instr->next;
+		}
+		return add_to_end->prev;
+	}
 }
 
 vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr)
@@ -506,6 +587,15 @@ vmp_instr* vmp_func_remove_instr(vmp_func* f, vmp_instr* instr)
 	}
 	if (instr->next != NULL) {
 		instr->next->prev = instr->prev;
+	}
+
+	// recalculate the instructions offset because of this
+	instr = f->first_instr;
+	f->body_size = 0;
+	while (instr != NULL) {
+		instr->instr_offset = f->body_size;
+		f->body_size += instr->instr_size;
+		instr = instr->next;
 	}
 	return instr;
 }

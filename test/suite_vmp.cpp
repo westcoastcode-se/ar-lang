@@ -183,10 +183,215 @@ struct utils_vmp : utils_vm
 		}
 		return vmp_package_find_type(p, &type_name_str);
 	}
+
+	vm_int32 verify_instr(vmp_func* func, vmp_instr* instr, vmp_instr_type type, vm_int32 offset, size_t size)
+	{
+		verify_value<const vmp_func*>(instr->func, func);
+		verify_value(instr->instr_type, type);
+		verify_value(instr->instr_offset, offset);
+		verify_value(instr->instr_size, (vm_int32)size);
+		return offset + size;
+	}
 };
 
 struct suite_vmp_tests : utils_vmp
 {
+	void instr_offset()
+	{
+		begin();
+
+		vm_string name;
+		name.start = "test";
+		name.end = name.start + 4;
+		vmp_func* const func = vmp_func_new(&name);
+		verify_not_null(func);
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+
+		verify_value(func->body_size, (vm_uint32)(sizeof(vmi_instr_lda) * 3));
+		vm_int32 offset = 0;
+		offset = verify_instr(func, func->first_instr, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		verify_null(func->first_instr->next->next->next);
+
+		vmp_func_destroy(func);
+
+		end();
+	}
+
+	void instr_offset_inject_start()
+	{
+		begin();
+
+		vm_string name;
+		name.start = "test";
+		name.end = name.start + 4;
+		vmp_func* const func = vmp_func_new(&name);
+		verify_not_null(func);
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_inject_after(func, NULL, vmp_instr_lda_a(0));
+
+		verify_value(func->body_size, (vm_uint32)(sizeof(vmi_instr_lda) * 3 + sizeof(vmi_instr_lda_a)));
+
+		vm_int32 offset = 0;
+		offset = verify_instr(func, func->first_instr, VMP_INSTR_LDA_A, offset, sizeof(vmi_instr_lda_a));
+		offset = verify_instr(func, func->first_instr->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		verify_null(func->first_instr->next->next->next->next);
+
+		vmp_func_destroy(func);
+
+		end();
+	}
+
+	void instr_offset_inject_start_multiple()
+	{
+		begin();
+
+		vm_string name;
+		name.start = "test";
+		name.end = name.start + 4;
+		vmp_func* const func = vmp_func_new(&name);
+		verify_not_null(func);
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_inject_after(func, NULL, vmp_instr_link(vmp_instr_lda_a(0), vmp_instr_stl(0)));
+
+		verify_value(func->body_size, (vm_uint32)(sizeof(vmi_instr_lda) * 3 + sizeof(vmi_instr_lda_a) + sizeof(vmi_instr_stl)));
+
+		vm_int32 offset = 0;
+		offset = verify_instr(func, func->first_instr, VMP_INSTR_LDA_A, offset, sizeof(vmi_instr_lda_a));
+		offset = verify_instr(func, func->first_instr->next, VMP_INSTR_STL, offset, sizeof(vmi_instr_stl));
+		offset = verify_instr(func, func->first_instr->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		verify_null(func->first_instr->next->next->next->next->next);
+
+		vmp_func_destroy(func);
+
+		end();
+	}
+
+	void instr_offset_inject_end()
+	{
+		begin();
+
+		vm_string name;
+		name.start = "test";
+		name.end = name.start + 4;
+		vmp_func* const func = vmp_func_new(&name);
+		verify_not_null(func);
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_inject_after(func, func->last_instr, vmp_instr_lda_a(0));
+
+		verify_value(func->body_size, (vm_uint32)(sizeof(vmi_instr_lda) * 3 + sizeof(vmi_instr_lda_a)));
+
+		vm_int32 offset = 0;
+		offset = verify_instr(func, func->first_instr, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next->next, VMP_INSTR_LDA_A, offset, sizeof(vmi_instr_lda_a));
+		verify_null(func->first_instr->next->next->next->next);
+
+		vmp_func_destroy(func);
+
+		end();
+	}
+
+	void instr_offset_inject_end_multiple()
+	{
+		begin();
+
+		vm_string name;
+		name.start = "test";
+		name.end = name.start + 4;
+		vmp_func* const func = vmp_func_new(&name);
+		verify_not_null(func);
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_inject_after(func, func->last_instr, vmp_instr_link(vmp_instr_lda_a(0), vmp_instr_stl(0)));
+
+		verify_value(func->body_size, (vm_uint32)(sizeof(vmi_instr_lda) * 3 + sizeof(vmi_instr_lda_a) + sizeof(vmi_instr_stl)));
+
+		vm_int32 offset = 0;
+		offset = verify_instr(func, func->first_instr, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next->next, VMP_INSTR_LDA_A, offset, sizeof(vmi_instr_lda_a));
+		offset = verify_instr(func, func->first_instr->next->next->next->next, VMP_INSTR_STL, offset, sizeof(vmi_instr_stl));
+		verify_null(func->first_instr->next->next->next->next->next);
+
+		vmp_func_destroy(func);
+
+		end();
+	}
+
+	void instr_offset_inject_middle()
+	{
+		begin();
+
+		vm_string name;
+		name.start = "test";
+		name.end = name.start + 4;
+		vmp_func* const func = vmp_func_new(&name);
+		verify_not_null(func);
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_inject_after(func, func->first_instr, vmp_instr_lda_a(0));
+
+		verify_value(func->body_size, (vm_uint32)(sizeof(vmi_instr_lda) * 3 + sizeof(vmi_instr_lda_a)));
+
+		vm_int32 offset = 0;
+		offset = verify_instr(func, func->first_instr, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next, VMP_INSTR_LDA_A, offset, sizeof(vmi_instr_lda_a));
+		offset = verify_instr(func, func->first_instr->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		verify_null(func->first_instr->next->next->next->next);
+
+		vmp_func_destroy(func);
+
+		end();
+	}
+
+	void instr_offset_inject_middle_multiple()
+	{
+		begin();
+
+		vm_string name;
+		name.start = "test";
+		name.end = name.start + 4;
+		vmp_func* const func = vmp_func_new(&name);
+		verify_not_null(func);
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_add_instr(func, vmp_instr_lda(0));
+		vmp_func_inject_after(func, func->first_instr, vmp_instr_link(vmp_instr_lda_a(0), vmp_instr_stl(0)));
+
+		verify_value(func->body_size, (vm_uint32)(sizeof(vmi_instr_lda) * 3 + sizeof(vmi_instr_lda_a) + sizeof(vmi_instr_stl)));
+
+		vm_int32 offset = 0;
+		offset = verify_instr(func, func->first_instr, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next, VMP_INSTR_LDA_A, offset, sizeof(vmi_instr_lda_a));
+		offset = verify_instr(func, func->first_instr->next->next, VMP_INSTR_STL, offset, sizeof(vmi_instr_stl));
+		offset = verify_instr(func, func->first_instr->next->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		offset = verify_instr(func, func->first_instr->next->next->next->next, VMP_INSTR_LDA, offset, sizeof(vmi_instr_lda));
+		verify_null(func->first_instr->next->next->next->next->next);
+
+		vmp_func_destroy(func);
+
+		end();
+	}
+
 	template<typename T>
 	void add_test(T lhs, T rhs)
 	{
@@ -1432,6 +1637,14 @@ struct suite_vmp_tests : utils_vmp
 
 	void operator()()
 	{
+		TEST(instr_offset);
+		TEST(instr_offset_inject_start);
+		TEST(instr_offset_inject_start_multiple);
+		TEST(instr_offset_inject_end);
+		TEST(instr_offset_inject_end_multiple);
+		TEST(instr_offset_inject_middle);
+		TEST(instr_offset_inject_middle_multiple);
+
 		TEST(add);
 		TEST(sub);
 		TEST(ldc);

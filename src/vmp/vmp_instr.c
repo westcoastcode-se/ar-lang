@@ -164,7 +164,6 @@ vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant)
 	case VMI_INSTR_PROP_UINT64:
 	case VMI_INSTR_PROP_FLOAT64:
 	{
-
 		vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmp_malloc(sizeof(vmp_instr_def_ldc));
 		if (instr == NULL)
 			return NULL;
@@ -559,6 +558,13 @@ vm_int64 vmp_instr_ldc_i8_get(const vmp_instr* instr)
 		return -1;
 	}
 	return TRUE;
+}
+
+vmp_instr* vmp_instr_link(vmp_instr* instr, vmp_instr* next)
+{
+	instr->next = next;
+	next->prev = instr;
+	return instr;
 }
 
 const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder)
