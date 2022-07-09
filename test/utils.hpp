@@ -167,6 +167,22 @@ struct utils_vm : test_utils
 		}
 	}
 
+	template<typename T>
+	void verify_not_null(T* ptr)
+	{
+		if (ptr == nullptr) {
+			throw_(error() << "expected ptr to not be nullptr");
+		}
+	}
+
+	template<typename T>
+	void verify_null(T* ptr)
+	{
+		if (ptr != nullptr) {
+			throw_(error() << "expected ptr to be nullptr");
+		}
+	}
+
 	void verify_stack_size(vmi_thread* t, size_t expected_size)
 	{
 		const size_t size = (size_t)(t->stack.top - t->stack.blocks);
