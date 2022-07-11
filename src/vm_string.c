@@ -11,6 +11,22 @@ void vm_string_zero(vm_string* s)
 	s->start = s->end = NULL;
 }
 
+void vm_mutable_string_malloc(vm_mutable_string* dest, const char* str, int len)
+{
+	dest->start = malloc(len);
+	vm_str_cpy(dest->start, str, len);
+	dest->end = dest->start + len;
+}
+
+void vm_mutable_string_free(vm_mutable_string* m)
+{
+	if (m->start)
+	{
+		free(m->start);
+		m->start = m->end = NULL;
+	}
+}
+
 BOOL vm_string_cmpsz(const vm_string* s, const char* other_string, int length)
 {
 	return vm_str_cmp(s->start, vm_string_length(s), other_string, length);

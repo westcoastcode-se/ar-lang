@@ -1,5 +1,6 @@
 #include "vmcode.h"
 #include "vmcd_messages.h"
+#include "vmcd_source_code.h"
 #include <inttypes.h>
 
 vmp_type* vmcd_parse_type(const vmcd_scope* s, BOOL include_imports)
@@ -169,6 +170,7 @@ vmp_instr* parse_value(const vmcd_scope* s)
 	}
 }
 
+/*
 // Statements: 
 //	1 + 2 
 //		ldc, ldc, add
@@ -235,7 +237,7 @@ BOOL parse_statement(const vmcd_scope* s, vmp_instr** result)
 
 
 	return TRUE;
-}
+}*/
 
 BOOL vmcd_parse_decl_assign_local(const vmcd_scope* s, vmp_local* local)
 {
@@ -636,6 +638,7 @@ vmcode* vmcode_new()
 	vmcode* p = (vmcode*)malloc(sizeof(vmcode));
 	if (p == NULL)
 		return NULL;
+	vmcd_list_sources_init(&p->source_codes);
 	p->pipeline = vmp_pipeline_new();
 	p->builder = NULL;
 	vm_messages_init(&p->messages);
@@ -652,7 +655,15 @@ void vmcode_destroy(vmcode* p)
 	if (p->pipeline != NULL) {
 		vmp_pipeline_destroy(p->pipeline);
 	}
+	vmcd_list_sources_release(&p->source_codes);
 	free(p);
+}
+
+BOOL vmcode_add_source_code(vmcode* p, const vm_byte* source_code, const vm_byte* filename)
+{
+	vmcd_source_code* src = vmcd_source_code_create(source_code, vm_str_len(source_code));
+	vmcd_source_code_set_filename(src, filename, vm_str_len(filename));
+	return vmcd_list_sources_add(&p->source_codes, src) >= 0;
 }
 
 BOOL vmcode_parse(vmcode* p, const vm_byte* source_code)

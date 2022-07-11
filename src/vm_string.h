@@ -3,6 +3,14 @@
 
 #include "vm_config.h"
 
+// Represents a string that we are allowed to write to
+struct vm_mutable_string
+{
+	char* start;
+	const char* end;
+};
+typedef struct vm_mutable_string vm_mutable_string;
+
 // Represents a string
 struct vm_string
 {
@@ -35,11 +43,26 @@ static inline char* vm_str_cpy(char* dest, const char* src, int len)
 	return dest;
 }
 
+// Calculate the length of a null terminated string
+static inline int vm_str_len(const char* str)
+{
+	int len = 0;
+	while (*str++ != 0)
+		++len;
+	return len;
+}
+
 // Initialize the supplied string with the soruce string
 extern void vm_string_setsz(vm_string* s, const char* src, int len);
 
 // Initialize the supplied string to zero
 extern void vm_string_zero(vm_string* s);
+
+// Allocate memory and copy the supplied source code
+extern void vm_mutable_string_malloc(vm_mutable_string* dest, const char* str, int len);
+
+// Free the internal memory
+extern void vm_mutable_string_free(vm_mutable_string* m);
 
 // Compare two strings
 extern BOOL vm_string_cmpsz(const vm_string* s, const char* other_string, int length);

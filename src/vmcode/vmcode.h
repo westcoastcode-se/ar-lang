@@ -3,10 +3,14 @@
 
 #include "../vmp/vmp.h"
 #include "vmcd_lexer.h"
+#include "vmcd_list_sources.h"
 
 // Source Code Processor
 struct vmcode
 {
+	// Source codes to be processed
+	vmcd_list_sources source_codes;
+
 	vmp_pipeline* pipeline;
 	vmp_builder* builder;
 
@@ -41,6 +45,9 @@ extern vmcode* vmcode_new();
 
 // Destroy the memory of the source code processor
 extern void vmcode_destroy(vmcode* p);
+
+// Add source code
+extern BOOL vmcode_add_source_code(vmcode* p, const vm_byte* source_code, const vm_byte* filename);
 
 // Parse the supplied source code
 extern BOOL vmcode_parse(vmcode* p, const vm_byte* source_code);

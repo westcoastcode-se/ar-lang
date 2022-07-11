@@ -135,13 +135,13 @@ func Get() int32 {
 		end();
 	}
 
-	void mult2()
+	void plus2()
 	{
 		static const auto source = R"(
 package main
 
-func Mult2(value int32) int32 {
-	ret := value * 2
+func Plus2(value int32) int32 {
+	ret := value + 2
 	return ret
 }
 )";
@@ -153,11 +153,11 @@ func Mult2(value int32) int32 {
 		static constexpr auto value = 10000;
 		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
 		
-		invoke(t, "Mult2");
+		invoke(t, "Plus2");
 
 		verify_stack_size(t, sizeof(vm_int32) * 2);
 		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
-		verify_value(ret, value);
+		verify_value(ret, value + 2);
 		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
 		verify_value(in, value);
 		
@@ -297,7 +297,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 	void operator()()
 	{
 		TEST(get_local);
-		TEST(mult2);
+		TEST(plus2);
 		//TEST(quicksort);
 	}
 };

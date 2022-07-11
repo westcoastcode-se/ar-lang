@@ -349,7 +349,7 @@ vm_float32 vmcd_token_f4(vmcd_token* t)
 	char temp[64];
 	temp[sprintf(temp, "%.*s", vm_string_length(&t->string), t->string.start)] = 0;
 
-	const auto v = strtof(temp, NULL);
+	const float v = strtof(temp, NULL);
 	if (v < (FLT_MAX - FLT_EPSILON) && v >(FLT_MIN + FLT_EPSILON))
 		return v;
 	else
@@ -361,7 +361,7 @@ vm_float64 vmcd_token_f8(vmcd_token* t)
 	char temp[64];
 	temp[sprintf(temp, "%.*s", vm_string_length(&t->string), t->string.start)] = 0;
 
-	const auto v = strtod(temp, NULL);
+	const double v = strtod(temp, NULL);
 	if (v < (DBL_MAX - DBL_EPSILON) && v >(DBL_MIN + DBL_EPSILON))
 		return v;
 	else
@@ -370,5 +370,5 @@ vm_float64 vmcd_token_f8(vmcd_token* t)
 
 BOOL vmcd_token_bool(vmcd_token* t)
 {
-	return vm_str_cmp(t->string.start, vm_string_length(&t->string), "true", 4) 
+	return vm_str_cmp(t->string.start, vm_string_length(&t->string), "true", 4);
 }
