@@ -562,8 +562,22 @@ vm_int64 vmp_instr_ldc_i8_get(const vmp_instr* instr)
 
 vmp_instr* vmp_instr_link(vmp_instr* instr, vmp_instr* next)
 {
+	if (instr == NULL)
+		return next;
+	if (instr->next != NULL) {
+		next->next = instr->next;
+		instr->next->prev = next;
+	}
 	instr->next = next;
 	next->prev = instr;
+	return instr;
+}
+
+vmp_instr* vmp_instr_get_last(vmp_instr* instr)
+{
+	while (instr->next != NULL) {
+		instr = instr->next;
+	}
 	return instr;
 }
 

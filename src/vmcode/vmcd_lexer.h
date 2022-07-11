@@ -25,11 +25,13 @@ enum vmcd_token_type
 	VMCD_TOKEN_KEYWORD_END_KEYWORD = VMCD_TOKEN_KEYWORD_INTERFACE,
 
 
-	VMCD_TOKEN_INT,
-	VMCD_TOKEN_HEX,
-	VMCD_TOKEN_BOOL,
-	VMCD_TOKEN_DECIMAL,
-	VMCD_TOKEN_STRING,
+	VMCD_TOKEN_VALUE,
+	VMCD_TOKEN_VALUE_INT,
+	VMCD_TOKEN_VALUE_HEX,
+	VMCD_TOKEN_VALUE_BOOL,
+	VMCD_TOKEN_VALUE_DECIMAL,
+	VMCD_TOKEN_VALUE_STRING,
+	VMCD_TOKEN_END_VALUE = VMCD_TOKEN_VALUE_STRING,
 
 	VMCD_TOKEN_COMMENT,
 
@@ -92,6 +94,12 @@ enum vmcd_token_type
 };
 typedef enum vmcd_token_type vmcd_token_type;
 
+enum vmcd_token_modifier
+{
+	VMCD_TOKEN_MOD_NONE = 0,
+};
+typedef enum vmcd_token_modifier vmcd_token_modifier;
+
 // Lexer used to interpret vmcd soure code
 struct vmcd_lexer
 {
@@ -107,7 +115,7 @@ struct vmcd_token
 	const vm_byte* source;
 
 	vmcd_token_type type;
-	vm_int32 modifier;
+	vmcd_token_modifier modifier;
 	vm_string string;
 
 	// The current line in the source code
@@ -357,6 +365,12 @@ static inline BOOL vmcd_token_is_keyword(vmcd_token* t)
 	return t->type >= VMCD_TOKEN_KEYWORD && t->type <= VMCD_TOKEN_KEYWORD_END_KEYWORD;
 }
 
+// Check to see if the supplied token is a value
+static inline BOOL vmcd_token_is_value(vmcd_token* t)
+{
+	return t->type >= VMCD_TOKEN_VALUE && t->type <= VMCD_TOKEN_END_VALUE;
+}
+
 // Convert the token content into a 4 byte integer
 extern vm_int32 vmcd_token_i4(vmcd_token* t);
 
@@ -368,6 +382,15 @@ extern vm_int64 vmcd_token_i8(vmcd_token* t);
 
 // Convert the token content into a 8 byte integer
 extern vm_uint64 vmcd_token_ui8(vmcd_token* t);
+
+// Convert the token content into a 4 decimal number
+extern vm_float32 vmcd_token_f4(vmcd_token* t);
+
+// Convert the token content into a 8 decimal number
+extern vm_float64 vmcd_token_f8(vmcd_token* t);
+
+// Convert the token content into a boolean value
+extern BOOL vmcd_token_bool(vmcd_token* t);
 
 // Convert the supplied c-string into a 64 bit unsigned integer. The size of the string is limited to the supplied length 
 static inline vm_uint64 strtou64(const char* str, int len)

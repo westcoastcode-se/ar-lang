@@ -1,4 +1,5 @@
 #include "vmcd_lexer.h"
+#include <float.h>
 
 void vmcd_lexer_init(vmcd_lexer* l, const vm_byte* source_code)
 {
@@ -164,9 +165,9 @@ void vmcd_token_number(vmcd_token* token)
 	while (vmcd_token_test_number(*token->source)) token->source++;
 
 	// Is this is a decimal?
-	token->type = VMCD_TOKEN_INT;
+	token->type = VMCD_TOKEN_VALUE_INT;
 	if (*token->source == '.') {
-		token->type = VMCD_TOKEN_DECIMAL;
+		token->type = VMCD_TOKEN_VALUE_DECIMAL;
 		token->source++;
 
 		// Ignore all numbers
@@ -175,13 +176,13 @@ void vmcd_token_number(vmcd_token* token)
 
 	// Is this a hex-decimal value?
 	if (*token->source == 'x') {
-		token->type = VMCD_TOKEN_HEX;
+		token->type = VMCD_TOKEN_VALUE_HEX;
 		token->source++;
 		// Ignore all hex values
 		while (vmcd_token_test_hex(*token->source)) token->source++;
 	}
 
-	if (token->type == VMCD_TOKEN_DECIMAL) {
+	if (token->type == VMCD_TOKEN_VALUE_DECIMAL) {
 		// This might be a value with format -3.402823466e+38f
 		if (*token->source == 'e') {
 			char peek = *(token->source + 1);
@@ -192,9 +193,6 @@ void vmcd_token_number(vmcd_token* token)
 				while (vmcd_token_test_number(*token->source)) token->source++;
 			}
 		}
-		// Allow the leading "f". Used to differentiate between floats and doubles
-		if (*token->source == 'f')
-			token->source++;
 	}
 
 	token->string.start = start;
@@ -344,4 +342,33 @@ vm_int64 vmcd_token_i8(vmcd_token* t)
 vm_uint64 vmcd_token_ui8(vmcd_token* t)
 {
 	return strtou64(t->string.start, vm_string_length(&t->string));
+}
+
+vm_float32 vmcd_token_f4(vmcd_token* t)
+{
+	char temp[64];
+	temp[sprintf(temp, "%.*s", vm_string_length(&t->string), t->string.start)] = 0;
+
+	const auto v = strtof(temp, NULL);
+	if (v < (FLT_MAX - FLT_EPSILON) && v >(FLT_MIN + FLT_EPSILON))
+		return v;
+	else
+		return 0.0f;
+}
+
+vm_float64 vmcd_token_f8(vmcd_token* t)
+{
+	char temp[64];
+	temp[sprintf(temp, "%.*s", vm_string_length(&t->string), t->string.start)] = 0;
+
+	const auto v = strtod(temp, NULL);
+	if (v < (DBL_MAX - DBL_EPSILON) && v >(DBL_MIN + DBL_EPSILON))
+		return v;
+	else
+		return 0.0;
+}
+
+BOOL vmcd_token_bool(vmcd_token* t)
+{
+	return vm_str_cmp(t->string.start, vm_string_length(&t->string), "true", 4) 
 }
