@@ -14,7 +14,7 @@ struct vmcd_source_code
 typedef struct vmcd_source_code vmcd_source_code;
 
 // Create a new source code blob
-extern vmcd_source_code* vmcd_source_code_create(const vm_byte* bytes, vm_int32 len);
+extern vmcd_source_code* vmcd_source_code_create(const vm_byte* bytes);
 
 // Destroy the source code
 extern void vmcd_source_code_destroy(vmcd_source_code* s);

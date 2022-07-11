@@ -49,8 +49,9 @@ extern void vmcode_destroy(vmcode* p);
 // Add source code
 extern BOOL vmcode_add_source_code(vmcode* p, const vm_byte* source_code, const vm_byte* filename);
 
-// Parse the supplied source code
-extern BOOL vmcode_parse(vmcode* p, const vm_byte* source_code);
+// Parse the supplied source code. The supplied filename points to the entrypoint for where the source code actually
+// starts to be parsed
+extern BOOL vmcode_parse(vmcode* p, const vm_byte* filename);
 
 // Link the compiled source code
 extern BOOL vmcode_link(vmcode* p);

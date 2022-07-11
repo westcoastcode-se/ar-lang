@@ -1,11 +1,11 @@
 #include "vmcd_source_code.h"
 
-vmcd_source_code* vmcd_source_code_create(const vm_byte* bytes, vm_int32 len)
+vmcd_source_code* vmcd_source_code_create(const vm_byte* bytes)
 {
 	vmcd_source_code* s = (vmcd_source_code*)malloc(sizeof(vmcd_source_code));
 	if (s == NULL)
 		return NULL;
-	vm_mutable_string_malloc(&s->source_code, bytes, len);
+	vm_mutable_string_malloc(&s->source_code, bytes, vm_str_len(bytes) + 1);
 	return s;
 }
 

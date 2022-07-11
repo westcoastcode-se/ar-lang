@@ -26,7 +26,11 @@ struct utils_vmcode : utils_vm
 
 	void compile(const vm_byte* source_code)
 	{
-		if (!vmcode_parse(vmcd, source_code)) {
+		// Add the source code
+		vmcode_add_source_code(vmcd, source_code, "/main.vmcd");
+
+		// Compile the source code using /main.vmcd as entrypoint
+		if (!vmcode_parse(vmcd, "/main.vmcd")) {
 			error_string_stream e;
 			e << "could not parse source code: [";
 			auto message = vmcd->messages.first;

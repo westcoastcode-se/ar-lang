@@ -661,16 +661,23 @@ void vmcode_destroy(vmcode* p)
 
 BOOL vmcode_add_source_code(vmcode* p, const vm_byte* source_code, const vm_byte* filename)
 {
-	vmcd_source_code* src = vmcd_source_code_create(source_code, vm_str_len(source_code));
+	vmcd_source_code* src = vmcd_source_code_create(source_code);
 	vmcd_source_code_set_filename(src, filename, vm_str_len(filename));
 	return vmcd_list_sources_add(&p->source_codes, src) >= 0;
 }
 
-BOOL vmcode_parse(vmcode* p, const vm_byte* source_code)
+BOOL vmcode_parse(vmcode* p, const vm_byte* filename)
 {
 	vmcd_lexer l;
 	vmcd_token t;
-	vmcd_lexer_init(&l, source_code);
+
+	const vm_string filename_str = { filename, filename + vm_str_len(filename) };
+	const vmcd_source_code* const source_code = vmcd_list_sources_find(&p->source_codes, &filename_str);
+	if (source_code == NULL) {
+		return FALSE;
+	}
+
+	vmcd_lexer_init(&l, source_code->source_code.start);
 	vmcd_token_init(&t, &l);
 	if (!vmcd_begin(p, &t)) {
 		return FALSE;
