@@ -62,6 +62,16 @@ struct vmp_instr_def_ldl
 };
 typedef struct vmp_instr_def_ldl vmp_instr_def_ldl;
 
+// ldf <func>
+struct vmp_instr_def_ldf
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// The function we want to push to the stack
+	const vmp_func* target_func;
+};
+typedef struct vmp_instr_def_ldf vmp_instr_def_ldf;
+
 // ldl_a <index>
 struct vmp_instr_def_ldl_a
 {
@@ -206,6 +216,17 @@ struct vmp_instr_def_callnative
 };
 typedef struct vmp_instr_def_callnative vmp_instr_def_callnative;
 
+// calluref <func>
+struct vmp_instr_def_calluref
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// The function definition that we are calling.
+	// TODO: Change this into a "type"
+	const vmp_func* func_def;
+};
+typedef struct vmp_instr_def_calluref vmp_instr_def_calluref;
+
 // add <type>
 struct vmp_instr_def_add
 {
@@ -280,6 +301,9 @@ extern vmp_instr* vmp_instr_ldl(vm_uint32 index);
 // Create a new ldl_a instruction and return it
 extern vmp_instr* vmp_instr_ldl_a(vm_uint32 index);
 
+// Create a new ldf instruction and return it
+extern vmp_instr* vmp_instr_ldf(const vmp_func* func);
+
 // Add an instruction to allocate local variable memory for the supplied function
 extern vmp_instr* vmp_instr_locals(const vmp_func* func);
 
@@ -330,6 +354,9 @@ extern vmp_instr* vmp_instr_call(const vmp_func* func);
 
 // Call the supplied function
 extern vmp_instr* vmp_instr_callnative(const vmp_func* func);
+
+// Call the function on the top of the stack
+extern vmp_instr* vmp_instr_calluref(const vmp_func* func);
 
 // Create a new add instruction and return it
 extern vmp_instr* vmp_instr_add(const vmp_type* type);

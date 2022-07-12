@@ -137,6 +137,16 @@ vmp_instr* vmp_instr_ldl_a(vm_uint32 index)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_ldf(const vmp_func* func)
+{
+	vmp_instr_def_ldf* instr = (vmp_instr_def_ldf*)vm_malloc(sizeof(vmp_instr_def_ldf));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDF, sizeof(vmi_instr_ldf));
+	instr->target_func = func;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_stl(vm_uint32 index)
 {
 	vmp_instr_def_stl* instr = (vmp_instr_def_stl*)vm_malloc(sizeof(vmp_instr_def_stl));
@@ -392,6 +402,16 @@ vmp_instr* vmp_instr_callnative(const vmp_func* func)
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CALLNATIVE, sizeof(vmi_instr_callnative));
+	instr->func_def = func;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_calluref(const vmp_func* func)
+{
+	vmp_instr_def_calluref* instr = (vmp_instr_def_calluref*)vm_malloc(sizeof(vmp_instr_def_calluref));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CALLUREF, sizeof(vmi_instr_calluref));
 	instr->func_def = func;
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
@@ -720,6 +740,19 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.size = local->type->size;
 		instr.offset = local->offset;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldl_a))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_LDF:
+	{
+		const vmp_instr_def_ldf* const cmd = (vmp_instr_def_ldf*)h;
+
+		vmi_instr_ldf instr;
+		instr.opcode = 0;
+		instr.icode = VMI_LDF;
+		instr.addr = builder->bytestream.memory + cmd->target_func->offset;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldf))) {
 			return NULL;
 		}
 		break;
@@ -1069,6 +1102,19 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.icode = VMI_CALLNATIVE;
 		instr.expected_stack_size = cmd->func_def->args_stack_size;
 		instr.func_ptr = cmd->func_def->native_func;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_call))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_CALLUREF:
+	{
+		const vmp_instr_def_calluref* const cmd = (vmp_instr_def_calluref*)h;
+
+		vmi_instr_calluref instr;
+		instr.opcode = 0;
+		instr.icode = VMI_CALLUREF;
+		instr.expected_stack_size = cmd->func_def->args_stack_size;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_call))) {
 			return NULL;
 		}

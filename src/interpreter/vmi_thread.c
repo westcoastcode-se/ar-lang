@@ -318,6 +318,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 		case VMI_CALLNATIVE:
 			ip = _vmi_thread_callnative(t, ip);
 			continue;
+		case VMI_CALLUREF:
+			ip = _vmi_thread_calluref(t, ip);
+			continue;
 		case VMI_LOCALS:
 			ip = _vmi_thread_locals(t, ip);
 			continue;
@@ -344,6 +347,9 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_LDL:
 			ip = _vmi_thread_ldl(t, ip);
+			continue;
+		case VMI_LDF:
+			ip = _vmi_thread_ldf(t, ip);
 			continue;
 		case VMI_STL:
 			ip = _vmi_thread_stl(t, ip);

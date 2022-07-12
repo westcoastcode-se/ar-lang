@@ -235,6 +235,46 @@ func Complex(value int32) int32 {
 		end();
 	}
 
+	void func_refs()
+	{
+		static const auto source = R"(
+package main
+
+func add(i int32) int32 {
+	return i + 4 
+}
+
+func sub(i int32) int32 {
+	return i - 2
+}
+
+func FuncRef(value int32) int32 {
+	f := add
+	value = f(value)
+	f = sub
+	return f(value)
+}
+)";
+		begin();
+		compile(source);
+
+		auto t = thread();
+
+		static constexpr auto value = 10;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "FuncRef");
+
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, value + 4 - 2);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+		end();
+	}
+
 	void quicksort()
 	{
 		static const auto source = R"(
@@ -302,6 +342,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 	{
 		TEST(get_local);
 		TEST(plus2);
+		TEST(func_refs);
 		//TEST(quicksort);
 	}
 };

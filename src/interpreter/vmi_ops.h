@@ -63,6 +63,9 @@ enum vmi_icodes
 	// Call a native (C) function
 	VMI_CALLNATIVE,
 
+	// Call a function where the address of the function can be found on the stack
+	VMI_CALLUREF,
+
 	// Return the the caller instruction pointer
 	VMI_RET,
 
@@ -86,6 +89,9 @@ enum vmi_icodes
 
 	// Store a value from the stack into a local variable
 	VMI_STL,
+
+	// Push a function reference onto the stack
+	VMI_LDF,
 
 	// Store the value on the stack into the memory address located on the stack
 	VMI_STUREF,
@@ -242,6 +248,14 @@ struct vmi_instr_ldl_a
 	};
 };
 typedef struct vmi_instr_ldl_a vmi_instr_ldl_a;
+
+// A "load function to the stack" instruction
+struct vmi_instr_ldf
+{
+	OPCODE_HEADER;
+	vmi_ip addr;
+};
+typedef struct vmi_instr_ldf vmi_instr_ldf;
 
 // A sturef instruction
 struct vmi_instr_sturef
@@ -446,6 +460,26 @@ struct vmi_instr_callnative
 	vm_nativefunc func_ptr;
 };
 typedef struct vmi_instr_callnative vmi_instr_callnative;
+
+// Call a function based on an address on the top of stack
+struct vmi_instr_calluref
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 props1;
+
+			// The expected (incoming) stack size that's required by the function - such as the arguments and the 
+			// return values.
+			vm_uint16 expected_stack_size;
+		};
+	};
+};
+typedef struct vmi_instr_calluref vmi_instr_calluref;
 
 struct vmi_instr_ret
 {

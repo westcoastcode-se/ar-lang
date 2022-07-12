@@ -61,6 +61,13 @@ vmi_ip _vmi_thread_callnative(vmi_thread* t, vmi_ip ip)
 	return ip + sizeof(vmi_instr_callnative);
 }
 
+vmi_ip _vmi_thread_calluref(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_calluref* instr = (const vmi_instr_calluref*)ip;
+	vmi_ip addr = *(const vm_byte**)vmi_stack_pop(&t->stack, sizeof(vmi_ip));
+	return vmi_thread_begin_call(t, ip, addr, instr->expected_stack_size);
+}
+
 vmi_ip _vmi_thread_lda(vmi_thread* t, vmi_ip ip)
 {
 	const vmi_instr_lda* instr = (const vmi_instr_lda*)ip;
@@ -124,4 +131,13 @@ vmi_ip _vmi_thread_lda_a(vmi_thread* t, vmi_ip ip)
 		return _vmi_thread_stack_out_of_memory(t, ip);
 	*dest = src;
 	return ip + sizeof(vmi_instr_lda_a);
+}
+
+
+vmi_ip _vmi_thread_ldf(vmi_thread* t, vmi_ip ip)
+{
+	const vmi_instr_ldf* instr = (const vmi_instr_ldf*)ip;
+	const vm_byte** dest = (const vm_byte**)vmi_stack_push(&t->stack, sizeof(const vm_byte*));
+	*dest = instr->addr;
+	return ip + sizeof(vmi_instr_ldf);
 }
