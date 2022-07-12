@@ -8,7 +8,7 @@
 #include "vmp_instr.h"
 #include "vmp_list_packages.h"
 #include "vmp_string_pool.h"
-#include "vmp_debug.h"
+#include "../vm_debug.h"
 
 struct vmp_pipeline
 {

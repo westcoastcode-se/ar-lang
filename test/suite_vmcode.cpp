@@ -19,7 +19,7 @@ struct utils_vmcode : utils_vm
 			vmcd = NULL;
 		}
 
-		if (vmp_memory_test_bytes_left() == FALSE) {
+		if (vm_memory_test_bytes_left() == FALSE) {
 			throw_(error() << "not all memory was released");
 		}
 	}

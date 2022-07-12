@@ -31,7 +31,7 @@ struct utils_vmp : utils_vm
 			pipeline = NULL;
 		}
 
-		vmp_memory_test_bytes_left();
+		vm_memory_test_bytes_left();
 	}
 
 	void compile(vm_int32 opt_level = 0)

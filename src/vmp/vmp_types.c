@@ -1,6 +1,6 @@
 #include "vmp_types.h"
 #include "vmp_instr.h"
-#include "vmp_debug.h"
+#include "../vm_debug.h"
 
 vmp_package* vmp_package_new(const vm_string* name)
 {
@@ -9,7 +9,7 @@ vmp_package* vmp_package_new(const vm_string* name)
 
 vmp_package* vmp_package_newsz(const char* name, vm_int32 len)
 {
-	vmp_package* p = (vmp_package*)vmp_malloc(sizeof(vmp_package));
+	vmp_package* p = (vmp_package*)vm_malloc(sizeof(vmp_package));
 	if (p == NULL)
 		return NULL;
 	p->header.keyword_type = VMP_KEYWORD_PACKAGE;
@@ -26,7 +26,7 @@ void vmp_package_destroy(vmp_package* p)
 	vmp_list_imports_release(&p->imports);
 	vmp_list_funcs_release(&p->funcs);
 	vmp_list_types_release(&p->types);
-	vmp_free(p);
+	vm_free(p);
 }
 
 int vmp_package_add_func(vmp_package* p, vmp_func* func)
@@ -130,7 +130,7 @@ vmp_keyword* vmp_package_find_keyword(vmp_package* p, const vm_string* name)
 
 vmp_type* vmp_type_new(const vm_string* name)
 {
-	vmp_type* p = (vmp_type*)vmp_malloc(sizeof(vmp_type));
+	vmp_type* p = (vmp_type*)vm_malloc(sizeof(vmp_type));
 	if (p == NULL)
 		return NULL;
 	p->header.keyword_type = VMP_KEYWORD_TYPE;
@@ -147,7 +147,7 @@ vmp_type* vmp_type_new(const vm_string* name)
 
 vmp_type* vmp_type_new_from_props(const vmp_type_props* props)
 {
-	vmp_type* p = (vmp_type*)vmp_malloc(sizeof(vmp_type));
+	vmp_type* p = (vmp_type*)vm_malloc(sizeof(vmp_type));
 	if (p == NULL)
 		return NULL;
 	p->header.keyword_type = VMP_KEYWORD_TYPE;
@@ -187,7 +187,7 @@ void vmp_type_destroy(vmp_type* p)
 {
 	vmp_list_inherited_by_release(&p->inherited_by);
 	vmp_list_inherits_from_release(&p->inherits_from);
-	vmp_free(p);
+	vm_free(p);
 }
 
 BOOL vmp_type_test_inherits_from(const vmp_type* type, const vmp_type* inherits_from)
@@ -224,7 +224,7 @@ BOOL vmp_type_can_convert(const vmp_type* from, const vmp_type* to)
 
 vmp_arg* vmp_arg_new()
 {
-	vmp_arg* p = (vmp_arg*)vmp_malloc(sizeof(vmp_arg));
+	vmp_arg* p = (vmp_arg*)vm_malloc(sizeof(vmp_arg));
 	if (p == NULL)
 		return NULL;
 	p->header.keyword_type = VMP_KEYWORD_ARG;
@@ -238,7 +238,7 @@ vmp_arg* vmp_arg_new()
 
 void vmp_arg_free(vmp_arg* a)
 {
-	vmp_free(a);
+	vm_free(a);
 }
 
 void vmp_arg_set_name(vmp_arg* a, const vm_string* name)
@@ -253,7 +253,7 @@ void vmp_arg_set_namesz(vmp_arg* a, const char* name, vm_int32 len)
 
 vmp_return* vmp_return_new()
 {
-	vmp_return* p = (vmp_return*)vmp_malloc(sizeof(vmp_return));
+	vmp_return* p = (vmp_return*)vm_malloc(sizeof(vmp_return));
 	if (p == NULL)
 		return NULL;
 	p->header.keyword_type = VMP_KEYWORD_RETURN;
@@ -265,12 +265,12 @@ vmp_return* vmp_return_new()
 
 void vmp_return_free(vmp_return* a)
 {
-	vmp_free(a);
+	vm_free(a);
 }
 
 vmp_local* vmp_local_new()
 {
-	vmp_local* p = (vmp_local*)vmp_malloc(sizeof(vmp_local));
+	vmp_local* p = (vmp_local*)vm_malloc(sizeof(vmp_local));
 	if (p == NULL)
 		return NULL;
 	p->header.keyword_type = VMP_KEYWORD_LOCAL;
@@ -284,7 +284,7 @@ vmp_local* vmp_local_new()
 
 void vmp_local_free(vmp_local* l)
 {
-	vmp_free(l);
+	vm_free(l);
 }
 
 void vmp_local_set_name(vmp_local* l, const vm_string* name)
@@ -304,7 +304,7 @@ vmp_func* vmp_func_new(const vm_string* name)
 
 vmp_func* vmp_func_newsz(const char* name, vm_int32 name_len)
 {
-	vmp_func* p = (vmp_func*)vmp_malloc(sizeof(vmp_func));
+	vmp_func* p = (vmp_func*)vm_malloc(sizeof(vmp_func));
 	if (p == NULL)
 		return NULL;
 	p->header.keyword_type = VMP_KEYWORD_FUNC;
@@ -331,7 +331,7 @@ void vmp_func_destroy(vmp_func* f)
 	vmp_instr* instr = f->first_instr;
 	while (instr != NULL) {
 		vmp_instr* const next = instr->next;
-		vmp_free(instr);
+		vm_free(instr);
 		instr = next;
 	}
 	f->first_instr = f->last_instr = NULL;
@@ -339,7 +339,7 @@ void vmp_func_destroy(vmp_func* f)
 	vmp_list_locals_release(&f->locals);
 	vmp_list_returns_release(&f->returns);
 	vmp_list_args_release(&f->args);
-	vmp_free(f);
+	vm_free(f);
 }
 
 
@@ -427,7 +427,7 @@ vmp_local* vmp_func_new_local(vmp_func* f, vmp_type* type)
 
 vmp_marker* vmp_func_new_marker(vmp_func* f)
 {
-	vmp_marker* p = (vmp_marker*)vmp_malloc(sizeof(vmp_marker));
+	vmp_marker* p = (vmp_marker*)vm_malloc(sizeof(vmp_marker));
 	if (p == NULL)
 		return NULL;
 	p->func = f;
@@ -442,7 +442,7 @@ void vmp_marker_set_instr(vmp_marker* m, vmp_instr* instr)
 
 void vmp_marker_free(vmp_marker* m)
 {
-	vmp_free(m);
+	vm_free(m);
 }
 
 vmp_instr* vmp_func_add_instr(vmp_func* f, vmp_instr* instr)

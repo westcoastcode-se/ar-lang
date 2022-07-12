@@ -1,6 +1,6 @@
 #include "vmp_list_imports.h"
 #include "vmp_types.h"
-#include "vmp_debug.h"
+#include "../vm_debug.h"
 
 #define CAPACITY (4)
 #define RESIZE (4)
@@ -9,13 +9,13 @@ BOOL vmp_list_imports_init(vmp_list_imports* l)
 {
 	l->count = 0;
 	l->capacity = CAPACITY;
-	l->memory = (vmp_package**)vmp_malloc(sizeof(vmp_package*) * l->capacity);
+	l->memory = (vmp_package**)vm_malloc(sizeof(vmp_package*) * l->capacity);
 	return l->memory != NULL;
 }
 
 void vmp_list_imports_release(vmp_list_imports* l)
 {
-	vmp_free(l->memory);
+	vm_free(l->memory);
 	l->memory = NULL;
 	l->capacity = 0;
 	l->count = 0;
@@ -25,7 +25,7 @@ vm_int32 vmp_list_imports_add(vmp_list_imports* l, vmp_package* ptr)
 {
 	if (l->count >= l->capacity) {
 		l->capacity += RESIZE;
-		l->memory = (vmp_package**)vmp_realloc(l->memory, sizeof(vmp_package*) * l->capacity);
+		l->memory = (vmp_package**)vm_realloc(l->memory, sizeof(vmp_package*) * l->capacity);
 		if (l->memory == NULL)
 			return -1;
 	}

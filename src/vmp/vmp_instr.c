@@ -2,7 +2,7 @@
 #include "vmp.h"
 #include "vmp_list_args.h"
 #include "vmp_messages.h"
-#include "vmp_debug.h"
+#include "../vm_debug.h"
 #include <inttypes.h>
 
 vmp_constant vmp_const_i1(vm_int8 value)
@@ -99,7 +99,7 @@ vmp_constant vmp_const_ptr(vm_byte* value)
 
 vmp_instr* vmp_instr_lda(vm_uint32 index)
 {
-	vmp_instr_def_lda* instr = (vmp_instr_def_lda*)vmp_malloc(sizeof(vmp_instr_def_lda));
+	vmp_instr_def_lda* instr = (vmp_instr_def_lda*)vm_malloc(sizeof(vmp_instr_def_lda));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDA, sizeof(vmi_instr_lda));
@@ -109,7 +109,7 @@ vmp_instr* vmp_instr_lda(vm_uint32 index)
 
 vmp_instr* vmp_instr_lda_a(vm_uint32 index)
 {
-	vmp_instr_def_lda_a* instr = (vmp_instr_def_lda_a*)vmp_malloc(sizeof(vmp_instr_def_lda_a));
+	vmp_instr_def_lda_a* instr = (vmp_instr_def_lda_a*)vm_malloc(sizeof(vmp_instr_def_lda_a));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDA_A, sizeof(vmi_instr_lda_a));
@@ -119,7 +119,7 @@ vmp_instr* vmp_instr_lda_a(vm_uint32 index)
 
 vmp_instr* vmp_instr_ldl(vm_uint32 index)
 {
-	vmp_instr_def_ldl* instr = (vmp_instr_def_ldl*)vmp_malloc(sizeof(vmp_instr_def_ldl));
+	vmp_instr_def_ldl* instr = (vmp_instr_def_ldl*)vm_malloc(sizeof(vmp_instr_def_ldl));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDL, sizeof(vmi_instr_ldl));
@@ -129,7 +129,7 @@ vmp_instr* vmp_instr_ldl(vm_uint32 index)
 
 vmp_instr* vmp_instr_ldl_a(vm_uint32 index)
 {
-	vmp_instr_def_ldl_a* instr = (vmp_instr_def_ldl_a*)vmp_malloc(sizeof(vmp_instr_def_ldl_a));
+	vmp_instr_def_ldl_a* instr = (vmp_instr_def_ldl_a*)vm_malloc(sizeof(vmp_instr_def_ldl_a));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDL_A, sizeof(vmi_instr_ldl_a));
@@ -139,7 +139,7 @@ vmp_instr* vmp_instr_ldl_a(vm_uint32 index)
 
 vmp_instr* vmp_instr_stl(vm_uint32 index)
 {
-	vmp_instr_def_stl* instr = (vmp_instr_def_stl*)vmp_malloc(sizeof(vmp_instr_def_stl));
+	vmp_instr_def_stl* instr = (vmp_instr_def_stl*)vm_malloc(sizeof(vmp_instr_def_stl));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STL, sizeof(vmi_instr_stl));
@@ -149,7 +149,7 @@ vmp_instr* vmp_instr_stl(vm_uint32 index)
 
 vmp_instr* vmp_instr_locals(const vmp_func* func)
 {
-	vmp_instr_def_locals* instr = (vmp_instr_def_locals*)vmp_malloc(sizeof(vmp_instr_def_locals));
+	vmp_instr_def_locals* instr = (vmp_instr_def_locals*)vm_malloc(sizeof(vmp_instr_def_locals));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LOCALS, sizeof(vmi_instr_locals));
@@ -164,7 +164,7 @@ vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant)
 	case VMI_INSTR_PROP_UINT64:
 	case VMI_INSTR_PROP_FLOAT64:
 	{
-		vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmp_malloc(sizeof(vmp_instr_def_ldc));
+		vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vm_malloc(sizeof(vmp_instr_def_ldc));
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC_I8, sizeof(vmi_instr_ldc_i64));
@@ -175,7 +175,7 @@ vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant)
 	default:
 	{
 
-		vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmp_malloc(sizeof(vmp_instr_def_ldc));
+		vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vm_malloc(sizeof(vmp_instr_def_ldc));
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC, sizeof(vmi_instr_ldc_i32));
@@ -188,7 +188,7 @@ vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant)
 
 vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant)
 {
-	vmp_instr_def_ldc_s* instr = (vmp_instr_def_ldc_s*)vmp_malloc(sizeof(vmp_instr_def_ldc_s));
+	vmp_instr_def_ldc_s* instr = (vmp_instr_def_ldc_s*)vm_malloc(sizeof(vmp_instr_def_ldc_s));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC_S, sizeof(vmi_instr_ldc_s));
@@ -199,7 +199,7 @@ vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant)
 
 vmp_instr* vmp_instr_allocs(const vmp_type* type)
 {
-	vmp_instr_def_allocs* instr = (vmp_instr_def_allocs*)vmp_malloc(sizeof(vmp_instr_def_allocs));
+	vmp_instr_def_allocs* instr = (vmp_instr_def_allocs*)vm_malloc(sizeof(vmp_instr_def_allocs));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ALLOCS, sizeof(vmi_instr_allocs));
@@ -210,7 +210,7 @@ vmp_instr* vmp_instr_allocs(const vmp_type* type)
 
 vmp_instr* vmp_instr_allocs_const(vm_int16 amount)
 {
-	vmp_instr_def_allocs* instr = (vmp_instr_def_allocs*)vmp_malloc(sizeof(vmp_instr_def_allocs));
+	vmp_instr_def_allocs* instr = (vmp_instr_def_allocs*)vm_malloc(sizeof(vmp_instr_def_allocs));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ALLOCS, sizeof(vmi_instr_allocs));
@@ -233,7 +233,7 @@ vm_int32 vmp_instr_allocs_get_size(const vmp_instr_def_frees* cmd)
 
 vmp_instr* vmp_instr_frees(const vmp_type* type)
 {
-	vmp_instr_def_frees* instr = (vmp_instr_def_frees*)vmp_malloc(sizeof(vmp_instr_def_frees));
+	vmp_instr_def_frees* instr = (vmp_instr_def_frees*)vm_malloc(sizeof(vmp_instr_def_frees));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_FREES, sizeof(vmi_instr_frees));
@@ -244,7 +244,7 @@ vmp_instr* vmp_instr_frees(const vmp_type* type)
 
 vmp_instr* vmp_instr_frees_const(vm_int16 amount)
 {
-	vmp_instr_def_frees* instr = (vmp_instr_def_frees*)vmp_malloc(sizeof(vmp_instr_def_frees));
+	vmp_instr_def_frees* instr = (vmp_instr_def_frees*)vm_malloc(sizeof(vmp_instr_def_frees));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_FREES, sizeof(vmi_instr_frees));
@@ -255,7 +255,7 @@ vmp_instr* vmp_instr_frees_const(vm_int16 amount)
 
 vmp_instr* vmp_instr_alloch(const vmp_type* type)
 {
-	vmp_instr_def_alloch* instr = (vmp_instr_def_alloch*)vmp_malloc(sizeof(vmp_instr_def_alloch));
+	vmp_instr_def_alloch* instr = (vmp_instr_def_alloch*)vm_malloc(sizeof(vmp_instr_def_alloch));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ALLOCH, sizeof(vmi_instr_alloch));
@@ -266,7 +266,7 @@ vmp_instr* vmp_instr_alloch(const vmp_type* type)
 
 vmp_instr* vmp_instr_alloch_type(const vmp_type* type)
 {
-	vmp_instr_def_alloch* instr = (vmp_instr_def_alloch*)vmp_malloc(sizeof(vmp_instr_def_alloch));
+	vmp_instr_def_alloch* instr = (vmp_instr_def_alloch*)vm_malloc(sizeof(vmp_instr_def_alloch));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ALLOCH_C, sizeof(vmi_instr_alloch_c));
@@ -277,7 +277,7 @@ vmp_instr* vmp_instr_alloch_type(const vmp_type* type)
 
 vmp_instr* vmp_instr_alloch_const(vm_int16 amount)
 {
-	vmp_instr_def_alloch* instr = (vmp_instr_def_alloch*)vmp_malloc(sizeof(vmp_instr_def_alloch));
+	vmp_instr_def_alloch* instr = (vmp_instr_def_alloch*)vm_malloc(sizeof(vmp_instr_def_alloch));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ALLOCH_C, sizeof(vmi_instr_alloch_c));
@@ -288,7 +288,7 @@ vmp_instr* vmp_instr_alloch_const(vm_int16 amount)
 
 vmp_instr* vmp_instr_freeh()
 {
-	vmp_instr_def_freeh* instr = (vmp_instr_def_freeh*)vmp_malloc(sizeof(vmp_instr_def_freeh));
+	vmp_instr_def_freeh* instr = (vmp_instr_def_freeh*)vm_malloc(sizeof(vmp_instr_def_freeh));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_FREEH, sizeof(vmi_instr_freeh));
@@ -302,7 +302,7 @@ vmp_instr* vmp_instr_sturef(const vmp_type* type)
 	ASSERT_NOT_NULL(type);
 
 	if (type->size > UINT8_MAX) {
-		vmp_instr_def_sturef* instr = (vmp_instr_def_sturef*)vmp_malloc(sizeof(vmp_instr_def_sturef));
+		vmp_instr_def_sturef* instr = (vmp_instr_def_sturef*)vm_malloc(sizeof(vmp_instr_def_sturef));
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STUREF, sizeof(vmi_instr_sturef));
@@ -310,7 +310,7 @@ vmp_instr* vmp_instr_sturef(const vmp_type* type)
 		return VMC_PIPELINE_INSTR_BASE(instr);
 	}
 	else {
-		vmp_instr_def_sturef_s* instr = (vmp_instr_def_sturef_s*)vmp_malloc(sizeof(vmp_instr_def_sturef_s));
+		vmp_instr_def_sturef_s* instr = (vmp_instr_def_sturef_s*)vm_malloc(sizeof(vmp_instr_def_sturef_s));
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STUREF_S, sizeof(vmi_instr_sturef_s));
@@ -324,7 +324,7 @@ vmp_instr* vmp_instr_stelem(const vmp_type* type)
 	ASSERT_NOT_NULL(type);
 
 	if (type->of_type->size > UINT8_MAX) {
-		vmp_instr_def_stelem* instr = (vmp_instr_def_stelem*)vmp_malloc(sizeof(vmp_instr_def_stelem));
+		vmp_instr_def_stelem* instr = (vmp_instr_def_stelem*)vm_malloc(sizeof(vmp_instr_def_stelem));
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STELEM, sizeof(vmi_instr_stelem));
@@ -332,7 +332,7 @@ vmp_instr* vmp_instr_stelem(const vmp_type* type)
 		return VMC_PIPELINE_INSTR_BASE(instr);
 	}
 	else {
-		vmp_instr_def_stelem_s* instr = (vmp_instr_def_stelem_s*)vmp_malloc(sizeof(vmp_instr_def_stelem_s));
+		vmp_instr_def_stelem_s* instr = (vmp_instr_def_stelem_s*)vm_malloc(sizeof(vmp_instr_def_stelem_s));
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STELEM_S, sizeof(vmi_instr_stelem_s));
@@ -346,7 +346,7 @@ vmp_instr* vmp_instr_ldelem(const vmp_type* type)
 	ASSERT_NOT_NULL(type);
 
 	if (type->of_type->size > UINT8_MAX) {
-		vmp_instr_def_ldelem* instr = (vmp_instr_def_ldelem*)vmp_malloc(sizeof(vmp_instr_def_ldelem));
+		vmp_instr_def_ldelem* instr = (vmp_instr_def_ldelem*)vm_malloc(sizeof(vmp_instr_def_ldelem));
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDELEM, sizeof(vmi_instr_ldelem));
@@ -354,7 +354,7 @@ vmp_instr* vmp_instr_ldelem(const vmp_type* type)
 		return VMC_PIPELINE_INSTR_BASE(instr);
 	}
 	else {
-		vmp_instr_def_ldelem_s* instr = (vmp_instr_def_ldelem_s*)vmp_malloc(sizeof(vmp_instr_def_ldelem_s));
+		vmp_instr_def_ldelem_s* instr = (vmp_instr_def_ldelem_s*)vm_malloc(sizeof(vmp_instr_def_ldelem_s));
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDELEM_S, sizeof(vmi_instr_ldelem_s));
@@ -367,7 +367,7 @@ vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)
 {
 	ASSERT_NOT_NULL(type);
 
-	vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vmp_malloc(sizeof(vmp_instr_def_ldc));
+	vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vm_malloc(sizeof(vmp_instr_def_ldc));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDC_I8, sizeof(vmi_instr_ldc_i64));
@@ -378,7 +378,7 @@ vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)
 
 vmp_instr* vmp_instr_call(const vmp_func* func)
 {
-	vmp_instr_def_call* instr = (vmp_instr_def_call*)vmp_malloc(sizeof(vmp_instr_def_call));
+	vmp_instr_def_call* instr = (vmp_instr_def_call*)vm_malloc(sizeof(vmp_instr_def_call));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CALL, sizeof(vmi_instr_call));
@@ -388,7 +388,7 @@ vmp_instr* vmp_instr_call(const vmp_func* func)
 
 vmp_instr* vmp_instr_callnative(const vmp_func* func)
 {
-	vmp_instr_def_callnative* instr = (vmp_instr_def_callnative*)vmp_malloc(sizeof(vmp_instr_def_callnative));
+	vmp_instr_def_callnative* instr = (vmp_instr_def_callnative*)vm_malloc(sizeof(vmp_instr_def_callnative));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CALLNATIVE, sizeof(vmi_instr_callnative));
@@ -398,7 +398,7 @@ vmp_instr* vmp_instr_callnative(const vmp_func* func)
 
 vmp_instr* vmp_instr_add(const vmp_type* type)
 {
-	vmp_instr_def_add* instr = (vmp_instr_def_add*)vmp_malloc(sizeof(vmp_instr_def_add));
+	vmp_instr_def_add* instr = (vmp_instr_def_add*)vm_malloc(sizeof(vmp_instr_def_add));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_ADD, sizeof(vmi_instr_add));
@@ -408,7 +408,7 @@ vmp_instr* vmp_instr_add(const vmp_type* type)
 
 vmp_instr* vmp_instr_sub(const vmp_type* type)
 {
-	vmp_instr_def_sub* instr = (vmp_instr_def_sub*)vmp_malloc(sizeof(vmp_instr_def_sub));
+	vmp_instr_def_sub* instr = (vmp_instr_def_sub*)vm_malloc(sizeof(vmp_instr_def_sub));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_SUB, sizeof(vmi_instr_sub));
@@ -418,7 +418,7 @@ vmp_instr* vmp_instr_sub(const vmp_type* type)
 
 vmp_instr* vmp_instr_clt(const vmp_type* type)
 {
-	vmp_instr_def_cmp* instr = (vmp_instr_def_cmp*)vmp_malloc(sizeof(vmp_instr_def_cmp));
+	vmp_instr_def_cmp* instr = (vmp_instr_def_cmp*)vm_malloc(sizeof(vmp_instr_def_cmp));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CMP, sizeof(vmi_instr_cmp));
@@ -429,7 +429,7 @@ vmp_instr* vmp_instr_clt(const vmp_type* type)
 
 vmp_instr* vmp_instr_cgt(const vmp_type* type)
 {
-	vmp_instr_def_cmp* instr = (vmp_instr_def_cmp*)vmp_malloc(sizeof(vmp_instr_def_cmp));
+	vmp_instr_def_cmp* instr = (vmp_instr_def_cmp*)vm_malloc(sizeof(vmp_instr_def_cmp));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CMP, sizeof(vmi_instr_cmp));
@@ -440,7 +440,7 @@ vmp_instr* vmp_instr_cgt(const vmp_type* type)
 
 vmp_instr* vmp_instr_jmpt(const vmp_marker* marker)
 {
-	vmp_instr_def_jmp* instr = (vmp_instr_def_jmp*)vmp_malloc(sizeof(vmp_instr_def_jmp));
+	vmp_instr_def_jmp* instr = (vmp_instr_def_jmp*)vm_malloc(sizeof(vmp_instr_def_jmp));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_JMP, sizeof(vmi_instr_jmp));
@@ -451,7 +451,7 @@ vmp_instr* vmp_instr_jmpt(const vmp_marker* marker)
 
 vmp_instr* vmp_instr_jmpf(const vmp_marker* marker)
 {
-	vmp_instr_def_jmp* instr = (vmp_instr_def_jmp*)vmp_malloc(sizeof(vmp_instr_def_jmp));
+	vmp_instr_def_jmp* instr = (vmp_instr_def_jmp*)vm_malloc(sizeof(vmp_instr_def_jmp));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_JMP, sizeof(vmi_instr_jmp));
@@ -462,7 +462,7 @@ vmp_instr* vmp_instr_jmpf(const vmp_marker* marker)
 
 vmp_instr* vmp_instr_conv(const vmp_type* from, const vmp_type* to)
 {
-	vmp_instr_def_conv* instr = (vmp_instr_def_conv*)vmp_malloc(sizeof(vmp_instr_def_conv));
+	vmp_instr_def_conv* instr = (vmp_instr_def_conv*)vm_malloc(sizeof(vmp_instr_def_conv));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CONV, sizeof(vmi_instr_conv));
@@ -473,7 +473,7 @@ vmp_instr* vmp_instr_conv(const vmp_type* from, const vmp_type* to)
 
 vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 {
-	vmp_instr_def_basic* instr = (vmp_instr_def_basic*)vmp_malloc(sizeof(vmp_instr_def_basic));
+	vmp_instr_def_basic* instr = (vmp_instr_def_basic*)vm_malloc(sizeof(vmp_instr_def_basic));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, type, size);

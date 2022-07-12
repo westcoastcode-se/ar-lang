@@ -1,5 +1,5 @@
 #include "vmp_string_pool.h"
-#include "vmp_debug.h"
+#include "../vm_debug.h"
 
 //
 // PRIVATE ///////////////////////////////////////////////////////////////////////////
@@ -7,7 +7,7 @@
 
 void _vmp_compiler_string_copy(vm_string* s, const char* src, int len)
 {
-	char* dest = (char*)vmp_malloc(len);
+	char* dest = (char*)vm_malloc(len);
 	s->start = dest;
 	s->end = dest + len;
 	for (int i = 0; i < len; ++i) {
@@ -29,8 +29,8 @@ void vmp_string_pool_destroy(vmp_string_pool* p)
 	vmp_string_pool_entry* e = p->first;
 	while (e != NULL) {
 		vmp_string_pool_entry* const next = e->next;
-		vmp_free((void*)e->value.start);
-		vmp_free(e);
+		vm_free((void*)e->value.start);
+		vm_free(e);
 		e = next;
 	}
 	p->first = p->last = NULL;
@@ -48,7 +48,7 @@ const vm_string* vmp_string_pool_stringsz(vmp_string_pool* p, const char* str, i
 	}
 
 	// If not, then add it to the string pool
-	e = (vmp_string_pool_entry*)vmp_malloc(sizeof(vmp_string_pool_entry));
+	e = (vmp_string_pool_entry*)vm_malloc(sizeof(vmp_string_pool_entry));
 	if (e == NULL) {
 		return NULL;
 	}

@@ -1,7 +1,7 @@
 #include "vmp.h"
 #include "vmp_types.h"
 #include "vmp_messages.h"
-#include "vmp_debug.h"
+#include "../vm_debug.h"
 #include "../interpreter/vmi_process.h"
 
 //
@@ -103,7 +103,7 @@ void vmp_pipeline_add_vm_package(vmp_pipeline* p)
 
 vmp_pipeline* vmp_pipeline_new()
 {
-	vmp_pipeline* p = (vmp_pipeline*)vmp_malloc(sizeof(vmp_pipeline));
+	vmp_pipeline* p = (vmp_pipeline*)vm_malloc(sizeof(vmp_pipeline));
 	if (p == NULL)
 		return NULL;
 	vmp_list_packages_init(&p->packages);
@@ -122,7 +122,7 @@ void vmp_pipeline_destroy(vmp_pipeline* p)
 	vm_messages_destroy(&p->messages);
 	vmp_string_pool_destroy(&p->string_pool);
 	vmp_list_packages_release(&p->packages);
-	vmp_free(p);
+	vm_free(p);
 }
 
 BOOL vmp_pipeline_add_package(vmp_pipeline* p, vmp_package* pkg)
@@ -272,7 +272,7 @@ const vm_string* vmp_pipeline_get_string(vmp_pipeline* p, const char* str, vm_in
 
 vmp_builder* vmp_builder_new(vmp_pipeline* p)
 {
-	vmp_builder* b = (vmp_builder*)vmp_malloc(sizeof(vmp_builder));
+	vmp_builder* b = (vmp_builder*)vm_malloc(sizeof(vmp_builder));
 	if (b == NULL)
 		return NULL;
 	b->pipeline = p;
@@ -409,7 +409,7 @@ void vmp_builder_destroy(vmp_builder* b)
 {
 	vm_messages_destroy(&b->messages);
 	vm_bytestream_release(&b->bytestream);
-	vmp_free(b);
+	vm_free(b);
 }
 
 BOOL vmp_builder_write(vmp_builder* builder, const void* ptr, vm_int32 size)

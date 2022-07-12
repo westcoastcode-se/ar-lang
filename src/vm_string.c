@@ -23,7 +23,8 @@ void vm_mutable_string_free(vm_mutable_string* m)
 	if (m->start)
 	{
 		free(m->start);
-		m->start = m->end = NULL;
+		m->start = NULL;
+		m->end = NULL;
 	}
 }
 
