@@ -716,6 +716,80 @@ struct suite_vmp_tests : utils_vmp
 		end();
 	}
 
+	void calluref()
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Add function and add two integer types
+		auto add = vmp_func_newsz("Add", 3);
+		auto add_arg1 = vmp_func_new_arg(add, get_type("vm", string(name<vm_int32>())));
+		vmp_arg_set_namesz(add_arg1, "lhs", 3);
+		auto add_arg2 = vmp_func_new_arg(add, get_type("vm", string(name<vm_int32>())));
+		vmp_arg_set_namesz(add_arg2, "rhs", 3);
+		vmp_func_new_return(add, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, add);
+
+		// {
+		//	lda 0
+		//	lda 1
+		//	add int32
+		//	ret
+		// }
+		vmp_func_begin_body(add);
+		vmp_func_add_instr(add, vmp_instr_lda(0));
+		vmp_func_add_instr(add, vmp_instr_lda(1));
+		vmp_func_add_instr(add, vmp_instr_add(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(add, vmp_instr_ret());
+		vmp_func_begin_end(add);
+
+		// Create the Get function and add two integer types
+		auto get = vmp_func_newsz("Get", 3);
+		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, get);
+
+		// {
+		//	locals (_1 int32)
+		//	ldc_i4 <const_val2>
+		//  ldc_i4 <const_val1>
+		//	ldf Add()(int32)
+		//	calluref ()(int32)
+		//	stl 0
+		//	frees int32 * 2
+		//  ldl 0
+		//	ret
+		// }
+		auto const_val1 = 10;
+		auto const_val2 = 20;
+		vmp_func_begin_body(get);
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
+		vmp_func_add_instr(get, vmp_instr_ldf(add));
+		vmp_func_add_instr(get, vmp_instr_calluref(add));
+		vmp_func_add_instr(get, vmp_instr_stl(0));
+		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
+		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_value(pop_value<vm_int32>(t), (vm_int32)(const_val1 + const_val2));
+
+		destroy(t);
+
+		end();
+	}
+
 	void locals()
 	{
 		begin();
@@ -1650,6 +1724,7 @@ struct suite_vmp_tests : utils_vmp
 		TEST(ldc);
 		TEST(call);
 		TEST(callnative);
+		TEST(calluref);
 		TEST(locals);
 		TEST(cgt);
 		TEST(clt);
