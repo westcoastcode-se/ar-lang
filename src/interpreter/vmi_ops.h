@@ -41,6 +41,15 @@ enum vmi_icodes
 
 	// Load the address one of the arguments
 	VMI_LDA_A,
+
+	// Load a global value to the stack
+	VMI_LDG,
+
+	// Load the address where the global value is located
+	VMI_LDG_A,
+
+	// Store a value to a global value
+	VMI_STG,
 	
 	// Allocate memory on the stack
 	VMI_ALLOCS,
@@ -248,6 +257,27 @@ struct vmi_instr_ldl_a
 	};
 };
 typedef struct vmi_instr_ldl_a vmi_instr_ldl_a;
+
+// A ldg instruction
+struct vmi_instr_ldg
+{
+	union
+	{
+		vmi_opcode_header header;
+		vmi_opcode opcode;
+		struct
+		{
+			vm_uint8 icode;
+			vm_uint8 size;
+			vm_uint8 offset;
+			vm_uint8 props3;
+		};
+	};
+	vm_byte* addr;
+};
+typedef struct vmi_instr_ldg vmi_instr_ldg;
+typedef struct vmi_instr_ldg vmi_instr_ldg_a;
+typedef struct vmi_instr_ldg vmi_instr_stg;
 
 // A "load function to the stack" instruction
 struct vmi_instr_ldf

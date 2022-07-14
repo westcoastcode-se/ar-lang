@@ -73,6 +73,16 @@ BOOL vmp_builder_message_type_too_large(struct vmp_builder* b, const vm_string* 
 		size, max_size);
 }
 
+BOOL vmp_builder_message_type_not_defined(struct vmp_builder* b, const vm_string* type_name)
+{
+	vm_messages* const m = &b->messages;
+	return vm_messages_add(m,
+		VMP_MESSAGE_PREFIX,
+		VMP_MESSAGE_TYPE_NOT_DEFINED,
+		VMP_MESSAGE_TYPE_NOT_DEFINED_STR,
+		vm_string_length(type_name), type_name->start);
+}
+
 BOOL vmp_builder_message_type_not_array(struct vmp_builder* b, const vm_string* type_name)
 {
 	vm_messages* const m = &b->messages;

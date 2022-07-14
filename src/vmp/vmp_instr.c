@@ -207,6 +207,36 @@ vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_ldg(vmp_global* g)
+{
+	vmp_instr_def_ldg* instr = (vmp_instr_def_ldg*)vm_malloc(sizeof(vmp_instr_def_ldg));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDG, sizeof(vmi_instr_ldg));
+	instr->global = g;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_ldg_a(vmp_global* g)
+{
+	vmp_instr_def_ldg_a* instr = (vmp_instr_def_ldg_a*)vm_malloc(sizeof(vmp_instr_def_ldg_a));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDG_A, sizeof(vmi_instr_ldg_a));
+	instr->global = g;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_stg(vmp_global* g)
+{
+	vmp_instr_def_stg* instr = (vmp_instr_def_stg*)vm_malloc(sizeof(vmp_instr_def_stg));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STG, sizeof(vmi_instr_stg));
+	instr->global = g;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_allocs(const vmp_type* type)
 {
 	vmp_instr_def_allocs* instr = (vmp_instr_def_allocs*)vm_malloc(sizeof(vmp_instr_def_allocs));
@@ -768,6 +798,48 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_locals))) {
 				return NULL;
 			}
+		}
+		break;
+	}
+	case VMP_INSTR_LDG:
+	{
+		const vmp_instr_def_ldg* const cmd = (vmp_instr_def_ldg*)h;
+
+		vmi_instr_ldg instr;
+		instr.opcode = 0;
+		instr.icode = VMI_LDG;
+		instr.size = cmd->global->type->size;
+		instr.addr = builder->bytestream.memory + cmd->global->offset;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldg))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_LDG_A:
+	{
+		const vmp_instr_def_ldg_a* const cmd = (vmp_instr_def_ldg_a*)h;
+
+		vmi_instr_ldg_a instr;
+		instr.opcode = 0;
+		instr.icode = VMI_LDG_A;
+		instr.size = cmd->global->type->size;
+		instr.addr = builder->bytestream.memory + cmd->global->offset;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldg_a))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_STG:
+	{
+		const vmp_instr_def_stg* const cmd = (vmp_instr_def_stg*)h;
+
+		vmi_instr_stg instr;
+		instr.opcode = 0;
+		instr.icode = VMI_STG;
+		instr.size = cmd->global->type->size;
+		instr.addr = builder->bytestream.memory + cmd->global->offset;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_stg))) {
+			return NULL;
 		}
 		break;
 	}

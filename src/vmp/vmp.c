@@ -194,9 +194,18 @@ void vmp_pipeline_resolve_locals(vmp_pipeline* p, vmp_func* func)
 vm_int32 vmp_pipeline_resolve_package(vmp_pipeline* p, vm_int32 offset, vmp_package* pkg)
 {
 	const vm_int32 num_funcs = pkg->funcs.count;
+	const vm_int32 num_globals = pkg->globals.count;
+	vm_int32 i;
+	
+	// Make sure that each package global variable has a known offset
+	for (i = 0; i < num_globals; ++i) {
+		vmp_global* const global = vmp_list_globals_get(&pkg->globals, i);
+		global->offset = offset;
+		offset += global->type->size;
+	}
 
 	// Make sure that each function has a known offset
-	for (vm_int32 i = 0; i < num_funcs; ++i) {
+	for (i = 0; i < num_funcs; ++i) {
 		vmp_func* const func = vmp_list_funcs_get(&pkg->funcs, i);
 		// Make sure that all information of the arguments are known
 		vmp_pipeline_resolve_args(p, func);
@@ -290,9 +299,25 @@ void vmp_builder_set_opt_level(vmp_builder* b, vm_int32 opt_level)
 
 BOOL vmp_builder_compile_package(vmp_builder* b, const vmp_package* p)
 {
-	const vm_int32 size = p->funcs.count;
+	const vm_int32 num_funcs = p->funcs.count;
+	const vm_int32 num_globals = p->globals.count;
 	vm_int32 i;
-	for (i = 0; i < size; ++i) {
+
+	// Reserve memory for global variables
+	for (i = 0; i < num_globals; ++i) {
+		vmp_global* const g = vmp_list_globals_get(&p->globals, i);
+		if (g->type->size == 0) {
+			vmp_builder_message_type_not_defined(b, &g->type->name);
+			return FALSE;
+		}
+		if (!vmp_builder_reserve(b, g->type->size)) {
+			vmp_builder_panic_out_of_memory(b);
+			return FALSE;
+		}
+	}
+
+	// Compile functions
+	for (i = 0; i < num_funcs; ++i) {
 		const vmp_func* const f = vmp_list_funcs_get(&p->funcs, i);
 		const vmp_instr* instr = f->first_instr;
 		while (instr) {
@@ -418,6 +443,15 @@ BOOL vmp_builder_write(vmp_builder* builder, const void* ptr, vm_int32 size)
 		vmp_builder_panic_out_of_memory(builder);
 		return FALSE;
 	}
+	return TRUE;
+}
+
+BOOL vmp_builder_reserve(vmp_builder* builder, vm_int32 size)
+{
+	vm_byte* ptr = vm_bytestream_reserve(&builder->bytestream, size);
+	if (ptr == NULL)
+		return FALSE;
+	memset(ptr, 0, size);
 	return TRUE;
 }
 

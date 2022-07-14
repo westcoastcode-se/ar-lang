@@ -3,11 +3,21 @@
 #include "vmcd_source_code.h"
 #include <inttypes.h>
 
-vmp_type* vmcd_parse_type(const vmcd_scope* s, BOOL include_imports)
+// Parse a type from a specific package. It is assumed that everything in the package is already processed and "compiled"
+vmp_type* vmcd_parse_type_from_package(const vmcd_scope* s)
+{
+	vmcd_token* const t = s->token;
+	return vmp_package_find_type(s->package, &t->string);
+}
+
+// Parse a type. If the returned type is NULL then a message will be put on the message queue with the error
+vmp_type* vmcd_parse_type(const vmcd_scope* s)
 {
 	vmcd_token* const t = s->token;
 	if (t->type == VMCD_TOKEN_PTR) {
-		vmp_type* base_type = vmcd_parse_type(s, include_imports);
+		// If no type was found then this is from a package and it wasn't found. This can be deduced because
+		// a type from "this" package is always temporarily created with an unknown size
+		vmp_type* base_type = vmcd_parse_type(s);
 		if (base_type == NULL)
 			return NULL;
 		char memory[128];
@@ -35,15 +45,14 @@ vmp_type* vmcd_parse_type(const vmcd_scope* s, BOOL include_imports)
 			case VMP_LIST_ADDED:
 				break;
 			default:
-				// Could not add type. TODO: Add better message
-				vmcd_message_not_implemented(s);
+				vmcd_message_out_of_memory(s);
 				return NULL;
 			}
 		}
 		return type;
 	}
 	else if (t->type == VMCD_TOKEN_SQUARE_L) {
-		vmcd_message_panic(s, "not implemented!");
+		vmcd_message_not_implemented(s);
 		return NULL;
 	}
 	else if (t->type != VMCD_TOKEN_KEYWORD) {
@@ -51,7 +60,7 @@ vmp_type* vmcd_parse_type(const vmcd_scope* s, BOOL include_imports)
 		return NULL;
 	}
 
-	// This is an imported package?
+	// This is an imported package? (ex: vm.int32)
 	vmp_package* const imported = vmp_package_find_import(s->package, &t->string);
 	if (imported != NULL) {
 		if (!vmcd_token_next_type(t, VMCD_TOKEN_DOT)) {
@@ -62,15 +71,12 @@ vmp_type* vmcd_parse_type(const vmcd_scope* s, BOOL include_imports)
 		vmcd_scope inner_scope = *s;
 		inner_scope.package = imported;
 		inner_scope.parent = s;
-		return vmcd_parse_type(&inner_scope, FALSE);
+		return vmcd_parse_type_from_package(&inner_scope);
 	}
 
-	// Try to fetch the type
-	vmp_type* type;
-	if (include_imports)
-		type = vmp_package_find_type_include_imports(s->package, &t->string);
-	else
-		type = vmp_package_find_type(s->package, &t->string);
+	// Try to fetch the type. If the type doesn't exist then assume that this isn't from a package and can thus be
+	// created artificially with an unknown size
+	vmp_type* type = vmp_package_find_type_include_imports(s->package, &t->string);
 	if (type == NULL) {
 		type = vmp_type_new(&t->string);
 		switch (vmp_package_add_type(s->package, type))
@@ -78,8 +84,7 @@ vmp_type* vmcd_parse_type(const vmcd_scope* s, BOOL include_imports)
 		case VMP_LIST_ADDED:
 			break;
 		default:
-			// Could not add type. TODO: Add better message
-			vmcd_message_not_implemented(s);
+			vmcd_message_out_of_memory(s);
 			return NULL;
 		}
 	}
@@ -170,7 +175,7 @@ vmp_instr* parse_value(const vmcd_scope* s)
 	}
 }
 
-/*
+
 // Statements: 
 //	1 + 2 
 //		ldc, ldc, add
@@ -178,9 +183,11 @@ vmp_instr* parse_value(const vmcd_scope* s)
 //		ldc, ldc, add, ldc, add
 //	1 + (2 + 3) 
 //		ldc, ldc, ldc, add, add
-// get() + constant + (10 * get())
-//		call, ldc, add, ldc, call, mul, add
-BOOL parse_statement(const vmcd_scope* s, vmp_instr** result)
+// get() + constant + (10 * get() - calc(5))
+//		call, ldc, add, ldc(10), call, mul, ldc(5), call, sub
+// get
+//		ldf
+/*BOOL parse_statement(const vmcd_scope* s, vmp_instr** result)
 {
 	vmcd_token* const t = s->token;
 	vmp_instr* instr = NULL;
@@ -202,7 +209,24 @@ BOOL parse_statement(const vmcd_scope* s, vmp_instr** result)
 		// constant or function?
 		vmp_keyword* keyword = vmp_func_find_keyword(s->func, &t->string);
 		if (keyword == NULL) {
-			// keyword doesn't exist? Then the only allowed type is a "func", "global", "const" or "type"
+			// Unknown keywords are:
+			// * func (call func)
+			// * package-local variables (load_global)
+			// * constants (load_const)
+			// * types (not allowed in this context)
+
+			// We have to, essentially, peek at the next token, to know if the keyword is expected to 
+			// be a variable or a call to a function
+			vmcd_token peek = *t;
+			vmcd_token_next(&peek);
+
+			// Function call
+			if (t->type == VMCD_TOKEN_PARAN_L) {
+				
+			}
+			else {
+				// Might be a function ref, constant or a global
+			}
 		}
 		else {
 			switch (keyword->keyword_type)
@@ -431,8 +455,9 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 		arg->name = t->string;
 		vmp_func_add_arg(func, arg);
 
-		vmp_type* type = vmcd_parse_type(s, TRUE);
+		vmp_type* type = vmcd_parse_type(s);
 		if (type == NULL) {
+			// We haven't encountered the type yet?
 			return vmcd_message_not_implemented(s);
 		}
 		arg->type = type;
@@ -454,7 +479,7 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 			vmp_return* ret = vmp_return_new();
 			vmp_func_add_return(func, ret);
 
-			vmp_type* type = vmcd_parse_type(s, TRUE);
+			vmp_type* type = vmcd_parse_type(s);
 			if (type == NULL) {
 				return vmcd_message_not_implemented(s);
 			}
@@ -468,7 +493,7 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 		if (!vmp_func_add_return(func, ret)) {
 			return vmcd_message_out_of_memory(s);
 		}
-		vmp_type* type = vmcd_parse_type(s, TRUE);
+		vmp_type* type = vmcd_parse_type(s);
 		if (type == NULL) {
 			return vmcd_message_not_implemented(s);
 		}

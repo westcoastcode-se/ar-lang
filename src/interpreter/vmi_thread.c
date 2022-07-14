@@ -68,6 +68,7 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 #include "instr/cmp.inc.c"
 #include "instr/jmp.inc.c"
 #include "instr/locals.inc.c"
+#include "instr/globals.inc.c"
 #include "instr/func.inc.c"
 #include "instr/copy_s.inc.c"
 #include "instr/memory.inc.c"
@@ -356,6 +357,15 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_LDL_A:
 			ip = _vmi_thread_ldl_a(t, ip);
+			continue;
+		case VMI_LDG:
+			ip = _vmi_thread_ldg(t, ip);
+			continue;
+		case VMI_LDG_A:
+			ip = _vmi_thread_ldg_a(t, ip);
+			continue;
+		case VMI_STG:
+			ip = _vmi_thread_stg(t, ip);
 			continue;
 		case VMI_STUREF:
 			ip = _vmi_thread_sturef(t, ip);

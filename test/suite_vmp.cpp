@@ -840,6 +840,63 @@ struct suite_vmp_tests : utils_vmp
 		end();
 	}
 
+	void globals()
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+		auto global = vmp_package_new_global(main_package, get_type("vm", string(name<vm_int32>())));
+
+		// Create the Set function that sets the global variable
+		auto set = vmp_func_newsz("Set", 3);
+		auto set_arg1 = vmp_func_new_arg(set, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, set);
+
+		// {
+		//	lda 0
+		//	stg <var>
+		//	ret
+		// }
+		vmp_func_begin_body(set);
+		vmp_func_add_instr(set, vmp_instr_lda(set_arg1->index));
+		vmp_func_add_instr(set, vmp_instr_stg(global));
+		vmp_func_add_instr(set, vmp_instr_ret());
+		vmp_func_begin_end(set);
+
+		// Create the Get function that returns the global variable
+		auto get = vmp_func_newsz("Get", 3);
+		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
+		vmp_package_add_func(main_package, get);
+
+		// {
+		//	ldg <var>
+		//	ret
+		// }
+		vmp_func_begin_body(get);
+		vmp_func_add_instr(get, vmp_instr_ldg(global));
+		vmp_func_add_instr(get, vmp_instr_ret());
+		vmp_func_begin_end(get);
+
+		compile();
+
+		auto t = thread();
+
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = 123;
+		invoke(t, "Set");
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_value(pop_value<vm_int32>(t), 123);
+
+		invoke(t, "Get");
+		verify_stack_size(t, sizeof(vm_int32));
+		verify_value(pop_value<vm_int32>(t), 123);
+
+		destroy(t);
+
+		end();
+	}
+
 	void cgt(const vm_int32 const_val)
 	{
 		begin();
@@ -1726,6 +1783,7 @@ struct suite_vmp_tests : utils_vmp
 		TEST(callnative);
 		TEST(calluref);
 		TEST(locals);
+		TEST(globals);
 		TEST(cgt);
 		TEST(clt);
 		TEST(jmpt);

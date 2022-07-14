@@ -18,11 +18,13 @@ vmp_package* vmp_package_newsz(const char* name, vm_int32 len)
 	vmp_list_types_init(&p->types);
 	vmp_list_funcs_init(&p->funcs);
 	vmp_list_imports_init(&p->imports);
+	vmp_list_globals_init(&p->globals);
 	return p;
 }
 
 void vmp_package_destroy(vmp_package* p)
 {
+	vmp_list_globals_release(&p->globals);
 	vmp_list_imports_release(&p->imports);
 	vmp_list_funcs_release(&p->funcs);
 	vmp_list_types_release(&p->types);
@@ -65,6 +67,21 @@ int vmp_package_add_import(vmp_package* p, vmp_package* imported)
 	// TODO: Verify that circular dependencies doesnt exist
 	if (vmp_list_imports_add(&p->imports, imported) < 0)
 		return VMP_LIST_OUT_OF_MEMORY;
+	return VMP_LIST_ADDED;
+}
+
+int vmp_package_add_global(vmp_package* p, vmp_global* g)
+{
+	ASSERT_NOT_NULL(p);
+	ASSERT_NOT_NULL(g);
+
+	if (g->package != NULL)
+		return VMP_LIST_ALREADY_ADDED;
+	if (vmp_list_globals_find(&p->globals, &g->name) != NULL)
+		return VMP_LIST_ALREADY_EXISTS;
+	if (vmp_list_globals_add(&p->globals, g) < 0)
+		return VMP_LIST_OUT_OF_MEMORY;
+	g->package = p;
 	return VMP_LIST_ADDED;
 }
 
@@ -114,11 +131,19 @@ vmp_type* vmp_package_find_type_include_imports(vmp_package* p, const vm_string*
 	return NULL;
 }
 
+vmp_global* vmp_package_find_global(vmp_package* p, const vm_string* name)
+{
+	return vmp_list_globals_find(&p->globals, name);
+}
+
 vmp_keyword* vmp_package_find_keyword(vmp_package* p, const vm_string* name)
 {
 	vmp_type* const type = vmp_package_find_type(p, name);
 	if (type != NULL)
 		return &type->header;
+	vmp_global* const g = vmp_package_find_global(p, name);
+	if (g != NULL)
+		return &g->header;
 	vmp_func* func = vmp_package_find_func(p, name);
 	if (func != NULL)
 		return &func->header;
@@ -126,6 +151,19 @@ vmp_keyword* vmp_package_find_keyword(vmp_package* p, const vm_string* name)
 	if (imports != NULL)
 		return &imports->header;
 	return NULL;
+}
+
+vmp_global* vmp_package_new_global(vmp_package* p, vmp_type* type)
+{
+	vmp_global* g = vmp_global_new();
+	g->type = type;
+	switch (vmp_package_add_global(p, g))
+	{
+	case VMP_LIST_ADDED:
+		return g;
+	default:
+		return NULL;
+	}
 }
 
 vmp_type* vmp_type_new(const vm_string* name)
@@ -274,9 +312,9 @@ vmp_local* vmp_local_new()
 	if (p == NULL)
 		return NULL;
 	p->header.keyword_type = VMP_KEYWORD_LOCAL;
+	vm_string_zero(&p->name);
 	p->func = NULL;
 	p->type = NULL;
-	vm_string_zero(&p->name);
 	p->offset = 0;
 	p->index = 0;
 	return p;
@@ -295,6 +333,34 @@ void vmp_local_set_name(vmp_local* l, const vm_string* name)
 void vmp_local_set_namesz(vmp_local* l, const char* name, vm_int32 len)
 {
 	vm_string_setsz(&l->name, name, len);
+}
+
+vmp_global* vmp_global_new()
+{
+	vmp_global* p = (vmp_global*)vm_malloc(sizeof(vmp_global));
+	if (p == NULL)
+		return NULL;
+	p->header.keyword_type = VMP_KEYWORD_GLOBAL;
+	vm_string_zero(&p->name);
+	p->package = NULL;
+	p->type = NULL;
+	p->offset = 0;
+	return p;
+}
+
+void vmp_global_free(vmp_global* g)
+{
+	vm_free(g);
+}
+
+void vmp_global_set_name(vmp_global* g, const vm_string* name)
+{
+	g->name = *name;
+}
+
+void vmp_global_set_namesz(vmp_global* g, const char* name, vm_int32 len)
+{
+	vm_string_setsz(&g->name, name, len);
 }
 
 vmp_func* vmp_func_new(const vm_string* name)

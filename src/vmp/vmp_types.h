@@ -12,6 +12,7 @@
 #include "vmp_list_inherits_from.h"
 #include "vmp_list_inherited_by.h"
 #include "vmp_list_imports.h"
+#include "vmp_list_globals.h"
 
 // Return value indicating that the item is already added once
 #define VMP_LIST_ADDED (0)
@@ -34,7 +35,8 @@ enum vmp_keyword_type
 	VMP_KEYWORD_ARG = (1 << 3),
 	VMP_KEYWORD_RETURN = (1 << 4),
 	VMP_KEYWORD_LOCAL = (1 << 5),
-	VMP_KEYWORD_CONST = (1 << 6)
+	VMP_KEYWORD_GLOBAL = (1 << 6),
+	VMP_KEYWORD_CONST = (1 << 7)
 };
 typedef enum vmp_keyword_type vmp_keyword_type;
 
@@ -85,6 +87,9 @@ struct vmp_package
 
 	// Imports
 	vmp_list_imports imports;
+
+	// Global variables
+	vmp_list_globals globals;
 };
 typedef struct vmp_package vmp_package;
 
@@ -273,6 +278,30 @@ struct vmp_local
 };
 typedef struct vmp_local vmp_local;
 
+struct vmp_global
+{
+	// Header
+	union
+	{
+		vmp_keyword header;
+		struct
+		{
+			vmp_keyword_type keyword_type;
+			vm_string name;
+		};
+	};
+
+	// Package this global variable is part of
+	const vmp_package* package;
+
+	// The type this variable is
+	const vmp_type* type;
+
+	// Offset, in bytes, where the global varaible can be found
+	vm_uint32 offset;
+};
+typedef struct vmp_global vmp_global;
+
 enum vmp_instr_type
 {
 	VMP_INSTR_LDA = 1,
@@ -286,6 +315,9 @@ enum vmp_instr_type
 	VMP_INSTR_LDL,
 	VMP_INSTR_LDL_A,
 	VMP_INSTR_LOCALS,
+	VMP_INSTR_LDG,
+	VMP_INSTR_LDG_A,
+	VMP_INSTR_STG,
 	VMP_INSTR_ALLOCS,
 	VMP_INSTR_FREES,
 	VMP_INSTR_ALLOCH,
@@ -375,6 +407,9 @@ extern int vmp_package_add_type(vmp_package* p, vmp_type* type);
 // Add another package as an import. It's not allowed to have circular imports 
 extern int vmp_package_add_import(vmp_package* p, vmp_package* imported);
 
+// Add a global variable to a package
+extern int vmp_package_add_global(vmp_package* p, vmp_global* g);
+
 // Add the supplied type to this package
 extern vmp_type* vmp_package_new_type(vmp_package* p, const vm_string* name, vm_uint32 size);
 
@@ -393,8 +428,14 @@ extern vmp_package* vmp_package_find_import(vmp_package* p, const vm_string* nam
 // Search for a type in the supplied package or any of the imported packages
 extern vmp_type* vmp_package_find_type_include_imports(vmp_package* p, const vm_string* name);
 
+// Search for an global variable
+extern vmp_global* vmp_package_find_global(vmp_package* p, const vm_string* name);
+
 // Find a generic keyword in the supplied package
 extern vmp_keyword* vmp_package_find_keyword(vmp_package* p, const vm_string* name);
+
+// Add a global variable for the supplied package
+extern vmp_global* vmp_package_new_global(vmp_package* p, vmp_type* type);
 
 // New type
 extern vmp_type* vmp_type_new(const vm_string* name);
@@ -439,7 +480,7 @@ extern vmp_return* vmp_return_new();
 // Destroy return
 extern void vmp_return_free(vmp_return* a);
 
-// New arg
+// New local
 extern vmp_local* vmp_local_new();
 
 // Destroy arg
@@ -450,6 +491,18 @@ extern void vmp_local_set_name(vmp_local* l, const vm_string* name);
 
 // Set the name of the argument
 extern void vmp_local_set_namesz(vmp_local* l, const char* name, vm_int32 len);
+
+// New global variable
+extern vmp_global* vmp_global_new();
+
+// Destroy the global variable
+extern void vmp_global_free(vmp_global* g);
+
+// Set the name of the variable
+extern void vmp_global_set_name(vmp_global* g, const vm_string* name);
+
+// Set the name of the variable
+extern void vmp_global_set_namesz(vmp_global* g, const char* name, vm_int32 len);
 
 // New type
 extern vmp_func* vmp_func_new(const vm_string* name);

@@ -157,6 +157,18 @@ struct vmp_instr_def_ldc
 typedef struct vmp_instr_def_ldc vmp_instr_def_ldc;
 typedef struct vmp_instr_def_ldc vmp_instr_def_ldc_s;
 
+// ldg <global>
+struct vmp_instr_def_ldg
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// Global variable
+	vmp_global* global;
+};
+typedef struct vmp_instr_def_ldg vmp_instr_def_ldg;
+typedef struct vmp_instr_def_ldg vmp_instr_def_ldg_a;
+typedef struct vmp_instr_def_ldg vmp_instr_def_stg;
+
 // allocs <value|type>
 struct vmp_instr_def_allocs
 {
@@ -315,6 +327,15 @@ extern vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant);
 
 // Create a constant value instruction for smaller values, such as 16- and 8 bit constants
 extern vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant);
+
+// Create a new ldg instruction and return it
+extern vmp_instr* vmp_instr_ldg(vmp_global* g);
+
+// Create a new ldg instruction and return it
+extern vmp_instr* vmp_instr_ldg_a(vmp_global* g);
+
+// Create a new ldg instruction and return it
+extern vmp_instr* vmp_instr_stg(vmp_global* g);
 
 // Create a allocation instruction on the stack based on a type
 extern vmp_instr* vmp_instr_allocs(const vmp_type* type);
