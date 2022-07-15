@@ -299,7 +299,7 @@ BOOL vmcd_parse_decl_assign_local(const vmcd_scope* s, vmp_local* local)
 		}
 		if (keyword->keyword_type == VMP_KEYWORD_ARG) {
 			vmp_arg* const arg = (vmp_arg*)keyword;
-			vmp_func_add_instr(f, vmp_instr_lda(arg->index));
+			vmp_func_add_instr(f, vmp_instr_lda(arg));
 		}
 		else {
 			return vmcd_message_not_implemented(s);

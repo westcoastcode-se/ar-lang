@@ -97,23 +97,23 @@ vmp_constant vmp_const_ptr(vm_byte* value)
 	return c;
 }
 
-vmp_instr* vmp_instr_lda(vm_uint32 index)
+vmp_instr* vmp_instr_lda(const vmp_arg* arg)
 {
 	vmp_instr_def_lda* instr = (vmp_instr_def_lda*)vm_malloc(sizeof(vmp_instr_def_lda));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDA, sizeof(vmi_instr_lda));
-	instr->index = index;
+	instr->arg = arg;
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
-vmp_instr* vmp_instr_lda_a(vm_uint32 index)
+vmp_instr* vmp_instr_lda_a(const vmp_arg* arg)
 {
 	vmp_instr_def_lda_a* instr = (vmp_instr_def_lda_a*)vm_malloc(sizeof(vmp_instr_def_lda_a));
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDA_A, sizeof(vmi_instr_lda_a));
-	instr->index = index;
+	instr->arg = arg;
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
@@ -640,12 +640,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_LDA:
 	{
 		const vmp_instr_def_lda* const cmd = (vmp_instr_def_lda*)h;
-		const vmp_arg* const arg = vmp_list_args_get(&func->args, cmd->index);
-		if (arg == NULL) {
-			vmp_builder_message_arg_index_missing(builder, cmd->index);
-			break;
-		}
-
+		const vmp_arg* const arg = cmd->arg;
 		vmi_instr_lda instr;
 		instr.opcode = 0;
 		instr.icode = VMI_LDA;
@@ -658,13 +653,8 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	}
 	case VMP_INSTR_LDA_A:
 	{
-		const vmp_instr_def_lda_a* const cmd = (vmp_instr_def_lda_a*)h;
-		const vmp_arg* const arg = vmp_list_args_get(&func->args, cmd->index);
-		if (arg == NULL) {
-			vmp_builder_message_arg_index_missing(builder, cmd->index);
-			break;
-		}
-
+		const vmp_instr_def_lda_a* const cmd = (vmp_instr_def_lda_a*)h; 
+		const vmp_arg* const arg = cmd->arg;
 		vmi_instr_lda_a instr;
 		instr.opcode = 0;
 		instr.icode = VMI_LDA_A;
@@ -720,11 +710,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_STL:
 	{
 		const vmp_instr_def_stl* const cmd = (vmp_instr_def_stl*)h;
-		const vmp_local* const local = vmp_list_locals_get(&func->locals, cmd->local->index);
-		if (local == NULL) {
-			vmp_builder_message_local_index_missing(builder, cmd->local->index);
-			break;
-		}
+		const vmp_local* const local = cmd->local;
 
 		vmi_instr_stl instr;
 		instr.opcode = 0;
@@ -739,11 +725,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_LDL:
 	{
 		const vmp_instr_def_ldl* const cmd = (vmp_instr_def_ldl*)h;
-		const vmp_local* const local = vmp_list_locals_get(&func->locals, cmd->local->index);
-		if (local == NULL) {
-			vmp_builder_message_local_index_missing(builder, cmd->local->index);
-			break;
-		}
+		const vmp_local* const local = cmd->local;
 
 		vmi_instr_ldl instr;
 		instr.opcode = 0;
@@ -758,11 +740,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_LDL_A:
 	{
 		const vmp_instr_def_ldl_a* const cmd = (vmp_instr_def_ldl_a*)h;
-		const vmp_local* const local = vmp_list_locals_get(&func->locals, cmd->local->index);
-		if (local == NULL) {
-			vmp_builder_message_local_index_missing(builder, cmd->local->index);
-			break;
-		}
+		const vmp_local* const local = cmd->local;
 
 		vmi_instr_ldl_a instr;
 		instr.opcode = 0;

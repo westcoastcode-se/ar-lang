@@ -9,9 +9,7 @@
 struct vmp_instr_def_lda
 {
 	VMC_PIPELINE_INSTR_HEADER;
-	
-	// Argument index to load
-	vm_uint32 index;
+	const vmp_arg* arg;
 };
 typedef struct vmp_instr_def_lda vmp_instr_def_lda;
 
@@ -19,9 +17,7 @@ typedef struct vmp_instr_def_lda vmp_instr_def_lda;
 struct vmp_instr_def_lda_a
 {
 	VMC_PIPELINE_INSTR_HEADER;
-
-	// Argument index to load
-	vm_uint32 index;
+	const vmp_arg* arg;
 };
 typedef struct vmp_instr_def_lda_a vmp_instr_def_lda_a;
 
@@ -293,10 +289,10 @@ typedef struct vmp_instr_def_basic vmp_instr_def_ret;
 typedef struct vmp_instr_def_basic vmp_instr_def_eoe;
 
 // Create a new lda instruction and return it
-extern vmp_instr* vmp_instr_lda(vm_uint32 index);
+extern vmp_instr* vmp_instr_lda(const vmp_arg* arg);
 
 // Create a new lda_a instruction and return it
-extern vmp_instr* vmp_instr_lda_a(vm_uint32 index);
+extern vmp_instr* vmp_instr_lda_a(const vmp_arg* arg);
 
 // Create a new stl instruction and return it
 extern vmp_instr* vmp_instr_stl(const vmp_local* local);
