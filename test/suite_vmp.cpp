@@ -609,7 +609,7 @@ struct suite_vmp_tests : utils_vmp
 		// Create the Get function and add two integer types
 		auto get = vmp_func_newsz("Get", 3);
 		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
-		vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
+		auto get_local_1 = vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
 		vmp_package_add_func(main_package, get);
 
 		// {
@@ -628,10 +628,10 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_call(add));
-		vmp_func_add_instr(get, vmp_instr_stl(0));
+		vmp_func_add_instr(get, vmp_instr_stl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
-		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_ldl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
@@ -677,7 +677,7 @@ struct suite_vmp_tests : utils_vmp
 		// Create the Get function and add two integer types
 		auto get = vmp_func_newsz("Get", 3);
 		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
-		vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
+		auto get_local_1 = vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
 		vmp_package_add_func(main_package, get);
 
 		// {
@@ -696,10 +696,10 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val1)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_callnative(add));
-		vmp_func_add_instr(get, vmp_instr_stl(0));
+		vmp_func_add_instr(get, vmp_instr_stl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
-		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_ldl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
@@ -749,7 +749,7 @@ struct suite_vmp_tests : utils_vmp
 		// Create the Get function and add two integer types
 		auto get = vmp_func_newsz("Get", 3);
 		vmp_func_new_return(get, get_type("vm", string(name<vm_int32>())));
-		vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
+		auto get_local_1 = vmp_func_new_local(get, get_type("vm", string(name<vm_int32>())));
 		vmp_package_add_func(main_package, get);
 
 		// {
@@ -770,10 +770,10 @@ struct suite_vmp_tests : utils_vmp
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_ldf(add));
 		vmp_func_add_instr(get, vmp_instr_calluref(add));
-		vmp_func_add_instr(get, vmp_instr_stl(0));
+		vmp_func_add_instr(get, vmp_instr_stl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(name<vm_int32>()))));
-		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_ldl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
@@ -814,16 +814,16 @@ struct suite_vmp_tests : utils_vmp
 		//	add int32
 		//	stl 0
 		//	ldl 0
-		//	ret
+		//	retvmp_instr_stl
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const((vm_int32)100)));
-		vmp_func_add_instr(get, vmp_instr_stl(0));
-		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_stl(get_local1));
+		vmp_func_add_instr(get, vmp_instr_ldl(get_local1));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const((vm_int32)1)));
 		vmp_func_add_instr(get, vmp_instr_add(get_type("vm", string(name<vm_int32>()))));
-		vmp_func_add_instr(get, vmp_instr_stl(0));
-		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_stl(get_local1));
+		vmp_func_add_instr(get, vmp_instr_ldl(get_local1));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
@@ -1207,10 +1207,10 @@ struct suite_vmp_tests : utils_vmp
 		//	ret
 		// }
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldl_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldl_a(get_local1));
 		vmp_func_add_instr(get, vmp_instr_call(inner_get));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type("vm", string(ptr<T>()))));
-		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_ldl(get_local1));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 
@@ -1263,7 +1263,7 @@ struct suite_vmp_tests : utils_vmp
 		// Create the Get function and add two integer types
 		auto get = vmp_func_newsz("Get", 3);
 		vmp_func_new_return(get, array_type);
-		vmp_func_new_local(get, array_type);
+		auto get_local_1 = vmp_func_new_local(get, array_type);
 		vmp_package_add_func(main_package, get);
 
 		// {
@@ -1280,15 +1280,15 @@ struct suite_vmp_tests : utils_vmp
 		//	ret
 		// }
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldl_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldl_a(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(0)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<T>())), vmp_const((T)values[0])));
 		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
-		vmp_func_add_instr(get, vmp_instr_ldl_a(0));
+		vmp_func_add_instr(get, vmp_instr_ldl_a(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<vm_int32>())), vmp_const(1)));
 		vmp_func_add_instr(get, vmp_instr_ldc(get_type("vm", string(name<T>())), vmp_const((T)values[1])));
 		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
-		vmp_func_add_instr(get, vmp_instr_ldl(0));
+		vmp_func_add_instr(get, vmp_instr_ldl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
 

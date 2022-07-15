@@ -105,7 +105,7 @@ BOOL vmcd_parse_assign_local(const vmcd_scope* s, vmp_local* local)
 		type_name.end = type_name.start + 5;
 		type = vmp_package_find_type_include_imports(s->package, &type_name);
 		vmp_func_add_instr(f, vmp_instr_ldc(type, vmp_const_i4(vmcd_token_i4(t))));
-		vmp_func_add_instr(f, vmp_instr_stl(local->index));
+		vmp_func_add_instr(f, vmp_instr_stl(local));
 		return TRUE;
 	default:
 		return vmcd_message_not_implemented(s);
@@ -235,11 +235,18 @@ vmp_instr* parse_value(const vmcd_scope* s)
 			{
 				const vmp_arg* const arg = (vmp_arg*)keyword;
 				instr = vmp_instr_lda(arg->index);
+				break;
 			}
 			case VMP_KEYWORD_LOCAL:
 			{
 				const vmp_local* const local = (vmp_local*)keyword;
-				instr = vmp_instr_ldl(local->index);
+				instr = vmp_instr_ldl(local);
+				break;
+			}
+			case VMP_KEYWORD_GLOBAL:
+			{
+				instr = vmp_instr_ldg((vmp_global*)keyword);
+				break;
 			}
 			case VMP_KEYWORD_FUNC:
 			case VMP_KEYWORD_PACKAGE:
@@ -281,7 +288,7 @@ BOOL vmcd_parse_decl_assign_local(const vmcd_scope* s, vmp_local* local)
 		}
 		local->type = type;
 		vmp_func_add_instr(f, vmp_instr_ldc(type, vmp_const_i4(vmcd_token_i4(t))));
-		vmp_func_add_instr(f, vmp_instr_stl(local->index));
+		vmp_func_add_instr(f, vmp_instr_stl(local));
 		return TRUE;
 	case VMCD_TOKEN_KEYWORD:
 	{
@@ -326,7 +333,7 @@ BOOL vmcd_parse_return(const vmcd_scope* s)
 				case VMP_KEYWORD_LOCAL:
 				{
 					const vmp_local* const local = (vmp_local*)keyword;
-					vmp_func_add_instr(s->func, vmp_instr_ldl(local->index));
+					vmp_func_add_instr(s->func, vmp_instr_ldl(local));
 					break;
 				}
 				default:

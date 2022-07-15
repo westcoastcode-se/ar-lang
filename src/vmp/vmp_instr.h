@@ -39,9 +39,7 @@ typedef struct vmp_instr_def_ldr_a vmp_instr_def_ldr_a;
 struct vmp_instr_def_stl
 {
 	VMC_PIPELINE_INSTR_HEADER;
-
-	// Locals index to save
-	vm_uint32 index;
+	const vmp_local* local;
 };
 typedef struct vmp_instr_def_stl vmp_instr_def_stl;
 
@@ -56,9 +54,7 @@ typedef struct vmp_instr_def_locals vmp_instr_def_locals;
 struct vmp_instr_def_ldl
 {
 	VMC_PIPELINE_INSTR_HEADER;
-
-	// Locals index to load
-	vm_uint32 index;
+	const vmp_local* local;
 };
 typedef struct vmp_instr_def_ldl vmp_instr_def_ldl;
 
@@ -76,9 +72,7 @@ typedef struct vmp_instr_def_ldf vmp_instr_def_ldf;
 struct vmp_instr_def_ldl_a
 {
 	VMC_PIPELINE_INSTR_HEADER;
-
-	// Locals index to load
-	vm_uint32 index;
+	const vmp_local* local;
 };
 typedef struct vmp_instr_def_ldl_a vmp_instr_def_ldl_a;
 
@@ -305,13 +299,13 @@ extern vmp_instr* vmp_instr_lda(vm_uint32 index);
 extern vmp_instr* vmp_instr_lda_a(vm_uint32 index);
 
 // Create a new stl instruction and return it
-extern vmp_instr* vmp_instr_stl(vm_uint32 index);
+extern vmp_instr* vmp_instr_stl(const vmp_local* local);
 
 // Create a new ldl instruction and return it
-extern vmp_instr* vmp_instr_ldl(vm_uint32 index);
+extern vmp_instr* vmp_instr_ldl(const vmp_local* local);
 
 // Create a new ldl_a instruction and return it
-extern vmp_instr* vmp_instr_ldl_a(vm_uint32 index);
+extern vmp_instr* vmp_instr_ldl_a(const vmp_local* local);
 
 // Create a new ldf instruction and return it
 extern vmp_instr* vmp_instr_ldf(const vmp_func* func);
