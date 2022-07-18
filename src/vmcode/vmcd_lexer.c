@@ -61,7 +61,7 @@ void vmcd_assign_or_equals(vmcd_token* t)
 	{
 	case '=':
 		t->source++;
-		t->type = VMCD_TOKEN_EQUALS;
+		t->type = VMCD_TOKEN_TEST_EQUALS;
 		t->modifier = 0;
 		t->string.start = start;
 		t->string.end = t->source;
@@ -91,6 +91,70 @@ void vmcd_colon_or_declassign(vmcd_token* t)
 		return;
 	default:
 		t->type = VMCD_TOKEN_COLON;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	}
+}
+
+void vmcd_token_single_line_comment(vmcd_token* t)
+{
+	const char* comment_start = ++t->source;
+	char c = *comment_start;
+
+	// Seek until new-line or eof
+	while (c != 0 && c != '\n') {
+		c = *(++t->source);
+	}
+
+	t->type = VMCD_TOKEN_COMMENT;
+	t->string.start = comment_start;
+	t->string.end = t->source;
+}
+
+void vmcd_token_multi_line_comment(vmcd_token* t)
+{
+	const char* comment_start = ++t->source;
+	const char* commend_end = comment_start;
+	char c = *comment_start;
+
+	// Seek until */ or eof
+	while (1) {
+		if (c == 0) {
+			commend_end = t->source;
+			//vmcd_token_message_unclosed_comment(t);
+			break;
+		}
+		// If we've reached */
+		if (c == '*' && *(t->source + 1) == '/') {
+			commend_end = t->source;
+			t->source += 2;
+			break;
+		}
+		c = *(++t->source);
+	}
+
+	t->type = VMCD_TOKEN_COMMENT;
+	t->string.start = comment_start;
+	t->string.end = commend_end;
+}
+
+void vmcd_token_div_or_comment(vmcd_token* t)
+{
+	const char* start = t->source++;
+	char c = *t->source;
+
+	switch (c)
+	{
+	case '/':
+		vmcd_token_single_line_comment(t);
+		return;
+	case '*':
+		vmcd_token_multi_line_comment(t);
+		return;
+	default:
+		t->type = VMCD_TOKEN_OP_DIV;
 		t->modifier = 0;
 		t->string.start = start;
 		t->string.end = t->source;
@@ -239,17 +303,17 @@ void vmcd_token_next0(vmcd_token* t)
 		t->line_offset = t->source;
 		return;
 	case '+':
-		vmcd_token_atom(VMCD_TOKEN_PLUS, t);
+		vmcd_token_atom(VMCD_TOKEN_OP_PLUS, t);
 		return;
 	case '-':
-		vmcd_token_atom(VMCD_TOKEN_MINUS, t);
+		vmcd_token_atom(VMCD_TOKEN_OP_MINUS, t);
 		return;
 	case '*':
-		vmcd_token_atom(VMCD_TOKEN_MULT, t);
+		vmcd_token_atom(VMCD_TOKEN_OP_MULT, t);
 		return;
-	//case '/':
-		//_vmc_lexer_div_or_comment(t);
-		//return;
+	case '/':
+		vmcd_token_div_or_comment(t);
+		return;
 	case '(':
 		vmcd_token_atom(VMCD_TOKEN_PARAN_L, t);
 		return;
@@ -316,6 +380,13 @@ void vmcd_token_next(vmcd_token* t)
 		ch = *++t->source;
 	}
 	vmcd_token_next0(t);
+}
+
+void vmcd_token_skip_newline(vmcd_token* t)
+{
+	while (t->type == VMCD_TOKEN_NEWLINE) {
+		vmcd_token_next(t);
+	}
 }
 
 BOOL vmcd_token_next_type(vmcd_token* t, vmcd_token_type type)

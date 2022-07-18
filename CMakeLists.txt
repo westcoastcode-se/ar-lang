@@ -53,7 +53,7 @@ add_library(vm "src/vm_config.h"
         
      
      "src/vmcode/vmcode.h" "src/vmcode/vmcode.c" "src/vmcode/vmcd_lexer.h" "src/vmcode/vmcd_lexer.c" "src/vmcode/vmcd_messages.h" 
-     "src/vmcode/vmcd_messages.c"   "src/vmp/vmp_list_imports.c" "src/vmp/vmp_list_imports.h"  "src/vmcode/vmcd_source_code.h" "src/vmcode/vmcd_source_code.c" "src/vmcode/vmcd_list_sources.h" "src/vmcode/vmcd_list_sources.c" "src/vm_debug.h" "src/vm_debug.c"    "src/vmp/vmp_list_globals.c" "src/vmp/vmp_list_globals.h")
+     "src/vmcode/vmcd_messages.c"   "src/vmp/vmp_list_imports.c" "src/vmp/vmp_list_imports.h"  "src/vmcode/vmcd_source_code.h" "src/vmcode/vmcd_source_code.c" "src/vmcode/vmcd_list_sources.h" "src/vmcode/vmcd_list_sources.c" "src/vm_debug.h" "src/vm_debug.c"    "src/vmp/vmp_list_globals.c" "src/vmp/vmp_list_globals.h" "src/vmcode/vmcd_types.h"  )
 
 
 # Tests

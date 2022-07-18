@@ -24,7 +24,6 @@ enum vmcd_token_type
 	VMCD_TOKEN_KEYWORD_INTERFACE,
 	VMCD_TOKEN_KEYWORD_END_KEYWORD = VMCD_TOKEN_KEYWORD_INTERFACE,
 
-
 	VMCD_TOKEN_VALUE,
 	VMCD_TOKEN_VALUE_INT,
 	VMCD_TOKEN_VALUE_HEX,
@@ -35,12 +34,33 @@ enum vmcd_token_type
 
 	VMCD_TOKEN_COMMENT,
 
-	VMCD_TOKEN_PLUS,
-	VMCD_TOKEN_MINUS,
-	VMCD_TOKEN_MULT,
-	VMCD_TOKEN_DIV,
-	VMCD_TOKEN_PTR = VMCD_TOKEN_MULT,
-	VMCD_TOKEN_SLASH = VMCD_TOKEN_DIV,
+	VMCD_TOKEN_OP,
+	// +
+	VMCD_TOKEN_OP_PLUS,
+	// -
+	VMCD_TOKEN_OP_MINUS,
+	// *
+	VMCD_TOKEN_OP_MULT,
+	VMCD_TOKEN_PTR = VMCD_TOKEN_OP_MULT,
+	// /
+	VMCD_TOKEN_OP_DIV,
+	// |
+	VMCD_TOKEN_BIT_OR,
+	// &
+	VMCD_TOKEN_BIT_AND,
+	VMCD_TOKEN_ADDR_OF = VMCD_TOKEN_BIT_AND,
+	// ==
+	VMCD_TOKEN_TEST_EQUALS,
+	// !=
+	VMCD_TOKEN_TEST_NOT_EQUALS,
+	// ||
+	VMCD_TOKEN_TEST_OR,
+	// &&
+	VMCD_TOKEN_TEST_AND,
+	VMCD_TOKEN_END_OP,
+
+	// !
+	VMCD_TOKEN_NOT,
 
 	// (
 	VMCD_TOKEN_PARAN_L,
@@ -57,11 +77,6 @@ enum vmcd_token_type
 	// }
 	VMCD_TOKEN_BRACKET_R,
 
-	// ==
-	VMCD_TOKEN_EQUALS,
-	// !=
-	VMCD_TOKEN_NOT_EQUALS,
-
 	// ,
 	VMCD_TOKEN_COMMA,
 	// .
@@ -73,19 +88,6 @@ enum vmcd_token_type
 	// :=
 	VMCD_TOKEN_DECL_ASSIGN,
 
-	// |
-	VMCD_TOKEN_BIT_OR,
-	// &
-	VMCD_TOKEN_BIT_AND,
-	VMCD_TOKEN_ADDR_OF = VMCD_TOKEN_BIT_AND,
-
-	// ||
-	VMCD_TOKEN_OR,
-	// &&
-	VMCD_TOKEN_AND,
-	// !
-	VMCD_TOKEN_NOT,
-	
 	// \n
 	VMCD_TOKEN_NEWLINE,
 	
@@ -143,6 +145,9 @@ extern void vmcd_token_release(vmcd_token* t);
 
 // Get the next token
 extern void vmcd_token_next(vmcd_token* t);
+
+// Get the enxt token that's not a newline
+extern void vmcd_token_skip_newline(vmcd_token* t);
 
 // Get the next token
 extern BOOL vmcd_token_next_type(vmcd_token* t, vmcd_token_type type);
@@ -369,6 +374,12 @@ static inline BOOL vmcd_token_is_keyword(vmcd_token* t)
 static inline BOOL vmcd_token_is_value(vmcd_token* t)
 {
 	return t->type >= VMCD_TOKEN_VALUE && t->type <= VMCD_TOKEN_END_VALUE;
+}
+
+// Check to see if the supplied token is a value
+static inline BOOL vmcd_token_is_operator(vmcd_token* t)
+{
+	return t->type >= VMCD_TOKEN_OP && t->type <= VMCD_TOKEN_END_OP;
 }
 
 // Convert the token content into a 4 byte integer

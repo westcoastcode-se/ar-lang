@@ -175,7 +175,6 @@ vmp_instr* parse_value(const vmcd_scope* s)
 	}
 }
 
-
 // Statements: 
 //	1 + 2 
 //		ldc, ldc, add
@@ -187,6 +186,53 @@ vmp_instr* parse_value(const vmcd_scope* s)
 //		call, ldc, add, ldc(10), call, mul, ldc(5), call, sub
 // get
 //		ldf
+// !(test() == true && (1 + 2) == 3)
+//	call, cmpt, ldc(2), ldc(1), add, ldc(3), cmpt, cmpt, cmpinv
+/*vmp_instr* parse_statement(const vmcd_scope* s)
+{
+	vmcd_token* const t = s->token;
+
+	// Is this a statement built using '(' segments
+	if (t->type == VMCD_TOKEN_PARAN_L) {
+		vmcd_token_next(t);
+		// Should return at the closest ')' token, thus ending this segment
+		vmp_instr* const inner = parse_statement(s);
+		if (inner != NULL) {
+			return NULL;
+		}
+
+		// This is the end of another, inner, segment
+		if (t->type == VMCD_TOKEN_PARAN_R) {
+			vmcd_token_next(t);
+			return inner;
+		}
+
+		// IF this is an operator then we know that this is a a "+", "-", .... statement
+		vmcd_token_next(t);
+		vmcd_token_skip_newline(t);
+		if (!vmcd_token_is_operator(t)) {
+
+		}
+
+		if (vmcd_token_is_operator(t)) {
+			// For example: "inner + inner2"
+			vmp_instr* const inner2 = parse_statement(s);
+			switch (t->type) {
+			case VMCD_TOKEN_OP_PLUS:
+				vmp_instr_link(vmp_instr_link(inner, inner2), vmp_instr_add());
+			}
+
+			vmp_instr_link()
+			return inner;
+		}
+	}
+
+	// Is this a value?
+	if (vmcd_token_is_value(t)) {
+
+	}
+}*/
+
 /*BOOL parse_statement(const vmcd_scope* s, vmp_instr** result)
 {
 	vmcd_token* const t = s->token;
@@ -619,10 +665,16 @@ BOOL vmcd_parse_package(const vmcd_scope* s)
 			}
 		}
 		else if (t->type == VMCD_TOKEN_KEYWORD_CONST) {
-
+			vmcd_message_not_implemented(s);
+			return FALSE;
 		}
 		else if (t->type == VMCD_TOKEN_KEYWORD_TYPE) {
-
+			vmcd_message_not_implemented(s);
+			return FALSE;
+		}
+		else if (t->type == VMCD_TOKEN_KEYWORD_IF) {
+			vmcd_message_not_implemented(s);
+			return FALSE;
 		}
 		else if (t->type == VMCD_TOKEN_NEWLINE || t->type == VMCD_TOKEN_COMMENT) {
 			// Ignore these types of tokens
@@ -712,16 +764,23 @@ BOOL vmcode_parse(vmcode* p, const vm_byte* filename)
 	vmcd_lexer_init(&l, source_code->source_code.start);
 	vmcd_token_init(&t, &l);
 	if (!vmcd_begin(p, &t)) {
+		vm_messages_move(&t.messages, &p->messages);
+		vmcd_token_release(&t);
+		vmcd_lexer_release(&l);
 		return FALSE;
 	}
 
 	// Resolve memory sizes and offsets for function, argument, returns, locals etc
 	if (!vmp_pipeline_resolve(p->pipeline)) {
+		vm_messages_move(&t.messages, &p->messages);
 		vm_messages_move(&p->pipeline->messages, &p->messages);
+		vmcd_token_release(&t);
+		vmcd_lexer_release(&l);
 		return FALSE;
 	}
 
 	vmcd_token_release(&t);
+	vmcd_lexer_release(&l);
 	return TRUE;
 }
 
