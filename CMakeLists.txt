@@ -50,11 +50,11 @@ add_library(vm "src/vm_config.h"
      "src/vmp/vmp_list_locals.h" "src/vmp/vmp_list_markers.c" "src/vmp/vmp_list_markers.h" "src/interpreter/vmi_list_packages.h" "src/interpreter/vmi_list_packages.c" 
      "src/interpreter/vmi_list_functions.c" "src/interpreter/vmi_list_functions.h" "src/vmp/vmp_list_inherits_from.c" "src/vmp/vmp_list_inherits_from.h" 
      "src/vmp/vmp_list_inherited_by.c" "src/vmp/vmp_list_inherited_by.h" "src/vmp/vmp_string_pool.c" "src/vmp/vmp_string_pool.h" 
-        
      
      "src/vmcode/vmcode.h" "src/vmcode/vmcode.c" "src/vmcode/vmcd_lexer.h" "src/vmcode/vmcd_lexer.c" "src/vmcode/vmcd_messages.h" 
-     "src/vmcode/vmcd_messages.c"   "src/vmp/vmp_list_imports.c" "src/vmp/vmp_list_imports.h"  "src/vmcode/vmcd_source_code.h" "src/vmcode/vmcd_source_code.c" "src/vmcode/vmcd_list_sources.h" "src/vmcode/vmcd_list_sources.c" "src/vm_debug.h" "src/vm_debug.c"    "src/vmp/vmp_list_globals.c" "src/vmp/vmp_list_globals.h" "src/vmcode/vmcd_types.h"  )
-
+     "src/vmcode/vmcd_messages.c" "src/vmp/vmp_list_imports.c" "src/vmp/vmp_list_imports.h"  "src/vmcode/vmcd_source_code.h" 
+     "src/vmcode/vmcd_source_code.c" "src/vmcode/vmcd_list_sources.h" "src/vmcode/vmcd_list_sources.c" "src/vm_debug.h" "src/vm_debug.c"
+     "src/vmp/vmp_list_globals.c" "src/vmp/vmp_list_globals.h" "src/vmcode/vmcd_types.h")
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)

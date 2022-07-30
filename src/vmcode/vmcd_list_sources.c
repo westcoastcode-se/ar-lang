@@ -1,5 +1,6 @@
 #include "vmcd_list_sources.h"
 #include "vmcd_source_code.h"
+#include "../vm_debug.h"
 
 #define CAPACITY (4)
 #define RESIZE (4)
@@ -8,7 +9,7 @@ BOOL vmcd_list_sources_init(vmcd_list_sources* l)
 {
 	l->count = 0;
 	l->capacity = CAPACITY;
-	l->memory = (struct vmcd_source_code**)malloc(sizeof(vmcd_source_code*) * l->capacity);
+	l->memory = (struct vmcd_source_code**)vm_malloc(sizeof(vmcd_source_code*) * l->capacity);
 	return l->memory != NULL;
 }
 
@@ -19,7 +20,7 @@ void vmcd_list_sources_release(vmcd_list_sources* l)
 		vmcd_source_code_destroy(a);
 	}
 
-	free(l->memory);
+	vm_free(l->memory);
 	l->memory = NULL;
 	l->capacity = 0;
 	l->count = 0;
@@ -29,7 +30,7 @@ vm_int32 vmcd_list_sources_add(vmcd_list_sources* l, vmcd_source_code* ptr)
 {
 	if (l->count >= l->capacity) {
 		l->capacity += RESIZE;
-		l->memory = (vmcd_source_code**)realloc(l->memory, sizeof(vmcd_source_code*) * l->capacity);
+		l->memory = (vmcd_source_code**)vm_realloc(l->memory, sizeof(vmcd_source_code*) * l->capacity);
 		if (l->memory == NULL)
 			return -1;
 	}
