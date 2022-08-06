@@ -31,30 +31,47 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_OPTS_GCC}")
 endif()
 
-# Lexer
+# Virtual Machine and Pipeline Builder
 set(VM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src")
-add_library(vm "src/vm_config.h"
-    "src/vm_string.h" "src/vm_string.c"
-    "src/vm_bytestream.h" "src/vm_bytestream.c"
-    "src/vm_message.h" "src/vm_message.c"
+add_library(vm 
+    "src/vm_string.c" 
+    "src/vm_bytestream.c" 
+    "src/vm_message.c" 
+    "src/vm_debug.c" 
+    "src/vm_hash.c"
 
-    "src/interpreter/vmi_ops.h" "src/interpreter/vmi_stack.h"  "src/interpreter/vmi_stack.c" "src/interpreter/vmi_thread.h" 
-    "src/interpreter/vmi_thread.c" "src/interpreter/vmi_process.h" "src/interpreter/vmi_process.c" "src/interpreter/vmi_config.h" 
-    "src/interpreter/vmi_debug.h" "src/interpreter/vmi_debug.c" "src/interpreter/vmi_locals.h" "src/interpreter/vmi_locals.c"
+    "src/interpreter/vmi_stack.c" 
+    "src/interpreter/vmi_thread.c" 
+    "src/interpreter/vmi_process.c"
+    "src/interpreter/vmi_debug.c" 
+    "src/interpreter/vmi_locals.c" 
+    "src/interpreter/vmi_list_functions.c"
+    "src/interpreter/vmi_list_packages.c" 
 
-     "src/vmp/vmp.h" "src/vmp/vmp_types.h" "src/vmp/vmp_instr.h" "src/vmp/vmp_instr.c" 
-     "src/vmp/vmp.c" "src/vmp/vmp_list_args.h" "src/vmp/vmp_list_args.c" "src/vmp/vmp_types.c" 
-     "src/vmp/vmp_list_packages.c" "src/vmp/vmp_list_packages.h" "src/vmp/vmp_list_types.h" 
-     "src/vmp/vmp_list_types.c" "src/vmp/vmp_list_funcs.c" "src/vmp/vmp_list_funcs.h"  "src/vmp/vmp_list_returns.c" 
-     "src/vmp/vmp_list_returns.h" "src/vmp/vmp_messages.h" "src/vmp/vmp_messages.c" "src/vmp/vmp_list_locals.c" 
-     "src/vmp/vmp_list_locals.h" "src/vmp/vmp_list_markers.c" "src/vmp/vmp_list_markers.h" "src/interpreter/vmi_list_packages.h" "src/interpreter/vmi_list_packages.c" 
-     "src/interpreter/vmi_list_functions.c" "src/interpreter/vmi_list_functions.h" "src/vmp/vmp_list_inherits_from.c" "src/vmp/vmp_list_inherits_from.h" 
-     "src/vmp/vmp_list_inherited_by.c" "src/vmp/vmp_list_inherited_by.h" "src/vmp/vmp_string_pool.c" "src/vmp/vmp_string_pool.h" 
+    "src/vmp/vmp.c" 
+    "src/vmp/vmp_instr.c" 
+    "src/vmp/vmp_types.c"
+    "src/vmp/vmp_messages.c"
+    "src/vmp/vmp_string_pool.c"
+    "src/vmp/vmp_list_args.c" 
+    "src/vmp/vmp_list_packages.c"
+    "src/vmp/vmp_list_types.c" 
+    "src/vmp/vmp_list_funcs.c"
+    "src/vmp/vmp_list_returns.c" 
+    "src/vmp/vmp_list_locals.c" 
+    "src/vmp/vmp_list_locals.h" 
+    "src/vmp/vmp_list_markers.c" 
+    "src/vmp/vmp_list_inherits_from.c"
+    "src/vmp/vmp_list_inherited_by.c" 
+    "src/vmp/vmp_list_globals.c"
      
-     "src/vmcode/vmcode.h" "src/vmcode/vmcode.c" "src/vmcode/vmcd_lexer.h" "src/vmcode/vmcd_lexer.c" "src/vmcode/vmcd_messages.h" 
-     "src/vmcode/vmcd_messages.c" "src/vmp/vmp_list_imports.c" "src/vmp/vmp_list_imports.h"  "src/vmcode/vmcd_source_code.h" 
-     "src/vmcode/vmcd_source_code.c" "src/vmcode/vmcd_list_sources.h" "src/vmcode/vmcd_list_sources.c" "src/vm_debug.h" "src/vm_debug.c"
-     "src/vmp/vmp_list_globals.c" "src/vmp/vmp_list_globals.h" "src/vmcode/vmcd_types.h")
+    "src/vmcode/vmcode.c" 
+    "src/vmcode/vmcd_lexer.c"
+    "src/vmcode/vmcd_messages.c" 
+    "src/vmp/vmp_list_imports.c"
+    "src/vmcode/vmcd_source_code.c" 
+    "src/vmcode/vmcd_list_sources.c"
+    )
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)

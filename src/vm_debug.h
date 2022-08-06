@@ -32,4 +32,7 @@ extern BOOL vm_memory_test_bytes_left();
 #define vmp_free(ptr) free(ptr)
 #endif
 
+// Do an allocate and return if out-of-memory
+#define vm_safe_malloc(TYPE) (TYPE*)vm_malloc(sizeof(TYPE)); if (p == NULL) return p
+
 #endif
