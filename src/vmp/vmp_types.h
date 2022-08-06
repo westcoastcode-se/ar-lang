@@ -5,14 +5,12 @@
 #include "vmp_list_args.h"
 #include "vmp_list_packages.h"
 #include "vmp_list_types.h"
-#include "vmp_list_funcs.h"
 #include "vmp_list_returns.h"
 #include "vmp_list_locals.h"
 #include "vmp_list_markers.h"
-#include "vmp_list_inherits_from.h"
-#include "vmp_list_inherited_by.h"
 #include "vmp_list_imports.h"
 #include "vmp_list_globals.h"
+#include "vmp_lists.h"
 
 // Return value indicating that the item is already added once
 #define VMP_LIST_ADDED (0)

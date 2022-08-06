@@ -56,16 +56,16 @@ add_library(vm
     "src/vmp/vmp_list_args.c" 
     "src/vmp/vmp_list_packages.c"
     "src/vmp/vmp_list_types.c" 
-    "src/vmp/vmp_list_funcs.c"
+    
     "src/vmp/vmp_list_returns.c" 
     "src/vmp/vmp_list_locals.c" 
     "src/vmp/vmp_list_locals.h" 
     "src/vmp/vmp_list_markers.c" 
-    "src/vmp/vmp_list_inherits_from.c"
-    "src/vmp/vmp_list_inherited_by.c" 
+    
+     
     "src/vmp/vmp_list_globals.c"
     "src/vmp/vmp_list_imports.c"
-)
+    "src/vmp/vmp_lists.c")
 
 # Compiler
 include_directories("${VM_INCLUDE_DIRS}")

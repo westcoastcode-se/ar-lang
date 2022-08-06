@@ -6,44 +6,44 @@
 #include "../vmp/vmp.h"
 
 // Types
-enum vmcd_keyword_type
+typedef enum vmcd_keyword_type
 {
-	VMCD_TYPE_PACKAGE,
-	VMCD_TYPE_FUNC,
-	VMCD_TYPE_STATEMENT,
-};
-typedef enum vmcd_keyword_type vmcd_keyword_type;
+	// Package
+	VMCD_KEYWORD_PACKAGE,
 
-// Header for all compiler keywords
-struct vmcd_keyword_header
+	// A function that might be associated with a struct
+	VMCD_KEYWORD_FUNC,
+
+	// A structure, type or something like that
+	VMCD_KEYWORD_TYPE,
+
+} vmcd_keyword_type;
+
+// Header for all keywords
+typedef struct vmcd_keyword
 {
 	vmcd_keyword_type type;
-};
-typedef struct vmcd_keyword_header vmcd_keyword_header;
+} vmcd_keyword;
 
-// Types
-enum vmcd_statement_type
+// Operations
+typedef enum vmcd_operation_type
 {
-	VMCD_STATEMENT_OPERATOR,
-	VMCD_STATEMENT_VALUE,
-	VMCD_STATEMENT_CONVERT_VALUE,
-};
-typedef enum vmcd_statement_type vmcd_statement_type;
+	VMCD_OPERATION_VALUE,
+	VMCD_OPERATION_OPERATOR,
+} vmcd_operation_type;
 
-// A generic statement, such as a function call or a constant value
-struct vmcd_statement
+// A generic operation, such as a function call or a constant value
+typedef struct vmcd_operation
 {
-	vmcd_keyword_header header;
-	vmcd_statement_type statement_type;
-	struct vmcd_keyword_statement* prev;
-	struct vmcd_keyword_statement* next;
-};
-typedef struct vmcd_statement vmcd_statement;
+	vmcd_operation_type op_type;
+	struct vmcd_operation* prev;
+	struct vmcd_operation* next;
+} vmcd_operation;
 
 // A package
-struct vmcd_keyword_package
+struct vmcd_package
 {
-	vmcd_keyword_header header;
+	vmcd_keyword header;
 	
 	// Name of the package
 	vm_string name;
@@ -51,12 +51,38 @@ struct vmcd_keyword_package
 	// The actual package
 	vmp_package* package;
 };
-typedef struct vmcd_keyword_package vmcd_keyword_package;
+typedef struct vmcd_package vmcd_package;
+
+typedef struct vmcd_type
+{
+	// Name of the type
+	vm_string name;
+
+	// Name of the package
+	const vmcd_type* of_type;
+} vmcd_type;
+
+// Argument
+struct vmcd_arg
+{
+	// Name of the argument
+	vm_string name;
+
+	// The type of the argument
+	vmcd_type* type;
+
+	// Intrusive list
+	struct vmcd_func_arg* next;
+	struct vmcd_func_arg* prev;
+
+	// The argument
+	vmp_arg* arg;
+};
 
 // A function
 struct vmcd_keyword_func
 {
-	vmcd_keyword_header header;
+	vmcd_keyword header;
 	
 	// Name of the function
 	vm_string name;
