@@ -110,5 +110,9 @@ typedef int (*vm_nativefunc)(struct vmi_thread*);
 #	define ASSERT_NOT_NULL(a) assert(a != NULL && "expected '" #a "' to be set")
 #endif
 
+#ifndef ASSERT_NULL
+#	define ASSERT_NULL(a) assert(a == NULL && "expected '" #a "' to be NULL")
+#endif
+
 #endif
 

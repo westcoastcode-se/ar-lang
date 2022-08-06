@@ -64,17 +64,21 @@ add_library(vm
     "src/vmp/vmp_list_inherits_from.c"
     "src/vmp/vmp_list_inherited_by.c" 
     "src/vmp/vmp_list_globals.c"
-     
-    "src/vmcode/vmcode.c" 
+    "src/vmp/vmp_list_imports.c"
+)
+
+# Compiler
+include_directories("${VM_INCLUDE_DIRS}")
+add_library(vmcode 
+    "src/vmcode/vmcode.c"
     "src/vmcode/vmcd_lexer.c"
     "src/vmcode/vmcd_messages.c" 
-    "src/vmp/vmp_list_imports.c"
     "src/vmcode/vmcd_source_code.c" 
     "src/vmcode/vmcd_list_sources.c"
-    )
+)
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)
 include_directories("${VM_INCLUDE_DIRS}")
 add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_vmp.cpp" "test/suite_vmcode.cpp")
-target_link_libraries(test vm)
+target_link_libraries(test vmcode vm)
