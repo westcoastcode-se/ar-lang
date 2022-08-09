@@ -114,14 +114,13 @@ struct utils_vmcode : utils_vm
 
 struct suite_vmcode_tests : utils_vmcode
 {
-	void get_local()
+	void return1()
 	{
 		static const auto source = R"(
 package main
 
 func Get() int32 {
-	ret := 12345
-	return ret
+	return 12345
 }
 )";
 		begin();
@@ -134,6 +133,30 @@ func Get() int32 {
 		verify_stack_size(t, sizeof(vm_int32));
 		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
 		verify_value(ret, 12345);
+
+		destroy(t);
+		end();
+	}
+
+	void return2()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
+	return 12345 + 20
+}
+)";
+		begin();
+		compile(source);
+
+		auto t = thread();
+
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, 12345 + 20);
 
 		destroy(t);
 		end();
@@ -340,9 +363,10 @@ func QuickSort(arr *int32, low int32, high int32) {
 
 	void operator()()
 	{
-		TEST(get_local);
-		TEST(plus2);
-		TEST(func_refs);
+		TEST(return1);
+		TEST(return2);
+		//TEST(plus2);
+		//TEST(func_refs);
 		//TEST(quicksort);
 	}
 };

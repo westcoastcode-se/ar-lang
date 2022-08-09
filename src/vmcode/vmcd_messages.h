@@ -42,6 +42,9 @@ enum vmcd_messages
 	// Functionality that's not implemented
 	VMCD_MESSAGE_NOT_IMPLEMENTED,
 
+	// Function has no body
+	VMCD_MESSAGE_FUNCTION_NO_BODY,
+
 	// A declaration is duplicated (exists more than once)
 	VMCD_MESSAGE_DUPLICATED_DECLARATION,
 
@@ -56,6 +59,7 @@ typedef enum vmcd_messages vmcd_messages;
 #define VMC_MESSAGE_TYPE_NOT_FOUND_STR "could not find local variable: '%.*s' at %d:%d"
 #define VMCD_MESSAGE_EXPECTED_TOKEN_STR "syntax error: missing '%c' before '%.*s' at %d:%d"
 #define VMCD_MESSAGE_NOT_IMPLEMENTED_STR "not implemented: '%.*s' at %d:%d"
+#define VMCD_MESSAGE_FUNCTION_NO_BODY_STR "function '%.*s' has no body"
 #define VMCD_MESSAGE_DUPLICATED_DECLARATION_STR "'%.*s' is already declared once at %d:%d"
 
 extern BOOL vmcd_message_panic(const struct vmcd_scope* s, const char* str);
@@ -68,6 +72,7 @@ extern BOOL vmcd_message_type_not_found(const struct vmcd_scope* s, const vm_str
 extern BOOL vmcd_message_expected_identifier(const struct vmcd_scope* s);
 extern BOOL vmcd_message_syntax_error(const struct vmcd_scope* s, char c);
 extern BOOL vmcd_message_not_implemented(const struct vmcd_scope* s);
+extern BOOL vmcd_message_function_no_body(const struct vmcd_scope* s, const vm_string* signature);
 extern BOOL vmcd_message_duplicated_declaration(const struct vmcd_scope* s, const vm_string* decl);
 
 #endif

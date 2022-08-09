@@ -34,7 +34,7 @@ static inline BOOL vm_str_cmp(const char* s1, int l1, const char* s2, int l2)
 }
 
 // Copy the content of a string into a new memory location
-static inline char* vm_str_cpy(char* dest, const char* src, int len)
+static inline char* vm_str_cpysz(char* dest, const char* src, int len)
 {
 	int i = 0;
 	for (; i < len; ++i) {
@@ -81,6 +81,12 @@ extern BOOL vm_string_ends_with(const vm_string* s, char c);
 
 // Length of the supplied string
 extern int vm_string_length(const vm_string* s);
+
+// Copy the content of a string into a new memory location
+static inline char* vm_str_cpy(char* dest, const vm_string* str)
+{
+	return vm_str_cpysz(dest, str->start, vm_string_length(str));
+}
 
 // Define a constant vm_string
 #define VM_STRING_CONST(name, value, len) \

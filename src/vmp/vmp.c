@@ -113,7 +113,6 @@ vmp_pipeline* vmp_pipeline_new()
 	p->vm_package = NULL;
 	vm_messages_init(&p->messages);
 	p->panic_error_message.code = VMP_MESSAGE_NONE;
-	vmp_pipeline_add_vm_package(p);
 	return p;
 }
 

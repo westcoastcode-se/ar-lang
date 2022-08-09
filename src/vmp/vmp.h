@@ -63,6 +63,9 @@ extern void vmp_pipeline_destroy(vmp_pipeline* p);
 // Add the supplied package
 extern BOOL vmp_pipeline_add_package(vmp_pipeline* p, vmp_package* pkg);
 
+// Add default vm package
+extern void vmp_pipeline_add_vm_package(vmp_pipeline* p);
+
 // Search for a package in the pipeline
 extern vmp_package* vmp_pipeline_find_package(vmp_pipeline* p, const vm_string* name);
 

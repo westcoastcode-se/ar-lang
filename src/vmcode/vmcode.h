@@ -4,13 +4,22 @@
 #include "../vmp/vmp.h"
 #include "vmcd_lexer.h"
 #include "vmcd_list_sources.h"
+#include "vmcd_lists.h"
+#include "../vm_string_pool.h"
 
 // Source Code Processor
 struct vmcode
 {
+	// A string pool
+	vm_string_pool string_pool;
+
 	// Source codes to be processed
 	vmcd_list_sources source_codes;
 
+	// All packages
+	vmcd_list_packages packages;
+
+	// Bytecode builders
 	vmp_pipeline* pipeline;
 	vmp_builder* builder;
 
@@ -23,22 +32,27 @@ struct vmcode
 typedef struct vmcode vmcode;
 
 // The compilation scope
-struct vmcd_scope
+typedef struct vmcd_scope
 {
 	vmcode* vmcd;
 	vmp_pipeline* pipeline;
 	vmcd_token* token;
 
 	// Current package we are in
-	vmp_package* package;
+	struct vmcd_package* package;
 
 	// The function we are in
-	vmp_func* func;
+	struct vmcd_func* func;
 	
 	// Parent function
 	const struct vmcd_scope* parent;
-};
-typedef struct vmcd_scope vmcd_scope;
+} vmcd_scope;
+
+// A parser responsible for parsing source code and building up a syntax tree from it
+typedef struct vmcd_parser
+{
+	int val;
+} vmcd_parser;
 
 // Create a new source code processor
 extern vmcode* vmcode_new();

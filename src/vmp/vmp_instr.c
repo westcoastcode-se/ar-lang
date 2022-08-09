@@ -672,7 +672,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		vmi_instr_ldc_i32 instr;
 		instr.opcode = 0;
 		instr.icode = VMI_LDC;
-		instr.props1 = cmd->constant.type;
+		instr.props1 = cmd->type->data_type;
 		instr.i32 = cmd->constant.i4;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldc_i32))) {
 			return NULL;
@@ -686,7 +686,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		vmi_instr_ldc_s instr;
 		instr.opcode = 0;
 		instr.icode = VMI_LDC_S;
-		instr.props1 = cmd->constant.type;
+		instr.props1 = cmd->type->data_type;
 		instr.i16 = cmd->constant.i2;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldc_s))) {
 			return NULL;
@@ -700,7 +700,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		vmi_instr_ldc_i64 instr;
 		instr.opcode = 0;
 		instr.icode = VMI_LDC_I8;
-		instr.props1 = cmd->constant.type;
+		instr.props1 = cmd->type->data_type;
 		instr.i64 = cmd->constant.i8;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldc_i64))) {
 			break;

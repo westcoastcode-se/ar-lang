@@ -1,50 +1,155 @@
 #include "vmcode.h"
 #include "vmcd_messages.h"
 #include "vmcd_source_code.h"
+#include "vmcd_types.h"
 #include <inttypes.h>
 
+//
+// Constants
+//
+
+VM_STRING_CONST(vmcd_bool, "bool", 4);
+VM_STRING_CONST(vmcd_pbool, "*bool", 5);
+VM_STRING_CONST(vmcd_int8, "int8", 4);
+VM_STRING_CONST(vmcd_pint8, "*int8", 5);
+VM_STRING_CONST(vmcd_uint8, "uint8", 5);
+VM_STRING_CONST(vmcd_puint8, "*uint8", 6);
+VM_STRING_CONST(vmcd_int16, "int16", 5);
+VM_STRING_CONST(vmcd_pint16, "*int16", 6);
+VM_STRING_CONST(vmcd_uint16, "uint16", 6);
+VM_STRING_CONST(vmcd_puint16, "*uint16", 7);
+VM_STRING_CONST(vmcd_int32, "int32", 5);
+VM_STRING_CONST(vmcd_pint32, "*int32", 6);
+VM_STRING_CONST(vmcd_uint32, "uint32", 6);
+VM_STRING_CONST(vmcd_puint32, "*uint32", 7);
+VM_STRING_CONST(vmcd_int64, "int64", 5);
+VM_STRING_CONST(vmcd_pint64, "*int64", 6);
+VM_STRING_CONST(vmcd_uint64, "uint64", 6);
+VM_STRING_CONST(vmcd_puint64, "*uint64", 7);
+VM_STRING_CONST(vmcd_float32, "float32", 7);
+VM_STRING_CONST(vmcd_pfloat32, "*float32", 8);
+VM_STRING_CONST(vmcd_float64, "float64", 7);
+VM_STRING_CONST(vmcd_pfloat64, "*float64", 8);
+
+vmcd_package* vmcode_find_package(vmcode* v, const vm_string* name)
+{
+	return vmcd_list_packages_find(&v->packages, name);
+}
+
+vm_int32 vmcode_add_package(vmcode* v, vmcd_package* p)
+{
+	// Always add the "vm" package
+	vmcd_package_add_import(p, vmcd_list_packages_get(&v->packages, 0));
+	return vmcd_list_packages_add(&v->packages, p);
+}
+
+void vmcode_vm_package(vmcode* p)
+{
+	vmcd_type* type;
+
+	// Create vm package
+	vm_string name;
+	name.start = "vm";
+	name.end = name.start + 2;
+	vmcd_package* const vm = vmcd_package_new(&name);
+	vmcd_list_packages_add(&p->packages, vm);
+
+	//
+	// Add default types
+	//
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_bool), sizeof(vm_int32), 0, VMI_INSTR_PROP_BOOL, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_pbool), sizeof(BOOL*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_int8), sizeof(vm_int8), 0, VMI_INSTR_PROP_INT8, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_pint8), sizeof(vm_int8*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_uint8), sizeof(vm_uint8), 0, VMI_INSTR_PROP_UINT8, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_puint8), sizeof(vm_uint8*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_int16), sizeof(vm_int16), 0, VMI_INSTR_PROP_INT16, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_pint16), sizeof(vm_int16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_uint16), sizeof(vm_uint16), 0, VMI_INSTR_PROP_UINT16, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_puint16), sizeof(vm_uint16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_int32), sizeof(vm_int32), 0, VMI_INSTR_PROP_INT32, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_pint32), sizeof(vm_int32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_uint32), sizeof(vm_uint32), 0, VMI_INSTR_PROP_UINT32, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_puint32), sizeof(vm_uint32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_int64), sizeof(vm_int64), 0, VMI_INSTR_PROP_INT64, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_pint64), sizeof(vm_int64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_uint64), sizeof(vm_uint64), 0, VMI_INSTR_PROP_UINT64, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_puint64), sizeof(vm_uint64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_float32), sizeof(vm_float32), 0, VMI_INSTR_PROP_FLOAT32, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_pfloat32), sizeof(vm_float32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_float64), sizeof(vm_float64), 0, VMI_INSTR_PROP_FLOAT64, NULL));
+	vmcd_package_add_type(vm, type);
+	type = vmcd_type_new_from_props(vmcd_type_props_get(VM_STRING_CONST_GET(vmcd_pfloat64), sizeof(vm_float64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
+	vmcd_package_add_type(vm, type);
+}
+
 // Parse a type from a specific package. It is assumed that everything in the package is already processed and "compiled"
-vmp_type* vmcd_parse_type_from_package(const vmcd_scope* s)
+vmcd_type* vmcd_parse_type_from_package(const vmcd_scope* s)
 {
 	vmcd_token* const t = s->token;
-	return vmp_package_find_type(s->package, &t->string);
+	return vmcd_package_find_type(s->package, &t->string);
 }
 
 // Parse a type. If the returned type is NULL then a message will be put on the message queue with the error
-vmp_type* vmcd_parse_type(const vmcd_scope* s)
+vmcd_type* vmcd_parse_type(const vmcd_scope* s)
 {
 	vmcd_token* const t = s->token;
 	if (t->type == VMCD_TOKEN_PTR) {
 		// If no type was found then this is from a package and it wasn't found. This can be deduced because
 		// a type from "this" package is always temporarily created with an unknown size
-		vmp_type* base_type = vmcd_parse_type(s);
+		vmcd_type* base_type = vmcd_parse_type(s);
 		if (base_type == NULL)
 			return NULL;
 		char memory[128];
 
 		// Stringify the type
 		memory[0] = '*';
-		vm_str_cpy(&memory[1], base_type->name.start, vm_string_length(&base_type->name));
-		const vm_string* pointer_type_name = vmp_pipeline_get_string(s->pipeline, memory, vm_string_length(&base_type->name) + 1);
+		vm_str_cpy(&memory[1], &VMCD_KEYWORD(base_type)->name);
+		const vm_string* pointer_type_name = vm_string_pool_stringsz(&s->vmcd->string_pool, memory, vm_string_length(&base_type->header.name) + 1);
 		if (pointer_type_name == NULL) {
 			vmcd_message_out_of_memory(s);
 			return NULL;
 		}
 
-		// Create the type if it doesn't exist
-		vmp_type* type = vmp_package_find_type(base_type->package, pointer_type_name);
+		vmcd_type* type = vmcd_package_find_type(base_type->package, pointer_type_name);
+		// Creat the type if it doesn't exist
 		if (type == NULL) {
-			type = vmp_type_new(pointer_type_name);
+			type = vmcd_type_new(pointer_type_name);
 			type->size = sizeof(vm_byte*);
-			type->flags |= VMP_TYPE_FLAGS_PTR;
-			if (!vmp_type_of_type(type, base_type)) {
-				vmcd_message_panic(s, "we are adding the same type multiple times");
-				return NULL;
-			}
-			switch (vmp_package_add_type(base_type->package, type)) {
-			case VMP_LIST_ADDED:
-				break;
-			default:
+			type->flags |= VMCD_TYPE_FLAG_PTR;
+			vmcd_type_of_type(type, base_type);
+			if (!vmcd_package_add_type(base_type->package, type)) {
 				vmcd_message_out_of_memory(s);
 				return NULL;
 			}
@@ -60,8 +165,9 @@ vmp_type* vmcd_parse_type(const vmcd_scope* s)
 		return NULL;
 	}
 
-	// This is an imported package? (ex: vm.int32)
-	vmp_package* const imported = vmp_package_find_import(s->package, &t->string);
+	// You might specify a full path to the type: "System.Int32Package1.Package2.Type.InnerType".
+	// The first type is considered the current class first
+	vmcd_package* const imported = vmcd_package_find_import(s->package, &t->string);
 	if (imported != NULL) {
 		if (!vmcd_token_next_type(t, VMCD_TOKEN_DOT)) {
 			vmcd_message_syntax_error(s, '.');
@@ -76,394 +182,16 @@ vmp_type* vmcd_parse_type(const vmcd_scope* s)
 
 	// Try to fetch the type. If the type doesn't exist then assume that this isn't from a package and can thus be
 	// created artificially with an unknown size
-	vmp_type* type = vmp_package_find_type_include_imports(s->package, &t->string);
+	vmcd_type* type = vmcd_package_find_type_include_imports(s->package, &t->string);
 	if (type == NULL) {
-		type = vmp_type_new(&t->string);
-		switch (vmp_package_add_type(s->package, type))
-		{
-		case VMP_LIST_ADDED:
-			break;
-		default:
+		// If the type isn't found then assume that the type isn't declared yet
+		type = vmcd_type_new(&t->string);
+		if (!vmcd_package_add_type(s->package, type)) {
 			vmcd_message_out_of_memory(s);
 			return NULL;
 		}
 	}
 	return type;
-}
-
-BOOL vmcd_parse_assign_local(const vmcd_scope* s, vmp_local* local)
-{
-	vmcd_token* const t = s->token;
-	vmp_func* const f = s->func;
-	vm_string type_name;
-	vmp_type* type = NULL;
-	vmcd_token_next(t);
-	switch (t->type)
-	{
-	case VMCD_TOKEN_VALUE_INT:
-		type_name.start = "int32";
-		type_name.end = type_name.start + 5;
-		type = vmp_package_find_type_include_imports(s->package, &type_name);
-		vmp_func_add_instr(f, vmp_instr_ldc(type, vmp_const_i4(vmcd_token_i4(t))));
-		vmp_func_add_instr(f, vmp_instr_stl(local));
-		return TRUE;
-	default:
-		return vmcd_message_not_implemented(s);
-	}
-}
-
-// Parse a constant value, such as 12345
-vmp_instr* parse_value(const vmcd_scope* s)
-{
-	vmcd_token* const t = s->token;
-	vm_string type_name;
-	vmp_instr* instr;
-	switch (t->type)
-	{
-	case VMCD_TOKEN_VALUE_INT:
-	{
-		const vm_uint64 value = vmcd_token_ui8(t);
-		if (value <= INT32_MAX) {
-			type_name.start = "int32";
-			type_name.end = type_name.start + 5;
-			vmp_type* type = vmp_package_find_type_include_imports(s->package, &type_name);
-			ASSERT_NOT_NULL(type);
-			return vmp_instr_ldc(type, vmp_const_i4(vmcd_token_i4(t)));
-		}
-		else if (value <= UINT32_MAX) {
-			type_name.start = "uint32";
-			type_name.end = type_name.start + 6;
-			vmp_type* type = vmp_package_find_type_include_imports(s->package, &type_name);
-			ASSERT_NOT_NULL(type);
-			return vmp_instr_ldc(type, vmp_const_ui4(vmcd_token_ui4(t)));
-		}
-		else if (value <= INT64_MAX) {
-			type_name.start = "int64";
-			type_name.end = type_name.start + 5;
-			vmp_type* type = vmp_package_find_type_include_imports(s->package, &type_name);
-			ASSERT_NOT_NULL(type);
-			return vmp_instr_ldc(type, vmp_const_i8(vmcd_token_i8(t)));
-		}
-		else if (value <= UINT64_MAX) {
-			type_name.start = "uint64";
-			type_name.end = type_name.start + 6;
-			vmp_type* type = vmp_package_find_type_include_imports(s->package, &type_name);
-			ASSERT_NOT_NULL(type);
-			return vmp_instr_ldc(type, vmp_const_ui8(vmcd_token_ui8(t)));
-		}
-	}
-	case VMCD_TOKEN_VALUE_DECIMAL:
-	{
-		const vm_float64 value = vmcd_token_f8(t);
-		type_name.start = "float64";
-		type_name.end = type_name.start + 7;
-		vmp_type* type = vmp_package_find_type_include_imports(s->package, &type_name);
-		ASSERT_NOT_NULL(type);
-		return vmp_instr_ldc(type, vmp_const_f8(vmcd_token_f8(t)));
-	}
-	case VMCD_TOKEN_VALUE_BOOL:
-	{
-		type_name.start = "bool";
-		type_name.end = type_name.start + 4;
-		vmp_type* type = vmp_package_find_type_include_imports(s->package, &type_name);
-		ASSERT_NOT_NULL(type);
-		return vmp_instr_ldc(type, vmp_const_i4(vmcd_token_bool(t)));
-	}
-	default:
-		vmcd_message_not_implemented(s);
-		return NULL;
-	}
-}
-
-// Statements: 
-//	1 + 2 
-//		ldc, ldc, add
-//	(1 + 2) + 3 
-//		ldc, ldc, add, ldc, add
-//	1 + (2 + 3) 
-//		ldc, ldc, ldc, add, add
-// get() + constant + (10 * get() - calc(5))
-//		call, ldc, add, ldc(10), call, mul, ldc(5), call, sub
-// get
-//		ldf
-// !(test() == true && (1 + 2) == 3)
-//	call, cmpt, ldc(2), ldc(1), add, ldc(3), cmpt, cmpt, cmpinv
-/*vmp_instr* parse_statement(const vmcd_scope* s)
-{
-	vmcd_token* const t = s->token;
-
-	// Is this a statement built using '(' segments
-	if (t->type == VMCD_TOKEN_PARAN_L) {
-		vmcd_token_next(t);
-		// Should return at the closest ')' token, thus ending this segment
-		vmp_instr* const inner = parse_statement(s);
-		if (inner != NULL) {
-			return NULL;
-		}
-
-		// This is the end of another, inner, segment
-		if (t->type == VMCD_TOKEN_PARAN_R) {
-			vmcd_token_next(t);
-			return inner;
-		}
-
-		// IF this is an operator then we know that this is a a "+", "-", .... statement
-		vmcd_token_next(t);
-		vmcd_token_skip_newline(t);
-		if (!vmcd_token_is_operator(t)) {
-
-		}
-
-		if (vmcd_token_is_operator(t)) {
-			// For example: "inner + inner2"
-			vmp_instr* const inner2 = parse_statement(s);
-			switch (t->type) {
-			case VMCD_TOKEN_OP_PLUS:
-				vmp_instr_link(vmp_instr_link(inner, inner2), vmp_instr_add());
-			}
-
-			vmp_instr_link()
-			return inner;
-		}
-	}
-
-	// Is this a value?
-	if (vmcd_token_is_value(t)) {
-
-	}
-}*/
-
-/*BOOL parse_statement(const vmcd_scope* s, vmp_instr** result)
-{
-	vmcd_token* const t = s->token;
-	vmp_instr* instr = NULL;
-
-	if (t->type == VMCD_TOKEN_PARAN_L) {
-		// Is the statement segmented using parantheses?
-		if (!parse_statement(s, &instr)) {
-			return FALSE;
-		}
-	}
-	else if (vmcd_token_is_value(t)) {
-		// Parse value statement
-		instr = parse_value(s);
-		if (instr == NULL) {
-			return FALSE;
-		}
-	}
-	else if (t->type == VMCD_TOKEN_KEYWORD) {
-		// constant or function?
-		vmp_keyword* keyword = vmp_func_find_keyword(s->func, &t->string);
-		if (keyword == NULL) {
-			// Unknown keywords are:
-			// * func (call func)
-			// * package-local variables (load_global)
-			// * constants (load_const)
-			// * types (not allowed in this context)
-
-			// We have to, essentially, peek at the next token, to know if the keyword is expected to 
-			// be a variable or a call to a function
-			vmcd_token peek = *t;
-			vmcd_token_next(&peek);
-
-			// Function call
-			if (t->type == VMCD_TOKEN_PARAN_L) {
-				
-			}
-			else {
-				// Might be a function ref, constant or a global
-			}
-		}
-		else {
-			switch (keyword->keyword_type)
-			{
-			case VMP_KEYWORD_ARG:
-			{
-				const vmp_arg* const arg = (vmp_arg*)keyword;
-				instr = vmp_instr_lda(arg->index);
-				break;
-			}
-			case VMP_KEYWORD_LOCAL:
-			{
-				const vmp_local* const local = (vmp_local*)keyword;
-				instr = vmp_instr_ldl(local);
-				break;
-			}
-			case VMP_KEYWORD_GLOBAL:
-			{
-				instr = vmp_instr_ldg((vmp_global*)keyword);
-				break;
-			}
-			case VMP_KEYWORD_FUNC:
-			case VMP_KEYWORD_PACKAGE:
-			case VMP_KEYWORD_CONST:
-			case VMP_KEYWORD_TYPE:
-				// This means casting
-			}
-		}
-	}
-	else {
-		return vmcd_message_not_implemented(s);
-	}
-
-	// should be a calculator 
-	vmcd_token_next(t);
-	if (t->type == VMCD_TOKEN_PLUS) {
-		instr = vmp_instr_link(instr, vmp_instr_add());
-	}
-
-
-	return TRUE;
-}*/
-
-BOOL vmcd_parse_decl_assign_local(const vmcd_scope* s, vmp_local* local)
-{
-	vmcd_token* const t = s->token;
-	vmp_func* const f = s->func;
-	vm_string type_name;
-	vmp_type* type = NULL;
-	vmcd_token_next(t);
-	switch (t->type)
-	{
-	case VMCD_TOKEN_VALUE_INT:
-		type_name.start = "int32";
-		type_name.end = type_name.start + 5;
-		type = vmp_package_find_type_include_imports(s->package, &type_name);
-		if (type == NULL) {
-			return vmcd_message_type_not_found(s, &type_name);
-		}
-		local->type = type;
-		vmp_func_add_instr(f, vmp_instr_ldc(type, vmp_const_i4(vmcd_token_i4(t))));
-		vmp_func_add_instr(f, vmp_instr_stl(local));
-		return TRUE;
-	case VMCD_TOKEN_KEYWORD:
-	{
-		vmp_keyword* keyword = vmp_func_find_keyword(s->func, &t->string);
-		if (keyword == NULL) {
-			// ??? Might be a function or a constant that's not declared yet
-			return vmcd_message_not_implemented(s);
-		}
-		if (keyword->keyword_type == VMP_KEYWORD_ARG) {
-			vmp_arg* const arg = (vmp_arg*)keyword;
-			vmp_func_add_instr(f, vmp_instr_lda(arg));
-		}
-		else {
-			return vmcd_message_not_implemented(s);
-		}
-	}
-	default:
-		return vmcd_message_not_implemented(s);
-	}
-}
-
-BOOL vmcd_parse_return(const vmcd_scope* s)
-{
-	vmcd_token* const t = s->token;
-	if (s->func->returns.count > 0) {
-		vmcd_token_next(t);
-
-		// Each return is separated with a comma(,)
-		const int num_returns = s->func->returns.count;
-		for (int i = 0; i < num_returns; ++i) {
-			vmp_return* const ret = vmp_list_returns_get(&s->func->returns, i);
-
-			switch (t->type) {
-			case VMCD_TOKEN_KEYWORD:
-			{
-				vmp_keyword* const keyword = vmp_func_find_keyword(s->func, &t->string);
-				if (keyword == NULL) {
-					return vmcd_message_expected_identifier(s);
-				}
-
-				switch (keyword->keyword_type) {
-				case VMP_KEYWORD_LOCAL:
-				{
-					const vmp_local* const local = (vmp_local*)keyword;
-					vmp_func_add_instr(s->func, vmp_instr_ldl(local));
-					break;
-				}
-				default:
-					return vmcd_message_not_implemented(s);
-				}
-				break;
-			}
-			default:
-				return vmcd_message_not_implemented(s);
-			};
-
-			if (i < (num_returns - 1)) {
-				if (!vmcd_token_next_type(t, VMCD_TOKEN_COMMA))
-					return vmcd_message_syntax_error(s, ',');
-				vmcd_token_next(t);
-			}
-		}
-	}
-	vmp_func_add_instr(s->func, vmp_instr_ret());
-	return TRUE;
-}
-
-BOOL vmcd_parse_keyword(vm_string keyword_name, const vmcd_scope* s)
-{
-	vmcd_token* const t = s->token;
-	vmp_keyword* const keyword = vmp_func_find_keyword(s->func, &keyword_name);
-
-	vmcd_token_next(t);
-	if (t->type == VMCD_TOKEN_PARAN_L) {
-		vmp_func* func = (vmp_func*)keyword;
-		// function call in the same package
-		if (func == NULL) {
-			// Create it and add it to the package
-			func = vmp_func_new(&t->string);
-			switch (vmp_package_add_func(s->package, func)) {
-			case VMP_LIST_ADDED:
-				break;
-			default:
-				// Could not add function. TODO: Add better message
-				return vmcd_message_not_implemented(s);
-			}
-		}
-
-		// Arguments are, indirectly, created using the arguments supplied to it!
-		return vmcd_message_not_implemented(s);
-	}
-	else if (t->type == VMCD_TOKEN_DOT) {
-		// Keyword in another package
-		return vmcd_message_not_implemented(s);
-	}
-	else if (t->type == VMCD_TOKEN_ASSIGN) {
-		if (keyword == NULL) {
-			vmcd_message_variable_not_found(s, &keyword_name);
-			return FALSE;
-		}
-		if (!vmp_keyword_is_assignable(keyword)) {
-			vmcd_message_not_assignable(s, &keyword_name);
-			return FALSE;
-		}
-		
-		if (keyword->keyword_type == VMP_KEYWORD_LOCAL) {
-			vmp_local* const local = (vmp_local*)keyword;
-			return vmcd_parse_assign_local(s, local);
-		}
-		else {
-			return vmcd_message_not_implemented(s);
-		}
-	}
-	else if (t->type == VMCD_TOKEN_DECL_ASSIGN) {
-		if (keyword != NULL) {
-			vmcd_message_duplicated_declaration(s, &keyword_name);
-		}
-		else {
-			// The type is not known yet
-			vmp_local* local = vmp_local_new();
-			if (vmp_func_add_local(s->func, local) == FALSE) {
-				vmcd_message_out_of_memory(s);
-				return FALSE;
-			}
-			vmp_local_set_name(local, &keyword_name);
-			return vmcd_parse_decl_assign_local(s, local);
-		}
-	}
-	return TRUE;
 }
 
 // Functions have the syntax: "func Name(<args>) (<returns>)
@@ -474,19 +202,14 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 		return vmcd_message_expected_identifier(s);
 
 	// This function might've been declared indirectly through a function call
-	vmp_func* func = vmp_package_find_func(s->package, &t->string);
+	vmcd_func* func = vmcd_package_find_func(s->package, &t->string);
 	if (func == NULL) {
-		func = vmp_func_new(&t->string);
-		switch (vmp_package_add_func(s->package, func)) {
-		case VMP_LIST_ADDED:
-			break;
-		default:
-			// Could not add function. TODO: Add better message
-			return vmcd_message_not_implemented(s);
+		func = vmcd_func_new(&t->string);
+		if (!vmcd_package_add_func(s->package, func)) {
+			return vmcd_message_out_of_memory(s);
 		}
-		vmp_func_add_flag(func, VMP_FUNC_FLAGS_PUBLIC);
 	}
-	if (func->body_size > 0) {
+	if (func->syntax_tree != NULL) {
 		// Body declared twice? This might be a function with another signature
 		return vmcd_message_not_implemented(s);
 	}
@@ -504,16 +227,15 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 		}
 
 		// Identity first
-		vmp_arg* arg = vmp_arg_new();
-		arg->name = t->string;
-		vmp_func_add_arg(func, arg);
+		vmcd_arg* arg = vmcd_arg_new(&t->string);
+		vmcd_func_add_arg(func, arg);
 
-		vmp_type* type = vmcd_parse_type(s);
+		vmcd_type* type = vmcd_parse_type(s);
 		if (type == NULL) {
 			// We haven't encountered the type yet?
 			return vmcd_message_not_implemented(s);
 		}
-		arg->type = type;
+		arg->type = VMCD_KEYWORD(type);
 	}
 
 	vmcd_token_next(t);
@@ -528,29 +250,25 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 					return vmcd_message_expected_identifier(s);
 			}
 
-			// Identity first
-			vmp_return* ret = vmp_return_new();
-			vmp_func_add_return(func, ret);
+			vmcd_return* ret = vmcd_return_new();
+			vmcd_func_add_return(func, ret);
 
-			vmp_type* type = vmcd_parse_type(s);
+			vmcd_type* type = vmcd_parse_type(s);
 			if (type == NULL) {
 				return vmcd_message_not_implemented(s);
 			}
-			ret->type = type;
+			ret->type = VMCD_KEYWORD(type);
 		}
 	}
 	else if (t->type == VMCD_TOKEN_KEYWORD) {
-		// One return value
-		// Identity first
-		vmp_return* ret = vmp_return_new();
-		if (!vmp_func_add_return(func, ret)) {
-			return vmcd_message_out_of_memory(s);
-		}
-		vmp_type* type = vmcd_parse_type(s);
+		vmcd_return* ret = vmcd_return_new();
+		vmcd_func_add_return(func, ret);
+
+		vmcd_type* type = vmcd_parse_type(s);
 		if (type == NULL) {
 			return vmcd_message_not_implemented(s);
 		}
-		ret->type = type;
+		ret->type = VMCD_KEYWORD(type);
 		vmcd_token_next(t);
 	}
 
@@ -558,14 +276,15 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 		// Expected function body
 		return vmcd_message_syntax_error(s, '{');
 	}
-	vmp_func_begin_body(func);
+	vmcd_token_next(t);
+
 	vmcd_scope inner_scope = *s;
 	inner_scope.func = func;
 	inner_scope.parent = s;
 
+	vmcd_syntax_tree_node st;
 	int depth = 1;
-	vmcd_token_next(t);
-	// Parse until we reach that end ')' token
+
 	while (depth > 0) {
 		if (t->type == VMCD_TOKEN_BRACKET_L) {
 			depth++;
@@ -577,40 +296,17 @@ BOOL vmcd_parse_func(const vmcd_scope* s)
 			vmcd_token_next(t);
 			continue;
 		}
-
-		switch (t->type)
-		{
-		case VMCD_TOKEN_KEYWORD:
-			// This will is probably a function name or a variable name
-			if (!vmcd_parse_keyword(t->string, &inner_scope)) {
-				return FALSE;
-			}
-			break;
-		case VMCD_TOKEN_KEYWORD_IF:
-		case VMCD_TOKEN_KEYWORD_FOR:
-		case VMCD_TOKEN_KEYWORD_VAR:
-		case VMCD_TOKEN_KEYWORD_FUNC:
-		case VMCD_TOKEN_KEYWORD_TYPE:
-		case VMCD_TOKEN_KEYWORD_ELSE:
-		case VMCD_TOKEN_KEYWORD_CONST:
-		case VMCD_TOKEN_KEYWORD_RETURN:
-			if (!vmcd_parse_return(&inner_scope)) {
-				return FALSE;
-			}
-			break;
-		case VMCD_TOKEN_KEYWORD_STRUCT:
-		case VMCD_TOKEN_KEYWORD_IMPORT:
-		case VMCD_TOKEN_KEYWORD_EXTERN:
-		case VMCD_TOKEN_KEYWORD_PACKAGE:
-		case VMCD_TOKEN_KEYWORD_INTERFACE:
-		default:
-			break;
+		else if (t->type == VMCD_TOKEN_NEWLINE) {
+			vmcd_token_next(t);
+			continue;
 		}
 
-		vmcd_token_next(t);
-	}
+		st = vmcd_syntax_tree_next(&inner_scope);
+		if (st == NULL)
+			return FALSE;
 
-	vmp_func_begin_end(func);
+		vmcd_func_add_syntax_tree(func, st);
+	}
 	return TRUE;
 }
 
@@ -623,19 +319,19 @@ BOOL vmcd_parse_package(const vmcd_scope* s)
 		return vmcd_message_expected_identifier(s);
 
 	// Try to get/create the package
-	vmp_package* package = vmp_pipeline_find_package(s->pipeline, &s->token->string);
+	vmcd_package* package = vmcode_find_package(s->vmcd, &s->token->string);
 	if (package == NULL) {
-		package = vmp_package_new(&s->token->string);
+		package = vmcd_package_new(&s->token->string);
 		if (package == NULL)
 			return vmcd_message_out_of_memory(s);
-		vmp_pipeline_add_package(s->pipeline, package);
+		vmcode_add_package(s->vmcd, package);
 	}
 
 	// A package supports the following keywords (for now):
 	// * func
 	// * import
 	// * type
-	// * const
+	// * const NAME = <expr>
 	while (1)
 	{
 		vmcd_token_next(t);
@@ -652,16 +348,13 @@ BOOL vmcd_parse_package(const vmcd_scope* s)
 			if (!vmcd_token_next_type(s->token, VMCD_TOKEN_VALUE_STRING))
 				return vmcd_message_expected_identifier(s);
 			
-			vmp_package* imported = vmp_pipeline_find_package(s->pipeline, &s->token->string);
+			vmcd_package* imported = vmcode_find_package(s->vmcd, &s->token->string);
 			if (imported == NULL) {
 				return vmcd_message_package_not_found(s);
 			}
-			switch (vmp_package_add_import(package, imported)) {
-			case VMP_LIST_ADDED:
-				break;
-			default:
-				// Could not import package. TODO: Add better message
-				return vmcd_message_package_not_found(s);
+
+			if (!vmcd_package_add_import(package, imported)) {
+				return vmcd_message_out_of_memory(s);
 			}
 		}
 		else if (t->type == VMCD_TOKEN_KEYWORD_CONST) {
@@ -722,7 +415,9 @@ vmcode* vmcode_new()
 	vmcode* p = (vmcode*)malloc(sizeof(vmcode));
 	if (p == NULL)
 		return NULL;
+	vm_string_pool_init(&p->string_pool);
 	vmcd_list_sources_init(&p->source_codes);
+	vmcd_list_packages_init(&p->packages);
 	p->pipeline = vmp_pipeline_new();
 	p->builder = NULL;
 	vm_messages_init(&p->messages);
@@ -739,7 +434,9 @@ void vmcode_destroy(vmcode* p)
 	if (p->pipeline != NULL) {
 		vmp_pipeline_destroy(p->pipeline);
 	}
+	vmcd_list_packages_release(&p->packages);
 	vmcd_list_sources_release(&p->source_codes);
+	vm_string_pool_destroy(&p->string_pool);
 	free(p);
 }
 
@@ -752,6 +449,8 @@ BOOL vmcode_add_source_code(vmcode* p, const vm_byte* source_code, const vm_byte
 
 BOOL vmcode_parse(vmcode* p, const vm_byte* filename)
 {
+	vmcode_vm_package(p);
+
 	vmcd_lexer l;
 	vmcd_token t;
 
@@ -786,7 +485,29 @@ BOOL vmcode_parse(vmcode* p, const vm_byte* filename)
 
 BOOL vmcode_link(vmcode* p)
 {
-	// Generate the actual bytecode
+	// Start by solving all pending types
+	vm_int32 i;
+	const vm_int32 count = p->packages.count;
+	for (i = 0; i < count; ++i) {
+		vmp_package* const package = vmcd_package_resolve_package(vmcd_list_packages_get(&p->packages, i), p);
+		if (!vmp_pipeline_add_package(p->pipeline, package)) {
+			return FALSE;
+		}
+	}
+
+	// Now it's time to compile each package
+	for (i = 0; i < count; ++i) {
+		if (!vmcd_package_compile(vmcd_list_packages_get(&p->packages, i), p)) {
+			return FALSE;
+		}
+	}
+
+	if (!vmp_pipeline_resolve(p->pipeline)) {
+		//
+		return FALSE;
+	}
+
+	// Let the actual builder compile the bytecode
 	p->builder = vmp_builder_new(p->pipeline);
 	vmp_builder_set_opt_level(p->builder, 0);
 	if (!vmp_builder_compile(p->builder)) {

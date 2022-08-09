@@ -14,7 +14,7 @@ void vm_string_zero(vm_string* s)
 void vm_mutable_string_malloc(vm_mutable_string* dest, const char* str, int len)
 {
 	dest->start = malloc(len);
-	vm_str_cpy(dest->start, str, len);
+	vm_str_cpysz(dest->start, str, len);
 	dest->end = dest->start + len;
 }
 

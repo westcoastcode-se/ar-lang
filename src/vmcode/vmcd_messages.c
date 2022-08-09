@@ -129,6 +129,16 @@ BOOL vmcd_message_not_implemented(const struct vmcd_scope* s)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
+BOOL vmcd_message_function_no_body(const struct vmcd_scope* s, const vm_string* signature)
+{
+	vm_messages* const m = &s->vmcd->messages;
+	return vm_messages_add(m,
+		VMCD_MESSAGE_PREFIX,
+		VMCD_MESSAGE_FUNCTION_NO_BODY,
+		VMCD_MESSAGE_FUNCTION_NO_BODY_STR,
+		vm_string_length(signature), signature->start);
+}
+
 BOOL vmcd_message_duplicated_declaration(const struct vmcd_scope* s, const vm_string* decl)
 {
 	const vmcd_token* const t = s->token;

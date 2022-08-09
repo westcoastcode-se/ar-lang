@@ -10,6 +10,7 @@ struct utils_vmp : utils_vm
 	{
 		// Create a new pipeline to put bytecode into
 		pipeline = vmp_pipeline_new();
+		vmp_pipeline_add_vm_package(pipeline);
 		builder = NULL;
 		process = NULL;
 	}

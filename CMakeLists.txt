@@ -65,7 +65,7 @@ add_library(vm
      
     "src/vmp/vmp_list_globals.c"
     "src/vmp/vmp_list_imports.c"
-    "src/vmp/vmp_lists.c")
+    "src/vmp/vmp_lists.c" "src/vm_string_pool.c")
 
 # Compiler
 include_directories("${VM_INCLUDE_DIRS}")
@@ -75,7 +75,7 @@ add_library(vmcode
     "src/vmcode/vmcd_messages.c" 
     "src/vmcode/vmcd_source_code.c" 
     "src/vmcode/vmcd_list_sources.c"
-)
+ "src/vmcode/vmcd_lists.c" "src/vmcode/vmcd_types.c" "src/vmcode/syntax_tree.c")
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)
