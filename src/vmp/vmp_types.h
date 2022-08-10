@@ -335,6 +335,7 @@ enum vmp_instr_type
 	VMP_INSTR_CMP,
 	VMP_INSTR_JMP,
 	VMP_INSTR_CONV,
+	VMP_INSTR_NEG,
 	VMP_INSTR_EOE,
 };
 typedef enum vmp_instr_type vmp_instr_type;

@@ -139,6 +139,9 @@ enum vmi_icodes
 	// Copy stack value at the top and push the copied value to the top of the stack
 	VMI_COPY_S,
 
+	// Negate the value on the stack
+	VMI_NEG,
+
 	// End-of-execution. This will forcefully stop the execution of the virtual machine. Normally used
 	// when calling a function from an unmanaged source, such as when used as a scripting language
 	VMI_EOE = 255
@@ -574,6 +577,9 @@ typedef struct vmi_instr_jmp vmi_instr_jmp;
 #define VMI_INSTR_JMP_PROP1_TRUE (0)
 #define VMI_INSTR_JMP_PROP1_FALSE (1)
 
+// Negate the current value on the stack
+typedef struct vmi_instr_single_instruction vmi_instr_neg;
+
 // End-of-execution instruction. The execution will be halted when when this operation is reached
 typedef vmi_instr_single_instruction vmi_instr_eoe;
 
@@ -661,5 +667,16 @@ enum vmi_ocodes
 	VMI_OP_LDELEM_S_I2 = (VMI_LDELEM_S | VMI_PROPS1_OPCODE(2)),
 	VMI_OP_LDELEM_S_I4 = (VMI_LDELEM_S | VMI_PROPS1_OPCODE(4)),
 	VMI_OP_LDELEM_S_I8 = (VMI_LDELEM_S | VMI_PROPS1_OPCODE(8)),
+
+	VMI_OP_NEG_I1 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT8)),
+	VMI_OP_NEG_UI1 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT8)),
+	VMI_OP_NEG_I2 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT16)),
+	VMI_OP_NEG_UI2 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT16)),
+	VMI_OP_NEG_I4 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT32)),
+	VMI_OP_NEG_UI4 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT32)),
+	VMI_OP_NEG_I8 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_INT64)),
+	VMI_OP_NEG_UI8 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT64)),
+	VMI_OP_NEG_F4 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_FLOAT32)),
+	VMI_OP_NEG_F8 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_FLOAT64)),
 };
 #endif

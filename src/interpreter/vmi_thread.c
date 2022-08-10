@@ -74,6 +74,7 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 #include "instr/memory.inc.c"
 #include "instr/arrays.inc.c"
 #include "instr/sturef.inc.c"
+#include "instr/neg.inc.c"
 
 vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 {
@@ -149,6 +150,37 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_OP_SUB_F8:
 			ip = _vmi_thread_subf8(t, ip);
+			continue;
+
+		case VMI_OP_NEG_I1:
+			ip = _vmi_thread_negi1(t, ip);
+			continue;
+		case VMI_OP_NEG_UI1:
+			ip = _vmi_thread_negui1(t, ip);
+			continue;
+		case VMI_OP_NEG_I2:
+			ip = _vmi_thread_negi2(t, ip);
+			continue;
+		case VMI_OP_NEG_UI2:
+			ip = _vmi_thread_negui2(t, ip);
+			continue;
+		case VMI_OP_NEG_I4:
+			ip = _vmi_thread_negi4(t, ip);
+			continue;
+		case VMI_OP_NEG_UI4:
+			ip = _vmi_thread_negui4(t, ip);
+			continue;
+		case VMI_OP_NEG_I8:
+			ip = _vmi_thread_negi8(t, ip);
+			continue;
+		case VMI_OP_NEG_UI8:
+			ip = _vmi_thread_negui8(t, ip);
+			continue;
+		case VMI_OP_NEG_F4:
+			ip = _vmi_thread_negf4(t, ip);
+			continue;
+		case VMI_OP_NEG_F8:
+			ip = _vmi_thread_negf8(t, ip);
 			continue;
 
 		case VMI_OP_LDC_I1:

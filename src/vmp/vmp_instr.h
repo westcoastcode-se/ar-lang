@@ -279,6 +279,13 @@ struct vmp_instr_def_conv
 };
 typedef struct vmp_instr_def_conv vmp_instr_def_conv;
 
+// neg
+typedef struct vmp_instr_def_neg
+{
+	VMC_PIPELINE_INSTR_HEADER;
+	const vmp_type* type;
+} vmp_instr_def_neg;
+
 // Represents a basic instruction with no arguments
 struct vmp_instr_def_basic
 {
@@ -389,6 +396,9 @@ extern vmp_instr* vmp_instr_jmpf(const vmp_marker* marker);
 
 // Create a new conv instruction
 extern vmp_instr* vmp_instr_conv(const vmp_type* from, const vmp_type* to);
+
+// Create a new neg instruction
+extern vmp_instr* vmp_instr_neg(const vmp_type* type);
 
 // Create a new ret instruction
 extern vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size);

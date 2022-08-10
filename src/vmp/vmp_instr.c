@@ -521,6 +521,16 @@ vmp_instr* vmp_instr_conv(const vmp_type* from, const vmp_type* to)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_neg(const vmp_type* type)
+{
+	vmp_instr_def_neg* instr = (vmp_instr_def_neg*)vm_malloc(sizeof(vmp_instr_def_neg));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_NEG, sizeof(vmi_instr_neg));
+	instr->type = type;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 {
 	vmp_instr_def_basic* instr = (vmp_instr_def_basic*)vm_malloc(sizeof(vmp_instr_def_basic));
@@ -1276,6 +1286,19 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.props1 = cmd->from_type->data_type;
 		instr.props2 = cmd->to_type->data_type;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_conv))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_NEG:
+	{
+		const vmp_instr_def_neg* const cmd = (vmp_instr_def_neg*)h;
+
+		vmi_instr_neg instr;
+		instr.opcode = 0;
+		instr.icode = VMI_NEG;
+		instr.props1 = cmd->type->data_type;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_neg))) {
 			return NULL;
 		}
 		break;
