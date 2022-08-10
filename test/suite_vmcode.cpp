@@ -162,6 +162,30 @@ func Get() int32 {
 		end();
 	}
 
+	void return3()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
+	return 12345 + 20 + 10
+}
+)";
+		begin();
+		compile(source);
+
+		auto t = thread();
+
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, 12345 + 20 + 10);
+
+		destroy(t);
+		end();
+	}
+
 	void plus2()
 	{
 		static const auto source = R"(
@@ -365,6 +389,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 	{
 		TEST(return1);
 		TEST(return2);
+		TEST(return3);
 		//TEST(plus2);
 		//TEST(func_refs);
 		//TEST(quicksort);

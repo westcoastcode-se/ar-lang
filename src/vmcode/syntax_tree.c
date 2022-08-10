@@ -6,6 +6,7 @@
 void vmcd_syntax_tree_init(vmcd_syntax_tree_node st, vmcd_syntax_tree_type type)
 {
 	st->type = type;
+	st->stack_type = NULL;
 	st->head = st->tail = NULL;
 }
 
@@ -25,13 +26,13 @@ vmcd_syntax_tree_node vmcd_syntax_tree_next_factor(vmcd_scope* s)
 	case VMCD_TOKEN_VALUE_INT:
 		type_name.start = "int32";
 		type_name.end = type_name.start + 5;
-		result->type = VMCD_KEYWORD(vmcd_package_find_type_include_imports(s->package, &type_name));
+		VMCD_SYNTAX_TREE_STACK_TYPE(result) = VMCD_KEYWORD(vmcd_package_find_type_include_imports(s->package, &type_name));
 		result->value.i4 = vmcd_token_i4(t);
 		break;
 	case VMCD_TOKEN_VALUE_DECIMAL:
 		type_name.start = "float32";
 		type_name.end = type_name.start + 7;
-		result->type = VMCD_KEYWORD(vmcd_package_find_type_include_imports(s->package, &type_name));
+		VMCD_SYNTAX_TREE_STACK_TYPE(result) = VMCD_KEYWORD(vmcd_package_find_type_include_imports(s->package, &type_name));
 		result->value.f4 = vmcd_token_f4(t);
 		break;
 	default:
@@ -67,9 +68,10 @@ vmcd_syntax_tree_node vmcd_syntax_tree_next_binop(vmcd_scope* s)
 			binop->left = left;
 			binop->op = VMCD_TOKEN_OP_PLUS;
 			binop->right = right;
-			binop->op_type = ((vmcd_syntax_tree_const_value*)left)->type; // TODO: This should be verified
+			VMCD_SYNTAX_TREE_STACK_TYPE(binop) = left->stack_type; // TODO: This should be verified
 			left = VMCD_SYNTAX_TREE(binop);
 		}
+		break;
 		default:
 			goto endwhile;
 		}
@@ -154,13 +156,13 @@ BOOL vmcd_syntax_tree_expression_compile(vmcd_syntax_tree* st, vmcd_func* f)
 		if (!vmcd_syntax_tree_expression_compile(binop->right, f))
 			return FALSE;
 		assert(binop->op == VMCD_TOKEN_OP_PLUS);
-		vmp_func_add_instr(f->func, vmp_instr_add(vmcd_keyword_resolve_type(binop->op_type)));
+		vmp_func_add_instr(f->func, vmp_instr_add(vmcd_keyword_resolve_type(VMCD_SYNTAX_TREE_STACK_TYPE(binop))));
 	}
 	break;
 	case VMCD_STT_CONST_VALUE:
 	{
 		vmcd_syntax_tree_const_value* cv = (vmcd_syntax_tree_const_value*)st;
-		vmp_func_add_instr(f->func, vmp_instr_ldc(vmcd_keyword_resolve_type(cv->type), cv->value));
+		vmp_func_add_instr(f->func, vmp_instr_ldc(vmcd_keyword_resolve_type(VMCD_SYNTAX_TREE_STACK_TYPE(cv)), cv->value));
 	}
 	break;
 	case VMCD_STT_RETURN:

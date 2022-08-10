@@ -15,21 +15,22 @@ typedef enum vmcd_syntax_tree_type {
 typedef struct vmcd_syntax_tree {
 	vmcd_syntax_tree_type type;
 
+	// Type of the data on the stack this syntax item results into
+	struct vmcd_keyword* stack_type;
+
 	// Intrusive Linked List
 	struct vmcd_syntax_tree* head;
 	struct vmcd_syntax_tree* tail;
 } vmcd_syntax_tree, *vmcd_syntax_tree_node;
 
 #define VMCD_SYNTAX_TREE(st) (&st->header)
+#define VMCD_SYNTAX_TREE_STACK_TYPE(st) (VMCD_SYNTAX_TREE(st)->stack_type)
 
 typedef struct vmcd_syntax_tree_const_value {
 	vmcd_syntax_tree header;
 
 	// The constant value to be pushed on the stack
 	vmp_constant value;
-
-	// Raw constant type
-	struct vmcd_keyword* type;
 } vmcd_syntax_tree_const_value;
 
 // A binary operation, such as +, -, / or *
@@ -44,9 +45,6 @@ typedef struct vmcd_syntax_tree_binop {
 
 	// THe right side of the operator
 	vmcd_syntax_tree_node right;
-
-	// Represents the actual operator type for the left and right value
-	struct vmcd_keyword* op_type;
 } vmcd_syntax_tree_binop;
 
 // A return statement
