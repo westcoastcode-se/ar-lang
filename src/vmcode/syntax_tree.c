@@ -3,6 +3,8 @@
 #include "vmcd_types.h"
 #include "vmcode.h"
 
+vmcd_syntax_tree_node vmcd_syntax_tree_next_expr(vmcd_scope* s);
+
 void vmcd_syntax_tree_init(vmcd_syntax_tree_node st, vmcd_syntax_tree_type type)
 {
 	st->type = type;
@@ -23,6 +25,7 @@ vmcd_syntax_tree_node vmcd_syntax_tree_next_factor(vmcd_scope* s)
 		result->op = t->type;
 		vmcd_token_next(t);
 		result->node = vmcd_syntax_tree_next_factor(s);
+		result->header.stack_type = result->node->stack_type;
 		return VMCD_SYNTAX_TREE(result);
 	}
 
@@ -56,6 +59,21 @@ vmcd_syntax_tree_node vmcd_syntax_tree_next_factor(vmcd_scope* s)
 		result->value.f4 = vmcd_token_f4(t);
 		vmcd_token_next(t);
 		return VMCD_SYNTAX_TREE(result);
+	}
+
+	if (t->type == VMCD_TOKEN_PARAN_L) {
+		vmcd_token_next(t);
+		vmcd_syntax_tree_node expr = vmcd_syntax_tree_next_expr(s);
+		if (expr == NULL) {
+			return expr;
+		}
+		if (t->type != VMCD_TOKEN_PARAN_R) {
+			// Expected right paranthesis
+			vmcd_message_syntax_error(s, ')');
+			return NULL;
+		}
+		vmcd_token_next(t);
+		return expr;
 	}
 
 	vmcd_message_not_implemented(s);
