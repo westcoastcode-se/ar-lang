@@ -90,8 +90,10 @@ vmcd_syntax_tree_node vmcd_syntax_tree_next_binop(vmcd_scope* s)
 
 	while (TRUE) {
 		switch (t->type) {
+		case VMCD_TOKEN_OP_MINUS:
 		case VMCD_TOKEN_OP_PLUS:
 		{
+			const vmcd_token_type token_type = t->type;
 			vmcd_token_next(t);
 			vmcd_syntax_tree_node right = vmcd_syntax_tree_next_factor(s);
 			if (right == NULL)
@@ -103,7 +105,7 @@ vmcd_syntax_tree_node vmcd_syntax_tree_next_binop(vmcd_scope* s)
 			}
 			vmcd_syntax_tree_init(&binop->header, VMCD_STT_BINOP);
 			binop->left = left;
-			binop->op = VMCD_TOKEN_OP_PLUS;
+			binop->op = token_type;
 			binop->right = right;
 			VMCD_SYNTAX_TREE_STACK_TYPE(binop) = left->stack_type; // TODO: This should be verified
 			left = VMCD_SYNTAX_TREE(binop);
@@ -195,8 +197,15 @@ BOOL vmcd_syntax_tree_expression_compile(vmcd_syntax_tree* st, vmcd_func* f)
 			return FALSE;
 		if (!vmcd_syntax_tree_expression_compile(binop->right, f))
 			return FALSE;
-		assert(binop->op == VMCD_TOKEN_OP_PLUS);
-		vmp_func_add_instr(f->func, vmp_instr_add(vmcd_keyword_resolve_type(VMCD_SYNTAX_TREE_STACK_TYPE(binop))));
+		if (binop->op == VMCD_TOKEN_OP_MINUS) {
+			vmp_func_add_instr(f->func, vmp_instr_sub(vmcd_keyword_resolve_type(VMCD_SYNTAX_TREE_STACK_TYPE(binop))));
+		}
+		else if (binop->op == VMCD_TOKEN_OP_PLUS) {
+			vmp_func_add_instr(f->func, vmp_instr_add(vmcd_keyword_resolve_type(VMCD_SYNTAX_TREE_STACK_TYPE(binop))));
+		}
+		else {
+			return FALSE;
+		}
 	}
 	break;
 	case VMCD_STT_UNARYOP:
