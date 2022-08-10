@@ -8,6 +8,7 @@
 typedef enum vmcd_syntax_tree_type {
 	VMCD_STT_CONST_VALUE,
 	VMCD_STT_BINOP,
+	VMCD_STT_UNARYOP,
 	VMCD_STT_RETURN,
 } vmcd_syntax_tree_type;
 
@@ -46,6 +47,17 @@ typedef struct vmcd_syntax_tree_binop {
 	// THe right side of the operator
 	vmcd_syntax_tree_node right;
 } vmcd_syntax_tree_binop;
+
+// A unary operator, used to mark a value as negative or positive
+typedef struct vmcd_syntax_tree_unaryop {
+	vmcd_syntax_tree header;
+
+	// The operator (+|-)
+	vmcd_token_type op;
+
+	// The node to apply the operator on
+	vmcd_syntax_tree_node node;
+} vmcd_syntax_tree_unaryop;
 
 // A return statement
 typedef struct vmcd_syntax_tree_return
