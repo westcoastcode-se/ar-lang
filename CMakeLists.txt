@@ -39,6 +39,7 @@ add_library(vm
     "src/vm_message.c" 
     "src/vm_debug.c" 
     "src/vm_hash.c"
+    "src/vm_string_pool.c"
 
     "src/interpreter/vmi_stack.c" 
     "src/interpreter/vmi_thread.c" 
@@ -62,22 +63,13 @@ add_library(vm
     "src/vmp/vmp_list_locals.h" 
     "src/vmp/vmp_list_markers.c" 
     
-     
     "src/vmp/vmp_list_globals.c"
     "src/vmp/vmp_list_imports.c"
-    "src/vmp/vmp_lists.c" "src/vm_string_pool.c")
-
-# Compiler
-include_directories("${VM_INCLUDE_DIRS}")
-add_library(vmcode 
-    "src/vmcode/vmcode.c"
-    "src/vmcode/vmcd_lexer.c"
-    "src/vmcode/vmcd_messages.c" 
-    "src/vmcode/vmcd_source_code.c" 
-    "src/vmcode/vmcd_list_sources.c"
- "src/vmcode/vmcd_lists.c" "src/vmcode/vmcd_types.c" "src/vmcode/syntax_tree.c"   )
+    "src/vmp/vmp_lists.c" 
+    )
 
 # Compiler for ZPP source code
+include_directories("${VM_INCLUDE_DIRS}")
 add_library(zpp 
     "src/zpp/syntax_tree.c" 
     "src/zpp/lexer.c" 

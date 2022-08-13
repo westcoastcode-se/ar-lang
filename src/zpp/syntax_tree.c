@@ -542,7 +542,6 @@ zpp_syntax_tree_node zpp_synax_tree_parse_term(zpp_compiler* c, zpp_token* t, co
 				return NULL;
 			left = ZPP_SYNTAX_TREE(binop);
 			binop->closest_function_node = state->func_node;
-			zpp_token_next(t);
 			break;
 		}
 		default:

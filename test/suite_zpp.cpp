@@ -1,9 +1,5 @@
 #include "utils.hpp"
 
-extern "C" {
-#	include "zpp/compiler.h"
-}
-
 struct utils_zpp : utils_vm
 {
 	zpp_compiler* compiler;
@@ -242,6 +238,244 @@ func Get() int32 {
 		destroy(t);
 	}
 
+	void return7()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
+	return 10 + 20 + 30
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, 10 + 20 + 30);
+
+		destroy(t);
+	}
+
+	void return8()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
+	return 10 + 20 + 30 - 40
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, 10 + 20 + 30 - 40);
+
+		destroy(t);
+	}
+	void plus2()
+	{
+		static const auto source = R"(
+package main
+
+func Plus2(value int32) int32 {
+	ret := value + 2
+	return ret
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		static constexpr auto value = 10000;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "Plus2");
+
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, value + 2);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+	}
+
+	static vm_int32 c_complex1(vm_int32 value) {
+		return (((++value * 10) + (value++)) - --value) * 2;
+	}
+
+	void complex1()
+	{
+		static const auto source = R"(
+package main
+
+func Complex(value int32) int32 {
+	return (((++value * 10) + (value++)) - --value) * 2
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		static constexpr auto value = 123;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "Complex");
+
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, c_complex1(value));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+	}
+
+	static vm_int32 c_complex2(vm_int32 value) {
+		return (vm_int32)((((++value / 2.0f) + (value++)) - --value) * 10);
+	}
+
+	void complex2()
+	{
+		static const auto source = R"(
+package main
+
+func Complex(value int32) int32 {
+	return (int32)((((++value / 2.0f) + (value++)) - --value) * 10)
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		static constexpr auto value = 123;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "Complex");
+
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, c_complex2(value));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+	}
+
+	void func_refs()
+	{
+		static const auto source = R"(
+package main
+
+func add(i int32) int32 {
+	return i + 4 
+}
+
+func sub(i int32) int32 {
+	return i - 2
+}
+
+func FuncRef(value int32) int32 {
+	f := add
+	value = f(value)
+	f = sub
+	return f(value)
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		static constexpr auto value = 10;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "FuncRef");
+
+		verify_stack_size(t, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, value + 4 - 2);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+	}
+
+	void quicksort()
+	{
+		static const auto source = R"(
+package main
+
+func swap(a *int32, b *int32) {
+	t := *a
+	*a = *b
+	*b = t
+}
+
+func partition(arr *int32, low int32, high int32) {
+	pivot := arr{high]
+	i := low - 1
+	for j := 0; j <= high; ++j) {
+		if arr[i] < pivot) {
+			++i
+			swap(&arr[i], &arr[j])
+		}
+	}
+	swap(&arr[i + 1], &arr[high])
+	return i + 1
+}
+
+// QuickSort the supplied array. low is the starting index and high is the ending index
+func QuickSort(arr *int32, low int32, high int32) {
+	if low < high {
+		pi := partition(arr, low, high)
+		QuickSort(arr, low, pi - 1)
+		QuickSort(arr, pi + 1, high)
+	}
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		static constexpr auto COUNT = 10000;
+
+		// 10000 values to sort
+		auto arr = new vm_int32[COUNT];
+		srand(0);
+		for (int i = 0; i < COUNT; ++i) {
+			arr[i] = rand() % 1000;
+		}
+		*(vm_int32**)vmi_thread_push_stack(t, sizeof(vm_int32*)) = arr;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = 0;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = COUNT - 1;
+		invoke(t, "QuickSort");
+		destroy(t);
+		vm_int32 tmp = 0;
+		for (int i = 0; i < COUNT; ++i) {
+			if (arr[i] < tmp) {
+				throw_(error() << "failed to quicksort values");
+			}
+			tmp = arr[i];
+		}
+		delete[] arr;
+		verify_stack_size(t, sizeof(vm_int32*) + sizeof(vm_int32) + sizeof(vm_int32));
+	}
 	void operator()()
 	{
 		TEST_BEGIN_END(return1);
@@ -250,6 +484,8 @@ func Get() int32 {
 		TEST_BEGIN_END(return4);
 		TEST_BEGIN_END(return5);
 		TEST_BEGIN_END(return6);
+		TEST_BEGIN_END(return7);
+		TEST_BEGIN_END(return8);
 	}
 };
 

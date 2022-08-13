@@ -531,7 +531,6 @@ vm_byte* zpp_compiler_compile(zpp_compiler* c)
 	c->pipeline = vmp_pipeline_new();
 
 	// Solve all pending packages, types, functions etc
-	vm_int32 i;
 	zpp_package* package = c->packages;
 	while (package) {
 		vmp_package* resolved = zpp_package_resolve_package(package, c);
