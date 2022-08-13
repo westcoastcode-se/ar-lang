@@ -90,8 +90,8 @@ static inline char* vm_str_cpy(char* dest, const vm_string* str)
 
 // Define a constant vm_string
 #define VM_STRING_CONST(name, value, len) \
-	const char _const_C##name[] = value; \
-	const vm_string _const_S##name = { \
+	static const char _const_C##name[] = value; \
+	static const vm_string _const_S##name = { \
 		_const_C##name, \
 		_const_C##name + len \
 	}

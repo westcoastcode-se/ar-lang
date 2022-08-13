@@ -67,3 +67,17 @@ struct test_utils
 	catch (const std::exception& e) { \
 		throw e; \
 	}
+
+#define TEST_BEGIN_END(s) \
+	cout << "\tTest '" << #s << "'"; \
+	try {\
+		begin(); \
+		s(); \
+		end(); \
+		cout << " - OK" << endl; \
+	}\
+	catch (const std::exception& e) { \
+		cerr << " - ERROR: " << e.what() << endl; \
+		_tests_success = false; \
+		end(); \
+	}

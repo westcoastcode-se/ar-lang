@@ -21,6 +21,13 @@ void vm_messages_init(vm_messages* m)
 	m->first = m->last = NULL;
 }
 
+void vm_message_init(vm_message* m)
+{
+	m->code = 0;
+	m->message[0] = 0;
+	m->next = NULL;
+}
+
 void vm_messages_destroy(vm_messages* m)
 {
 	vm_message* message = m->first;
@@ -61,24 +68,29 @@ BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* fo
 	vm_message* new_message = (vm_message*)malloc(sizeof(vm_message));
 	if (new_message == NULL)
 		return FALSE;
+	vm_message_init(new_message);
 
 	buffer = new_message->message;
 	buffer += sprintf(buffer, "%c%.3d: ", prefix, error_code);
 
 	new_message->prefix = prefix;
 	new_message->code = error_code;
-	new_message->next = NULL;
 	new_message->line = new_message->line_offset = new_message->offset = 0;
 
 	va_start(argptr, format);
 	vsprintf(buffer, format, argptr);
 	va_end(argptr);
 
-	if (m->last == NULL)
-		m->last = m->first = new_message;
-	else {
-		m->last->next = new_message;
-		m->last = new_message;
-	}
+	vm_messages_append(m, new_message);
 	return FALSE;
+}
+
+void vm_messages_append(vm_messages* m, vm_message* msg)
+{
+	if (m->last == NULL)
+		m->last = m->first = msg;
+	else {
+		m->last->next = msg;
+		m->last = msg;
+	}
 }

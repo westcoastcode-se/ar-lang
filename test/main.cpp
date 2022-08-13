@@ -6,12 +6,13 @@ bool _tests_success = true;
 extern void suite_vmp();
 // Verify that you can build bytecode using the scripting language
 extern void suite_vmcode();
-
+// Verify that z++ source can be compiled
+extern void suite_zpp();
 int main()
 {
 	// Suites
 	suite_vmp();
-	suite_vmcode();
+	suite_zpp();
 
 	// Verify result
 	if (!_tests_success)

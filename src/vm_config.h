@@ -106,6 +106,10 @@ typedef int (*vm_nativefunc)(struct vmi_thread*);
 #	define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
 #endif
 
+#ifndef BIT_ISSET
+#define BIT_ISSET(bits, bit) ((bits & bit) == bit)
+#endif
+
 #ifndef ASSERT_NOT_NULL
 #	define ASSERT_NOT_NULL(a) assert(a != NULL && "expected '" #a "' to be set")
 #endif

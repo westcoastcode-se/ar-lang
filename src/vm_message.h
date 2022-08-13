@@ -44,6 +44,9 @@ extern BOOL vm_message_set(vm_message* msg, char prefix, int error_code, const c
 // Initialize the supplied messages object
 extern void vm_messages_init(vm_messages* m);
 
+// Initialize the supplied message object
+extern void vm_message_init(vm_message* m);
+
 // Destroy the internals of the supplied messages object
 extern void vm_messages_destroy(vm_messages* m);
 
@@ -56,7 +59,10 @@ inline static BOOL vm_messages_has_messages(vm_messages* m)
 // Move all messages to a new destination
 extern void vm_messages_move(vm_messages* src, vm_messages* dest);
 
-// Add a new messages. Returns TRUE if the messages was added successfully
+// Add a new message. Returns TRUE if the messages was added successfully
 extern BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* format, ...);
+
+// Append a new message
+extern void vm_messages_append(vm_messages* m, vm_message* msg);
 
 #endif

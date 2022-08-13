@@ -75,10 +75,21 @@ add_library(vmcode
     "src/vmcode/vmcd_messages.c" 
     "src/vmcode/vmcd_source_code.c" 
     "src/vmcode/vmcd_list_sources.c"
- "src/vmcode/vmcd_lists.c" "src/vmcode/vmcd_types.c" "src/vmcode/syntax_tree.c")
+ "src/vmcode/vmcd_lists.c" "src/vmcode/vmcd_types.c" "src/vmcode/syntax_tree.c"   )
+
+# Compiler for ZPP source code
+add_library(zpp 
+    "src/zpp/syntax_tree.c" 
+    "src/zpp/lexer.c" 
+    "src/zpp/symbols.c" 
+    "src/zpp/lists.c" 
+    "src/zpp/compiler.c" 
+    "src/zpp/source_code.c" 
+    "src/zpp/messages.c"
+)
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)
 include_directories("${VM_INCLUDE_DIRS}")
-add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_vmp.cpp" "test/suite_vmcode.cpp")
-target_link_libraries(test vmcode vm)
+add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_vmp.cpp" "test/suite_zpp.cpp")
+target_link_libraries(test zpp vm)
