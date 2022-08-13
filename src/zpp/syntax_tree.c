@@ -735,6 +735,32 @@ zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token*
 			zpp_syntax_tree_add(ZPP_SYNTAX_TREE(local_node), ZPP_SYNTAX_TREE(assign));
 			return ZPP_SYNTAX_TREE(local_node);
 		}
+		else if (t->type == ZPP_TOKEN_ASSIGN) {
+			// Existing variable, might be a local, argument or a global variable
+
+			zpp_token_next(t);
+			// Expression to be set in the local variable
+			zpp_syntax_tree_node decl_expression = zpp_synax_tree_parse_term(c, t, state);
+			if (decl_expression == NULL)
+				return NULL;
+
+			// Check to see if the local variable exists, and if not then add it
+			zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &var_name);
+			if (symbol == NULL) {
+				// Not defined yet
+				// TODO: Add support for an "unresolved" assignable type
+				zpp_message_not_implemented(state);
+				return NULL;
+			}
+
+			zpp_syntax_tree_assign* assign = zpp_syntax_tree_assign_new(decl_expression, symbol);
+			if (assign == NULL) {
+				zpp_message_out_of_memory(state);
+				return NULL;
+			}
+			assign->closest_function_node = state->func_node;
+			return ZPP_SYNTAX_TREE(assign);
+		}
 		else {
 			zpp_message_not_implemented(state);
 			return NULL;
