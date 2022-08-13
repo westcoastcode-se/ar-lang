@@ -217,14 +217,9 @@ BOOL zpp_compiler_compile_load_local(zpp_compiler* c, zpp_syntax_tree_load_local
 	return TRUE;
 }
 
-BOOL zpp_compiler_compile_local(zpp_compiler* c, zpp_syntax_tree_local* local)
+BOOL zpp_compiler_compile_load_argument(zpp_compiler* c, zpp_syntax_tree_load_argument* arg)
 {
-	zpp_syntax_tree* node = ZPP_SYNTAX_TREE(local)->node;
-	while (node != NULL) {
-		if (!zpp_synax_tree_compile(c, node))
-			return FALSE;
-		node = node->tail;
-	}
+	vmp_func_add_instr(arg->closest_function_node->function->func, vmp_instr_lda(arg->target->arg));
 	return TRUE;
 }
 
@@ -238,17 +233,6 @@ zpp_syntax_tree_root* zpp_syntax_tree_root_new()
 void zpp_syntax_tree_root_add(zpp_syntax_tree_root* root, zpp_syntax_tree_node node)
 {
 	zpp_syntax_tree_add(ZPP_SYNTAX_TREE(root), node);
-}
-
-zpp_syntax_tree_local* zpp_syntax_tree_local_new(struct zpp_local* local)
-{
-	zpp_syntax_tree_local* p = vm_safe_malloc(zpp_syntax_tree_local);
-	zpp_syntax_tree_init(ZPP_SYNTAX_TREE(p), ZPP_SYNTAX_TREE_LOCAL);
-	p->local = local;
-	p->closest_function_node = NULL;
-	// TODO: Allow for local variables to be "incrementally" increased. The function stack should dynamically increase when this happen
-	//		 and the stack will automatically be resized when exiting out of scope "}"
-	return p;
 }
 
 zpp_syntax_tree_package* zpp_syntax_tree_package_new(zpp_package* pkg)
@@ -300,8 +284,8 @@ BOOL zpp_synax_tree_compile(zpp_compiler* c, zpp_syntax_tree* st)
 		return zpp_compiler_compile_assign(c, (zpp_syntax_tree_assign*)st);
 	case ZPP_SYNTAX_TREE_LOAD_LOCAL:
 		return zpp_compiler_compile_load_local(c, (zpp_syntax_tree_load_local*)st);
-	case ZPP_SYNTAX_TREE_LOCAL:
-		return zpp_compiler_compile_local(c, (zpp_syntax_tree_local*)st);
+	case ZPP_SYNTAX_TREE_LOAD_ARGUMENT:
+		return zpp_compiler_compile_load_argument(c, (zpp_syntax_tree_load_argument*)st);
 	case ZPP_SYNTAX_TREE_TYPE:
 		return TRUE;
 	case ZPP_SYNTAX_TREE_ERROR:
@@ -335,6 +319,11 @@ zpp_symbol* zpp_symbol_find_symbol0(zpp_syntax_tree* st, const vm_string* name, 
 			return ZPP_SYMBOL(func->function);
 		}
 
+		// Check local function types
+		zpp_symbol* result = zpp_func_find_symbol(func->function, name);
+		if (result)
+			return result;
+
 		// Search all function children in root 
 		if (recursive) {
 			zpp_syntax_tree* node = st->node;
@@ -344,14 +333,6 @@ zpp_symbol* zpp_symbol_find_symbol0(zpp_syntax_tree* st, const vm_string* name, 
 					return symbol;
 				node = node->tail;
 			}
-		}
-	}
-	break;
-	case ZPP_SYNTAX_TREE_LOCAL:
-	{
-		zpp_syntax_tree_local* const local = (zpp_syntax_tree_local*)st;
-		if (zpp_symbol_has_name(ZPP_SYMBOL(local->local), name)) {
-			return ZPP_SYMBOL(local->local);
 		}
 	}
 	break;
@@ -468,8 +449,6 @@ void zpp_syntax_tree_destroy(zpp_syntax_tree* st)
 		break;
 	case ZPP_SYNTAX_TREE_CONST_VALUE:
 		break;
-	case ZPP_SYNTAX_TREE_LOCAL:
-		break;
 	case ZPP_SYNTAX_TREE_ASSIGN:
 		break;
 	case ZPP_SYNTAX_TREE_BINOP:
@@ -477,6 +456,8 @@ void zpp_syntax_tree_destroy(zpp_syntax_tree* st)
 	case ZPP_SYNTAX_TREE_UNARYOP:
 		break;
 	case ZPP_SYNTAX_TREE_LOAD_LOCAL:
+		break;
+	case ZPP_SYNTAX_TREE_LOAD_ARGUMENT:
 		break;
 	default:
 		assert(FALSE); // Add 
@@ -528,6 +509,15 @@ zpp_syntax_tree_load_local* zpp_syntax_tree_load_local_new()
 {
 	zpp_syntax_tree_load_local* const p = vm_safe_malloc(zpp_syntax_tree_load_local);
 	zpp_syntax_tree_init(ZPP_SYNTAX_TREE(p), ZPP_SYNTAX_TREE_LOAD_LOCAL);
+	p->target = NULL;
+	p->closest_function_node = NULL;
+	return p;
+}
+
+zpp_syntax_tree_load_argument* zpp_syntax_tree_load_argument_new()
+{
+	zpp_syntax_tree_load_argument* const p = vm_safe_malloc(zpp_syntax_tree_load_argument);
+	zpp_syntax_tree_init(ZPP_SYNTAX_TREE(p), ZPP_SYNTAX_TREE_LOAD_ARGUMENT);
 	p->target = NULL;
 	p->closest_function_node = NULL;
 	return p;
@@ -603,6 +593,17 @@ zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_tok
 			}
 			load->closest_function_node = state->func_node;
 			load->target = (zpp_local*)symbol;
+			zpp_token_next(t);
+			return ZPP_SYNTAX_TREE(load);
+		}
+		else if (symbol->type == ZPP_SYMBOL_ARGUMENT) {
+			zpp_syntax_tree_load_argument* load = zpp_syntax_tree_load_argument_new();
+			if (load == NULL) {
+				zpp_message_out_of_memory(state);
+				return NULL;
+			}
+			load->closest_function_node = state->func_node;
+			load->target = (zpp_argument*)symbol;
 			zpp_token_next(t);
 			return ZPP_SYNTAX_TREE(load);
 		}
@@ -698,19 +699,20 @@ zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token*
 		zpp_token_next(t);
 		if (t->type == ZPP_TOKEN_DECL_ASSIGN) {
 			zpp_token_next(t);
+
+			// Check to see if the local variable exists, and if not then add it
+			zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &var_name);
+			if (symbol != NULL) {
+				// Symbol is already defined
+				zpp_message_not_implemented(state);
+				return NULL;
+			}
+
 			// Expression to be set in the local variable
 			zpp_syntax_tree_node decl_expression = zpp_synax_tree_parse_term(c, t, state);
 			if (decl_expression == NULL)
 				return NULL;
 			
-			// Check to see if the local variable exists, and if not then add it
-			zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &var_name);
-			if (symbol != NULL) {
-				// Already defined
-				zpp_message_not_implemented(state);
-				return NULL;
-			}
-
 			// Define the local variable
 			zpp_local* const local = zpp_local_new(&var_name);
 			if (local == NULL) {
@@ -721,19 +723,13 @@ zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token*
 			local->header.name = var_name;
 			zpp_func_add_local(state->func_node->function, local);
 
-			zpp_syntax_tree_local* local_node = zpp_syntax_tree_local_new(local);
-			if (local_node == NULL) {
-				zpp_message_out_of_memory(state);
-				return NULL;
-			}
 			zpp_syntax_tree_assign* assign = zpp_syntax_tree_assign_new(decl_expression, ZPP_SYMBOL(local));
 			if (assign == NULL) {
 				zpp_message_out_of_memory(state);
 				return NULL;
 			}
 			assign->closest_function_node = state->func_node;
-			zpp_syntax_tree_add(ZPP_SYNTAX_TREE(local_node), ZPP_SYNTAX_TREE(assign));
-			return ZPP_SYNTAX_TREE(local_node);
+			return ZPP_SYNTAX_TREE(assign);
 		}
 		else if (t->type == ZPP_TOKEN_ASSIGN) {
 			// Existing variable, might be a local, argument or a global variable

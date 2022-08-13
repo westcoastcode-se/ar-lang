@@ -14,10 +14,10 @@ typedef enum zpp_syntax_tree_object_type
 	ZPP_SYNTAX_TREE_TYPE,
 	ZPP_SYNTAX_TREE_FUNC,
 	ZPP_SYNTAX_TREE_RETURN,
-	ZPP_SYNTAX_TREE_LOCAL,
 	ZPP_SYNTAX_TREE_ASSIGN,
 	ZPP_SYNTAX_TREE_CONST_VALUE,
 	ZPP_SYNTAX_TREE_LOAD_LOCAL,
+	ZPP_SYNTAX_TREE_LOAD_ARGUMENT,
 	ZPP_SYNTAX_TREE_BINOP,
 	ZPP_SYNTAX_TREE_UNARYOP
 } zpp_syntax_tree_object_type;
@@ -115,17 +115,6 @@ typedef struct zpp_syntax_tree_func
 	zpp_syntax_tree_package* closest_package_node;
 } zpp_syntax_tree_func;
 
-// A local declaration
-typedef struct zpp_syntax_tree_local
-{
-	zpp_syntax_tree header;
-
-	// The actual, underlying, local variable definition
-	struct zpp_local* local;
-	// Closest function node
-	zpp_syntax_tree_func* closest_function_node;
-} zpp_syntax_tree_local;
-
 // A constant value
 typedef struct zpp_syntax_tree_const_value
 {
@@ -154,7 +143,7 @@ typedef struct zpp_syntax_tree_assign
 	zpp_syntax_tree_func* closest_function_node;
 } zpp_syntax_tree_assign, zpp_syntax_tree_assign_local;
 
-// Node for a = and := expression
+// Node for loading a local variable
 typedef struct zpp_syntax_tree_load_local
 {
 	zpp_syntax_tree header;
@@ -163,6 +152,16 @@ typedef struct zpp_syntax_tree_load_local
 	// Closest function node
 	zpp_syntax_tree_func* closest_function_node;
 } zpp_syntax_tree_load_local;
+
+// Node for loading an argument
+typedef struct zpp_syntax_tree_load_argument
+{
+	zpp_syntax_tree header;
+	// The target variable
+	struct zpp_argument* target;
+	// Closest function node
+	zpp_syntax_tree_func* closest_function_node;
+} zpp_syntax_tree_load_argument;
 
 // Syntax tree for binary operators, such as + and -
 typedef struct zpp_syntax_tree_binop
@@ -192,9 +191,6 @@ extern zpp_syntax_tree_root* zpp_syntax_tree_root_new();
 
 // Add the supplied type as a global type
 extern void zpp_syntax_tree_root_add(zpp_syntax_tree_root* root, zpp_syntax_tree_node node);
-
-// Create a new local variable definition
-extern zpp_syntax_tree_local* zpp_syntax_tree_local_new(struct zpp_local* local);
 
 // Create a new package tree node
 extern zpp_syntax_tree_package* zpp_syntax_tree_package_new(struct zpp_package* pkg);

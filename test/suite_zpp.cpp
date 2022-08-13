@@ -371,14 +371,13 @@ func Get() int32 {
 		destroy(t);
 	}
 
-	void plus2()
+	void arg1()
 	{
 		static const auto source = R"(
 package main
 
-func Plus2(value int32) int32 {
-	ret := value + 2
-	return ret
+func Arg(value int32) int32 {
+	return value
 }
 )";
 		add_source_code(source, "/main.zpp");
@@ -389,11 +388,11 @@ func Plus2(value int32) int32 {
 		static constexpr auto value = 10000;
 		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
 
-		invoke(t, "Plus2");
+		invoke(t, "Arg");
 
 		verify_stack_size(t, sizeof(vm_int32) * 2);
 		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
-		verify_value(ret, value + 2);
+		verify_value(ret, value);
 		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
 		verify_value(in, value);
 
@@ -579,7 +578,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST_BEGIN_END(local2);
 		TEST_BEGIN_END(local3);
 
-		TEST_BEGIN_END(plus2);
+		TEST_BEGIN_END(arg1);
 	}
 };
 
