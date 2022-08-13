@@ -321,6 +321,31 @@ func Get() int32 {
 		destroy(t);
 	}
 
+	void local2()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
+	ret := 10 + 20 + 30 - 40
+	ret2 := ret + 10
+	return ret2
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, 10 + 20 + 30 - 40 + 10);
+
+		destroy(t);
+	}
+
 	void plus2()
 	{
 		static const auto source = R"(
@@ -526,6 +551,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST_BEGIN_END(return8);
 
 		TEST_BEGIN_END(local1);
+		TEST_BEGIN_END(local2);
 
 		TEST_BEGIN_END(plus2);
 	}

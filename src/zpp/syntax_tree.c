@@ -587,7 +587,6 @@ zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_tok
 	// Keyword?
 	if (t->type == ZPP_TOKEN_KEYWORD) {
 		const vm_string keyword = t->string;
-		zpp_token_next(t);
 		zpp_symbol* const symbol = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &keyword);
 		if (symbol == NULL) {
 			// TODO: Add support for "unresolved" types (which is later on resolved as the "closest" type)
