@@ -14,6 +14,7 @@ typedef enum zpp_syntax_tree_object_type
 	ZPP_SYNTAX_TREE_TYPE,
 	ZPP_SYNTAX_TREE_FUNC,
 	ZPP_SYNTAX_TREE_RETURN,
+	ZPP_SYNTAX_TREE_ASSIGN,
 	ZPP_SYNTAX_TREE_CONST_VALUE,
 	ZPP_SYNTAX_TREE_BINOP,
 	ZPP_SYNTAX_TREE_UNARYOP
@@ -129,6 +130,16 @@ typedef struct zpp_syntax_tree_return
 	// Closest function node
 	zpp_syntax_tree_func* closest_function_node;
 } zpp_syntax_tree_return;
+
+// Node for a = and := expression
+typedef struct zpp_syntax_tree_assign
+{
+	zpp_syntax_tree header;
+	// The target variable
+	struct zpp_symbol* target;
+	// Closest function node
+	zpp_syntax_tree_func* closest_function_node;
+} zpp_syntax_tree_assign, zpp_syntax_tree_assign_local;
 
 // Syntax tree for binary operators, such as + and -
 typedef struct zpp_syntax_tree_binop

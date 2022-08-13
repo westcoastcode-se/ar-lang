@@ -24,21 +24,6 @@ zpp_syntax_tree_node zpp_syntax_tree_get_parent(zpp_syntax_tree_node st)
 	return st->parent;
 }
 
-BOOL zpp_syntax_tree_has_children(zpp_syntax_tree_node st)
-{
-	switch (st->type)
-	{
-	case ZPP_SYNTAX_TREE_ROOT:
-	case ZPP_SYNTAX_TREE_PACKAGE:
-	case ZPP_SYNTAX_TREE_FUNC:
-	case ZPP_SYNTAX_TREE_TYPE:
-	case ZPP_SYNTAX_TREE_RETURN:
-		return TRUE;
-	default:
-		return FALSE;
-	}
-}
-
 void zpp_syntax_tree_add(zpp_syntax_tree* st, zpp_syntax_tree_node node)
 {
 	if (st->node == NULL)
@@ -209,6 +194,23 @@ BOOL zpp_compiler_compile_const_value(zpp_compiler* c, zpp_syntax_tree_const_val
 	return TRUE;
 }
 
+BOOL zpp_compiler_compile_assign(zpp_compiler* c, zpp_syntax_tree_assign* assign)
+{
+	// TODO: It should be possible to do something like "value, value2 := 10, 20"
+	zpp_syntax_tree* node = ZPP_SYNTAX_TREE(assign)->node;
+	if (!zpp_synax_tree_compile(c, node))
+		return FALSE;
+
+	if (assign->target->type == ZPP_SYMBOL_LOCAL) {
+		// stl <index>
+		zpp_local* const local = (zpp_local*)assign->target;
+		vmp_func_add_instr(assign->closest_function_node->function->func, vmp_instr_stl(local->local));
+		return TRUE;
+	}
+	// Unknown assign expression
+	return FALSE;
+}
+
 zpp_syntax_tree_root* zpp_syntax_tree_root_new()
 {
 	zpp_syntax_tree_root* p = vm_safe_malloc(zpp_syntax_tree_root);
@@ -266,6 +268,8 @@ BOOL zpp_synax_tree_compile(zpp_compiler* c, zpp_syntax_tree* st)
 		return zpp_compiler_compile_unaryop(c, (zpp_syntax_tree_unaryop*)st);
 	case ZPP_SYNTAX_TREE_CONST_VALUE:
 		return zpp_compiler_compile_const_value(c, (zpp_syntax_tree_const_value*)st);
+	case ZPP_SYNTAX_TREE_ASSIGN:
+		return zpp_compiler_compile_assign(c, (zpp_syntax_tree_assign*)st);
 	case ZPP_SYNTAX_TREE_TYPE:
 		return TRUE;
 	case ZPP_SYNTAX_TREE_ERROR:
@@ -413,6 +417,8 @@ void zpp_syntax_tree_destroy(zpp_syntax_tree* st)
 		break;
 	case ZPP_SYNTAX_TREE_CONST_VALUE:
 		break;
+	case ZPP_SYNTAX_TREE_ASSIGN:
+		break;
 	case ZPP_SYNTAX_TREE_BINOP:
 		break;
 	case ZPP_SYNTAX_TREE_UNARYOP:
@@ -518,6 +524,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_tok
 		zpp_token_next(t);
 		return node;
 	}
+	zpp_message_not_implemented(state);
 	return NULL;
 }
 
@@ -560,6 +567,15 @@ zpp_syntax_tree_return* zpp_syntax_tree_return_new(zpp_syntax_tree_node expr)
 	return p;
 }
 
+zpp_syntax_tree_assign* zpp_syntax_tree_assign_new(zpp_syntax_tree_node expr, zpp_symbol* target)
+{
+	zpp_syntax_tree_assign* const p = vm_safe_malloc(zpp_syntax_tree_assign);
+	zpp_syntax_tree_init(ZPP_SYNTAX_TREE(p), ZPP_SYNTAX_TREE_ASSIGN);
+	p->target = target;
+	zpp_syntax_tree_add(ZPP_SYNTAX_TREE(p), expr);
+	return p;
+}
+
 zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
 {
 	switch (t->type) {
@@ -577,6 +593,49 @@ zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token*
 		}
 		ret->closest_function_node = state->func_node;
 		return ZPP_SYNTAX_TREE(ret);
+	}
+	case ZPP_TOKEN_KEYWORD:
+	{
+		// Might be an argument, constant, local, global variable or function
+		const vm_string var_name = t->string;
+		zpp_token_next(t);
+		if (t->type == ZPP_TOKEN_DECL_ASSIGN) {
+			zpp_token_next(t);
+			// Expression to be set in the local variable
+			zpp_syntax_tree_node decl_expression = zpp_synax_tree_parse_term(c, t, state);
+			if (decl_expression == NULL)
+				return NULL;
+			
+			// Check to see if the local variable exists, and if not then add it
+			zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &var_name);
+			if (symbol != NULL) {
+				// Already defined
+				zpp_message_not_implemented(state);
+				return NULL;
+			}
+
+			// Define the local variable
+			zpp_local* const local = zpp_local_new(&var_name);
+			if (local == NULL) {
+				zpp_message_out_of_memory(state);
+				return NULL;
+			}
+			local->type = decl_expression->stack_type;
+			zpp_func_add_local(state->func_node->function, local);
+
+			zpp_syntax_tree_assign* assign = zpp_syntax_tree_assign_new(decl_expression, ZPP_SYMBOL(local));
+			if (assign == NULL) {
+				zpp_message_out_of_memory(state);
+				return NULL;
+			}
+			assign->closest_function_node = state->func_node;
+			return ZPP_SYNTAX_TREE(assign);
+		}
+		else {
+			zpp_message_not_implemented(state);
+			return NULL;
+		}
+		//
 	}
 	break;
 	}

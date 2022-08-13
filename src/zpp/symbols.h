@@ -136,6 +136,22 @@ typedef struct zpp_argument
 	vmp_arg* arg;
 } zpp_argument;
 
+// A local variable
+typedef struct zpp_local
+{
+	zpp_symbol header;
+
+	// The expected argument type
+	zpp_symbol* type;
+
+	// Intrusive linked list
+	struct zpp_local* head;
+	struct zpp_local* tail;
+
+	// The local. Freeing memory of this is done by the pipeline and not this type
+	vmp_local* local;
+} zpp_local;
+
 // A return value
 typedef struct zpp_return
 {
@@ -184,6 +200,10 @@ typedef struct zpp_func
 	// All return values returned by this function
 	zpp_return* returns;
 	zpp_return* returns_end;
+
+	// All local variables
+	zpp_local* locals;
+	zpp_local* locals_end;
 
 	// Syntax tree
 	struct zpp_syntax_tree* syntax_tree;
@@ -268,8 +288,20 @@ extern void zpp_func_add_argument(zpp_func* f, zpp_argument* a);
 // Add the supplied return value
 extern void zpp_func_add_return(zpp_func* f, zpp_return* r);
 
+// Add the supplied local value
+extern void zpp_func_add_local(zpp_func* f, zpp_local* l);
+
 // Resolve the supplied type and get the type
 extern vmp_func* zpp_func_resolve_func(zpp_func* f, struct zpp_compiler* c);
+
+// Search for a local variable in this function
+extern zpp_local* zpp_func_find_local(zpp_func* f, const vm_string* name);
+
+// Search for an argument of a specific name
+extern zpp_argument* zpp_func_find_argument(zpp_func* f, const vm_string* name);
+
+// Search for a symbol variable in this function
+extern zpp_symbol* zpp_func_find_symbol(zpp_func* f, const vm_string* name);
 
 // Create a new arg
 extern zpp_argument* zpp_argument_new(const vm_string* name);
@@ -285,5 +317,11 @@ extern void zpp_return_destroy(zpp_return* ptr);
 
 // Resolve a type based on a specific symbol
 extern vmp_type* zpp_symbol_resolve_type(zpp_symbol* s, struct zpp_compiler* c);
+
+// Create a new local variable
+extern zpp_local* zpp_local_new(const vm_string* name);
+
+// Destroy the supplied local
+extern void zpp_local_destroy(zpp_local* ptr);
 
 #endif

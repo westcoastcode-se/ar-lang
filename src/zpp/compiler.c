@@ -333,6 +333,7 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 		zpp_argument* arg = zpp_argument_new(&t->string);
 		zpp_func_add_argument(func, arg);
 
+		zpp_token_next(t);
 		zpp_type* const type = zpp_compiler_parse_type(c, t, state);
 		if (type == NULL) {
 			return FALSE;
@@ -389,7 +390,10 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 			node,
 			state->type_node
 	};
-	return zpp_compiler_parse_body(c, t, &child_scope);
+	if (!zpp_compiler_parse_body(c, t, &child_scope))
+		return FALSE;
+	zpp_token_next(t);
+	return TRUE;
 }
 
 BOOL zpp_compiler_parse_package(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
@@ -468,13 +472,15 @@ BOOL zpp_compiler_parse_package(zpp_compiler* c, zpp_token* t, const zpp_compile
 			if (!zpp_compiler_parse_func(c, t, &child_scope)) {
 				return FALSE;
 			}
-			break;
+			continue;
 		}
 		case ZPP_TOKEN_NEWLINE:
 		{
 			zpp_token_next(t);
-			break;
+			continue;
 		}
+		case ZPP_TOKEN_EOF:
+			return TRUE;
 		default:
 			return zpp_message_not_implemented(state);
 		}

@@ -29,11 +29,24 @@ struct utils_zpp : utils_vm
 		return { source_code, source_code + strlen(source_code) };
 	}
 
-	bool add_source_code(const vm_byte* source_code, const vm_byte* filename)
+	void add_source_code(const vm_byte* source_code, const vm_byte* filename)
 	{
 		const vm_string src = to_vm_string(source_code);
 		const vm_string fn = to_vm_string(filename);
-		return zpp_compiler_add_source_code(compiler, zpp_source_code_new(&src, &fn)) == TRUE;
+		if (zpp_compiler_add_source_code(compiler, zpp_source_code_new(&src, &fn)) == FALSE) {
+			error_string_stream e;
+			e << "could not add source code: [";
+			auto message = compiler->messages.first;
+			while (message != nullptr) {
+				e << "\n" << message->message;
+				message = message->next;
+			}
+			if (compiler->panic.code != 0) {
+				e << "\n" << compiler->panic.message;
+			}
+			e << "\n]";
+			throw_(e);
+		}
 	}
 
 	void compile()
@@ -283,6 +296,31 @@ func Get() int32 {
 
 		destroy(t);
 	}
+
+	void local1()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
+	ret := 10 + 20 + 30 - 40
+	return ret
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		invoke(t, "Get");
+
+		verify_stack_size(t, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, 10 + 20 + 30 - 40);
+
+		destroy(t);
+	}
+
 	void plus2()
 	{
 		static const auto source = R"(
@@ -486,6 +524,10 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST_BEGIN_END(return6);
 		TEST_BEGIN_END(return7);
 		TEST_BEGIN_END(return8);
+
+		TEST_BEGIN_END(local1);
+
+		TEST_BEGIN_END(plus2);
 	}
 };
 

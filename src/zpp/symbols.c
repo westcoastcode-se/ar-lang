@@ -291,6 +291,7 @@ zpp_func* zpp_func_new(const vm_string* name)
 	p->package = NULL;
 	p->arguments = p->arguments_end = NULL;
 	p->returns = p->returns_end = NULL;
+	p->locals = p->locals_end = NULL;
 	p->syntax_tree = p->syntax_tree_end = NULL;
 	p->tail = p->head = NULL;
 	p->func = NULL;
@@ -302,15 +303,22 @@ void zpp_func_destroy(zpp_func* f)
 	zpp_argument* arg = f->arguments;
 	while (arg) {
 		zpp_argument* const tail = arg->tail;
-		vm_free(arg);
+		zpp_argument_destroy(arg);
 		arg = tail;
 	}
 
 	zpp_return* ret = f->returns;
 	while (ret) {
 		zpp_return* const tail = ret->tail;
-		vm_free(ret);
+		zpp_return_destroy(ret);
 		ret = tail;
+	}
+
+	zpp_local* local = f->locals;
+	while (local) {
+		zpp_local* const tail = local->tail;
+		zpp_local_destroy(local);
+		local = tail;
 	}
 
 	vm_free(f);
@@ -361,6 +369,21 @@ void zpp_func_add_return(zpp_func* f, zpp_return* r)
 	}
 }
 
+void zpp_func_add_local(zpp_func* f, zpp_local* l)
+{
+	ASSERT_NOT_NULL(f);
+	ASSERT_NOT_NULL(l);
+
+	if (f->locals == NULL) {
+		f->locals = f->locals_end = l;
+	}
+	else {
+		f->locals_end->tail = l;
+		l->head = f->locals_end;
+		f->locals_end = l;
+	}
+}
+
 vmp_func* zpp_func_resolve_func(zpp_func* f, struct zpp_compiler* c)
 {
 	ASSERT_NOT_NULL(f);
@@ -385,6 +408,7 @@ vmp_func* zpp_func_resolve_func(zpp_func* f, struct zpp_compiler* c)
 			return NULL;
 		}
 		vmp_arg_set_name(a, &f->header.name);
+		arg->arg = a;
 		arg = arg->tail;
 	}
 
@@ -396,10 +420,58 @@ vmp_func* zpp_func_resolve_func(zpp_func* f, struct zpp_compiler* c)
 			//vmcd_message_out_of_memory(s);
 			return NULL;
 		}
+		ret->ret = r;
 		ret = ret->tail;
 	}
 
+	// add local values
+	zpp_local* local = f->locals;
+	while (local != NULL) {
+		vmp_local* l = vmp_func_new_local(f->func, zpp_symbol_resolve_type(local->type, c));
+		if (l == NULL) {
+			//vmcd_message_out_of_memory(s);
+			return NULL;
+		}
+		local->local = l;
+		local = local->tail;
+	}
+
 	return f->func;
+}
+
+zpp_local* zpp_func_find_local(zpp_func* f, const vm_string* name)
+{
+	zpp_local* local = f->locals;
+	while (local != NULL) {
+		if (vm_string_cmp(&local->header.name, name))
+			return local;
+		local = local->tail;
+	}
+	return NULL;
+}
+
+zpp_argument* zpp_func_find_argument(zpp_func* f, const vm_string* name)
+{
+	zpp_argument* arg = f->arguments;
+	while (arg != NULL) {
+		if (vm_string_cmp(&arg->header.name, name))
+			return arg;
+		arg = arg->tail;
+	}
+	return NULL;
+}
+
+zpp_symbol* zpp_func_find_symbol(zpp_func* f, const vm_string* name)
+{
+	zpp_local* local = zpp_func_find_local(f, name);
+	if (local)
+		return ZPP_SYMBOL(local);
+
+	zpp_argument* arg = zpp_func_find_argument(f, name);
+	if (arg)
+		return ZPP_SYMBOL(arg);
+
+	return NULL;
 }
 
 zpp_argument* zpp_argument_new(const vm_string* name)
@@ -448,4 +520,20 @@ vmp_type* zpp_symbol_resolve_type(zpp_symbol* s, struct zpp_compiler* c)
 		// TODO: Add support for trying to resolve an unresolved symbol
 	}
 	return NULL;
+}
+
+zpp_local* zpp_local_new(const vm_string* name)
+{
+	zpp_local* p = vm_safe_malloc(zpp_local);
+	zpp_symbol_init(ZPP_SYMBOL(p), ZPP_SYMBOL_LOCAL);
+	p->header.name = *name;
+	p->type = NULL;
+	p->head = p->tail = NULL;
+	p->local = NULL;
+	return p;
+}
+
+void zpp_local_destroy(zpp_local* ptr)
+{
+	vm_free(ptr);
 }
