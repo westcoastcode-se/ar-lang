@@ -211,6 +211,23 @@ BOOL zpp_compiler_compile_assign(zpp_compiler* c, zpp_syntax_tree_assign* assign
 	return FALSE;
 }
 
+BOOL zpp_compiler_compile_load_local(zpp_compiler* c, zpp_syntax_tree_load_local* local)
+{
+	vmp_func_add_instr(local->closest_function_node->function->func, vmp_instr_ldl(local->target->local));
+	return TRUE;
+}
+
+BOOL zpp_compiler_compile_local(zpp_compiler* c, zpp_syntax_tree_local* local)
+{
+	zpp_syntax_tree* node = ZPP_SYNTAX_TREE(local)->node;
+	while (node != NULL) {
+		if (!zpp_synax_tree_compile(c, node))
+			return FALSE;
+		node = node->tail;
+	}
+	return TRUE;
+}
+
 zpp_syntax_tree_root* zpp_syntax_tree_root_new()
 {
 	zpp_syntax_tree_root* p = vm_safe_malloc(zpp_syntax_tree_root);
@@ -221,6 +238,17 @@ zpp_syntax_tree_root* zpp_syntax_tree_root_new()
 void zpp_syntax_tree_root_add(zpp_syntax_tree_root* root, zpp_syntax_tree_node node)
 {
 	zpp_syntax_tree_add(ZPP_SYNTAX_TREE(root), node);
+}
+
+zpp_syntax_tree_local* zpp_syntax_tree_local_new(struct zpp_local* local)
+{
+	zpp_syntax_tree_local* p = vm_safe_malloc(zpp_syntax_tree_local);
+	zpp_syntax_tree_init(ZPP_SYNTAX_TREE(p), ZPP_SYNTAX_TREE_LOCAL);
+	p->local = local;
+	p->closest_function_node = NULL;
+	// TODO: Allow for local variables to be "incrementally" increased. The function stack should dynamically increase when this happen
+	//		 and the stack will automatically be resized when exiting out of scope "}"
+	return p;
 }
 
 zpp_syntax_tree_package* zpp_syntax_tree_package_new(zpp_package* pkg)
@@ -270,6 +298,10 @@ BOOL zpp_synax_tree_compile(zpp_compiler* c, zpp_syntax_tree* st)
 		return zpp_compiler_compile_const_value(c, (zpp_syntax_tree_const_value*)st);
 	case ZPP_SYNTAX_TREE_ASSIGN:
 		return zpp_compiler_compile_assign(c, (zpp_syntax_tree_assign*)st);
+	case ZPP_SYNTAX_TREE_LOAD_LOCAL:
+		return zpp_compiler_compile_load_local(c, (zpp_syntax_tree_load_local*)st);
+	case ZPP_SYNTAX_TREE_LOCAL:
+		return zpp_compiler_compile_local(c, (zpp_syntax_tree_local*)st);
 	case ZPP_SYNTAX_TREE_TYPE:
 		return TRUE;
 	case ZPP_SYNTAX_TREE_ERROR:
@@ -301,6 +333,25 @@ zpp_symbol* zpp_symbol_find_symbol0(zpp_syntax_tree* st, const vm_string* name, 
 		zpp_syntax_tree_func* const func = (zpp_syntax_tree_func*)st;
 		if (zpp_symbol_has_name(ZPP_SYMBOL(func->function), name)) {
 			return ZPP_SYMBOL(func->function);
+		}
+
+		// Search all function children in root 
+		if (recursive) {
+			zpp_syntax_tree* node = st->node;
+			while (node) {
+				zpp_symbol* const symbol = zpp_symbol_find_symbol0(node, name, FALSE, FALSE);
+				if (symbol)
+					return symbol;
+				node = node->tail;
+			}
+		}
+	}
+	break;
+	case ZPP_SYNTAX_TREE_LOCAL:
+	{
+		zpp_syntax_tree_local* const local = (zpp_syntax_tree_local*)st;
+		if (zpp_symbol_has_name(ZPP_SYMBOL(local->local), name)) {
+			return ZPP_SYMBOL(local->local);
 		}
 	}
 	break;
@@ -417,11 +468,15 @@ void zpp_syntax_tree_destroy(zpp_syntax_tree* st)
 		break;
 	case ZPP_SYNTAX_TREE_CONST_VALUE:
 		break;
+	case ZPP_SYNTAX_TREE_LOCAL:
+		break;
 	case ZPP_SYNTAX_TREE_ASSIGN:
 		break;
 	case ZPP_SYNTAX_TREE_BINOP:
 		break;
 	case ZPP_SYNTAX_TREE_UNARYOP:
+		break;
+	case ZPP_SYNTAX_TREE_LOAD_LOCAL:
 		break;
 	default:
 		assert(FALSE); // Add 
@@ -465,6 +520,16 @@ zpp_syntax_tree_const_value* zpp_syntax_tree_const_value_new()
 	zpp_syntax_tree_const_value* const p = vm_safe_malloc(zpp_syntax_tree_const_value);
 	zpp_syntax_tree_init(ZPP_SYNTAX_TREE(p), ZPP_SYNTAX_TREE_CONST_VALUE);
 	p->closest_function_node = NULL;
+	p->value.type = 0;
+	return p;
+}
+
+zpp_syntax_tree_load_local* zpp_syntax_tree_load_local_new()
+{
+	zpp_syntax_tree_load_local* const p = vm_safe_malloc(zpp_syntax_tree_load_local);
+	zpp_syntax_tree_init(ZPP_SYNTAX_TREE(p), ZPP_SYNTAX_TREE_LOAD_LOCAL);
+	p->target = NULL;
+	p->closest_function_node = NULL;
 	return p;
 }
 
@@ -474,19 +539,25 @@ zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_tok
 		const zpp_token_type token_type = t->type;
 		zpp_token_next(t);
 		zpp_syntax_tree_node left = zpp_synax_tree_parse_factor(c, t, state);
-		if (left == NULL)
+		if (left == NULL) {
+			zpp_message_out_of_memory(state);
 			return NULL;
+		}
 		zpp_syntax_tree_unaryop* const unaryop = zpp_syntax_tree_unaryop_new(left, token_type);
-		if (unaryop == NULL)
+		if (unaryop == NULL) {
+			zpp_message_out_of_memory(state);
 			return NULL;
+		}
 		unaryop->closest_function_node = state->func_node;
 		return ZPP_SYNTAX_TREE(unaryop);
 	}
 
 	if (t->type == ZPP_TOKEN_VALUE_INT) {
 		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
-		if (val == NULL)
+		if (val == NULL) {
+			zpp_message_out_of_memory(state);
 			return NULL;
+		}
 		val->closest_function_node = state->func_node;
 		vm_string type_name;
 		type_name.start = "int32";
@@ -499,8 +570,10 @@ zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_tok
 
 	if (t->type == ZPP_TOKEN_VALUE_DECIMAL) {
 		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
-		if (val == NULL)
+		if (val == NULL) {
+			zpp_message_out_of_memory(state);
 			return NULL;
+		}
 		val->closest_function_node = state->func_node;
 		vm_string type_name;
 		type_name.start = "float32";
@@ -509,6 +582,31 @@ zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_tok
 		val->value.f4 = zpp_token_f4(t);
 		zpp_token_next(t);
 		return ZPP_SYNTAX_TREE(val);
+	}
+
+	// Keyword?
+	if (t->type == ZPP_TOKEN_KEYWORD) {
+		const vm_string keyword = t->string;
+		zpp_token_next(t);
+		zpp_symbol* const symbol = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &keyword);
+		if (symbol == NULL) {
+			// TODO: Add support for "unresolved" types (which is later on resolved as the "closest" type)
+			zpp_message_not_implemented(state);
+			return NULL;
+		}
+
+		// Load a local variable
+		if (symbol->type == ZPP_SYMBOL_LOCAL) {
+			zpp_syntax_tree_load_local* load = zpp_syntax_tree_load_local_new();
+			if (load == NULL) {
+				zpp_message_out_of_memory(state);
+				return NULL;
+			}
+			load->closest_function_node = state->func_node;
+			load->target = (zpp_local*)symbol;
+			zpp_token_next(t);
+			return ZPP_SYNTAX_TREE(load);
+		}
 	}
 
 	if (t->type == ZPP_TOKEN_PARAN_L) {
@@ -621,15 +719,22 @@ zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token*
 				return NULL;
 			}
 			local->type = decl_expression->stack_type;
+			local->header.name = var_name;
 			zpp_func_add_local(state->func_node->function, local);
 
+			zpp_syntax_tree_local* local_node = zpp_syntax_tree_local_new(local);
+			if (local_node == NULL) {
+				zpp_message_out_of_memory(state);
+				return NULL;
+			}
 			zpp_syntax_tree_assign* assign = zpp_syntax_tree_assign_new(decl_expression, ZPP_SYMBOL(local));
 			if (assign == NULL) {
 				zpp_message_out_of_memory(state);
 				return NULL;
 			}
 			assign->closest_function_node = state->func_node;
-			return ZPP_SYNTAX_TREE(assign);
+			zpp_syntax_tree_add(ZPP_SYNTAX_TREE(local_node), ZPP_SYNTAX_TREE(assign));
+			return ZPP_SYNTAX_TREE(local_node);
 		}
 		else {
 			zpp_message_not_implemented(state);
