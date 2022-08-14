@@ -657,7 +657,7 @@ func Arg(value int32) int32 {
 
 		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
 		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
-		verify_value(ret, value > 100 ? TRUE : 0);
+		verify_value(ret, (value + 10) > 100 ? TRUE : 0);
 		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
 		verify_value(in, value);
 
