@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdbool.h>
 
 typedef float vm_float32;
 typedef double vm_float64;
@@ -20,6 +21,7 @@ typedef unsigned int vm_hash32;
 typedef long long vm_int64;
 typedef unsigned long long vm_uint64;
 typedef int (*vm_nativefunc)(struct vmi_thread*);
+typedef vm_int32 vm_bool;
 
 #ifndef VM_VERSION
 #	define VM_VERSION 1
