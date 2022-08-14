@@ -160,6 +160,14 @@ BOOL zpp_compiler_compile_binop(zpp_compiler* c, zpp_syntax_tree_binop* binop)
 		vmp_func_add_instr(binop->closest_function_node->function->func,
 			vmp_instr_add(zpp_symbol_resolve_type(ZPP_SYNTAX_TREE_STACK_TYPE(binop), c)));
 		return TRUE;
+	case ZPP_TOKEN_OP_MULT:
+		vmp_func_add_instr(binop->closest_function_node->function->func,
+			vmp_instr_mul(zpp_symbol_resolve_type(ZPP_SYNTAX_TREE_STACK_TYPE(binop), c)));
+		return TRUE;
+	case ZPP_TOKEN_OP_DIV:
+		vmp_func_add_instr(binop->closest_function_node->function->func,
+			vmp_instr_div(zpp_symbol_resolve_type(ZPP_SYNTAX_TREE_STACK_TYPE(binop), c)));
+		return TRUE;
 	default:
 		// TODO: Add support for alternate operators
 		return FALSE;
@@ -636,6 +644,8 @@ zpp_syntax_tree_node zpp_synax_tree_parse_term(zpp_compiler* c, zpp_token* t, co
 		switch (t->type) {
 		case ZPP_TOKEN_OP_MINUS:
 		case ZPP_TOKEN_OP_PLUS:
+		case ZPP_TOKEN_OP_MULT:
+		case ZPP_TOKEN_OP_DIV:
 		{
 			const zpp_token_type token_type = t->type;
 			zpp_token_next(t);
