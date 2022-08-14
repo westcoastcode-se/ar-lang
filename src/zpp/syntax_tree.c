@@ -800,6 +800,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 				}
 				load->closest_function_node = state->func_node;
 				load->target = (zpp_local*)symbol;
+				ZPP_SYNTAX_TREE_STACK_TYPE(load) = load->target->type;
 				return ZPP_SYNTAX_TREE(load);
 			}
 			else if (symbol->type == ZPP_SYMBOL_ARGUMENT) {
@@ -810,6 +811,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 				}
 				load->closest_function_node = state->func_node;
 				load->target = (zpp_argument*)symbol;
+				ZPP_SYNTAX_TREE_STACK_TYPE(load) = load->target->type;
 				return ZPP_SYNTAX_TREE(load);
 			}
 			else {

@@ -524,6 +524,38 @@ func Arg(value int32) int32 {
 		destroy(t);
 	}
 
+	void arg4()
+	{
+		static const auto source = R"(
+package main
+
+func Args(value1 int32, value2 int32) int32 {
+	return value1 + value2
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		static constexpr auto value1 = 10000;
+		static constexpr auto value2 = 123;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value1;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value2;
+
+		invoke(t, "Args");
+
+		verify_stack_size(t, sizeof(vm_int32) * 3);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(ret, value1 + value2);
+		auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value2);
+		in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value1);
+
+		destroy(t);
+	}
+
 	void compare_lt1()
 	{
 		static const auto source = R"(
@@ -856,6 +888,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 		delete[] arr;
 		verify_stack_size(t, sizeof(vm_int32*) + sizeof(vm_int32) + sizeof(vm_int32));
 	}
+
 	void operator()()
 	{
 		TEST_BEGIN_END(return1);
@@ -877,6 +910,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST_BEGIN_END(arg1);
 		TEST_BEGIN_END(arg2);
 		TEST_BEGIN_END(arg3);
+		TEST_BEGIN_END(arg4);
 
 		TEST_BEGIN_END(compare_lt1);
 		TEST_BEGIN_END(compare_lt2);
