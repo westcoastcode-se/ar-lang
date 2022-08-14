@@ -24,6 +24,12 @@ zpp_syntax_tree_node zpp_syntax_tree_get_parent(zpp_syntax_tree_node st)
 	return st->parent;
 }
 
+// Get the underlying zpp_func function representation from the supplied state
+zpp_func* zpp_compiler_state_get_func(const zpp_compiler_state* s)
+{
+	return s->func_node->function;
+}
+
 void zpp_syntax_tree_add(zpp_syntax_tree* st, zpp_syntax_tree_node node)
 {
 	if (st->node == NULL)
@@ -523,11 +529,10 @@ zpp_syntax_tree_load_argument* zpp_syntax_tree_load_argument_new()
 	return p;
 }
 
-zpp_syntax_tree_return* zpp_syntax_tree_return_new(zpp_syntax_tree_node expr)
+zpp_syntax_tree_return* zpp_syntax_tree_return_new()
 {
 	zpp_syntax_tree_return* const p = vm_safe_malloc(zpp_syntax_tree_return);
 	zpp_syntax_tree_init(ZPP_SYNTAX_TREE(p), ZPP_SYNTAX_TREE_RETURN);
-	zpp_syntax_tree_add(ZPP_SYNTAX_TREE(p), expr);
 	return p;
 }
 
@@ -902,16 +907,34 @@ zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token*
 		case ZPP_TOKEN_KEYWORD_RETURN:
 		{
 			zpp_token_next(t);
-			zpp_syntax_tree_node return_expr = zpp_synax_tree_parse_comp_expr(c, t, state);
-			if (zpp_syntax_tree_is_error(return_expr))
-				return return_expr;
-
-			zpp_syntax_tree_return* ret = zpp_syntax_tree_return_new(return_expr);
+			
+			// Create a new return node
+			zpp_syntax_tree_return* ret = zpp_syntax_tree_return_new();
 			if (ret == NULL) {
 				zpp_message_out_of_memory(state);
 				return zpp_syntax_tree_error();
 			}
 			ret->closest_function_node = state->func_node;
+
+			// The number of expressions that are left
+			vm_int32 return_expressions_left = zpp_func_num_returns(zpp_compiler_state_get_func(state));
+
+			// Fetch all return statements 
+			while (return_expressions_left > 0) {
+				zpp_syntax_tree_node return_expr = zpp_synax_tree_parse_comp_expr(c, t, state);
+				if (zpp_syntax_tree_is_error(return_expr))
+					return return_expr;
+				// Spearate each statement with a comma
+				if (return_expressions_left > 1) {
+					if (t->type != ZPP_TOKEN_COMMA) {
+						zpp_message_syntax_error(state, "expected ,");
+						return zpp_syntax_tree_error();
+					}
+					zpp_token_next(t);
+				}
+				zpp_syntax_tree_add(ZPP_SYNTAX_TREE(ret), return_expr);
+				--return_expressions_left;
+			}
 			return ZPP_SYNTAX_TREE(ret);
 		}
 		case ZPP_TOKEN_KEYWORD_IF:

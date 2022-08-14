@@ -374,6 +374,8 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 			}
 			ret->type = ZPP_SYMBOL(type);
 		}
+		// Skip '('
+		zpp_token_next(t);
 	}
 
 	// Expected body for now. Perhaps re-use this function to parse a function pointer definition in the future

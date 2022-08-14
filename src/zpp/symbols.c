@@ -290,7 +290,9 @@ zpp_func* zpp_func_new(const vm_string* name)
 	p->header.name = *name;
 	p->package = NULL;
 	p->arguments = p->arguments_end = NULL;
+	p->arguments_count = 0;
 	p->returns = p->returns_end = NULL;
+	p->returns_count = 0;
 	p->locals = p->locals_end = NULL;
 	p->syntax_tree = p->syntax_tree_end = NULL;
 	p->tail = p->head = NULL;
@@ -352,6 +354,7 @@ void zpp_func_add_argument(zpp_func* f, zpp_argument* a)
 		a->head = f->arguments_end;
 		f->arguments_end = a;
 	}
+	f->arguments_count++;
 }
 
 void zpp_func_add_return(zpp_func* f, zpp_return* r)
@@ -367,6 +370,7 @@ void zpp_func_add_return(zpp_func* f, zpp_return* r)
 		r->head = f->returns_end;
 		f->returns_end = r;
 	}
+	f->returns_count++;
 }
 
 void zpp_func_add_local(zpp_func* f, zpp_local* l)
@@ -472,6 +476,18 @@ zpp_symbol* zpp_func_find_symbol(zpp_func* f, const vm_string* name)
 		return ZPP_SYMBOL(arg);
 
 	return NULL;
+}
+
+vm_int32 zpp_func_num_arguments(zpp_func* f)
+{
+	ASSERT_NOT_NULL(f);
+	return f->arguments_count;
+}
+
+vm_int32 zpp_func_num_returns(zpp_func* f)
+{
+	ASSERT_NOT_NULL(f);
+	return f->returns_count;
 }
 
 zpp_argument* zpp_argument_new(const vm_string* name)

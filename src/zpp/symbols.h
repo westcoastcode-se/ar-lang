@@ -196,10 +196,12 @@ typedef struct zpp_func
 	// All arguments required by this function
 	zpp_argument* arguments;
 	zpp_argument* arguments_end;
+	vm_int32 arguments_count;
 
 	// All return values returned by this function
 	zpp_return* returns;
 	zpp_return* returns_end;
+	vm_int32 returns_count;
 
 	// All local variables
 	zpp_local* locals;
@@ -302,6 +304,12 @@ extern zpp_argument* zpp_func_find_argument(zpp_func* f, const vm_string* name);
 
 // Search for a symbol variable in this function
 extern zpp_symbol* zpp_func_find_symbol(zpp_func* f, const vm_string* name);
+
+// Return how many arguments are part of the function
+extern vm_int32 zpp_func_num_arguments(zpp_func* f);
+
+// Return how many arguments are part of the function
+extern vm_int32 zpp_func_num_returns(zpp_func* f);
 
 // Create a new arg
 extern zpp_argument* zpp_argument_new(const vm_string* name);
