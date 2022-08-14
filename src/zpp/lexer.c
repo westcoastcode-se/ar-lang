@@ -271,6 +271,52 @@ void zpp_assign_or_equals(zpp_token* t)
 	}
 }
 
+void zpp_lt_or_lte(zpp_token* t)
+{
+	const char* start = t->source++;
+	char c = *t->source;
+
+	switch (c)
+	{
+	case '=':
+		t->source++;
+		t->type = ZPP_TOKEN_TEST_LTE;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	default:
+		t->type = ZPP_TOKEN_TEST_LT;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	}
+}
+
+void zpp_gt_or_gte(zpp_token* t)
+{
+	const char* start = t->source++;
+	char c = *t->source;
+
+	switch (c)
+	{
+	case '=':
+		t->source++;
+		t->type = ZPP_TOKEN_TEST_GTE;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	default:
+		t->type = ZPP_TOKEN_TEST_GT;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	}
+}
+
 void zpp_colon_or_declassign(zpp_token* t)
 {
 	const char* start = t->source++;
@@ -539,6 +585,12 @@ void zpp_token_next0(zpp_token* t)
 		return;
 	case '=':
 		zpp_assign_or_equals(t);
+		return;
+	case '<':
+		zpp_lt_or_lte(t);
+		return;
+	case '>':
+		zpp_gt_or_gte(t);
 		return;
 	case ':':
 		zpp_colon_or_declassign(t);

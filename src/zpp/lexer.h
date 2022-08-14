@@ -77,6 +77,15 @@ typedef enum zpp_token_type
 	// }
 	ZPP_TOKEN_BRACKET_R,
 
+	// <
+	ZPP_TOKEN_TEST_LT,
+	// <=
+	ZPP_TOKEN_TEST_LTE,
+	// >
+	ZPP_TOKEN_TEST_GT,
+	// >=
+	ZPP_TOKEN_TEST_GTE,
+
 	// ,
 	ZPP_TOKEN_COMMA,
 	// .
