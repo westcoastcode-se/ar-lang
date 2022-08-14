@@ -193,7 +193,7 @@ struct vmi_instr_single_instruction
 typedef struct vmi_instr_single_instruction vmi_instr_single_instruction;
 typedef struct vmi_instr_single_instruction vmi_instr_add;
 typedef struct vmi_instr_single_instruction vmi_instr_sub;
-typedef struct vmi_instr_single_instruction vmi_instr_mult;
+typedef struct vmi_instr_single_instruction vmi_instr_mul;
 typedef struct vmi_instr_single_instruction vmi_instr_div;
 
 // A lda(rgument) instruction

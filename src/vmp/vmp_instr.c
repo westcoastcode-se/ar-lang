@@ -466,6 +466,26 @@ vmp_instr* vmp_instr_sub(const vmp_type* type)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_mul(const vmp_type* type)
+{
+	vmp_instr_def_mul* instr = (vmp_instr_def_mul*)vm_malloc(sizeof(vmp_instr_def_mul));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_MUL, sizeof(vmi_instr_mul));
+	instr->type = type;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_div(const vmp_type* type)
+{
+	vmp_instr_def_div* instr = (vmp_instr_def_div*)vm_malloc(sizeof(vmp_instr_def_div));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_DIV, sizeof(vmi_instr_div));
+	instr->type = type;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
 vmp_instr* vmp_instr_clt(const vmp_type* type)
 {
 	vmp_instr_def_cmp* instr = (vmp_instr_def_cmp*)vm_malloc(sizeof(vmp_instr_def_cmp));
@@ -1217,6 +1237,32 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.icode = VMI_SUB;
 		instr.props1 = cmd->type->data_type;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_sub))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_MUL:
+	{
+		const vmp_instr_def_mul* const cmd = (vmp_instr_def_mul*)h;
+
+		vmi_instr_mul instr;
+		instr.opcode = 0;
+		instr.icode = VMI_MUL;
+		instr.props1 = cmd->type->data_type;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_mul))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_DIV:
+	{
+		const vmp_instr_def_div* const cmd = (vmp_instr_def_div*)h;
+
+		vmi_instr_div instr;
+		instr.opcode = 0;
+		instr.icode = VMI_DIV;
+		instr.props1 = cmd->type->data_type;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_div))) {
 			return NULL;
 		}
 		break;

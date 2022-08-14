@@ -526,6 +526,68 @@ struct suite_vmp_tests : utils_vmp
 	}
 
 	template<typename T>
+	void mul_T(T lhs, T rhs)
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Add function and add two integer types
+		auto func = vmp_func_newsz("Mul", 3);
+		auto arg1 = vmp_func_new_arg(func, get_type("vm", string(name<T>())));
+		vmp_arg_set_namesz(arg1, "lhs", 3);
+		auto arg2 = vmp_func_new_arg(func, get_type("vm", string(name<T>())));
+		vmp_arg_set_namesz(arg2, "rhs", 3);
+		auto ret1 = vmp_func_new_return(func, get_type("vm", string(name<T>())));
+		vmp_package_add_func(main_package, func);
+
+		// {
+		//	lda 0
+		//	lda 1
+		//	mul T
+		//	ret
+		// }
+		vmp_func_begin_body(func);
+		vmp_func_add_instr(func, vmp_instr_lda(arg1));
+		vmp_func_add_instr(func, vmp_instr_lda(arg2));
+		vmp_func_add_instr(func, vmp_instr_mul(get_type("vm", string(name<T>()))));
+		vmp_func_add_instr(func, vmp_instr_ret());
+		vmp_func_begin_end(func);
+
+		compile();
+
+		auto t = thread();
+		push_value(t, (T)lhs);
+		push_value(t, (T)rhs);
+		invoke(t, "Mul");
+
+		verify_stack_size(t, sizeof(T) * 3);
+		verify_value(pop_value<T>(t), (T)(lhs * rhs));
+		verify_value(pop_value<T>(t), (T)(rhs));
+		verify_value(pop_value<T>(t), (T)(lhs));
+
+		destroy(t);
+
+		end();
+	}
+
+	void mul()
+	{
+		TEST_FN(mul_T<vm_int8>(2, 5));
+		TEST_FN(mul_T<vm_uint8>(3, 5));
+		TEST_FN(mul_T<vm_int16>(INT8_MAX, 10));
+		TEST_FN(mul_T<vm_uint16>(INT16_MAX, 2));
+		TEST_FN(mul_T<vm_int32>(INT16_MAX, 3));
+		TEST_FN(mul_T<vm_uint32>(INT16_MAX, 4));
+		TEST_FN(mul_T<vm_int64>(INT32_MAX, 2));
+		TEST_FN(mul_T<vm_uint64>(INT32_MAX, 4));
+		TEST_FN(mul_T<vm_float32>(1.0f, 20.0f));
+		TEST_FN(mul_T<vm_float64>(-10.0, 203.0));
+	}
+
+	template<typename T>
 	void neg_T(T value)
 	{
 		begin();
@@ -1429,8 +1491,8 @@ struct suite_vmp_tests : utils_vmp
 		TEST_FN(stelem_T<vm_uint16>({ INT16_MAX + 1, UINT16_MAX - 1 }));
 		TEST_FN(stelem_T<vm_int32>({ UINT16_MAX + 1, INT32_MAX - 100 }));
 		TEST_FN(stelem_T<vm_uint32>({ INT32_MAX + 1u, UINT32_MAX - 100u }));
-		TEST_FN(stelem_T<vm_int64>({ UINT32_MAX + 1ll, INT64_MAX - 100ll }));
-		TEST_FN(stelem_T<vm_uint64>({ (vm_uint64)INT64_MAX + (vm_uint64)1, (vm_uint64)UINT64_MAX - (vm_uint64)100 }));
+		TEST_FN(stelem_T<vm_int64>({ UINT32_MAX + 1ll, INT64_MAX - 100i64 }));
+		TEST_FN(stelem_T<vm_uint64>({ (vm_uint64)INT64_MAX + 1i64, (vm_uint64)UINT64_MAX - 100i64 }));
 		TEST_FN(stelem_T<vm_float32>({ 123.43f, 657.123f }));
 		TEST_FN(stelem_T<vm_float64>({ 123.4345, 657.12312 }));
 
@@ -1441,7 +1503,7 @@ struct suite_vmp_tests : utils_vmp
 		TEST_FN(stelem_ptr_T<vm_int32>({ UINT16_MAX + 1, INT32_MAX - 100 }));
 		TEST_FN(stelem_ptr_T<vm_uint32>({ INT32_MAX + 1u, UINT32_MAX - 100u }));
 		TEST_FN(stelem_ptr_T<vm_int64>({ UINT32_MAX + 1ll, INT64_MAX - 100ll }));
-		TEST_FN(stelem_ptr_T<vm_uint64>({ (vm_uint64)INT64_MAX + (vm_uint64)1, (vm_uint64)UINT64_MAX - (vm_uint64)100 }));
+		TEST_FN(stelem_ptr_T<vm_uint64>({ (vm_uint64)INT64_MAX + 1i64, (vm_uint64)UINT64_MAX - 100i64 }));
 		TEST_FN(stelem_ptr_T<vm_float32>({ 123.43f, 657.123f }));
 		TEST_FN(stelem_ptr_T<vm_float64>({ 123.4345, 657.12312 }));
 	}
@@ -1835,6 +1897,7 @@ struct suite_vmp_tests : utils_vmp
 
 		TEST(add);
 		TEST(sub);
+		TEST(mul);
 		TEST(neg);
 		TEST(ldc);
 		TEST(call);

@@ -239,6 +239,8 @@ struct vmp_instr_def_add
 };
 typedef struct vmp_instr_def_add vmp_instr_def_add;
 typedef struct vmp_instr_def_add vmp_instr_def_sub;
+typedef struct vmp_instr_def_add vmp_instr_def_mul;
+typedef struct vmp_instr_def_add vmp_instr_def_div;
 
 // add <type>
 struct vmp_instr_def_cmp
@@ -381,6 +383,12 @@ extern vmp_instr* vmp_instr_add(const vmp_type* type);
 
 // Create a new sub instruction and return it
 extern vmp_instr* vmp_instr_sub(const vmp_type* type);
+
+// Create a new mul instruction and return it
+extern vmp_instr* vmp_instr_mul(const vmp_type* type);
+
+// Create a new div instruction and return it
+extern vmp_instr* vmp_instr_div(const vmp_type* type);
 
 // Create a new cmp instruction and return it
 extern vmp_instr* vmp_instr_clt(const vmp_type* type);
