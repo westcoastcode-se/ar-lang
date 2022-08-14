@@ -460,7 +460,7 @@ zpp_token_type zpp_token_find_keyword_type(const vm_string* str)
 			return ZPP_TOKEN_KEYWORD_INTERFACE;
 		}
 	}
-	return ZPP_TOKEN_KEYWORD;
+	return ZPP_TOKEN_IDENTITY;
 }
 
 void zpp_token_number(zpp_token* token)
@@ -528,7 +528,7 @@ void zpp_token_next0(zpp_token* t)
 	char ch = *t->source;
 	t->modifier = 0;
 
-	// Is this a potential keyword?
+	// Is this a potential keyword or identity?
 	if (zpp_token_test_keyword(ch)) {
 		zpp_token_keyword(t);
 		return;

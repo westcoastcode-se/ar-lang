@@ -197,7 +197,7 @@ zpp_type* zpp_compiler_parse_type(zpp_compiler* c, zpp_token* t, const zpp_compi
 		zpp_message_not_implemented(state);
 		return NULL;
 	}
-	else if (t->type != ZPP_TOKEN_KEYWORD) {
+	else if (t->type != ZPP_TOKEN_IDENTITY) {
 		zpp_message_expected_identifier(state);
 		return NULL;
 	}
@@ -276,9 +276,10 @@ BOOL zpp_compiler_parse_body(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 			
 		}		
 		node = zpp_synax_tree_parse_expression(c, t, state);
-		if (node == NULL)
+		if (zpp_syntax_tree_is_error(node))
 			return FALSE;
-		zpp_syntax_tree_add(state->parent_node, node);
+		if (node != NULL)
+			zpp_syntax_tree_add(state->parent_node, node);
 	}
 
 	return TRUE;
@@ -287,7 +288,7 @@ BOOL zpp_compiler_parse_body(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
 {
 	// Expected function name
-	if (t->type != ZPP_TOKEN_KEYWORD) {
+	if (t->type != ZPP_TOKEN_IDENTITY) {
 		return zpp_message_expected_identifier(state);
 	}
 
@@ -325,7 +326,7 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 	while (zpp_token_next(t) != ZPP_TOKEN_PARAN_R) {
 		// Ignore comma
 		if (t->type == ZPP_TOKEN_COMMA) {
-			if (zpp_token_next(t) != ZPP_TOKEN_KEYWORD)
+			if (zpp_token_next(t) != ZPP_TOKEN_IDENTITY)
 				return zpp_message_expected_identifier(state);
 		}
 
@@ -343,7 +344,7 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 	zpp_token_next(t);
 
 	// Return values present?
-	if (t->type == ZPP_TOKEN_KEYWORD) {
+	if (t->type == ZPP_TOKEN_IDENTITY) {
 		// One return type
 		zpp_return* ret = zpp_return_new();
 		zpp_func_add_return(func, ret);
@@ -360,7 +361,7 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 		while (zpp_token_next(t) != ZPP_TOKEN_PARAN_R) {
 			// Ignore comma
 			if (t->type == ZPP_TOKEN_COMMA) {
-				if (zpp_token_next(t) != ZPP_TOKEN_KEYWORD)
+				if (zpp_token_next(t) != ZPP_TOKEN_IDENTITY)
 					return zpp_message_expected_identifier(state);
 			}
 
@@ -399,7 +400,7 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 BOOL zpp_compiler_parse_package(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
 {
 	// Expected package name
-	if (t->type != ZPP_TOKEN_KEYWORD) {
+	if (t->type != ZPP_TOKEN_IDENTITY) {
 		return zpp_message_expected_identifier(state);
 	}
 

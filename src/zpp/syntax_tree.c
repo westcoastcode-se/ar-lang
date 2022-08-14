@@ -721,36 +721,104 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 	}
 	else if (t->type == ZPP_TOKEN_KEYWORD) {
 		const vm_string keyword = t->string;
-		zpp_symbol* const symbol = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &keyword);
-		if (symbol == NULL) {
-			// TODO: Add support for "unresolved" types (which is later on resolved as the "closest" type)
-			zpp_message_not_implemented(state);
-			return zpp_syntax_tree_error();
-		}
+		zpp_token_next(t);
 
-		// Load a local variable
-		if (symbol->type == ZPP_SYMBOL_LOCAL) {
-			zpp_syntax_tree_load_local* load = zpp_syntax_tree_load_local_new();
-			if (load == NULL) {
+		if (t->type == ZPP_TOKEN_DECL_ASSIGN) {
+			zpp_token_next(t);
+
+			// Check to see if the local variable exists, and if not then add it
+			zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &keyword);
+			if (symbol != NULL) {
+				// Symbol is already defined
+				zpp_message_not_implemented(state);
+				return zpp_syntax_tree_error();
+			}
+
+			// Expression to be set in the local variable
+			zpp_syntax_tree_node decl_expression = zpp_synax_tree_parse_comp_expr(c, t, state);
+			if (zpp_syntax_tree_is_error(decl_expression))
+				return decl_expression;
+
+			// Define the local variable
+			zpp_local* const local = zpp_local_new(&keyword);
+			if (local == NULL) {
 				zpp_message_out_of_memory(state);
 				return zpp_syntax_tree_error();
 			}
-			load->closest_function_node = state->func_node;
-			load->target = (zpp_local*)symbol;
-			zpp_token_next(t);
-			return ZPP_SYNTAX_TREE(load);
-		}
-		else if (symbol->type == ZPP_SYMBOL_ARGUMENT) {
-			zpp_syntax_tree_load_argument* load = zpp_syntax_tree_load_argument_new();
-			if (load == NULL) {
+			local->type = decl_expression->stack_type;
+			local->header.name = keyword;
+			zpp_func_add_local(state->func_node->function, local);
+
+			zpp_syntax_tree_assign* assign = zpp_syntax_tree_assign_new(decl_expression, ZPP_SYMBOL(local));
+			if (assign == NULL) {
 				zpp_message_out_of_memory(state);
 				return zpp_syntax_tree_error();
 			}
-			load->closest_function_node = state->func_node;
-			load->target = (zpp_argument*)symbol;
-			zpp_token_next(t);
-			return ZPP_SYNTAX_TREE(load);
+			assign->closest_function_node = state->func_node;
+			return ZPP_SYNTAX_TREE(assign);
 		}
+		else if (t->type == ZPP_TOKEN_ASSIGN) {
+			// Existing variable, might be a local, argument or a global variable
+			zpp_token_next(t);
+
+			// Check to see if the local variable exists, and if not then add it
+			zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &keyword);
+			if (symbol == NULL) {
+				// Not defined yet
+				// TODO: Add support for an "unresolved" assignable type
+				zpp_message_not_implemented(state);
+				return zpp_syntax_tree_error();
+			}
+
+			// Expression to be set in the local variable
+			zpp_syntax_tree_node decl_expression = zpp_synax_tree_parse_comp_expr(c, t, state);
+			if (zpp_syntax_tree_is_error(decl_expression))
+				return decl_expression;
+
+			zpp_syntax_tree_assign* assign = zpp_syntax_tree_assign_new(decl_expression, symbol);
+			if (assign == NULL) {
+				zpp_message_out_of_memory(state);
+				return zpp_syntax_tree_error();
+			}
+			assign->closest_function_node = state->func_node;
+			return ZPP_SYNTAX_TREE(assign);
+		}
+		else {
+			zpp_symbol* const symbol = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &keyword);
+			if (symbol == NULL) {
+				// TODO: Add support for "unresolved" types (which is later on resolved as the "closest" type)
+				zpp_message_not_implemented(state);
+				return zpp_syntax_tree_error();
+			}
+
+			// Load a local variable
+			if (symbol->type == ZPP_SYMBOL_LOCAL) {
+				zpp_syntax_tree_load_local* load = zpp_syntax_tree_load_local_new();
+				if (load == NULL) {
+					zpp_message_out_of_memory(state);
+					return zpp_syntax_tree_error();
+				}
+				load->closest_function_node = state->func_node;
+				load->target = (zpp_local*)symbol;
+				zpp_token_next(t);
+				return ZPP_SYNTAX_TREE(load);
+			}
+			else if (symbol->type == ZPP_SYMBOL_ARGUMENT) {
+				zpp_syntax_tree_load_argument* load = zpp_syntax_tree_load_argument_new();
+				if (load == NULL) {
+					zpp_message_out_of_memory(state);
+					return zpp_syntax_tree_error();
+				}
+				load->closest_function_node = state->func_node;
+				load->target = (zpp_argument*)symbol;
+				zpp_token_next(t);
+				return ZPP_SYNTAX_TREE(load);
+			}
+			else {
+				zpp_message_not_implemented(state);
+				return zpp_syntax_tree_error();
+			}
+		}		
 	}
 	else if (t->type == ZPP_TOKEN_PARAN_L) {
 		zpp_token_next(t);
@@ -829,7 +897,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_comp_expr(zpp_compiler* c, zpp_token* 
 
 zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
 {
-	if (zpp_token_is_keyword(t)) {
+	if (zpp_token_is_keyword(t) && t->type != ZPP_TOKEN_KEYWORD) {
 		switch (t->type) {
 		case ZPP_TOKEN_KEYWORD_RETURN:
 		{
@@ -865,77 +933,6 @@ zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token*
 		{
 			zpp_message_not_implemented(state);
 			return zpp_syntax_tree_error();
-		}
-		case ZPP_TOKEN_KEYWORD:
-		{
-			// Might be an argument, constant, local, global variable or function
-			const vm_string var_name = t->string;
-			zpp_token_next(t);
-			if (t->type == ZPP_TOKEN_DECL_ASSIGN) {
-				zpp_token_next(t);
-
-				// Check to see if the local variable exists, and if not then add it
-				zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &var_name);
-				if (symbol != NULL) {
-					// Symbol is already defined
-					zpp_message_not_implemented(state);
-					return zpp_syntax_tree_error();
-				}
-
-				// Expression to be set in the local variable
-				zpp_syntax_tree_node decl_expression = zpp_synax_tree_parse_comp_expr(c, t, state);
-				if (zpp_syntax_tree_is_error(decl_expression))
-					return decl_expression;
-
-				// Define the local variable
-				zpp_local* const local = zpp_local_new(&var_name);
-				if (local == NULL) {
-					zpp_message_out_of_memory(state);
-					return zpp_syntax_tree_error();
-				}
-				local->type = decl_expression->stack_type;
-				local->header.name = var_name;
-				zpp_func_add_local(state->func_node->function, local);
-
-				zpp_syntax_tree_assign* assign = zpp_syntax_tree_assign_new(decl_expression, ZPP_SYMBOL(local));
-				if (assign == NULL) {
-					zpp_message_out_of_memory(state);
-					return zpp_syntax_tree_error();
-				}
-				assign->closest_function_node = state->func_node;
-				return ZPP_SYNTAX_TREE(assign);
-			}
-			else if (t->type == ZPP_TOKEN_ASSIGN) {
-				// Existing variable, might be a local, argument or a global variable
-
-				zpp_token_next(t);
-				// Expression to be set in the local variable
-				zpp_syntax_tree_node decl_expression = zpp_synax_tree_parse_comp_expr(c, t, state);
-				if (zpp_syntax_tree_is_error(decl_expression))
-					return decl_expression;
-
-				// Check to see if the local variable exists, and if not then add it
-				zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &var_name);
-				if (symbol == NULL) {
-					// Not defined yet
-					// TODO: Add support for an "unresolved" assignable type
-					zpp_message_not_implemented(state);
-					return zpp_syntax_tree_error();
-				}
-
-				zpp_syntax_tree_assign* assign = zpp_syntax_tree_assign_new(decl_expression, symbol);
-				if (assign == NULL) {
-					zpp_message_out_of_memory(state);
-					return zpp_syntax_tree_error();
-				}
-				assign->closest_function_node = state->func_node;
-				return ZPP_SYNTAX_TREE(assign);
-			}
-			else {
-				zpp_message_not_implemented(state);
-				return zpp_syntax_tree_error();
-			}
-			//
 		}
 		break;
 		}
