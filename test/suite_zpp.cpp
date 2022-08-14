@@ -552,6 +552,63 @@ func Arg(value int32) int32 {
 		destroy(t);
 	}
 
+	void compare_gt1()
+	{
+		static const auto source = R"(
+package main
+
+func Arg(value int32) int32 {
+	return value > 10
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		static constexpr auto value = 5;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "Arg");
+
+		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
+		verify_value(ret, value > 10 ? TRUE : 0);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+	}
+
+	void compare_gt2()
+	{
+		static const auto source = R"(
+package main
+
+func Arg(value int32) int32 {
+	return value > 100
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		auto t = thread();
+
+		static constexpr auto value = 5;
+		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+
+		invoke(t, "Arg");
+
+		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
+		verify_value(ret, value > 100 ? TRUE : 0);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_value(in, value);
+
+		destroy(t);
+	}
+
+
 	static vm_int32 c_complex1(vm_int32 value) {
 		return (((++value * 10) + (value++)) - --value) * 2;
 	}
@@ -739,6 +796,8 @@ func QuickSort(arr *int32, low int32, high int32) {
 
 		TEST_BEGIN_END(compare_lt1);
 		TEST_BEGIN_END(compare_lt2);
+		TEST_BEGIN_END(compare_gt1);
+		TEST_BEGIN_END(compare_gt2);
 	}
 };
 
