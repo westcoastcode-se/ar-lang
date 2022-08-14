@@ -22,6 +22,9 @@ extern void vm_free1(void* mem);
 // Check to see how many bytes have not been freed
 extern BOOL vm_memory_test_bytes_left();
 
+// Clear the memory being tracked by the by the memory tracker
+extern void vm_memory_test_clear();
+
 #ifdef VM_DEBUG_MEMORY_TRACKING
 #define vm_malloc(size) vm_malloc1(size, __FILE__, __LINE__)
 #define vm_realloc(ptr, new_size) vm_realloc1(ptr, new_size, __FILE__, __LINE__)

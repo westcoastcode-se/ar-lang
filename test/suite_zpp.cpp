@@ -3,13 +3,11 @@
 struct utils_zpp : utils_vm
 {
 	zpp_compiler* compiler;
-	vmi_process* process;
 
 	void begin()
 	{
 		// Create a new pipeline to put bytecode into
 		compiler = zpp_compiler_new();
-		process = NULL;
 	}
 
 	void end()
@@ -18,6 +16,47 @@ struct utils_zpp : utils_vm
 			zpp_compiler_destroy(compiler);
 			compiler = NULL;
 		}
+	}
+};
+
+struct utils_zpp_errors : utils_zpp
+{
+	void begin()
+	{
+		utils_zpp::begin();
+	}
+
+	void end()
+	{
+		utils_zpp::end();
+		vm_memory_test_clear();
+	}
+};
+
+struct utils_zpp_success : utils_zpp
+{
+	vmi_process* process;
+	vmi_thread* thread;
+
+	void begin()
+	{
+		utils_zpp::begin();
+		process = NULL;
+	}
+
+	void end()
+	{
+		if (thread != NULL) {
+			vmi_thread_destroy(thread);
+			thread = NULL;
+		}
+
+		if (process != NULL) {
+			vmi_process_destroy(process);
+			process = NULL;
+		}
+
+		utils_zpp::end();
 
 		if (vm_memory_test_bytes_left() == FALSE) {
 			throw_(error() << "not all memory was released");
@@ -76,23 +115,14 @@ struct utils_zpp : utils_vm
 		if (result != 0) {
 			throw_(error() << "failed to load bytecode because: " << result);
 		}
-	}
 
-	vmi_thread* thread()
-	{
-		auto const t = vmi_thread_new(process);
-		if (t == nullptr) {
+		thread = vmi_thread_new(process);
+		if (thread == nullptr) {
 			throw_(error() << "could not spawn a new VM thread");
 		}
-		return t;
 	}
 
-	void destroy(vmi_thread* p)
-	{
-		vmi_thread_destroy(p);
-	}
-
-	void invoke(vmi_thread* t, const char* entry_point)
+	void invoke(const char* entry_point)
 	{
 		const vmi_package* package = vmi_process_find_package_by_name(process, "main", 4);
 		if (package == NULL) {
@@ -104,14 +134,14 @@ struct utils_zpp : utils_vm
 			throw_(error() << "could not find function '" << entry_point << "'");
 		}
 
-		const auto result = vmi_process_exec(process, t, func);
+		const auto result = vmi_process_exec(process, thread, func);
 		if (result != 0) {
-			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << t->exit_reason);
+			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << thread->exit_reason);
 		}
 	}
 };
 
-struct suite_zpp_tests : utils_zpp
+struct suite_zpp_tests : utils_zpp_success
 {
 	void return1()
 	{
@@ -125,15 +155,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke( "Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 12345);
-
-		destroy(t);
 	}
 
 	void return2()
@@ -148,15 +174,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 12345 + 10);
-
-		destroy(t);
 	}
 
 	void return3()
@@ -170,16 +192,12 @@ func Get() int32 {
 )";
 		add_source_code(source, "/main.zpp");
 		compile();
+		
+		invoke("Get");
 
-		auto t = thread();
-
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 12345 - 10);
-
-		destroy(t);
 	}
 
 	void return4()
@@ -194,15 +212,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, -12345);
-
-		destroy(t);
 	}
 
 	void return5()
@@ -217,15 +231,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 12345 - -10);
-
-		destroy(t);
 	}
 
 	void return6()
@@ -240,15 +250,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, -12345 - -10);
-
-		destroy(t);
 	}
 
 	void return7()
@@ -263,15 +269,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 10 + 20 + 30);
-
-		destroy(t);
 	}
 
 	void return8()
@@ -286,15 +288,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 10 + 20 + 30 - 40);
-
-		destroy(t);
 	}
 
 	void return9()
@@ -309,15 +307,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 10 + 20 + 30 - 40);
-
-		destroy(t);
 	}
 
 	void return10()
@@ -332,15 +326,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 10 * (20 + 30) - 40);
-
-		destroy(t);
 	}
 
 	void return11()
@@ -355,15 +345,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, (10 * (20 + 30)) / 2);
-
-		destroy(t);
 	}
 
 	void return12()
@@ -378,17 +364,13 @@ func Get() (int32, int32) {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32) * 2);
-		auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 2);
+		auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 123);
-		ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, (10 * (20 + 30)) / 2);
-
-		destroy(t);
 	}
 
 	void local1()
@@ -404,15 +386,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 10 + 20 + 30 - 40);
-
-		destroy(t);
 	}
 
 	void local2()
@@ -429,15 +407,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 10 + 20 + 30 - 40 + 10);
-
-		destroy(t);
 	}
 
 	void local3()
@@ -454,15 +428,11 @@ func Get() int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
+		invoke("Get");
 
-		invoke(t, "Get");
-
-		verify_stack_size(t, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, 10 + 20 + 30 - 40 + 10);
-
-		destroy(t);
 	}
 
 	void arg1()
@@ -477,20 +447,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 10000;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) * 2);
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, value);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void arg2()
@@ -505,20 +471,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 10000;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) * 2);
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, value + 10 + 20 - 30);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void arg3()
@@ -533,20 +495,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 10000;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) * 2);
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, (value + 10 + 20) - 30);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void arg4()
@@ -561,24 +519,20 @@ func Args(value1 int32, value2 int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value1 = 10000;
 		static constexpr auto value2 = 123;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value1;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value2;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value1;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value2;
 
-		invoke(t, "Args");
+		invoke("Args");
 
-		verify_stack_size(t, sizeof(vm_int32) * 3);
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 3);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, value1 + value2);
-		auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value2);
-		in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value1);
-
-		destroy(t);
 	}
 
 	void arg5()
@@ -593,26 +547,22 @@ func Args(value1 int32, value2 int32) (int32, int32) {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value1 = 10000;
 		static constexpr auto value2 = 123;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value1;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value2;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value1;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value2;
 
-		invoke(t, "Args");
+		invoke("Args");
 
-		verify_stack_size(t, sizeof(vm_int32) * 4);
-		auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 4);
+		auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, value1);
-		ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, value2);
-		ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, value2);
-		ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, value1);
-
-		destroy(t);
 	}
 
 	void compare_lt1()
@@ -627,20 +577,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 5;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
 		verify_value(ret, value < 10 ? TRUE : 0);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void compare_lt2()
@@ -655,20 +601,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 5;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
 		verify_value(ret, value < 100 ? TRUE : 0);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void compare_lt3()
@@ -683,20 +625,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 95;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
 		verify_value(ret, (value + 10) < 100 ? TRUE : 0);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void compare_gt1()
@@ -711,20 +649,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 5;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
 		verify_value(ret, value > 10 ? TRUE : 0);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void compare_gt2()
@@ -739,20 +673,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 5;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
 		verify_value(ret, value > 100 ? TRUE : 0);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void compare_gt3()
@@ -767,20 +697,16 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 95;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Arg");
+		invoke("Arg");
 
-		verify_stack_size(t, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(t, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
 		verify_value(ret, (value + 10) > 100 ? TRUE : 0);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	static vm_int32 c_complex1(vm_int32 value) {
@@ -799,20 +725,16 @@ func Complex(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 123;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Complex");
+		invoke("Complex");
 
-		verify_stack_size(t, sizeof(vm_int32) * 2);
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, c_complex1(value));
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	static vm_int32 c_complex2(vm_int32 value) {
@@ -831,20 +753,16 @@ func Complex(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 123;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "Complex");
+		invoke("Complex");
 
-		verify_stack_size(t, sizeof(vm_int32) * 2);
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, c_complex2(value));
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void func_refs()
@@ -870,20 +788,16 @@ func FuncRef(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto value = 10;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = value;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
 
-		invoke(t, "FuncRef");
+		invoke("FuncRef");
 
-		verify_stack_size(t, sizeof(vm_int32) * 2);
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32) * 2);
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, value + 4 - 2);
-		const auto in = *(vm_int32*)vmi_thread_pop_stack(t, sizeof(vm_int32));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
-
-		destroy(t);
 	}
 
 	void quicksort()
@@ -922,8 +836,6 @@ func QuickSort(arr *int32, low int32, high int32) {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		auto t = thread();
-
 		static constexpr auto COUNT = 10000;
 
 		// 10000 values to sort
@@ -932,11 +844,11 @@ func QuickSort(arr *int32, low int32, high int32) {
 		for (int i = 0; i < COUNT; ++i) {
 			arr[i] = rand() % 1000;
 		}
-		*(vm_int32**)vmi_thread_push_stack(t, sizeof(vm_int32*)) = arr;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = 0;
-		*(vm_int32*)vmi_thread_push_stack(t, sizeof(vm_int32)) = COUNT - 1;
-		invoke(t, "QuickSort");
-		destroy(t);
+		*(vm_int32**)vmi_thread_push_stack(thread, sizeof(vm_int32*)) = arr;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = 0;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = COUNT - 1;
+		invoke("QuickSort");
+
 		vm_int32 tmp = 0;
 		for (int i = 0; i < COUNT; ++i) {
 			if (arr[i] < tmp) {
@@ -945,7 +857,7 @@ func QuickSort(arr *int32, low int32, high int32) {
 			tmp = arr[i];
 		}
 		delete[] arr;
-		verify_stack_size(t, sizeof(vm_int32*) + sizeof(vm_int32) + sizeof(vm_int32));
+		verify_stack_size(thread, sizeof(vm_int32*) + sizeof(vm_int32) + sizeof(vm_int32));
 	}
 
 	void operator()()
@@ -982,7 +894,16 @@ func QuickSort(arr *int32, low int32, high int32) {
 	}
 };
 
+struct suite_zpp_errors : utils_zpp_errors
+{
+	void operator()()
+	{
+		// TODO: Verift that the errors raised by the compiler are correct
+	}
+};
+
 void suite_zpp()
 {
 	SUITE(suite_zpp_tests);
+	SUITE(suite_zpp_errors);
 }

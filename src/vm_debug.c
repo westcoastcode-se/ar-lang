@@ -116,10 +116,15 @@ BOOL vm_memory_test_bytes_left()
 			h = h->next;
 		}
 		printf("===================\n");
-		_vm_memory_tracker.first = NULL;
-		_vm_memory_tracker.last = NULL;
-		_vm_memory_tracker.total_bytes = 0;
+		vm_memory_test_clear();
 		return FALSE;
 	}
 	return TRUE;
+}
+
+void vm_memory_test_clear()
+{
+	_vm_memory_tracker.first = NULL;
+	_vm_memory_tracker.last = NULL;
+	_vm_memory_tracker.total_bytes = 0;
 }
