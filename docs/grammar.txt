@@ -1,6 +1,5 @@
 expr		:		KEYWORD:VAR IDENTIFIER EQ expr
-			:		KEYWORD:RETURN term ((PLUS|MINUS) term)*
-			:		KEYWORD DECL_ASSIGN term ((PLUS|MINUS) term)*
+			:		KEYWORD:RETURN term comp-expr
 			:		comp-expr ((AND|OR) comp-expr)*
 
 comp-expr	:		NOT comp-expr
@@ -15,5 +14,7 @@ factor		:		(PLUS|MINUS) factor
 
 bitwise		:		atom (BIT_AND factor)*
 
-atom		:		INT|DECIMAL|IDENTIFIER
-			:		(PLUS|MINUS) factor
+atom		:		INT|DECIMAL
+			:		(IDENTIFIER|(IDENTIFIER KEYWORD:DECL_ASSIGN expr)|(IDENTIFIER KEYWORD:ASSIGN expr))
+			:		(PARANT_L|PARAN_R) expr
+			 

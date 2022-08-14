@@ -719,7 +719,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 		zpp_token_next(t);
 		return ZPP_SYNTAX_TREE(val);
 	}
-	else if (t->type == ZPP_TOKEN_KEYWORD) {
+	else if (t->type == ZPP_TOKEN_IDENTITY) {
 		const vm_string keyword = t->string;
 		zpp_token_next(t);
 
@@ -800,7 +800,6 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 				}
 				load->closest_function_node = state->func_node;
 				load->target = (zpp_local*)symbol;
-				zpp_token_next(t);
 				return ZPP_SYNTAX_TREE(load);
 			}
 			else if (symbol->type == ZPP_SYMBOL_ARGUMENT) {
@@ -811,7 +810,6 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 				}
 				load->closest_function_node = state->func_node;
 				load->target = (zpp_argument*)symbol;
-				zpp_token_next(t);
 				return ZPP_SYNTAX_TREE(load);
 			}
 			else {
