@@ -191,7 +191,7 @@ struct utils_vmp : utils_vm
 		verify_value(instr->instr_type, type);
 		verify_value(instr->instr_offset, offset);
 		verify_value(instr->instr_size, (vm_int32)size);
-		return offset + size;
+		return (vm_int32)(offset + size);
 	}
 };
 
@@ -574,9 +574,9 @@ struct suite_vmp_tests : utils_vmp
 		TEST_FN(neg_T<vm_int16>(10));
 		TEST_FN(neg_T<vm_uint16>(INT8_MAX));
 		TEST_FN(neg_T<vm_int32>(INT16_MAX));
-		TEST_FN(neg_T<vm_uint32>(INT16_MAX + 10));
-		TEST_FN(neg_T<vm_int64>((vm_int64)(INT32_MAX + 5)));
-		TEST_FN(neg_T<vm_uint64>((vm_uint64)(INT32_MAX + 1000)));
+		TEST_FN(neg_T<vm_uint32>((vm_uint32)INT16_MAX + 10));
+		TEST_FN(neg_T<vm_int64>((vm_int64)((vm_int64)INT32_MAX + 5i64)));
+		TEST_FN(neg_T<vm_uint64>((vm_uint64)(INT32_MAX + 1000i64)));
 		TEST_FN(neg_T<vm_float32>(1.0f));
 		TEST_FN(neg_T<vm_float64>(-10.0));
 	}

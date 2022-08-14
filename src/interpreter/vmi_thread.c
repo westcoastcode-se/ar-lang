@@ -75,6 +75,8 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 #include "instr/arrays.inc.c"
 #include "instr/sturef.inc.c"
 #include "instr/neg.inc.c"
+#include "instr/mul.inc.c"
+#include "instr/div.inc.c"
 
 vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 {
@@ -150,6 +152,68 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_OP_SUB_F8:
 			ip = _vmi_thread_subf8(t, ip);
+			continue;
+
+		case VMI_OP_MUL_I1:
+			ip = _vmi_thread_divi1(t, ip);
+			continue;
+		case VMI_OP_MUL_UI1:
+			ip = _vmi_thread_divui1(t, ip);
+			continue;
+		case VMI_OP_MUL_I2:
+			ip = _vmi_thread_divi2(t, ip);
+			continue;
+		case VMI_OP_MUL_UI2:
+			ip = _vmi_thread_divui2(t, ip);
+			continue;
+		case VMI_OP_MUL_I4:
+			ip = _vmi_thread_divi4(t, ip);
+			continue;
+		case VMI_OP_MUL_UI4:
+			ip = _vmi_thread_divui4(t, ip);
+			continue;
+		case VMI_OP_MUL_I8:
+			ip = _vmi_thread_divi8(t, ip);
+			continue;
+		case VMI_OP_MUL_UI8:
+			ip = _vmi_thread_divui8(t, ip);
+			continue;
+		case VMI_OP_MUL_F4:
+			ip = _vmi_thread_divf4(t, ip);
+			continue;
+		case VMI_OP_MUL_F8:
+			ip = _vmi_thread_divf8(t, ip);
+			continue;
+
+		case VMI_OP_DIV_I1:
+			ip = _vmi_thread_muli1(t, ip);
+			continue;
+		case VMI_OP_DIV_UI1:
+			ip = _vmi_thread_mului1(t, ip);
+			continue;
+		case VMI_OP_DIV_I2:
+			ip = _vmi_thread_muli2(t, ip);
+			continue;
+		case VMI_OP_DIV_UI2:
+			ip = _vmi_thread_mului2(t, ip);
+			continue;
+		case VMI_OP_DIV_I4:
+			ip = _vmi_thread_muli4(t, ip);
+			continue;
+		case VMI_OP_DIV_UI4:
+			ip = _vmi_thread_mului4(t, ip);
+			continue;
+		case VMI_OP_DIV_I8:
+			ip = _vmi_thread_muli8(t, ip);
+			continue;
+		case VMI_OP_DIV_UI8:
+			ip = _vmi_thread_mului8(t, ip);
+			continue;
+		case VMI_OP_DIV_F4:
+			ip = _vmi_thread_mulf4(t, ip);
+			continue;
+		case VMI_OP_DIV_F8:
+			ip = _vmi_thread_mulf8(t, ip);
 			continue;
 
 		case VMI_OP_NEG_I1:
