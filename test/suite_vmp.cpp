@@ -526,6 +526,62 @@ struct suite_vmp_tests : utils_vmp
 	}
 
 	template<typename T>
+	void neg_T(T value)
+	{
+		begin();
+
+		// Create the main package
+		auto main_package = vmp_package_newsz("main", 4);
+		vmp_pipeline_add_package(pipeline, main_package);
+
+		// Create the Add function and add two integer types
+		auto add = vmp_func_newsz("Neg", 3);
+		auto arg1 = vmp_func_new_arg(add, get_type("vm", string(name<T>())));
+		vmp_arg_set_namesz(arg1, "lhs", 3);
+		auto ret1 = vmp_func_new_return(add, get_type("vm", string(name<T>())));
+		vmp_package_add_func(main_package, add);
+
+		// {
+		//	lda 0
+		//	neg T
+		//	ret
+		// }
+		vmp_func_begin_body(add);
+		vmp_func_add_instr(add, vmp_instr_lda(arg1));
+		vmp_func_add_instr(add, vmp_instr_neg(get_type("vm", string(name<T>()))));
+		vmp_func_add_instr(add, vmp_instr_ret());
+		vmp_func_begin_end(add);
+
+		compile();
+
+		auto t = thread();
+		push_value(t, (T)value);
+		invoke(t, "Neg");
+
+		verify_stack_size(t, sizeof(T) * 2);
+		verify_value(pop_value<T>(t), (T)(-value));
+		verify_value(pop_value<T>(t), (T)(value));
+
+		destroy(t);
+
+		end();
+	}
+
+	void neg()
+	{
+		TEST_FN(neg_T<vm_int8>(1));
+		TEST_FN(neg_T<vm_uint8>(15));
+		TEST_FN(neg_T<vm_int16>(10));
+		TEST_FN(neg_T<vm_uint16>(INT8_MAX));
+		TEST_FN(neg_T<vm_int32>(INT16_MAX));
+		TEST_FN(neg_T<vm_uint32>(INT16_MAX + 10));
+		TEST_FN(neg_T<vm_int64>((vm_int64)(INT32_MAX + 5)));
+		TEST_FN(neg_T<vm_uint64>((vm_uint64)(INT32_MAX + 1000)));
+		TEST_FN(neg_T<vm_float32>(1.0f));
+		TEST_FN(neg_T<vm_float64>(-10.0));
+	}
+
+	template<typename T>
 	void ldc_T(T value)
 	{
 		begin();
@@ -1779,6 +1835,7 @@ struct suite_vmp_tests : utils_vmp
 
 		TEST(add);
 		TEST(sub);
+		TEST(neg);
 		TEST(ldc);
 		TEST(call);
 		TEST(callnative);
