@@ -219,11 +219,8 @@ extern zpp_syntax_tree_type* zpp_syntax_tree_type_new(struct zpp_type* type);
 // Destroy the supplied syntax tree
 extern void zpp_syntax_tree_destroy(zpp_syntax_tree* st);
 
-// Parse a factor
-extern zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
-
-// Parse a term
-extern zpp_syntax_tree_node zpp_synax_tree_parse_term(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
+// Parse function
+typedef zpp_syntax_tree_node (*zpp_synax_tree_parse_fn)(struct zpp_compiler*, zpp_token*, const struct zpp_compiler_state*);
 
 // Parse an expression
 extern zpp_syntax_tree_node zpp_synax_tree_parse_expression(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);

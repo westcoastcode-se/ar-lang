@@ -318,7 +318,7 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 
 	// Expected a '(' rune
 	if (zpp_token_next(t) != ZPP_TOKEN_PARAN_L) {
-		return zpp_message_syntax_error(state, '(');
+		return zpp_message_syntax_error(state, "expected: (");
 	}
 
 	// Parse argument information until we reach that end ')' token
@@ -377,7 +377,7 @@ BOOL zpp_compiler_parse_func(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 
 	// Expected body for now. Perhaps re-use this function to parse a function pointer definition in the future
 	if (t->type != ZPP_TOKEN_BRACKET_L) {
-		return zpp_message_syntax_error(state, '{');
+		return zpp_message_syntax_error(state, "expected {");
 	}
 	zpp_token_next(t);
 

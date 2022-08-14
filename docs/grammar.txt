@@ -1,8 +1,14 @@
-expr		:		term ((PLUS|MINUS) term)*
+expr		:		KEYWORD:VAR IDENTIFIER EQ expr
+			:		KEYWORD:RETURN term ((PLUS|MINUS) term)*
+			:		KEYWORD DECL_ASSIGN term ((PLUS|MINUS) term)*
+			:		term ((PLUS|MINUS) term)*
 
 term		:		factor ((MUL|DIV) factor)*
 
-factor		:		INT|DECIMAL
-			:		(PLUS|MINUS) factor
-			:		LPARAN expr RPARAN
+factor		:		(PLUS|MINUS) factor
+			:		bitwise
 
+bitwise		:		atom (BIT_AND factor)*
+
+atom		:		INT|DECIMAL|IDENTIFIER
+			:		(PLUS|MINUS) factor

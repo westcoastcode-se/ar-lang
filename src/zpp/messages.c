@@ -45,7 +45,7 @@ BOOL zpp_message_expected_identifier(const struct zpp_compiler_state* s)
 		vm_string_length(&t->string), t->string.start, line, line_offset);
 }
 
-BOOL zpp_message_syntax_error(const struct zpp_compiler_state* s, vm_byte c)
+BOOL zpp_message_syntax_error(const struct zpp_compiler_state* s, const char* msg)
 {
 	const zpp_token* const t = s->token;
 	vm_messages* const m = &s->compiler->messages;
@@ -56,5 +56,5 @@ BOOL zpp_message_syntax_error(const struct zpp_compiler_state* s, vm_byte c)
 		ZPP_MESSAGE_PREFIX,
 		ZPP_MESSAGE_SYNTAX_ERROR,
 		ZPP_MESSAGE_SYNTAX_ERROR_STR,
-		c, vm_string_length(&t->string), t->string.start, line, line_offset);
+		msg, vm_string_length(&t->string), t->string.start, line, line_offset);
 }
