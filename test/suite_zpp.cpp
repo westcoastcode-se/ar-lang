@@ -17,6 +17,19 @@ struct utils_zpp : utils_vm
 			compiler = NULL;
 		}
 	}
+
+	vm_string to_vm_string(const vm_byte* source_code)
+	{
+		return { source_code, source_code + strlen(source_code) };
+	}
+
+	bool add_source_code(const vm_byte* source_code, const vm_byte* filename)
+	{
+		const vm_string src = to_vm_string(source_code);
+		const vm_string fn = to_vm_string(filename);
+		return zpp_compiler_add_source_code(compiler, zpp_source_code_new(&src, &fn)) == TRUE;
+	}
+
 };
 
 struct utils_zpp_errors : utils_zpp
@@ -30,6 +43,35 @@ struct utils_zpp_errors : utils_zpp
 	{
 		utils_zpp::end();
 		vm_memory_test_clear();
+	}
+
+	void verify_error_count(int expected) {
+		auto message = compiler->messages.first;
+		int count = 0;
+		while (message) {
+			message = message->next;
+			count++;
+		}
+		if (expected != count) {
+			throw_(error() << "expected " << expected << " errors but was " << count);
+		}
+	}
+
+	const vm_message* verify_error(const vm_message* message, int code, int line, int line_offset, const char* str)
+	{
+		if (code != message->code)
+			throw_(error() << "expected code=" << code << " but was " << message->code);
+
+		if (line != message->line)
+			throw_(error() << "expected line=" << line << " but was " << message->line);
+
+		if (line_offset != message->line_offset)
+			throw_(error() << "expected line_offset=" << line_offset << " but was " << message->line_offset);
+
+		if (strcmp(message->message, str) != 0)
+			throw_(error() << "expected message='" << str << "' but was '" << message->message << "'");
+
+		return message->next;
 	}
 };
 
@@ -63,16 +105,9 @@ struct utils_zpp_success : utils_zpp
 		}
 	}
 
-	vm_string to_vm_string(const vm_byte* source_code)
-	{
-		return { source_code, source_code + strlen(source_code) };
-	}
-
 	void add_source_code(const vm_byte* source_code, const vm_byte* filename)
 	{
-		const vm_string src = to_vm_string(source_code);
-		const vm_string fn = to_vm_string(filename);
-		if (zpp_compiler_add_source_code(compiler, zpp_source_code_new(&src, &fn)) == FALSE) {
+		if (!utils_zpp::add_source_code(source_code, filename)) {
 			error_string_stream e;
 			e << "could not add source code: [";
 			auto message = compiler->messages.first;
@@ -896,9 +931,24 @@ func QuickSort(arr *int32, low int32, high int32) {
 
 struct suite_zpp_errors : utils_zpp_errors
 {
+	void no_package_error()
+	{
+		static const auto source = R"(
+func Get() int32 {
+	return 0
+}
+)";
+		verify_false(add_source_code(source, "/main.zpp"));
+		verify_error_count(1);
+		
+		const vm_message* message = compiler->messages.first;
+		message = verify_error(message,ZPP_MESSAGE_EXPECTED_PACKAGE, 1, 0, "C004: expected package but was 'func' at 1:0");
+	}
+
 	void operator()()
 	{
 		// TODO: Verift that the errors raised by the compiler are correct
+		TEST_BEGIN_END(no_package_error);
 	}
 };
 

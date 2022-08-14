@@ -61,13 +61,13 @@ void vm_messages_move(vm_messages* src, vm_messages* dest)
 	}
 }
 
-BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* format, ...)
+vm_message* vm_messages_add(vm_messages* m, char prefix, int error_code, const char* format, ...)
 {
 	char* buffer;
 	va_list argptr;
 	vm_message* new_message = (vm_message*)malloc(sizeof(vm_message));
 	if (new_message == NULL)
-		return FALSE;
+		return NULL;
 	vm_message_init(new_message);
 
 	buffer = new_message->message;
@@ -82,7 +82,7 @@ BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* fo
 	va_end(argptr);
 
 	vm_messages_append(m, new_message);
-	return FALSE;
+	return new_message;
 }
 
 void vm_messages_append(vm_messages* m, vm_message* msg)

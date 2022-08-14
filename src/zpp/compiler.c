@@ -501,11 +501,15 @@ BOOL zpp_compiler_parse_source_code(zpp_compiler* c, zpp_token* t)
 				return FALSE;
 			}
 		}
+		else if (t->type == ZPP_TOKEN_EOF) {
+			break;
+		}
 		else if (t->type == ZPP_TOKEN_NEWLINE) {
 			zpp_token_next(t);
 		}
-		else if (t->type == ZPP_TOKEN_EOF) {
-			break;
+		else {
+			zpp_message_expected_package(c, t);
+			return FALSE;
 		}
 	}
 	return TRUE;

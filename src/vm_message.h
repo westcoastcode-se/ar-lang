@@ -59,8 +59,8 @@ inline static BOOL vm_messages_has_messages(vm_messages* m)
 // Move all messages to a new destination
 extern void vm_messages_move(vm_messages* src, vm_messages* dest);
 
-// Add a new message. Returns TRUE if the messages was added successfully
-extern BOOL vm_messages_add(vm_messages* m, char prefix, int error_code, const char* format, ...);
+// Add a new message. Returns the created message if the messages was added successfully
+extern vm_message* vm_messages_add(vm_messages* m, char prefix, int error_code, const char* format, ...);
 
 // Append a new message
 extern void vm_messages_append(vm_messages* m, vm_message* msg);

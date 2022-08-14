@@ -183,6 +183,20 @@ struct utils_vm : test_utils
 		}
 	}
 
+	void verify_false(bool value)
+	{
+		if (value) {
+			throw_(error() << "expected false");
+		}
+	}
+
+	void verify_true(bool value)
+	{
+		if (!value) {
+			throw_(error() << "expected true");
+		}
+	}
+
 	void verify_stack_size(vmi_thread* t, size_t expected_size)
 	{
 		const size_t size = (size_t)(t->stack.top - t->stack.blocks);
