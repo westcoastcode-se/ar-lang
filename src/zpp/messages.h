@@ -13,13 +13,14 @@ typedef enum zpp_message_code
 	// The device is out of memory
 	ZPP_MESSAGE_OUT_OF_MEMORY,
 
-	// Not implemented
+	// This error code is raised if the source code contains one or many un-implemented features
 	ZPP_MESSAGE_NOT_IMPLEMENTED,
 	
-	// Message raised when we expected a package, but was something else. All documents have to have a defined package
+	// Message raised when we expected a package, but was something else. All documents have 
+	// to have a defined package at the start of each document
 	ZPP_MESSAGE_EXPECTED_PACKAGE,
 
-	// Compiler requires an keyword that represents an identifier
+	// Compiler expects an identifier
 	ZPP_MESSAGE_EXPECTED_IDENTIFIER,
 
 	// Generic syntax error

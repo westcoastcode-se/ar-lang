@@ -945,10 +945,43 @@ func Get() int32 {
 		message = verify_error(message,ZPP_MESSAGE_EXPECTED_PACKAGE, 1, 0, "C004: expected package but was 'func' at 1:0");
 	}
 
+	void missing_package_identifier()
+	{
+		static const auto source = R"(
+package *
+
+func Get() int32 {
+	return 0
+}
+)";
+		verify_false(add_source_code(source, "/main.zpp"));
+		verify_error_count(1);
+
+		const vm_message* message = compiler->messages.first;
+		message = verify_error(message, ZPP_MESSAGE_EXPECTED_IDENTIFIER, 1, 8, "C005: expected identifier but was '*' at 1:8");
+	}
+
+	void missing_function_identifier()
+	{
+		static const auto source = R"(
+package main
+
+func () int32 {
+	return 0
+}
+)";
+		verify_false(add_source_code(source, "/main.zpp"));
+		verify_error_count(1);
+
+		const vm_message* message = compiler->messages.first;
+		message = verify_error(message, ZPP_MESSAGE_EXPECTED_IDENTIFIER, 3, 5, "C005: expected identifier but was '(' at 3:5");
+	}
+
 	void operator()()
 	{
-		// TODO: Verift that the errors raised by the compiler are correct
 		TEST_BEGIN_END(no_package_error);
+		TEST_BEGIN_END(missing_package_identifier);
+		TEST_BEGIN_END(missing_function_identifier);
 	}
 };
 
