@@ -24,7 +24,7 @@ typedef enum zpp_token_type
 	ZPP_TOKEN_KEYWORD_INTERFACE,
 	ZPP_TOKEN_KEYWORD_END_KEYWORD = ZPP_TOKEN_KEYWORD_INTERFACE,
 
-	// 
+	// Identifier
 	ZPP_TOKEN_IDENTITY,
 
 	ZPP_TOKEN_VALUE,
@@ -40,8 +40,12 @@ typedef enum zpp_token_type
 	ZPP_TOKEN_OP,
 	// +
 	ZPP_TOKEN_OP_PLUS,
+	// ++
+	ZPP_TOKEN_OP_INC,
 	// -
 	ZPP_TOKEN_OP_MINUS,
+	// --
+	ZPP_TOKEN_OP_DEC,
 	// *
 	ZPP_TOKEN_OP_MULT,
 	ZPP_TOKEN_PTR = ZPP_TOKEN_OP_MULT,

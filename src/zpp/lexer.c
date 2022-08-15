@@ -404,6 +404,52 @@ void zpp_token_div_or_comment(zpp_token* t)
 	}
 }
 
+void zpp_token_plus_or_increment(zpp_token* t)
+{
+	const char* start = t->source++;
+	char c = *t->source;
+
+	switch (c)
+	{
+	case '+':
+		t->source++;
+		t->type = ZPP_TOKEN_OP_INC;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	default:
+		t->type = ZPP_TOKEN_OP_PLUS;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	}
+}
+
+void zpp_token_minus_or_decrement(zpp_token* t)
+{
+	const char* start = t->source++;
+	char c = *t->source;
+
+	switch (c)
+	{
+	case '+':
+		t->source++;
+		t->type = ZPP_TOKEN_OP_DEC;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	default:
+		t->type = ZPP_TOKEN_OP_MINUS;
+		t->modifier = 0;
+		t->string.start = start;
+		t->string.end = t->source;
+		return;
+	}
+}
+
 zpp_token_type zpp_token_find_keyword_type(const vm_string* str)
 {
 	const int len = vm_string_length(str);
@@ -548,10 +594,10 @@ void zpp_token_next0(zpp_token* t)
 		t->line_offset = t->source;
 		return;
 	case '+':
-		zpp_token_atom(ZPP_TOKEN_OP_PLUS, t);
+		zpp_token_plus_or_increment(t);
 		return;
 	case '-':
-		zpp_token_atom(ZPP_TOKEN_OP_MINUS, t);
+		zpp_token_minus_or_decrement(t);
 		return;
 	case '*':
 		zpp_token_atom(ZPP_TOKEN_OP_MULT, t);
