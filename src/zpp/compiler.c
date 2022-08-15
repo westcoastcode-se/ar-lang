@@ -248,7 +248,7 @@ zpp_type* zpp_compiler_parse_type(zpp_compiler* c, zpp_token* t, const zpp_compi
 
 BOOL zpp_compiler_parse_body(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
 {
-	zpp_syntax_tree_node node;
+	zpp_syntax_tree_node node = ZPP_SYNTAX_TREE(state->package_node);
 
 	while (t->type != ZPP_TOKEN_BRACKET_R) {
 		if (t->type == ZPP_TOKEN_BRACKET_L) {

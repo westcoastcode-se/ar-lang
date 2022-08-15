@@ -902,7 +902,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_comp_expr(zpp_compiler* c, zpp_token* 
 
 zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
 {
-	if (zpp_token_is_keyword(t) && t->type != ZPP_TOKEN_KEYWORD) {
+	if (zpp_token_is_keyword(t)) {
 		switch (t->type) {
 		case ZPP_TOKEN_KEYWORD_RETURN:
 		{
