@@ -30,9 +30,9 @@ extern void vm_memory_test_clear();
 #define vm_realloc(ptr, new_size) vm_realloc1(ptr, new_size, __FILE__, __LINE__)
 #define vm_free(ptr) vm_free1(ptr)
 #else
-#define vmp_malloc(size) malloc(size)
-#define vmp_realloc(ptr, new_size) realloc(ptr, new_size)
-#define vmp_free(ptr) free(ptr)
+#define vm_malloc(size) malloc(size)
+#define vm_realloc(ptr, new_size) realloc(ptr, new_size)
+#define vm_free(ptr) free(ptr)
 #endif
 
 // Do an allocate and return if out-of-memory
