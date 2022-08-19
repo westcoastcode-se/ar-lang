@@ -553,72 +553,47 @@ zpp_syntax_tree_node zpp_synax_tree_parse_bitwise(struct zpp_compiler* c, zpp_to
 zpp_syntax_tree_node zpp_synax_tree_parse_oper_expr(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
 zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
 
-// Create a binary operator plus minus
-zpp_syntax_tree_node zpp_synax_tree_parse_binop_plus_minus(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state, zpp_synax_tree_parse_fn fn)
-{
-	zpp_syntax_tree_node left = fn(c, t, state);
+// A generic binary operator parser
+zpp_syntax_tree_node zpp_synax_tree_parse_binop(zpp_compiler* const c, zpp_token* const t, const zpp_compiler_state* const s,
+	const zpp_token_type* const types, int types_count, zpp_synax_tree_parse_fn left_fn, zpp_synax_tree_parse_fn right_fn) {
+	if (right_fn == NULL)
+		right_fn = left_fn;
+	zpp_syntax_tree_node left = left_fn(c, t, s);
 	if (zpp_syntax_tree_is_error(left))
 		return left;
-
 	while (1) {
-		switch (t->type) {
-		case ZPP_TOKEN_OP_MINUS:
-		case ZPP_TOKEN_OP_PLUS:
-		{
-			const zpp_token_type token_type = t->type;
-			zpp_token_next(t);
-			zpp_syntax_tree_node right = fn(c, t, state);
-			if (zpp_syntax_tree_is_error(right))
-				return right;
-			zpp_syntax_tree_binop* binop = zpp_syntax_tree_binop_new(left, right, token_type);
-			if (binop == NULL) {
-				zpp_message_out_of_memory(state);
-				return zpp_syntax_tree_error();
+		zpp_token_type const token_type = t->type;
+		int i;
+		for (i = 0; i < types_count; ++i) {
+			if (token_type == types[i]) {
+				zpp_token_next(t);
+				zpp_syntax_tree_node const right = right_fn(c, t, s);
+				if (zpp_syntax_tree_is_error(right))
+					return right;
+				zpp_syntax_tree_binop* const binop = zpp_syntax_tree_binop_new(left, right, token_type);
+				if (binop == NULL) {
+					zpp_message_out_of_memory(s);
+					return zpp_syntax_tree_error();
+				}
+				binop->closest_function_node = s->func_node;
+				left = ZPP_SYNTAX_TREE(binop);
+				break;
 			}
-			left = ZPP_SYNTAX_TREE(binop);
-			binop->closest_function_node = state->func_node;
+		}
+		if (i == types_count)
 			break;
-		}
-		default:
-			goto end;
-		}
 	}
-end:
 	return left;
 }
 
-// Create a binary operator mult div
-zpp_syntax_tree_node zpp_synax_tree_parse_binop_mult_div(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state, zpp_synax_tree_parse_fn fn)
-{
-	zpp_syntax_tree_node left = fn(c, t, state);
-	if (zpp_syntax_tree_is_error(left))
-		return left;
+// Types that represents binary operators
+const zpp_token_type BINOP_COMP[] = { ZPP_TOKEN_TEST_EQUALS, ZPP_TOKEN_TEST_NOT_EQUALS, ZPP_TOKEN_TEST_LT, ZPP_TOKEN_TEST_LTE, ZPP_TOKEN_TEST_GT, ZPP_TOKEN_TEST_GTE };
+const zpp_token_type ops_plus_minus[] = { ZPP_TOKEN_OP_MINUS, ZPP_TOKEN_OP_PLUS };
+const zpp_token_type ops_mult_div[] = { ZPP_TOKEN_OP_MULT, ZPP_TOKEN_OP_DIV };
 
-	while (1) {
-		switch (t->type) {
-		case ZPP_TOKEN_OP_MULT:
-		case ZPP_TOKEN_OP_DIV:
-		{
-			const zpp_token_type token_type = t->type;
-			zpp_token_next(t);
-			zpp_syntax_tree_node right = fn(c, t, state);
-			if (zpp_syntax_tree_is_error(right))
-				return right;
-			zpp_syntax_tree_binop* binop = zpp_syntax_tree_binop_new(left, right, token_type);
-			if (binop == NULL) {
-				zpp_message_out_of_memory(state);
-				return zpp_syntax_tree_error();
-			}
-			left = ZPP_SYNTAX_TREE(binop);
-			binop->closest_function_node = state->func_node;
-			break;
-		}
-		default:
-			goto end;
-		}
-	}
-end:
-	return left;
+zpp_syntax_tree_node zpp_synax_tree_parse_binop_comp(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s, zpp_synax_tree_parse_fn fn)
+{
+	return zpp_synax_tree_parse_binop(c, t, s, BINOP_COMP, 6, fn, fn);
 }
 
 // Create a binary operator bitwise
@@ -636,43 +611,6 @@ zpp_syntax_tree_node zpp_synax_tree_parse_binop_bitwise(zpp_compiler* c, zpp_tok
 			const zpp_token_type token_type = t->type;
 			zpp_token_next(t);
 			zpp_syntax_tree_node right = right_fn(c, t, state);
-			if (zpp_syntax_tree_is_error(right))
-				return right;
-			zpp_syntax_tree_binop* binop = zpp_syntax_tree_binop_new(left, right, token_type);
-			if (binop == NULL) {
-				zpp_message_out_of_memory(state);
-				return zpp_syntax_tree_error();
-			}
-			left = ZPP_SYNTAX_TREE(binop);
-			binop->closest_function_node = state->func_node;
-			break;
-		}
-		default:
-			goto end;
-		}
-	}
-end:
-	return left;
-}
-
-zpp_syntax_tree_node zpp_synax_tree_parse_binop_comp(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state, zpp_synax_tree_parse_fn fn)
-{
-	zpp_syntax_tree_node left = fn(c, t, state);
-	if (zpp_syntax_tree_is_error(left))
-		return left;
-
-	while (1) {
-		switch (t->type) {
-		case ZPP_TOKEN_TEST_EQUALS:
-		case ZPP_TOKEN_TEST_NOT_EQUALS:
-		case ZPP_TOKEN_TEST_LT:
-		case ZPP_TOKEN_TEST_LTE:
-		case ZPP_TOKEN_TEST_GT:
-		case ZPP_TOKEN_TEST_GTE:
-		{
-			const zpp_token_type token_type = t->type;
-			zpp_token_next(t);
-			zpp_syntax_tree_node right = fn(c, t, state);
 			if (zpp_syntax_tree_is_error(right))
 				return right;
 			zpp_syntax_tree_binop* binop = zpp_syntax_tree_binop_new(left, right, token_type);
@@ -881,12 +819,12 @@ zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_tok
 
 zpp_syntax_tree_node zpp_synax_tree_parse_term(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
-	return zpp_synax_tree_parse_binop_mult_div(c, t, s, zpp_synax_tree_parse_factor);
+	return zpp_synax_tree_parse_binop(c, t, s, ops_mult_div, 2, zpp_synax_tree_parse_factor, zpp_synax_tree_parse_factor);
 }
 
 zpp_syntax_tree_node zpp_synax_tree_parse_arith_expr(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
-	return zpp_synax_tree_parse_binop_plus_minus(c, t, s, zpp_synax_tree_parse_term);
+	return zpp_synax_tree_parse_binop(c, t, s, ops_plus_minus, 2, zpp_synax_tree_parse_term, zpp_synax_tree_parse_term);
 }
 
 zpp_syntax_tree_node zpp_synax_tree_parse_comp_expr(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
