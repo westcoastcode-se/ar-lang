@@ -1,7 +1,7 @@
 #ifndef _VMI_PROCESS_H_
 #define _VMI_PROCESS_H_
 
-#include "vmi_config.h"
+#include "config.h"
 #include "vmi_list_functions.h"
 #include "vmi_list_packages.h"
 #include "../vm_string.h"

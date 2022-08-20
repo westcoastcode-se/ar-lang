@@ -1,7 +1,7 @@
 #ifndef _VMI_OPS_H_
 #define _VMI_OPS_H_
 
-#include "vmi_config.h"
+#include "config.h"
 
 // High INT8 (the four last bits)
 #define VMI_PROPS_HIGH(P) ((P) << 4)

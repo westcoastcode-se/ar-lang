@@ -1,7 +1,7 @@
 #ifndef _VMI_THREAD_DEBUG_H_
 #define _VMI_THREAD_DEBUG_H_
 
-#include "vmi_config.h"
+#include "config.h"
 #include "vmi_stack.h"
 
 // Print debug information about the current instruction
