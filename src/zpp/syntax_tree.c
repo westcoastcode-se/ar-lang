@@ -553,6 +553,22 @@ zpp_syntax_tree_node zpp_synax_tree_parse_bitwise(struct zpp_compiler* c, zpp_to
 zpp_syntax_tree_node zpp_synax_tree_parse_oper_expr(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
 zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
 
+// A generic unary operator parser
+zpp_syntax_tree_node zpp_synax_tree_parse_unaryop(zpp_compiler* const c, zpp_token* const t, const zpp_compiler_state* const s,
+	zpp_token_type token_type, zpp_synax_tree_parse_fn right_fn) {
+	zpp_token_next(t);
+	zpp_syntax_tree_node const right = right_fn(c, t, s);
+	if (zpp_syntax_tree_is_error(right))
+		return right;
+	zpp_syntax_tree_binop* const binop = zpp_syntax_tree_unaryop_new(right, token_type);
+	if (binop == NULL) {
+		zpp_message_out_of_memory(s);
+		return zpp_syntax_tree_error();
+	}
+	binop->closest_function_node = s->func_node;
+	return ZPP_SYNTAX_TREE(binop);
+}
+
 // A generic binary operator parser
 zpp_syntax_tree_node zpp_synax_tree_parse_binop(zpp_compiler* const c, zpp_token* const t, const zpp_compiler_state* const s,
 	const zpp_token_type* const types, int types_count, zpp_synax_tree_parse_fn left_fn, zpp_synax_tree_parse_fn right_fn) {
@@ -796,25 +812,13 @@ zpp_syntax_tree_node zpp_synax_tree_parse_bitwise(struct zpp_compiler* c, zpp_to
 	return zpp_synax_tree_parse_binop_bitwise(c, t, state, zpp_synax_tree_parse_oper_expr, zpp_synax_tree_parse_factor);
 }
 
-zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state)
+zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* s)
 {
 	if (t->type == ZPP_TOKEN_OP_MINUS || t->type == ZPP_TOKEN_OP_PLUS) {
-		const zpp_token_type token_type = t->type;
-		zpp_token_next(t);
-		zpp_syntax_tree_node left = zpp_synax_tree_parse_factor(c, t, state);
-		if (zpp_syntax_tree_is_error(left)) {
-			return left;
-		}
-		zpp_syntax_tree_unaryop* const unaryop = zpp_syntax_tree_unaryop_new(left, token_type);
-		if (unaryop == NULL) {
-			zpp_message_out_of_memory(state);
-			return zpp_syntax_tree_error();
-		}
-		unaryop->closest_function_node = state->func_node;
-		return ZPP_SYNTAX_TREE(unaryop);
+		return zpp_synax_tree_parse_unaryop(c, t, s, t->type, zpp_synax_tree_parse_factor);
 	}
 	
-	return zpp_synax_tree_parse_bitwise(c, t, state);
+	return zpp_synax_tree_parse_bitwise(c, t, s);
 }
 
 zpp_syntax_tree_node zpp_synax_tree_parse_term(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
