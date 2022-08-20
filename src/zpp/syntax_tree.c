@@ -560,13 +560,13 @@ zpp_syntax_tree_node zpp_synax_tree_parse_unaryop(zpp_compiler* const c, zpp_tok
 	zpp_syntax_tree_node const right = right_fn(c, t, s);
 	if (zpp_syntax_tree_is_error(right))
 		return right;
-	zpp_syntax_tree_binop* const binop = zpp_syntax_tree_unaryop_new(right, token_type);
-	if (binop == NULL) {
+	zpp_syntax_tree_unaryop* const unaryop = zpp_syntax_tree_unaryop_new(right, token_type);
+	if (unaryop == NULL) {
 		zpp_message_out_of_memory(s);
 		return zpp_syntax_tree_error();
 	}
-	binop->closest_function_node = s->func_node;
-	return ZPP_SYNTAX_TREE(binop);
+	unaryop->closest_function_node = s->func_node;
+	return ZPP_SYNTAX_TREE(unaryop);
 }
 
 // A generic binary operator parser
@@ -834,19 +834,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_arith_expr(zpp_compiler* c, zpp_token*
 zpp_syntax_tree_node zpp_synax_tree_parse_comp_expr(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
 	if (t->type == ZPP_TOKEN_NOT) {
-		const zpp_token_type token_type = t->type;
-		zpp_token_next(t);
-		zpp_syntax_tree_node left = zpp_synax_tree_parse_comp_expr(c, t, s);
-		if (zpp_syntax_tree_is_error(left)) {
-			return left;
-		}
-		zpp_syntax_tree_unaryop* const unaryop = zpp_syntax_tree_unaryop_new(left, token_type);
-		if (unaryop == NULL) {
-			zpp_message_out_of_memory(s);
-			return zpp_syntax_tree_error();
-		}
-		unaryop->closest_function_node = s->func_node;
-		return ZPP_SYNTAX_TREE(unaryop);
+		return zpp_synax_tree_parse_unaryop(c, t, s, t->type, zpp_synax_tree_parse_comp_expr);
 	} 
 
 	return zpp_synax_tree_parse_binop_comp(c, t, s, zpp_synax_tree_parse_arith_expr);
