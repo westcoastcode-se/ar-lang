@@ -551,6 +551,22 @@ vmp_instr* vmp_instr_neg(const vmp_type* type)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
+vmp_instr* vmp_instr_bit(vm_int32 op, const vmp_type* type)
+{
+	vmp_instr_def_bit* instr = (vmp_instr_def_bit*)vm_malloc(sizeof(vmp_instr_def_bit));
+	if (instr == NULL)
+		return NULL;
+	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_BIT, sizeof(vmi_instr_bit));
+	instr->op = op;
+	instr->type = type;
+	return VMC_PIPELINE_INSTR_BASE(instr);
+}
+
+vmp_instr* vmp_instr_bit_not(const vmp_type* type)
+{
+	return vmp_instr_bit(VMI_INSTR_BIT_PROPS2_NOT, type);
+}
+
 vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size)
 {
 	vmp_instr_def_basic* instr = (vmp_instr_def_basic*)vm_malloc(sizeof(vmp_instr_def_basic));
@@ -1345,6 +1361,20 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		instr.icode = VMI_NEG;
 		instr.props1 = cmd->type->data_type;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_neg))) {
+			return NULL;
+		}
+		break;
+	}
+	case VMP_INSTR_BIT:
+	{
+		const vmp_instr_def_bit* const cmd = (vmp_instr_def_bit*)h;
+
+		vmi_instr_bit instr;
+		instr.opcode = 0;
+		instr.icode = VMI_BIT;
+		instr.props1 = cmd->op;
+		instr.props2 = cmd->type->data_type;
+		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_bit))) {
 			return NULL;
 		}
 		break;

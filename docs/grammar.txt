@@ -61,6 +61,7 @@ term:
 	
 factor:
 	(PLUS|MINUS) factor |
+	BIT_NOT factor |
 	atom
 
 atom:

@@ -638,6 +638,9 @@ void zpp_token_next0(zpp_token* t)
 	case '>':
 		zpp_gt_or_gte(t);
 		return;
+	case '~':
+		zpp_token_atom(ZPP_TOKEN_BIT_NOT, t);
+		return;
 	case ':':
 		zpp_colon_or_declassign(t);
 		return;

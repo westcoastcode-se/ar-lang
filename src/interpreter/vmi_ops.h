@@ -148,6 +148,9 @@ enum vmi_icodes
 	// Negate the value on the stack
 	VMI_NEG,
 
+	// A bit operation
+	VMI_BIT,
+
 	// End-of-execution. This will forcefully stop the execution of the virtual machine. Normally used
 	// when calling a function from an unmanaged source, such as when used as a scripting language
 	VMI_EOE = 255
@@ -588,6 +591,10 @@ typedef struct vmi_instr_jmp vmi_instr_jmp;
 // Negate the current value on the stack
 typedef struct vmi_instr_single_instruction vmi_instr_neg;
 
+// Bit operations
+typedef struct vmi_instr_single_instruction vmi_instr_bit;
+#define VMI_INSTR_BIT_PROPS2_NOT (1)
+
 // End-of-execution instruction. The execution will be halted when when this operation is reached
 typedef vmi_instr_single_instruction vmi_instr_eoe;
 
@@ -708,5 +715,14 @@ enum vmi_ocodes
 	VMI_OP_NEG_UI8 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_UINT64)),
 	VMI_OP_NEG_F4 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_FLOAT32)),
 	VMI_OP_NEG_F8 = (VMI_NEG | VMI_PROPS1_OPCODE(VMI_INSTR_PROP_FLOAT64)),
+
+	VMI_OP_BIT_NOT_I1 = (VMI_BIT | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT8) | VMI_PROPS1_OPCODE(VMI_INSTR_BIT_PROPS2_NOT)),
+	VMI_OP_BIT_NOT_UI1 = (VMI_BIT | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_UINT8) | VMI_PROPS1_OPCODE(VMI_INSTR_BIT_PROPS2_NOT)),
+	VMI_OP_BIT_NOT_I2 = (VMI_BIT | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT16) | VMI_PROPS1_OPCODE(VMI_INSTR_BIT_PROPS2_NOT)),
+	VMI_OP_BIT_NOT_UI2 = (VMI_BIT | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_UINT16) | VMI_PROPS1_OPCODE(VMI_INSTR_BIT_PROPS2_NOT)),
+	VMI_OP_BIT_NOT_I4 = (VMI_BIT | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT32) | VMI_PROPS1_OPCODE(VMI_INSTR_BIT_PROPS2_NOT)),
+	VMI_OP_BIT_NOT_UI4 = (VMI_BIT | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_UINT32) | VMI_PROPS1_OPCODE(VMI_INSTR_BIT_PROPS2_NOT)),
+	VMI_OP_BIT_NOT_I8 = (VMI_BIT | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_INT64) | VMI_PROPS1_OPCODE(VMI_INSTR_BIT_PROPS2_NOT)),
+	VMI_OP_BIT_NOT_UI8 = (VMI_BIT | VMI_PROPS2_OPCODE(VMI_INSTR_PROP_UINT64) | VMI_PROPS1_OPCODE(VMI_INSTR_BIT_PROPS2_NOT)),
 };
 #endif

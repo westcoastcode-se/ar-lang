@@ -230,17 +230,27 @@ struct vmp_instr_def_calluref
 typedef struct vmp_instr_def_calluref vmp_instr_def_calluref;
 
 // add <type>
-struct vmp_instr_def_add
+typedef struct vmp_instr_def_add
 {
 	VMC_PIPELINE_INSTR_HEADER;
 
 	// The types available are defined by the interpreter
 	const vmp_type* type;
-};
-typedef struct vmp_instr_def_add vmp_instr_def_add;
-typedef struct vmp_instr_def_add vmp_instr_def_sub;
-typedef struct vmp_instr_def_add vmp_instr_def_mul;
-typedef struct vmp_instr_def_add vmp_instr_def_div;
+} vmp_instr_def_add;
+
+typedef vmp_instr_def_add vmp_instr_def_sub;
+typedef vmp_instr_def_add vmp_instr_def_mul;
+typedef vmp_instr_def_add vmp_instr_def_div;
+
+// bit <op> <type>
+typedef struct vmp_instr_def_bit
+{
+	VMC_PIPELINE_INSTR_HEADER;
+	// The bit operation type
+	vm_int32 op;
+	// The types available are defined by the interpreter
+	const vmp_type* type;
+} vmp_instr_def_bit;
 
 // add <type>
 struct vmp_instr_def_cmp
@@ -407,6 +417,12 @@ extern vmp_instr* vmp_instr_conv(const vmp_type* from, const vmp_type* to);
 
 // Create a new neg instruction
 extern vmp_instr* vmp_instr_neg(const vmp_type* type);
+
+// Create a new bit instruction
+extern vmp_instr* vmp_instr_bit(vm_int32 op, const vmp_type* type);
+
+// Create a new bitnot instruction
+extern vmp_instr* vmp_instr_bit_not(const vmp_type* type);
 
 // Create a new ret instruction
 extern vmp_instr* vmp_instr_basic(vmp_instr_type type, vm_int32 size);

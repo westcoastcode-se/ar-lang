@@ -744,6 +744,79 @@ func Arg(value int32) int32 {
 		verify_value(in, value);
 	}
 
+	void bit_not1()
+	{
+		static const auto source = R"(
+package main
+
+func BitNot(value int32) int32 {
+	return ~value
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		static constexpr auto value = 100;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+
+		invoke("BitNot");
+
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
+		verify_value(ret, ~value);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
+		verify_value(in, value);
+	}
+
+	void bit_not2()
+	{
+		static const auto source = R"(
+package main
+
+func BitNot(value int32) int32 {
+	return ~10 - value
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		static constexpr auto value = 100;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+
+		invoke("BitNot");
+
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
+		verify_value(ret, ~10 - value);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
+		verify_value(in, value);
+	}
+
+	void bit_not3()
+	{
+		static const auto source = R"(
+package main
+
+func BitNot(value int32) int32 {
+	return ~(10 - value)
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		static constexpr auto value = 100;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+
+		invoke("BitNot");
+
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
+		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
+		verify_value(ret, ~(10 - value));
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
+		verify_value(in, value);
+	}
+
+
 	static vm_int32 c_complex1(vm_int32 value) {
 		return (((++value * 10) + (value++)) - --value) * 2;
 	}
@@ -926,6 +999,10 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST_BEGIN_END(compare_gt1);
 		TEST_BEGIN_END(compare_gt2);
 		TEST_BEGIN_END(compare_gt3);
+
+		TEST_BEGIN_END(bit_not1);
+		TEST_BEGIN_END(bit_not2);
+		TEST_BEGIN_END(bit_not3);
 	}
 };
 

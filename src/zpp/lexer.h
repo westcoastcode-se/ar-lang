@@ -65,6 +65,9 @@ typedef enum zpp_token_type
 	// &&
 	ZPP_TOKEN_TEST_AND,
 	ZPP_TOKEN_END_OP,
+	
+	// ~
+	ZPP_TOKEN_BIT_NOT,
 
 	// !
 	ZPP_TOKEN_NOT,

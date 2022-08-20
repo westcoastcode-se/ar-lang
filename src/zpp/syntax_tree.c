@@ -186,6 +186,10 @@ BOOL zpp_compiler_compile_unaryop(zpp_compiler* c, zpp_syntax_tree_unaryop* unar
 		vmp_func_add_instr(unaryop->closest_function_node->function->func, 
 			vmp_instr_neg(zpp_symbol_resolve_type(ZPP_SYNTAX_TREE_STACK_TYPE(unaryop), c)));
 		return TRUE;
+	case ZPP_TOKEN_BIT_NOT:
+		vmp_func_add_instr(unaryop->closest_function_node->function->func,
+			vmp_instr_bit_not(zpp_symbol_resolve_type(ZPP_SYNTAX_TREE_STACK_TYPE(unaryop), c)));
+		return TRUE;
 	default:
 		// TODO: Add support for alternate operators
 		return FALSE;
@@ -808,7 +812,11 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 
 zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* s)
 {
-	if (t->type == ZPP_TOKEN_OP_MINUS || t->type == ZPP_TOKEN_OP_PLUS) {
+	switch (t->type)
+	{
+	case ZPP_TOKEN_OP_MINUS:
+	case ZPP_TOKEN_OP_PLUS:
+	case ZPP_TOKEN_BIT_NOT:
 		return zpp_synax_tree_parse_unaryop(c, t, s, t->type, zpp_synax_tree_parse_factor);
 	}
 

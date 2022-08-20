@@ -77,6 +77,7 @@ vmi_ip _vmi_thread_not_implemented(vmi_thread* t, vmi_ip ip)
 #include "instr/neg.inc.c"
 #include "instr/mul.inc.c"
 #include "instr/div.inc.c"
+#include "instr/bit.inc.c"
 
 vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 {
@@ -245,6 +246,31 @@ vm_int32 _vmi_thread_exec(vmi_thread* t, vmi_ip ip)
 			continue;
 		case VMI_OP_NEG_F8:
 			ip = _vmi_thread_negf8(t, ip);
+			continue;
+
+		case VMI_OP_BIT_NOT_I1:
+			ip = _vmi_thread_bit_noti1(t, ip);
+			continue;
+		case VMI_OP_BIT_NOT_UI1:
+			ip = _vmi_thread_bit_notui1(t, ip);
+			continue;
+		case VMI_OP_BIT_NOT_I2:
+			ip = _vmi_thread_bit_noti2(t, ip);
+			continue;
+		case VMI_OP_BIT_NOT_UI2:
+			ip = _vmi_thread_bit_notui2(t, ip);
+			continue;
+		case VMI_OP_BIT_NOT_I4:
+			ip = _vmi_thread_bit_noti4(t, ip);
+			continue;
+		case VMI_OP_BIT_NOT_UI4:
+			ip = _vmi_thread_bit_notui4(t, ip);
+			continue;
+		case VMI_OP_BIT_NOT_I8:
+			ip = _vmi_thread_bit_noti8(t, ip);
+			continue;
+		case VMI_OP_BIT_NOT_UI8:
+			ip = _vmi_thread_bit_notui8(t, ip);
 			continue;
 
 		case VMI_OP_LDC_I1:
