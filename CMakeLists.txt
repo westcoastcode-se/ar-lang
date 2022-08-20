@@ -44,7 +44,7 @@ add_library(vm
     "src/interpreter/vmi_stack.c" 
     "src/interpreter/vmi_thread.c" 
     "src/interpreter/vmi_process.c"
-    "src/interpreter/vmi_debug.c" 
+    "src/interpreter/debug.c" 
     "src/interpreter/vmi_locals.c" 
     "src/interpreter/vmi_list_functions.c"
     "src/interpreter/vmi_list_packages.c" 
