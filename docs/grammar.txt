@@ -1,20 +1,74 @@
-expr		:		KEYWORD:VAR IDENTIFIER EQ expr
-			:		KEYWORD:RETURN term comp-expr
-			:		comp-expr ((AND|OR) comp-expr)*
+DIGIT:
+	0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
-comp-expr	:		NOT comp-expr
-			:		arith-expr ((EQUALS|LT|LTE|GT|GTE) arith-expr)*
+CHAR:
+	[a-zA-Z_]
 
-arith-expr	:		term ((PLUS|MINUS) term)*
+NUMBER:	
+	DIGIT+
 
-term		:		factor ((MUL|DIV) factor)*
+DECIMAL:
+	NUMBER . NUMBER
 
-factor		:		(PLUS|MINUS) factor
-			:		bitwise
+STRING: 
+	"*"
 
-bitwise		:		atom (BIT_AND factor)*
+NEWLINE:
+	\n
 
-atom		:		INT|DECIMAL
-			:		(IDENTIFIER|(IDENTIFIER KEYWORD:DECL_ASSIGN expr)|(IDENTIFIER KEYWORD:ASSIGN expr))
-			:		(PARANT_L|PARAN_R) expr
-			 
+COMMENT: 
+	// *
+
+PLUS: 
+	+
+
+MINUS:
+	-
+
+MULT:
+	*
+
+DIV:
+	/
+
+PAREN_L:
+	(
+
+PAREN_R:
+	)
+
+NOT:
+	!
+
+keyword:
+	KEYWORD:VAR IDENTIFIER = comp-expr |
+	KEYWORD:IF comp-expr |
+	KEYWORD:RETURN comp-expr |
+	comp-expr
+
+block:
+	{ keyword* }
+
+comp-expr:
+	NOT comp-expr |
+	expression ((LT|LTE|GT|GTE|EQUALS|NOT_EQUALS) expression)*
+
+expression:
+	term ((PLUS|MINUS) term)*
+
+term:
+	factor ((MULT|DIV) factor)*
+	
+factor:
+	(PLUS|MINUS) factor |
+	atom
+
+atom:
+	(PLUS|MINUS) atom |
+	NUMBER |
+	DECIMAL |
+	STRING |
+	CHAR |
+	IDENTIFIER |
+	PAREN_L expression PAREN_R |
+	block |

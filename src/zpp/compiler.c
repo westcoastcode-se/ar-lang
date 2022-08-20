@@ -275,7 +275,7 @@ BOOL zpp_compiler_parse_body(zpp_compiler* c, zpp_token* t, const zpp_compiler_s
 		else {
 			
 		}		
-		node = zpp_synax_tree_parse_expression(c, t, state);
+		node = zpp_synax_tree_parse_keywords(c, t, state);
 		if (zpp_syntax_tree_is_error(node))
 			return FALSE;
 		if (node != NULL)

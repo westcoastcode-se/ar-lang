@@ -545,13 +545,28 @@ zpp_syntax_tree_assign* zpp_syntax_tree_assign_new(zpp_syntax_tree_node expr, zp
 	return p;
 }
 
-zpp_syntax_tree_node zpp_synax_tree_parse_arith_expr(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s);
 zpp_syntax_tree_node zpp_synax_tree_parse_comp_expr(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s);
 zpp_syntax_tree_node zpp_synax_tree_parse_term(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state);
 zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
-zpp_syntax_tree_node zpp_synax_tree_parse_bitwise(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
-zpp_syntax_tree_node zpp_synax_tree_parse_oper_expr(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
 zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
+
+zpp_syntax_tree_node zpp_synax_tree_out_of_memory(const zpp_compiler_state* s)
+{
+	zpp_message_out_of_memory(s);
+	return zpp_syntax_tree_error();
+}
+
+zpp_syntax_tree_node zpp_synax_tree_not_implemented(const zpp_compiler_state* s)
+{
+	zpp_message_not_implemented(s);
+	return zpp_syntax_tree_error();
+}
+
+zpp_syntax_tree_node zpp_synax_tree_syntax_error(const zpp_compiler_state* s, const char* msg)
+{
+	zpp_message_syntax_error(s, "expected ,");
+	return zpp_syntax_tree_error();
+}
 
 // A generic unary operator parser
 zpp_syntax_tree_node zpp_synax_tree_parse_unaryop(zpp_compiler* const c, zpp_token* const t, const zpp_compiler_state* const s,
@@ -561,10 +576,8 @@ zpp_syntax_tree_node zpp_synax_tree_parse_unaryop(zpp_compiler* const c, zpp_tok
 	if (zpp_syntax_tree_is_error(right))
 		return right;
 	zpp_syntax_tree_unaryop* const unaryop = zpp_syntax_tree_unaryop_new(right, token_type);
-	if (unaryop == NULL) {
-		zpp_message_out_of_memory(s);
-		return zpp_syntax_tree_error();
-	}
+	if (unaryop == NULL)
+		return zpp_synax_tree_out_of_memory(s);
 	unaryop->closest_function_node = s->func_node;
 	return ZPP_SYNTAX_TREE(unaryop);
 }
@@ -587,10 +600,8 @@ zpp_syntax_tree_node zpp_synax_tree_parse_binop(zpp_compiler* const c, zpp_token
 				if (zpp_syntax_tree_is_error(right))
 					return right;
 				zpp_syntax_tree_binop* const binop = zpp_syntax_tree_binop_new(left, right, token_type);
-				if (binop == NULL) {
-					zpp_message_out_of_memory(s);
-					return zpp_syntax_tree_error();
-				}
+				if (binop == NULL)
+					return zpp_synax_tree_out_of_memory(s);
 				binop->closest_function_node = s->func_node;
 				left = ZPP_SYNTAX_TREE(binop);
 				break;
@@ -603,14 +614,9 @@ zpp_syntax_tree_node zpp_synax_tree_parse_binop(zpp_compiler* const c, zpp_token
 }
 
 // Types that represents binary operators
-const zpp_token_type BINOP_COMP[] = { ZPP_TOKEN_TEST_EQUALS, ZPP_TOKEN_TEST_NOT_EQUALS, ZPP_TOKEN_TEST_LT, ZPP_TOKEN_TEST_LTE, ZPP_TOKEN_TEST_GT, ZPP_TOKEN_TEST_GTE };
+const zpp_token_type ops_compares[] = { ZPP_TOKEN_TEST_EQUALS, ZPP_TOKEN_TEST_NOT_EQUALS, ZPP_TOKEN_TEST_LT, ZPP_TOKEN_TEST_LTE, ZPP_TOKEN_TEST_GT, ZPP_TOKEN_TEST_GTE };
 const zpp_token_type ops_plus_minus[] = { ZPP_TOKEN_OP_MINUS, ZPP_TOKEN_OP_PLUS };
 const zpp_token_type ops_mult_div[] = { ZPP_TOKEN_OP_MULT, ZPP_TOKEN_OP_DIV };
-
-zpp_syntax_tree_node zpp_synax_tree_parse_binop_comp(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s, zpp_synax_tree_parse_fn fn)
-{
-	return zpp_synax_tree_parse_binop(c, t, s, BINOP_COMP, 6, fn, fn);
-}
 
 // Create a binary operator bitwise
 zpp_syntax_tree_node zpp_synax_tree_parse_binop_bitwise(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state, zpp_synax_tree_parse_fn left_fn,
@@ -646,8 +652,38 @@ end:
 	return left;
 }
 
-zpp_syntax_tree_node zpp_synax_tree_parse_oper_expr(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state)
+zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state)
 {
+	if (t->type == ZPP_TOKEN_VALUE_INT) {
+		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
+		if (val == NULL) {
+			zpp_message_out_of_memory(state);
+			return zpp_syntax_tree_error();
+		}
+		val->closest_function_node = state->func_node;
+		vm_string type_name;
+		type_name.start = "int32";
+		type_name.end = type_name.start + 5;
+		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &type_name);
+		val->value.i4 = zpp_token_i4(t);
+		zpp_token_next(t);
+		return ZPP_SYNTAX_TREE(val);
+	}
+	else if (t->type == ZPP_TOKEN_VALUE_DECIMAL) {
+		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
+		if (val == NULL) {
+			zpp_message_out_of_memory(state);
+			return zpp_syntax_tree_error();
+		}
+		val->closest_function_node = state->func_node;
+		vm_string type_name;
+		type_name.start = "float32";
+		type_name.end = type_name.start + 7;
+		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &type_name);
+		val->value.f4 = zpp_token_f4(t);
+		zpp_token_next(t);
+		return ZPP_SYNTAX_TREE(val);
+	}
 	if (t->type == ZPP_TOKEN_IDENTITY) {
 		const vm_string identity = t->string;
 		zpp_symbol* symbol = zpp_func_find_symbol(state->func_node->function, &identity);
@@ -752,46 +788,9 @@ zpp_syntax_tree_node zpp_synax_tree_parse_oper_expr(struct zpp_compiler* c, zpp_
 			return result;
 		}
 	}
-
-	return zpp_synax_tree_parse_atom(c, t, state);
-}
-
-
-zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state)
-{
-	if (t->type == ZPP_TOKEN_VALUE_INT) {
-		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
-		if (val == NULL) {
-			zpp_message_out_of_memory(state);
-			return zpp_syntax_tree_error();
-		}
-		val->closest_function_node = state->func_node;
-		vm_string type_name;
-		type_name.start = "int32";
-		type_name.end = type_name.start + 5;
-		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &type_name);
-		val->value.i4 = zpp_token_i4(t);
-		zpp_token_next(t);
-		return ZPP_SYNTAX_TREE(val);
-	}
-	else if (t->type == ZPP_TOKEN_VALUE_DECIMAL) {
-		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
-		if (val == NULL) {
-			zpp_message_out_of_memory(state);
-			return zpp_syntax_tree_error();
-		}
-		val->closest_function_node = state->func_node;
-		vm_string type_name;
-		type_name.start = "float32";
-		type_name.end = type_name.start + 7;
-		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &type_name);
-		val->value.f4 = zpp_token_f4(t);
-		zpp_token_next(t);
-		return ZPP_SYNTAX_TREE(val);
-	}
 	else if (t->type == ZPP_TOKEN_PARAN_L) {
 		zpp_token_next(t);
-		zpp_syntax_tree_node node = zpp_synax_tree_parse_expression(c, t, state);
+		zpp_syntax_tree_node node = zpp_synax_tree_parse_keywords(c, t, state);
 		if (zpp_syntax_tree_is_error(node))
 			return node;
 		// Expected right paranthesis
@@ -807,69 +806,65 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 	return zpp_syntax_tree_error();
 }
 
-zpp_syntax_tree_node zpp_synax_tree_parse_bitwise(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state)
-{
-	return zpp_synax_tree_parse_binop_bitwise(c, t, state, zpp_synax_tree_parse_oper_expr, zpp_synax_tree_parse_factor);
-}
-
 zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* s)
 {
 	if (t->type == ZPP_TOKEN_OP_MINUS || t->type == ZPP_TOKEN_OP_PLUS) {
 		return zpp_synax_tree_parse_unaryop(c, t, s, t->type, zpp_synax_tree_parse_factor);
 	}
-	
-	return zpp_synax_tree_parse_bitwise(c, t, s);
+
+	return zpp_synax_tree_parse_atom(c, t, s);
 }
 
 zpp_syntax_tree_node zpp_synax_tree_parse_term(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
-	return zpp_synax_tree_parse_binop(c, t, s, ops_mult_div, 2, zpp_synax_tree_parse_factor, zpp_synax_tree_parse_factor);
+	return zpp_synax_tree_parse_binop(c, t, s, ops_mult_div, 2, 
+		zpp_synax_tree_parse_factor, zpp_synax_tree_parse_factor);
 }
 
-zpp_syntax_tree_node zpp_synax_tree_parse_arith_expr(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
+zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
-	return zpp_synax_tree_parse_binop(c, t, s, ops_plus_minus, 2, zpp_synax_tree_parse_term, zpp_synax_tree_parse_term);
+	return zpp_synax_tree_parse_binop(c, t, s, ops_plus_minus, 2, 
+		zpp_synax_tree_parse_term, zpp_synax_tree_parse_term);
 }
 
 zpp_syntax_tree_node zpp_synax_tree_parse_comp_expr(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
 	if (t->type == ZPP_TOKEN_NOT) {
 		return zpp_synax_tree_parse_unaryop(c, t, s, t->type, zpp_synax_tree_parse_comp_expr);
-	} 
+	}
 
-	return zpp_synax_tree_parse_binop_comp(c, t, s, zpp_synax_tree_parse_arith_expr);
+	return zpp_synax_tree_parse_binop(c, t, s, ops_compares, 6, 
+		zpp_synax_tree_parse_expression, zpp_synax_tree_parse_expression);
 }
 
-zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
+zpp_syntax_tree_node zpp_synax_tree_parse_keywords(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
-	if (zpp_token_is_keyword(t)) {
+	if (t->type == ZPP_TOKEN_BRACKET_L) {
+		// Block/Stack Marker Start
+	}
+	else if (zpp_token_is_keyword(t)) {
 		switch (t->type) {
 		case ZPP_TOKEN_KEYWORD_RETURN:
 		{
 			zpp_token_next(t);
-			
-			// Create a new return node
 			zpp_syntax_tree_return* ret = zpp_syntax_tree_return_new();
-			if (ret == NULL) {
-				zpp_message_out_of_memory(state);
-				return zpp_syntax_tree_error();
-			}
-			ret->closest_function_node = state->func_node;
+			if (ret == NULL)
+				return zpp_synax_tree_out_of_memory(s);
+			ret->closest_function_node = s->func_node;
 
 			// The number of expressions that are left
-			vm_int32 return_expressions_left = zpp_func_num_returns(zpp_compiler_state_get_func(state));
+			vm_int32 return_expressions_left = zpp_func_num_returns(zpp_compiler_state_get_func(s));
 
 			// Fetch all return statements 
+			// TODO: Allow for skipping return values and let the compiler return the default value for you
 			while (return_expressions_left > 0) {
-				zpp_syntax_tree_node return_expr = zpp_synax_tree_parse_comp_expr(c, t, state);
+				zpp_syntax_tree_node return_expr = zpp_synax_tree_parse_comp_expr(c, t, s);
 				if (zpp_syntax_tree_is_error(return_expr))
 					return return_expr;
 				// Spearate each statement with a comma
 				if (return_expressions_left > 1) {
-					if (t->type != ZPP_TOKEN_COMMA) {
-						zpp_message_syntax_error(state, "expected ,");
-						return zpp_syntax_tree_error();
-					}
+					if (t->type != ZPP_TOKEN_COMMA)
+						return zpp_synax_tree_syntax_error(s, "expected ,");
 					zpp_token_next(t);
 				}
 				zpp_syntax_tree_add(ZPP_SYNTAX_TREE(ret), return_expr);
@@ -877,32 +872,14 @@ zpp_syntax_tree_node zpp_synax_tree_parse_expression(zpp_compiler* c, zpp_token*
 			}
 			return ZPP_SYNTAX_TREE(ret);
 		}
-		case ZPP_TOKEN_KEYWORD_IF:
-		{
-			zpp_message_not_implemented(state);
-			return zpp_syntax_tree_error();
-		}
-		case ZPP_TOKEN_KEYWORD_VAR:
-		{
-			zpp_message_not_implemented(state);
-			return zpp_syntax_tree_error();
-		}
-		case ZPP_TOKEN_TEST_EQUALS:
-		{
-			zpp_message_not_implemented(state);
-			return zpp_syntax_tree_error();
-		}
-		case ZPP_TOKEN_TEST_NOT_EQUALS:
-		{
-			zpp_message_not_implemented(state);
-			return zpp_syntax_tree_error();
-		}
 		break;
+		case ZPP_TOKEN_KEYWORD_VAR:
+			return zpp_synax_tree_not_implemented(s);
+		default:
+			zpp_message_not_implemented(s);
+			return zpp_syntax_tree_error();
 		}
-
-		zpp_message_not_implemented(state);
-		return zpp_syntax_tree_error();
 	}
 
-	return zpp_synax_tree_parse_comp_expr(c, t, state);
+	return zpp_synax_tree_parse_comp_expr(c, t, s);
 }
