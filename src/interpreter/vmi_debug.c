@@ -37,6 +37,7 @@ void vmi_debug_instruction(vmi_ip ip)
 		VMI_DEBUG_INSTR(VMI_CMP);
 		VMI_DEBUG_INSTR(VMI_CONV);
 		VMI_DEBUG_INSTR(VMI_NEG);
+		VMI_DEBUG_INSTR(VMI_BIT);
 		VMI_DEBUG_INSTR(VMI_EOE);
 	default:
 		printf("<unknown instruction>\n");

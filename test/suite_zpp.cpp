@@ -761,8 +761,8 @@ func BitNot(value int32) int32 {
 
 		invoke("BitNot");
 
-		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, ~value);
 		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
@@ -785,8 +785,8 @@ func BitNot(value int32) int32 {
 
 		invoke("BitNot");
 
-		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, ~10 - value);
 		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
@@ -809,13 +809,60 @@ func BitNot(value int32) int32 {
 
 		invoke("BitNot");
 
-		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_bool));
-		const auto ret = *(vm_bool*)vmi_thread_pop_stack(thread, sizeof(vm_bool));
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(ret, ~(10 - value));
 		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
 		verify_value(in, value);
 	}
 
+	void bit_not4()
+	{
+		static const auto source = R"(
+package main
+
+func BitNot(value int32) int32 {
+	return -~value
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		static constexpr auto value = 100;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+
+		invoke("BitNot");
+
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
+		verify_value(ret, -~value);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
+		verify_value(in, value);
+	}
+
+	void bit_not5()
+	{
+		static const auto source = R"(
+package main
+
+func BitNot(value int32) int32 {
+	return ~-value
+}
+)";
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		static constexpr auto value = 100;
+		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+
+		invoke("BitNot");
+
+		verify_stack_size(thread, sizeof(vm_int32) + sizeof(vm_int32));
+		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
+		verify_value(ret, ~-value);
+		const auto in = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
+		verify_value(in, value);
+	}
 
 	static vm_int32 c_complex1(vm_int32 value) {
 		return (((++value * 10) + (value++)) - --value) * 2;
@@ -1003,6 +1050,8 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST_BEGIN_END(bit_not1);
 		TEST_BEGIN_END(bit_not2);
 		TEST_BEGIN_END(bit_not3);
+		TEST_BEGIN_END(bit_not4);
+		TEST_BEGIN_END(bit_not5);
 	}
 };
 
