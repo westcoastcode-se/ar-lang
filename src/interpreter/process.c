@@ -1,5 +1,5 @@
-#include "vmi_process.h"
-#include "vmi_thread.h"
+#include "process.h"
+#include "thread.h"
 
 //
 // PRIVATE ///////////////////////////////////////////////////////////////////////////

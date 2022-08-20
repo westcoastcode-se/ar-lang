@@ -1,5 +1,5 @@
 #ifndef _VMI_THREAD_H_
-#include "../vmi_thread.h"
+#include "../thread.h"
 #endif
 
 // Add the two top-most values from the stack. Assume that they are 1 byte integers

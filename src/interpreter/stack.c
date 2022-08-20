@@ -1,4 +1,4 @@
-#include "vmi_stack.h"
+#include "stack.h"
 
 void vmi_stack_init(vmi_stack* s)
 {

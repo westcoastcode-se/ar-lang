@@ -1,5 +1,5 @@
 #ifndef _VMI_THREAD_H_
-#include "../vmi_thread.h"
+#include "../thread.h"
 #endif
 
 // Compare the two top-most values on the stack

@@ -41,11 +41,11 @@ add_library(vm
     "src/vm_hash.c"
     "src/vm_string_pool.c"
 
-    "src/interpreter/vmi_stack.c" 
-    "src/interpreter/vmi_thread.c" 
-    "src/interpreter/vmi_process.c"
+    "src/interpreter/stack.c" 
+    "src/interpreter/thread.c" 
+    "src/interpreter/process.c"
     "src/interpreter/debug.c" 
-    "src/interpreter/vmi_locals.c" 
+    "src/interpreter/locals.c" 
     "src/interpreter/vmi_list_functions.c"
     "src/interpreter/vmi_list_packages.c" 
 

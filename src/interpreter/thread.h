@@ -1,9 +1,9 @@
 #ifndef _VMI_THREAD_H_
 #define _VMI_THREAD_H_
 
-#include "vmi_process.h"
-#include "vmi_stack.h"
-#include "vmi_locals.h"
+#include "process.h"
+#include "stack.h"
+#include "locals.h"
 
 // Flags that can happen during the execution of the virtual machine
 enum vmi_thread_flags

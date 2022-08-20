@@ -6,8 +6,8 @@ extern "C"
 {
 #endif
 
-#include "interpreter/vmi_thread.h"
-#include "interpreter/vmi_process.h"
+#include "interpreter/thread.h"
+#include "interpreter/process.h"
 #include "vmp/vmp.h"
 #include "zpp/compiler.h"
 

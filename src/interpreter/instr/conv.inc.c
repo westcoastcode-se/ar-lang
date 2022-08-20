@@ -1,5 +1,5 @@
 #ifndef _VMI_THREAD_H_
-#include "../vmi_thread.h"
+#include "../thread.h"
 #endif
 
 vmi_ip _vmi_thread_conv_i2_i4(vmi_thread* t, vmi_ip ip)

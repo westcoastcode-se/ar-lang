@@ -1,4 +1,4 @@
-#include "vmi_thread.h"
+#include "thread.h"
 #include "vmi_ops.h"
 #include "debug.h"
 #include "vmi_utils.h"

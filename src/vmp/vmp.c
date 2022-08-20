@@ -2,7 +2,7 @@
 #include "vmp_types.h"
 #include "vmp_messages.h"
 #include "../vm_debug.h"
-#include "../interpreter/vmi_process.h"
+#include "../interpreter/process.h"
 
 //
 // Constants

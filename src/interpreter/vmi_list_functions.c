@@ -1,5 +1,5 @@
 #include "vmi_list_functions.h"
-#include "vmi_process.h"
+#include "process.h"
 
 #define CAPACITY (8)
 #define RESIZE (8)

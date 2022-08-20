@@ -1,5 +1,5 @@
 #ifndef _VMI_THREAD_H_
-#include "../vmi_thread.h"
+#include "../thread.h"
 #endif
 
 // Return to the caller

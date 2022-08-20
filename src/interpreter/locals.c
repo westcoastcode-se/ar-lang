@@ -1,4 +1,4 @@
-#include "vmi_locals.h"
+#include "locals.h"
 
 vmi_locals_block* vmi_locals_new_block(vm_int32 size)
 {

@@ -2,7 +2,7 @@
 #define _VMI_THREAD_DEBUG_H_
 
 #include "config.h"
-#include "vmi_stack.h"
+#include "stack.h"
 
 // Print debug information about the current instruction
 extern void vmi_debug_instruction(vmi_ip ip);
