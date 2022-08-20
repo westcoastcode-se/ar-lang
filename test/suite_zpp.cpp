@@ -174,6 +174,12 @@ struct utils_zpp_success : utils_zpp
 			throw_(error() << "error occurred when executing thread: " << result << ". Message: " << thread->exit_reason);
 		}
 	}
+
+	template<typename T>
+	T push_value(T value) {
+		*(T*)vmi_thread_push_stack(thread, sizeof(T)) = value;
+		return value;
+	}
 };
 
 struct suite_zpp_tests : utils_zpp_success
@@ -482,8 +488,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 10000;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(10000);
 
 		invoke("Arg");
 
@@ -506,8 +511,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 10000;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(10000);
 
 		invoke("Arg");
 
@@ -530,8 +534,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 10000;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(10000);
 
 		invoke("Arg");
 
@@ -554,10 +557,8 @@ func Args(value1 int32, value2 int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value1 = 10000;
-		static constexpr auto value2 = 123;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value1;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value2;
+		const auto value1 = push_value<int>(10000);
+		const auto value2 = push_value<int>(123);
 
 		invoke("Args");
 
@@ -582,10 +583,8 @@ func Args(value1 int32, value2 int32) (int32, int32) {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value1 = 10000;
-		static constexpr auto value2 = 123;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value1;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value2;
+		const auto value1 = push_value<int>(10000);
+		const auto value2 = push_value<int>(123);
 
 		invoke("Args");
 
@@ -612,8 +611,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 5;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(5);
 
 		invoke("Arg");
 
@@ -636,8 +634,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 5;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(5);
 
 		invoke("Arg");
 
@@ -660,8 +657,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 95;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(95);
 
 		invoke("Arg");
 
@@ -684,8 +680,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 5;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(5);
 
 		invoke("Arg");
 
@@ -708,8 +703,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 5;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(5);
 
 		invoke("Arg");
 
@@ -732,8 +726,7 @@ func Arg(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 95;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(95);
 
 		invoke("Arg");
 
@@ -756,8 +749,7 @@ func BitNot(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 100;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(100);
 
 		invoke("BitNot");
 
@@ -780,8 +772,7 @@ func BitNot(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 100;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(100);
 
 		invoke("BitNot");
 
@@ -804,8 +795,7 @@ func BitNot(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 100;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(100);
 
 		invoke("BitNot");
 
@@ -828,8 +818,7 @@ func BitNot(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 100;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(100);
 
 		invoke("BitNot");
 
@@ -852,8 +841,7 @@ func BitNot(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 100;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(100);
 
 		invoke("BitNot");
 
@@ -880,8 +868,7 @@ func Complex(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 123;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(123);
 
 		invoke("Complex");
 
@@ -908,8 +895,7 @@ func Complex(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 123;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(123);
 
 		invoke("Complex");
 
@@ -943,8 +929,7 @@ func FuncRef(value int32) int32 {
 		add_source_code(source, "/main.zpp");
 		compile();
 
-		static constexpr auto value = 10;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = value;
+		const auto value = push_value<int>(10);
 
 		invoke("FuncRef");
 
@@ -999,9 +984,9 @@ func QuickSort(arr *int32, low int32, high int32) {
 		for (int i = 0; i < COUNT; ++i) {
 			arr[i] = rand() % 1000;
 		}
-		*(vm_int32**)vmi_thread_push_stack(thread, sizeof(vm_int32*)) = arr;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = 0;
-		*(vm_int32*)vmi_thread_push_stack(thread, sizeof(vm_int32)) = COUNT - 1;
+		push_value<vm_int32*>(arr);
+		push_value<vm_int32>(0);
+		push_value<vm_int32>(COUNT - 1);
 		invoke("QuickSort");
 
 		vm_int32 tmp = 0;
