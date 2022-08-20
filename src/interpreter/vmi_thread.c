@@ -1,6 +1,6 @@
 #include "vmi_thread.h"
 #include "vmi_ops.h"
-#include "vmi_debug.h"
+#include "debug.h"
 #include "vmi_utils.h"
 #include <string.h>
 #include <stdarg.h>

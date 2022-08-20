@@ -1,7 +1,7 @@
 #ifndef _VMI_LIST_PACKAGES_H_
 #define _VMI_LIST_PACKAGES_H_
 
-#include "vmi_debug.h"
+#include "debug.h"
 #include "../vm_string.h"
 
 // List

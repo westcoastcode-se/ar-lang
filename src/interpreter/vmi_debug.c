@@ -1,4 +1,4 @@
-#include "vmi_debug.h"
+#include "debug.h"
 #include "vmi_ops.h"
 
 #define VMI_DEBUG_INSTR(I) case I: printf(#I "\n"); break
