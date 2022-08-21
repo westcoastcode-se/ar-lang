@@ -14,6 +14,22 @@ BOOL zpp_symbol_has_name(zpp_symbol* s, const vm_string* name)
 	return vm_string_cmp(&s->name, name);
 }
 
+BOOL zpp_symbol_equals(zpp_symbol* t1, zpp_symbol* t2)
+{
+	ASSERT_NOT_NULL(t1);
+	ASSERT_NOT_NULL(t2);
+
+	if (t1 == t2) {
+		return TRUE;
+	}
+
+	if (t1->type == ZPP_SYMBOL_UNRESOLVED || t2->type == ZPP_SYMBOL_UNRESOLVED) {
+		assert(false && "Not implemented");
+	}
+
+	return FALSE;
+}
+
 const zpp_type_props* zpp_type_props_get(const vm_string* name, vm_uint32 size, vm_uint32 flags, vm_uint8 data_type, zpp_type* of_type)
 {
 	static zpp_type_props p;

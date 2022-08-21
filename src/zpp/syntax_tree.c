@@ -1,5 +1,6 @@
 #include "syntax_tree.h"
 #include "compiler.h"
+#include "optimizations.h"
 #include "../vm_debug.h"
 
 zpp_syntax_tree zpp_syntax_tree_error_ = { ZPP_SYNTAX_TREE_ERROR, NULL, NULL, NULL };
@@ -551,8 +552,8 @@ zpp_syntax_tree_assign* zpp_syntax_tree_assign_new(zpp_syntax_tree_node expr, zp
 
 zpp_syntax_tree_node zpp_synax_tree_parse_comp_expr(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s);
 zpp_syntax_tree_node zpp_synax_tree_parse_term(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state);
-zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
-zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
+zpp_syntax_tree_node zpp_synax_tree_parse_factor(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state);
+zpp_syntax_tree_node zpp_synax_tree_parse_atom(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state);
 
 zpp_syntax_tree_node zpp_synax_tree_out_of_memory(const zpp_compiler_state* s)
 {
@@ -576,7 +577,7 @@ zpp_syntax_tree_node zpp_synax_tree_syntax_error(const zpp_compiler_state* s, co
 zpp_syntax_tree_node zpp_synax_tree_parse_unaryop(zpp_compiler* const c, zpp_token* const t, const zpp_compiler_state* const s,
 	zpp_token_type token_type, zpp_synax_tree_parse_fn right_fn) {
 	zpp_token_next(t);
-	zpp_syntax_tree_node const right = right_fn(c, t, s);
+	zpp_syntax_tree_node right = right_fn(c, t, s);
 	if (zpp_syntax_tree_is_error(right))
 		return right;
 	zpp_syntax_tree_unaryop* const unaryop = zpp_syntax_tree_unaryop_new(right, token_type);
@@ -600,7 +601,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_binop(zpp_compiler* const c, zpp_token
 		for (i = 0; i < types_count; ++i) {
 			if (token_type == types[i]) {
 				zpp_token_next(t);
-				zpp_syntax_tree_node const right = right_fn(c, t, s);
+				zpp_syntax_tree_node right = right_fn(c, t, s);
 				if (zpp_syntax_tree_is_error(right))
 					return right;
 				zpp_syntax_tree_binop* const binop = zpp_syntax_tree_binop_new(left, right, token_type);
@@ -656,7 +657,7 @@ end:
 	return left;
 }
 
-zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state)
+zpp_syntax_tree_node zpp_synax_tree_parse_atom(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
 {
 	if (t->type == ZPP_TOKEN_VALUE_INT) {
 		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
@@ -810,7 +811,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(struct zpp_compiler* c, zpp_token
 	return zpp_syntax_tree_error();
 }
 
-zpp_syntax_tree_node zpp_synax_tree_parse_factor(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* s)
+zpp_syntax_tree_node zpp_synax_tree_parse_factor(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
 	switch (t->type)
 	{
@@ -847,10 +848,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_comp_expr(zpp_compiler* c, zpp_token* 
 
 zpp_syntax_tree_node zpp_synax_tree_parse_keywords(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* s)
 {
-	if (t->type == ZPP_TOKEN_BRACKET_L) {
-		// Block/Stack Marker Start
-	}
-	else if (zpp_token_is_keyword(t)) {
+	if (zpp_token_is_keyword(t)) {
 		switch (t->type) {
 		case ZPP_TOKEN_KEYWORD_RETURN:
 		{
@@ -862,6 +860,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_keywords(zpp_compiler* c, zpp_token* t
 
 			// The number of expressions that are left
 			vm_int32 return_expressions_left = zpp_func_num_returns(zpp_compiler_state_get_func(s));
+			zpp_return* return_symbol = s->func_node->function->returns;
 
 			// Fetch all return statements 
 			// TODO: Allow for skipping return values and let the compiler return the default value for you
@@ -875,7 +874,14 @@ zpp_syntax_tree_node zpp_synax_tree_parse_keywords(zpp_compiler* c, zpp_token* t
 						return zpp_synax_tree_syntax_error(s, "expected ,");
 					zpp_token_next(t);
 				}
+				// Verify that the return_expression results in the same type as the return type
 				zpp_syntax_tree_add(ZPP_SYNTAX_TREE(ret), return_expr);
+
+				if (!zpp_symbol_equals(return_expr->stack_type, return_symbol->type)) {
+					// Add a cast tree node
+					// TODO: Traverse and search for constants that can be merged?
+				}
+				return_symbol = return_symbol->tail;
 				--return_expressions_left;
 			}
 			return ZPP_SYNTAX_TREE(ret);

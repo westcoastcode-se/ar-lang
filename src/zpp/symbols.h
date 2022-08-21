@@ -41,6 +41,10 @@ extern void zpp_symbol_init(zpp_symbol_header* s, zpp_symbol_type type);
 // Check to see if the supplied symbol has the name
 extern BOOL zpp_symbol_has_name(zpp_symbol* s, const vm_string* name);
 
+// Check to see if the two symbols are the same. If one, or both, is a unresolved type then this
+// verifies against the resolved type instead
+extern BOOL zpp_symbol_equals(zpp_symbol* t1, zpp_symbol* t2);
+
 // The package
 typedef struct zpp_package
 {

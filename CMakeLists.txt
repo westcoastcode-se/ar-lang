@@ -76,6 +76,7 @@ add_library(zpp
     "src/zpp/compiler.c" 
     "src/zpp/source_code.c" 
     "src/zpp/messages.c"
+    "src/zpp/optimizations.c"
 )
 
 # Tests

@@ -223,6 +223,6 @@ extern void zpp_syntax_tree_destroy(zpp_syntax_tree* st);
 typedef zpp_syntax_tree_node (*zpp_synax_tree_parse_fn)(struct zpp_compiler*, zpp_token*, const struct zpp_compiler_state*);
 
 // Parse an expression
-extern zpp_syntax_tree_node zpp_synax_tree_parse_keywords(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* state);
+extern zpp_syntax_tree_node zpp_synax_tree_parse_keywords(struct zpp_compiler* c, zpp_token* t, const struct zpp_compiler_state* s);
 
 #endif
