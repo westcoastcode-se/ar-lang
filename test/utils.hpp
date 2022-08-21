@@ -107,6 +107,146 @@ struct uitls_vm_type<vm_float64>
 	static constexpr auto props1 = VMI_INSTR_PROP_FLOAT64;
 };
 
+template<>
+struct uitls_vm_type<vm_int8*>
+{
+	static constexpr auto name = "*int8";
+	static constexpr auto ptr = "**int8";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_uint8*>
+{
+	static constexpr auto name = "*uint8";
+	static constexpr auto ptr = "**uint8";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_int16*>
+{
+	static constexpr auto name = "*int16";
+	static constexpr auto ptr = "**int16";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_uint16*>
+{
+	static constexpr auto name = "*uint16";
+	static constexpr auto ptr = "**uint16";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_int32*>
+{
+	static constexpr auto name = "*int32";
+	static constexpr auto ptr = "**int32";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_uint32*>
+{
+	static constexpr auto name = "*uint32";
+	static constexpr auto ptr = "**uint32";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_int64*>
+{
+	static constexpr auto name = "*int64";
+	static constexpr auto ptr = "**int64";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_uint64*>
+{
+	static constexpr auto name = "*uint64";
+	static constexpr auto ptr = "**uint64";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_float32*>
+{
+	static constexpr auto name = "*float32";
+	static constexpr auto ptr = "**float32";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
+template<>
+struct uitls_vm_type<vm_float64*>
+{
+	static constexpr auto name = "*float64";
+	static constexpr auto ptr = "**float64";
+	static constexpr auto shorthand = "ptr";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+};
+
 struct utils_vm : test_utils
 {
 	template<typename T>
