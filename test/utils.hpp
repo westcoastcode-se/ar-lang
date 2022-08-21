@@ -300,7 +300,7 @@ struct utils_vm : test_utils
 	}
 
 	template<typename T>
-	void verify_value(T value, T expected)
+	void assert_equals(T value, T expected)
 	{
 		if (value != expected) {
 			throw_(error() << "expected value to be " << expected << " but was " << value);
@@ -308,7 +308,7 @@ struct utils_vm : test_utils
 	}
 
 	template<typename T>
-	void verify_not_null(T* ptr)
+	void assert_not_null(T* ptr)
 	{
 		if (ptr == nullptr) {
 			throw_(error() << "expected ptr to not be nullptr");
@@ -316,11 +316,29 @@ struct utils_vm : test_utils
 	}
 
 	template<typename T>
-	void verify_null(T* ptr)
+	void assert_null(T* ptr)
 	{
 		if (ptr != nullptr) {
 			throw_(error() << "expected ptr to be nullptr");
 		}
+	}
+
+	template<typename T>
+	void verify_value(T value, T expected)
+	{
+		assert_equals<T>(value, expected);
+	}
+
+	template<typename T>
+	void verify_not_null(T* ptr)
+	{
+		assert_not_null<T>(ptr);
+	}
+
+	template<typename T>
+	void verify_null(T* ptr)
+	{
+		assert_null<T>(ptr);
 	}
 
 	void verify_false(bool value)

@@ -215,7 +215,7 @@ func Get() %s {
 	}
 
 	template<typename T>
-	void const_add_T(T value1, T value2)
+	void const_add_T(T lhs, T rhs)
 	{
 		const char* source = format_string(R"(
 package main
@@ -223,7 +223,7 @@ package main
 func Get() %s {
 	return %s + %s
 }
-)", name<T>(), to_string((T)value1), to_string((T)value2));
+)", name<T>(), to_string((T)lhs), to_string((T)rhs));
 
 		add_source_code(source, "/main.zpp");
 		compile();
@@ -232,7 +232,28 @@ func Get() %s {
 
 		verify_stack_size(thread, sizeof(T));
 		const auto ret = *(T*)vmi_thread_pop_stack(thread, sizeof(T));
-		verify_value(ret, (T)(value1 + value2));
+		verify_value(ret, (T)(lhs + rhs));
+	}
+
+	template<typename T>
+	void const_sub_T(T lhs, T rhs)
+	{
+		const char* source = format_string(R"(
+package main
+
+func Get() %s {
+	return %s - %s
+}
+)", name<T>(), to_string((T)lhs), to_string((T)rhs));
+
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		invoke("Get");
+
+		verify_stack_size(thread, sizeof(T));
+		const auto ret = *(T*)vmi_thread_pop_stack(thread, sizeof(T));
+		verify_value(ret, (T)(lhs - rhs));
 	}
 
 	void operator()()
@@ -241,50 +262,15 @@ func Get() %s {
 		TEST(const_T<vm_float32>(123.45f));
 
 		TEST(const_add_T<vm_int32>(12345, 123));
-		//TEST(const_add_T<vm_float32>(123.45f));
+		TEST(const_add_T<vm_float32>(123.45f, 1.2f));
+
+		TEST(const_sub_T<vm_int32>(12345, 123));
+		TEST(const_sub_T<vm_float32>(123.45f, 1.2f));
 	}
 };
 
 struct suite_zpp_tests : utils_zpp_success
 {
-	void return2()
-	{
-		static const auto source = R"(
-package main
-
-func Get() int32 {
-	return 12345 + 10
-}
-)";
-		add_source_code(source, "/main.zpp");
-		compile();
-
-		invoke("Get");
-
-		verify_stack_size(thread, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
-		verify_value(ret, 12345 + 10);
-	}
-
-	void return3()
-	{
-		static const auto source = R"(
-package main
-
-func Get() int32 {
-	return 12345 - 10
-}
-)";
-		add_source_code(source, "/main.zpp");
-		compile();
-		
-		invoke("Get");
-
-		verify_stack_size(thread, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
-		verify_value(ret, 12345 - 10);
-	}
-
 	void return4()
 	{
 		static const auto source = R"(
@@ -1046,8 +1032,6 @@ func QuickSort(arr *int32, low int32, high int32) {
 
 	void operator()()
 	{
-		TEST(return2());
-		TEST(return3());
 		TEST(return4());
 		TEST(return5());
 		TEST(return6());
