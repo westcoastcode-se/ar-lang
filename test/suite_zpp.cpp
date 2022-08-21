@@ -29,7 +29,16 @@ struct utils_zpp : utils_vm
 		const vm_string fn = to_vm_string(filename);
 		return zpp_compiler_add_source_code(compiler, zpp_source_code_new(&src, &fn)) == TRUE;
 	}
-
+	
+	const char* format_string(const char* format, ...)
+	{
+		static char memory[4096];
+		va_list argptr;
+		va_start(argptr, format);
+		vsprintf(memory, format, argptr);
+		va_end(argptr);
+		return memory;
+	}
 };
 
 struct utils_zpp_errors : utils_zpp
@@ -179,6 +188,36 @@ struct utils_zpp_success : utils_zpp
 	T push_value(T value) {
 		*(T*)vmi_thread_push_stack(thread, sizeof(T)) = value;
 		return value;
+	}
+};
+
+struct suite_zpp_get_const : utils_zpp_success
+{
+	template<typename T>
+	void const_T(T value)
+	{
+		const char* source = format_string(R"(
+package main
+
+func Get() %s {
+	return %s
+}
+)", name<T>(), to_string((T)value));
+
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		invoke("Get");
+
+		verify_stack_size(thread, sizeof(T));
+		const auto ret = *(T*)vmi_thread_pop_stack(thread, sizeof(T));
+		verify_value(ret, value);
+	}
+
+	void operator()()
+	{
+		TEST(const_T<vm_int32>(12345));
+		TEST(const_T<vm_float32>(123.45f));
 	}
 };
 
@@ -1099,5 +1138,6 @@ func () int32 {
 void suite_zpp()
 {
 	SUITE(suite_zpp_tests);
+	SUITE(suite_zpp_get_const);
 	SUITE(suite_zpp_errors);
 }
