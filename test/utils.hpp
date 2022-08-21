@@ -338,31 +338,41 @@ struct utils_vm : test_utils
 	}
 
 	const char* to_string(vm_int8 value) {
-		static char str[64];
+		// Just use new but not delete because we are lazy
+		// TODO: Make this better
+		char* str = new char[64];
 		sprintf(str, "%d", (vm_int32)value);
 		return str;
 	}
 
 	const char* to_string(vm_int16 value) {
-		static char str[64];
+		// Just use new but not delete because we are lazy
+		// TODO: Make this better
+		char* str = new char[64];
 		sprintf(str, "%d", (vm_int32)value);
 		return str;
 	}
 
 	const char* to_string(vm_int32 value) {
-		static char str[64];
+		// Just use new but not delete because we are lazy
+		// TODO: Make this better
+		char* str = new char[64];
 		sprintf(str, "%d", value);
 		return str;
 	}
 
 	const char* to_string(vm_int64 value) {
-		static char str[64];
+		// Just use new but not delete because we are lazy
+		// TODO: Make this better
+		char* str = new char[64];
 		sprintf(str, "%lld", value);
 		return str;
 	}
 
 	const char* to_string(vm_float32 value) {
-		static char str[64];
+		// Just use new but not delete because we are lazy
+		// TODO: Make this better
+		char* str = new char[64];
 		sprintf(str, "%f", value);
 		return str;
 	}

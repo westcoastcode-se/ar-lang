@@ -214,34 +214,39 @@ func Get() %s {
 		verify_value(ret, value);
 	}
 
+	template<typename T>
+	void const_add_T(T value1, T value2)
+	{
+		const char* source = format_string(R"(
+package main
+
+func Get() %s {
+	return %s + %s
+}
+)", name<T>(), to_string((T)value1), to_string((T)value2));
+
+		add_source_code(source, "/main.zpp");
+		compile();
+
+		invoke("Get");
+
+		verify_stack_size(thread, sizeof(T));
+		const auto ret = *(T*)vmi_thread_pop_stack(thread, sizeof(T));
+		verify_value(ret, (T)(value1 + value2));
+	}
+
 	void operator()()
 	{
 		TEST(const_T<vm_int32>(12345));
 		TEST(const_T<vm_float32>(123.45f));
+
+		TEST(const_add_T<vm_int32>(12345, 123));
+		//TEST(const_add_T<vm_float32>(123.45f));
 	}
 };
 
 struct suite_zpp_tests : utils_zpp_success
 {
-	void return1()
-	{
-		static const auto source = R"(
-package main
-
-func Get() int32 {
-	return 12345
-}
-)";
-		add_source_code(source, "/main.zpp");
-		compile();
-
-		invoke( "Get");
-
-		verify_stack_size(thread, sizeof(vm_int32));
-		const auto ret = *(vm_int32*)vmi_thread_pop_stack(thread, sizeof(vm_int32));
-		verify_value(ret, 12345);
-	}
-
 	void return2()
 	{
 		static const auto source = R"(
@@ -1041,7 +1046,6 @@ func QuickSort(arr *int32, low int32, high int32) {
 
 	void operator()()
 	{
-		TEST(return1());
 		TEST(return2());
 		TEST(return3());
 		TEST(return4());
