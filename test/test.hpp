@@ -11,6 +11,8 @@
 using namespace std;
 
 extern bool _tests_success;
+extern int _tests_count;
+extern int _tests_failed;
 
 struct error_string_stream : public std::stringstream
 {
@@ -48,36 +50,17 @@ struct test_utils
 	s _##s; _##s();
 
 #define TEST(s) \
+	_tests_count++;\
 	cout << "\tTest '" << #s << "'"; \
 	try {\
-		s(); \
-		cout << " - OK" << endl; \
-	}\
-	catch (const std::exception& e) { \
-		cerr << " - ERROR: " << e.what() << endl; \
-		_tests_success = false; \
-	}
-
-#define TEST_FN(s) \
-	cout << endl << "\t\tTest '" << #s << "'"; \
-	try {\
+		beforeEach(); \
 		s; \
-		cout << " - OK"; \
-	}\
-	catch (const std::exception& e) { \
-		throw e; \
-	}
-
-#define TEST_BEGIN_END(s) \
-	cout << "\tTest '" << #s << "'"; \
-	try {\
-		begin(); \
-		s(); \
-		end(); \
+		afterEach(); \
 		cout << " - OK" << endl; \
 	}\
 	catch (const std::exception& e) { \
 		cerr << " - ERROR: " << e.what() << endl; \
 		_tests_success = false; \
-		end(); \
+		_tests_failed++;\
+		afterEach(); \
 	}

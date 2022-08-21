@@ -4,13 +4,13 @@ struct utils_zpp : utils_vm
 {
 	zpp_compiler* compiler;
 
-	void begin()
+	void beforeEach()
 	{
 		// Create a new pipeline to put bytecode into
 		compiler = zpp_compiler_new();
 	}
 
-	void end()
+	void afterEach()
 	{
 		if (compiler != NULL) {
 			zpp_compiler_destroy(compiler);
@@ -34,14 +34,14 @@ struct utils_zpp : utils_vm
 
 struct utils_zpp_errors : utils_zpp
 {
-	void begin()
+	void beforeEach()
 	{
-		utils_zpp::begin();
+		utils_zpp::beforeEach();
 	}
 
-	void end()
+	void afterEach()
 	{
-		utils_zpp::end();
+		utils_zpp::afterEach();
 		vm_memory_test_clear();
 	}
 
@@ -80,13 +80,13 @@ struct utils_zpp_success : utils_zpp
 	vmi_process* process;
 	vmi_thread* thread;
 
-	void begin()
+	void beforeEach()
 	{
-		utils_zpp::begin();
+		utils_zpp::beforeEach();
 		process = NULL;
 	}
 
-	void end()
+	void afterEach()
 	{
 		if (thread != NULL) {
 			vmi_thread_destroy(thread);
@@ -98,7 +98,7 @@ struct utils_zpp_success : utils_zpp
 			process = NULL;
 		}
 
-		utils_zpp::end();
+		utils_zpp::afterEach();
 
 		if (vm_memory_test_bytes_left() == FALSE) {
 			throw_(error() << "not all memory was released");
@@ -1002,41 +1002,41 @@ func QuickSort(arr *int32, low int32, high int32) {
 
 	void operator()()
 	{
-		TEST_BEGIN_END(return1);
-		TEST_BEGIN_END(return2);
-		TEST_BEGIN_END(return3);
-		TEST_BEGIN_END(return4);
-		TEST_BEGIN_END(return5);
-		TEST_BEGIN_END(return6);
-		TEST_BEGIN_END(return7);
-		TEST_BEGIN_END(return8);
-		TEST_BEGIN_END(return9);
-		TEST_BEGIN_END(return10);
-		TEST_BEGIN_END(return11);
-		TEST_BEGIN_END(return12);
+		TEST(return1());
+		TEST(return2());
+		TEST(return3());
+		TEST(return4());
+		TEST(return5());
+		TEST(return6());
+		TEST(return7());
+		TEST(return8());
+		TEST(return9());
+		TEST(return10());
+		TEST(return11());
+		TEST(return12());
 
-		TEST_BEGIN_END(local1);
-		TEST_BEGIN_END(local2);
-		TEST_BEGIN_END(local3);
+		TEST(local1());
+		TEST(local2());
+		TEST(local3());
 
-		TEST_BEGIN_END(arg1);
-		TEST_BEGIN_END(arg2);
-		TEST_BEGIN_END(arg3);
-		TEST_BEGIN_END(arg4);
-		TEST_BEGIN_END(arg5);
+		TEST(arg1());
+		TEST(arg2());
+		TEST(arg3());
+		TEST(arg4());
+		TEST(arg5());
 
-		TEST_BEGIN_END(compare_lt1);
-		TEST_BEGIN_END(compare_lt2);
-		TEST_BEGIN_END(compare_lt3);
-		TEST_BEGIN_END(compare_gt1);
-		TEST_BEGIN_END(compare_gt2);
-		TEST_BEGIN_END(compare_gt3);
+		TEST(compare_lt1());
+		TEST(compare_lt2());
+		TEST(compare_lt3());
+		TEST(compare_gt1());
+		TEST(compare_gt2());
+		TEST(compare_gt3());
 
-		TEST_BEGIN_END(bit_not1);
-		TEST_BEGIN_END(bit_not2);
-		TEST_BEGIN_END(bit_not3);
-		TEST_BEGIN_END(bit_not4);
-		TEST_BEGIN_END(bit_not5);
+		TEST(bit_not1());
+		TEST(bit_not2());
+		TEST(bit_not3());
+		TEST(bit_not4());
+		TEST(bit_not5());
 	}
 };
 
@@ -1090,9 +1090,9 @@ func () int32 {
 
 	void operator()()
 	{
-		TEST_BEGIN_END(no_package_error);
-		TEST_BEGIN_END(missing_package_identifier);
-		TEST_BEGIN_END(missing_function_identifier);
+		TEST(no_package_error());
+		TEST(missing_package_identifier());
+		TEST(missing_function_identifier());
 	}
 };
 
