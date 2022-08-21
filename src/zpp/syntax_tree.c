@@ -43,6 +43,47 @@ void zpp_syntax_tree_add(zpp_syntax_tree* st, zpp_syntax_tree_node node)
 	node->parent = st;
 }
 
+void zpp_syntax_tree_remove(zpp_syntax_tree* st, zpp_syntax_tree_node node)
+{
+	assert(st == node->parent);
+	if (st->node == node) {
+		st->node = st->node->tail;
+		st->node->head = NULL;
+	}
+	if (st->node_end == node) {
+		st->node_end = st->node_end->head;
+		st->node_end->tail = NULL;
+	}
+	if (node->head) {
+		node->head->tail = node->tail;
+	}
+	if (node->tail) {
+		node->tail->head = node->head;
+	}
+}
+
+void zpp_syntax_tree_remove_replace(zpp_syntax_tree* st, zpp_syntax_tree_node old_node, zpp_syntax_tree_node new_node)
+{
+	assert(st == old_node->parent);
+	assert(old_node == new_node->parent);
+
+	zpp_syntax_tree_node head = old_node->head;
+	zpp_syntax_tree_node tail = old_node->tail;
+
+	new_node->head = head;
+	new_node->tail = tail;
+
+	if (head == NULL)
+		st->node = new_node;
+	else
+		head->tail = new_node;
+	
+	if (tail == NULL)
+		st->node_end = new_node;
+	else
+		tail->head = new_node;
+}
+
 zpp_syntax_tree_node zpp_syntax_tree_find_parent_of_type(zpp_syntax_tree_node s, zpp_syntax_tree_object_type type)
 {
 	s = s->parent;
@@ -580,11 +621,18 @@ zpp_syntax_tree_node zpp_synax_tree_parse_unaryop(zpp_compiler* const c, zpp_tok
 	zpp_syntax_tree_node right = right_fn(c, t, s);
 	if (zpp_syntax_tree_is_error(right))
 		return right;
+
+	// Try to merge all children. For example, if the node is another binop node with two constants, then replace the right
+	// node into a new constant node instead
+	right = zpp_synax_tree_merge_children(s, right);
+
 	zpp_syntax_tree_unaryop* const unaryop = zpp_syntax_tree_unaryop_new(right, token_type);
 	if (unaryop == NULL)
 		return zpp_synax_tree_out_of_memory(s);
 	unaryop->closest_function_node = s->func_node;
-	return ZPP_SYNTAX_TREE(unaryop);
+
+	// Merge the unaryop
+	return zpp_synax_tree_merge_children(s, ZPP_SYNTAX_TREE(unaryop));
 }
 
 // A generic binary operator parser
@@ -595,6 +643,11 @@ zpp_syntax_tree_node zpp_synax_tree_parse_binop(zpp_compiler* const c, zpp_token
 	zpp_syntax_tree_node left = left_fn(c, t, s);
 	if (zpp_syntax_tree_is_error(left))
 		return left;
+
+	// Try to merge all children. For example, if the node is another binop node with two constants, then replace the right
+	// node into a new constant node instead
+	left = zpp_synax_tree_merge_children(s, left);
+
 	while (1) {
 		zpp_token_type const token_type = t->type;
 		int i;
@@ -604,11 +657,18 @@ zpp_syntax_tree_node zpp_synax_tree_parse_binop(zpp_compiler* const c, zpp_token
 				zpp_syntax_tree_node right = right_fn(c, t, s);
 				if (zpp_syntax_tree_is_error(right))
 					return right;
+				
+				// Try to merge all children. For example, if the node is another binop node with two constants, then replace the right
+				// node into a new constant node instead
+				right = zpp_synax_tree_merge_children(s, right);
+
 				zpp_syntax_tree_binop* const binop = zpp_syntax_tree_binop_new(left, right, token_type);
 				if (binop == NULL)
 					return zpp_synax_tree_out_of_memory(s);
 				binop->closest_function_node = s->func_node;
-				left = ZPP_SYNTAX_TREE(binop);
+
+				// Merge the actual binop
+				left = zpp_synax_tree_merge_children(s, ZPP_SYNTAX_TREE(binop));
 				break;
 			}
 		}
@@ -631,6 +691,10 @@ zpp_syntax_tree_node zpp_synax_tree_parse_binop_bitwise(zpp_compiler* c, zpp_tok
 	if (zpp_syntax_tree_is_error(left))
 		return left;
 
+	// Try to merge all children. For example, if the node is another binop node with two constants, then replace the right
+	// node into a new constant node instead
+	left = zpp_synax_tree_merge_children(state, left);
+
 	while (1) {
 		switch (t->type) {
 		case ZPP_TOKEN_BIT_AND:
@@ -640,13 +704,20 @@ zpp_syntax_tree_node zpp_synax_tree_parse_binop_bitwise(zpp_compiler* c, zpp_tok
 			zpp_syntax_tree_node right = right_fn(c, t, state);
 			if (zpp_syntax_tree_is_error(right))
 				return right;
+
+			// Try to merge all children. For example, if the node is another binop node with two constants, then replace the right
+			// node into a new constant node instead
+			right = zpp_synax_tree_merge_children(state, right);
+
 			zpp_syntax_tree_binop* binop = zpp_syntax_tree_binop_new(left, right, token_type);
 			if (binop == NULL) {
 				zpp_message_out_of_memory(state);
 				return zpp_syntax_tree_error();
 			}
-			left = ZPP_SYNTAX_TREE(binop);
 			binop->closest_function_node = state->func_node;
+
+			// Merge the actual binop
+			left = zpp_synax_tree_merge_children(state, ZPP_SYNTAX_TREE(binop));
 			break;
 		}
 		default:
@@ -671,6 +742,8 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(zpp_compiler* c, zpp_token* t, co
 		type_name.end = type_name.start + 5;
 		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &type_name);
 		val->value.i4 = zpp_token_i4(t);
+		// TODO: Constant types are always known. They might have a parent CAST unaryop though
+		val->value.type = zpp_symbol_get_data_type(val->header.stack_type);
 		zpp_token_next(t);
 		return ZPP_SYNTAX_TREE(val);
 	}
@@ -686,6 +759,8 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(zpp_compiler* c, zpp_token* t, co
 		type_name.end = type_name.start + 7;
 		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &type_name);
 		val->value.f4 = zpp_token_f4(t);
+		// TODO: Constant types are always known. They might have a parent CAST unaryop though
+		val->value.type = zpp_symbol_get_data_type(val->header.stack_type);
 		zpp_token_next(t);
 		return ZPP_SYNTAX_TREE(val);
 	}

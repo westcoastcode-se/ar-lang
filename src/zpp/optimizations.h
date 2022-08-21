@@ -12,4 +12,7 @@ extern zpp_syntax_tree_node zpp_synax_tree_merge_unaryop(const struct zpp_compil
 // Try to merge a tree node. This function is allowed to be executed when builing in debug.
 extern zpp_syntax_tree_node zpp_synax_tree_merge_children(const struct zpp_compiler_state* s, zpp_syntax_tree_node node);
 
+// Try to merge all tree nodes in the supplied root node
+extern BOOL zpp_synax_tree_optimize(const struct zpp_compiler_state* s, zpp_syntax_tree_root* root_node);
+
 #endif

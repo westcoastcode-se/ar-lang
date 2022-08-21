@@ -330,6 +330,9 @@ extern void zpp_return_destroy(zpp_return* ptr);
 // Resolve a type based on a specific symbol
 extern vmp_type* zpp_symbol_resolve_type(zpp_symbol* s, struct zpp_compiler* c);
 
+// Try to figure out the data type for the supplied symbol. Will return -1 if no data_type could be resolved
+extern vm_int32 zpp_symbol_get_data_type(zpp_symbol* s);
+
 // Create a new local variable
 extern zpp_local* zpp_local_new(const vm_string* name);
 

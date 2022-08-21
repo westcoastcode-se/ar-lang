@@ -554,6 +554,18 @@ vmp_type* zpp_symbol_resolve_type(zpp_symbol* s, struct zpp_compiler* c)
 	return NULL;
 }
 
+vm_int32 zpp_symbol_get_data_type(zpp_symbol* s)
+{
+	ASSERT_NOT_NULL(s);
+
+	if (s->type == ZPP_SYMBOL_TYPE) {
+		zpp_type* const t = (zpp_type*)s;
+		return t->data_type;
+	}
+
+	return -1;
+}
+
 zpp_local* zpp_local_new(const vm_string* name)
 {
 	zpp_local* p = vm_safe_malloc(zpp_local);

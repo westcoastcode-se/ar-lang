@@ -58,6 +58,9 @@ extern zpp_syntax_tree_node zpp_syntax_tree_get_parent(zpp_syntax_tree_node st);
 // Add a new child node to the supplied node
 extern void zpp_syntax_tree_add(zpp_syntax_tree* st, zpp_syntax_tree_node node);
 
+// Remove a node from the syntax tree and replace it with a new one at the same location as the old one
+extern void zpp_syntax_tree_remove_replace(zpp_syntax_tree* st, zpp_syntax_tree_node old_node, zpp_syntax_tree_node new_node);
+
 // Search for the closest ST parent of the supplied type
 extern zpp_syntax_tree_node zpp_syntax_tree_find_parent_of_type(zpp_syntax_tree_node st, zpp_syntax_tree_object_type type);
 

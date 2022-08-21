@@ -64,7 +64,7 @@ add_library(vm
     
     "src/vmp/vmp_list_globals.c"
     "src/vmp/vmp_list_imports.c"
-    "src/vmp/vmp_lists.c" )
+    "src/vmp/vmp_lists.c"  "src/vmp/const.c")
 
 # Compiler for ZPP source code
 include_directories("${VM_INCLUDE_DIRS}")

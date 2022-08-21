@@ -1,4 +1,5 @@
 #include "compiler.h"
+#include "optimizations.h"
 #include "../vm_debug.h"
 
 BOOL zpp_compiler_create_system_package(zpp_compiler* c)
@@ -552,6 +553,13 @@ vm_byte* zpp_compiler_compile(zpp_compiler* c)
 		}
 		package = package->tail;
 	}
+
+	// Optimize the syntax tree before compiling it into bytecode
+	const zpp_compiler_state state = {
+		c, NULL, NULL, NULL, NULL, NULL
+	};
+	if (!zpp_synax_tree_optimize(&state, c->root_node))
+		return NULL;
 
 	// Compile the syntax tree
 	if (!zpp_synax_tree_compile(c, ZPP_SYNTAX_TREE(c->root_node)))
