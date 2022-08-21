@@ -14,6 +14,7 @@
 	extern void NAME##_release(NAME* l); \
 	extern vm_int32 NAME##_add(NAME* l, struct TYPE* ptr);\
 	extern struct TYPE* NAME##_get(const NAME* l, vm_int32 index);\
+	extern struct TYPE* NAME##_first(const NAME* l);\
 	extern void NAME##_set(const NAME* l, vm_int32 index, struct TYPE* ptr);\
 	extern BOOL NAME##_contains(const NAME* l, const struct TYPE* ptr)
 
@@ -103,11 +104,19 @@
 		return FALSE; \
 	}
 
+#define DEFINE_LIST_FIRST(NAME, TYPE) \
+	struct TYPE* NAME##_first(const NAME* l) \
+	{ \
+		assert(l->count > 0); \
+		return l->memory[0]; \
+	}
+
 #define DEFINE_LIST_BASE_DEFAULT(NAME, TYPE, CAPACITY, RESIZE) \
 	DEFINE_LIST_INIT(NAME, TYPE, CAPACITY) \
 	DEFINE_LIST_RELEASE_DESTROY(NAME, TYPE) \
 	DEFINE_LIST_ADD(NAME, TYPE, RESIZE) \
 	DEFINE_LIST_GET(NAME, TYPE) \
+	DEFINE_LIST_FIRST(NAME, TYPE) \
 	DEFINE_LIST_SET(NAME, TYPE) \
 	DEFINE_LIST_CONTAINS(NAME, TYPE)
 
@@ -116,6 +125,7 @@
 	DEFINE_LIST_RELEASE(NAME, TYPE) \
 	DEFINE_LIST_ADD(NAME, TYPE, RESIZE) \
 	DEFINE_LIST_GET(NAME, TYPE) \
+	DEFINE_LIST_FIRST(NAME, TYPE) \
 	DEFINE_LIST_SET(NAME, TYPE) \
 	DEFINE_LIST_CONTAINS(NAME, TYPE)
 

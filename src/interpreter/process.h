@@ -2,8 +2,7 @@
 #define _VMI_PROCESS_H_
 
 #include "config.h"
-#include "vmi_list_functions.h"
-#include "vmi_list_packages.h"
+#include "lists.h"
 #include "../vm_string.h"
 
 struct vmi_package_func_bytecode_header

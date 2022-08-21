@@ -46,8 +46,7 @@ add_library(vm
     "src/interpreter/process.c"
     "src/interpreter/debug.c" 
     "src/interpreter/locals.c" 
-    "src/interpreter/vmi_list_functions.c"
-    "src/interpreter/vmi_list_packages.c" 
+    "src/interpreter/lists.c"  
 
     "src/vmp/vmp.c" 
     "src/vmp/vmp_instr.c" 
@@ -65,8 +64,7 @@ add_library(vm
     
     "src/vmp/vmp_list_globals.c"
     "src/vmp/vmp_list_imports.c"
-    "src/vmp/vmp_lists.c" 
-    )
+    "src/vmp/vmp_lists.c" )
 
 # Compiler for ZPP source code
 include_directories("${VM_INCLUDE_DIRS}")
