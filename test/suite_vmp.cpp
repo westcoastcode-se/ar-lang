@@ -530,6 +530,49 @@ struct suite_vmp_consts : utils_vmp_vmi
 		assert_equals(lhs_const.type, (vm_int32)props1_of(expected));
 	}
 
+	template<typename LHS, typename RHS>
+	void vmp_const_sub_T(LHS lhs, RHS rhs)
+	{
+		vmp_const lhs_const = to_const(lhs);
+		vmp_const rhs_const = to_const(rhs);
+		vmp_const_sub(&lhs_const, &rhs_const);
+
+		auto expected = lhs - rhs;
+
+		if (std::is_same<decltype(expected), vm_int8>::value) {
+			assert_equals(lhs_const.i1, (vm_int8)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_uint8>::value) {
+			assert_equals(lhs_const.ui1, (vm_uint8)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_int16>::value) {
+			assert_equals(lhs_const.i2, (vm_int16)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_uint16>::value) {
+			assert_equals(lhs_const.ui2, (vm_uint16)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_int32>::value) {
+			assert_equals(lhs_const.i4, (vm_int32)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_uint32>::value) {
+			assert_equals(lhs_const.ui4, (vm_uint32)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_int64>::value) {
+			assert_equals(lhs_const.i8, (vm_int64)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_uint64>::value) {
+			assert_equals(lhs_const.ui8, (vm_uint64)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_float32>::value) {
+			assert_equals(lhs_const.f4, (vm_float32)expected);
+		}
+		else if (std::is_same<decltype(expected), vm_float64>::value) {
+			assert_equals(lhs_const.f8, (vm_float64)expected);
+		}
+
+		assert_equals(lhs_const.type, (vm_int32)props1_of(expected));
+	}
+
 	void operator()()
 	{
 		TEST(ldc_T<vm_int8>(12));
@@ -564,6 +607,17 @@ struct suite_vmp_consts : utils_vmp_vmi
 		TEST(vmp_const_add_T((vm_uint8)129, (vm_uint64)INT64_MAX + 100ull));
 		TEST(vmp_const_add_T((vm_uint8)129, 123.12f));
 		TEST(vmp_const_add_T((vm_int8)129, 123.12));
+
+		TEST(vmp_const_sub_T((vm_uint8)129, (vm_int8)-12));
+		TEST(vmp_const_sub_T((vm_uint8)129, (vm_uint8)244));
+		TEST(vmp_const_sub_T((vm_uint8)129, (vm_int16)1234));
+		TEST(vmp_const_sub_T((vm_uint8)129, (vm_uint16)30000));
+		TEST(vmp_const_sub_T((vm_uint8)129, (vm_int32)34768));
+		TEST(vmp_const_sub_T((vm_uint8)129, (vm_uint32)INT32_MAX + 100u));
+		TEST(vmp_const_sub_T((vm_uint8)129, (vm_int64)UINT32_MAX + 100ll));
+		TEST(vmp_const_sub_T((vm_uint8)129, (vm_uint64)INT64_MAX + 100ull));
+		TEST(vmp_const_sub_T((vm_uint8)129, 123.12f));
+		TEST(vmp_const_sub_T((vm_int8)129, 123.12));
 
 		TEST(vmp_const_add_T((vm_int32)1234, (vm_int32)5678));
 	}
