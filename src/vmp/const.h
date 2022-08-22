@@ -69,24 +69,24 @@ extern vmp_constant vmp_const_f8(vm_float64 value);
 extern vmp_constant vmp_const_ptr(vm_byte* value);
 
 // A function pointer that represents when we want to combine two constants
-typedef BOOL (*vmp_const_combine_fn)(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result);
+typedef BOOL (*vmp_const_combine_fn)(vmp_constant* lhs, const vmp_constant* rhs);
 
 // Helper function for when an binop operator between two constants are not implemented
-extern BOOL vmp_const_not_implemented(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result);
+extern BOOL vmp_const_not_implemented(vmp_constant* lhs, const vmp_constant* rhs);
 
 // Helper function for when an binop operator between two constants are not allowed
-extern BOOL vmp_const_not_allowed(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result);
+extern BOOL vmp_const_not_allowed(vmp_constant* lhs, const vmp_constant* rhs);
 
 // Add two constant values and return the result
-extern BOOL vmp_const_add(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result);
+extern BOOL vmp_const_add(vmp_constant* lhs, const vmp_constant* rhs);
 
 // Subtract two constant values and return the result
-extern BOOL vmp_const_sub(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result);
+extern BOOL vmp_const_sub(vmp_constant* lhs, const vmp_constant* rhs);
 
 // Multiply two constant values and return the result
-extern BOOL vmp_const_mult(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result);
+extern BOOL vmp_const_mult(vmp_constant* lhs, const vmp_constant* rhs);
 
 // Divide two constant values and return the result
-extern BOOL vmp_const_div(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result);
+extern BOOL vmp_const_div(vmp_constant* lhs, const vmp_constant* rhs);
 
 #endif

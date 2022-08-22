@@ -93,13 +93,13 @@ vmp_constant vmp_const_ptr(vm_byte* value)
 	return c;
 }
 
-BOOL vmp_const_not_implemented(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result)
+BOOL vmp_const_not_implemented(vmp_constant* lhs, const vmp_constant* rhs)
 {
 	assert(false && "Not implemented");
 	return FALSE;
 }
 
-BOOL vmp_const_not_allowed(const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result)
+BOOL vmp_const_not_allowed(vmp_constant* lhs, const vmp_constant* rhs)
 {
 	return FALSE;
 }

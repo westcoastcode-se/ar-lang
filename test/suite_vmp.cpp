@@ -487,6 +487,18 @@ struct suite_vmp_constants : utils_vmp_vmi
 		verify_value(pop_value<T>(), (T)value);
 	}
 
+	template<typename LHS, typename RHS>
+	void vmp_const_add_T(LHS lhs, RHS rhs)
+	{
+		vmp_constant lhs_const = vmp_const(lhs);
+		vmp_constant rhs_const = vmp_const(rhs);
+		vmp_const_add(&lhs_const, &rhs_const);
+
+		const auto expected = lhs + rhs;
+		assert_equals(lhs_const.i4, expected);
+		assert_equals(lhs_const.type, (vm_int32)props1_of(expected));
+	}
+
 	void operator()()
 	{
 		TEST(ldc_T<vm_int8>(12));
@@ -499,6 +511,9 @@ struct suite_vmp_constants : utils_vmp_vmi
 		TEST(ldc_T<vm_uint64>(UINT64_MAX - 123456));
 		TEST(ldc_T<vm_float32>(123.456f));
 		TEST(ldc_T<vm_float64>(12345.6789));
+
+		//TEST(vmp_const_add_T((vm_int8)-123, (vm_int8)54));
+		TEST(vmp_const_add_T((vm_int32)1234, (vm_int32)5678));
 	}
 };
 

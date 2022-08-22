@@ -2,6 +2,71 @@
 
 #include "test.hpp"
 
+template<int T>
+struct utils_vm_datatype
+{
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_INT8>
+{
+	typedef vm_int8 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_UINT8>
+{
+	typedef vm_uint8 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_INT16>
+{
+	typedef vm_int16 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_UINT16>
+{
+	typedef vm_uint16 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_INT32>
+{
+	typedef vm_int32 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_UINT32>
+{
+	typedef vm_uint32 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_INT64>
+{
+	typedef vm_int64 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_UINT64>
+{
+	typedef vm_uint64 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_FLOAT32>
+{
+	typedef vm_float32 type;
+};
+
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_FLOAT64>
+{
+	typedef vm_float64 type;
+};
+
 template<typename T>
 struct uitls_vm_type
 {
@@ -354,6 +419,7 @@ struct utils_vm : test_utils
 			throw_(error() << "expected true");
 		}
 	}
+
 
 	const char* to_string(vm_int8 value) {
 		// Just use new but not delete because we are lazy
