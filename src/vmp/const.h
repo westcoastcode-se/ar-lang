@@ -76,7 +76,11 @@ extern BOOL vmp_const_not_implemented(vmp_const* lhs, const vmp_const* rhs);
 // Helper function for when an binop operator between two constants are not allowed
 extern BOOL vmp_const_not_allowed(vmp_const* lhs, const vmp_const* rhs);
 
-// Add two constant values and return the result
+// Add two constant values and return the result. 
+// 
+// If you add two values where both of the values are less then 4 bytes then the result will be transformed into a 4 byte integer. 
+// If one of the types are unsigned, then the resulting value will turn into an unsigned value
+// If one of the values are a floating value then the resulting value is turned into a floating value
 extern BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs);
 
 // Subtract two constant values and return the result

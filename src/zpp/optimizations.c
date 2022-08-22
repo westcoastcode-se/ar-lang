@@ -2,9 +2,9 @@
 #include "symbols.h"
 #include "compiler.h"
 
-// Merge two constants and put the result into the supplied memory. Returns FALSE if the merge was not successfull - for example
+// Merge two constants and put the result into the left-hand side memory location. Returns FALSE if the merge was not successfull - for example
 // if the underlying memory size has to be uplifted (increased to fit the new constant value)
-BOOL zpp_syntax_tree_merge_constants(zpp_token_type op, const vmp_const* lhs, const vmp_const* rhs, vmp_const* result)
+BOOL zpp_syntax_tree_merge_constants(zpp_token_type op, vmp_const* lhs, const vmp_const* rhs)
 {
 	if (lhs->type != rhs->type) {
 		// TODO: Allow different types, for example 2 * 2.0 should result into a 4.0 decimal value
@@ -21,74 +21,39 @@ BOOL zpp_syntax_tree_merge_constants(zpp_token_type op, const vmp_const* lhs, co
 	switch (op)
 	{
 	case ZPP_TOKEN_OP_PLUS:
-		switch (data_type)
-		{
-		case VMI_INSTR_PROP_INT8:
-			result->i1 = lhs->i1 + rhs->i1;
-			break;
-		case VMI_INSTR_PROP_UINT8:
-			result->ui1 = lhs->ui1 + rhs->ui1;
-			break;
-		case VMI_INSTR_PROP_INT16:
-			result->i2 = lhs->i2 + rhs->i2;
-			break;
-		case VMI_INSTR_PROP_UINT16:
-			result->ui2 = lhs->ui2 + rhs->ui2;
-			break;
-		case VMI_INSTR_PROP_INT32:
-			result->i4 = lhs->i4 + rhs->i4;
-			break;
-		case VMI_INSTR_PROP_UINT32:
-			result->ui4 = lhs->ui4 + rhs->ui4;
-			break;
-		case VMI_INSTR_PROP_INT64:
-			result->i8 = lhs->i8 + rhs->i8;
-			break;
-		case VMI_INSTR_PROP_UINT64:
-			result->ui8 = lhs->ui8 + rhs->ui8;
-			break;
-		case VMI_INSTR_PROP_FLOAT32:
-			result->f4 = lhs->f4 + rhs->f4;
-			break;
-		case VMI_INSTR_PROP_FLOAT64:
-			result->f8 = lhs->f8 + rhs->f8;
-			break;
-		default:
-			return FALSE;
-		}
-		break;
+		return vmp_const_add(lhs, rhs);
 	case ZPP_TOKEN_OP_MINUS:
 		switch (data_type)
 		{
 		case VMI_INSTR_PROP_INT8:
-			result->i1 = lhs->i1 - rhs->i1;
+			lhs->i1 = lhs->i1 - rhs->i1;
 			break;
 		case VMI_INSTR_PROP_UINT8:
-			result->ui1 = lhs->ui1 - rhs->ui1;
+			lhs->ui1 = lhs->ui1 - rhs->ui1;
 			break;
 		case VMI_INSTR_PROP_INT16:
-			result->i2 = lhs->i2 - rhs->i2;
+			lhs->i2 = lhs->i2 - rhs->i2;
 			break;
 		case VMI_INSTR_PROP_UINT16:
-			result->ui2 = lhs->ui2 - rhs->ui2;
+			lhs->ui2 = lhs->ui2 - rhs->ui2;
 			break;
 		case VMI_INSTR_PROP_INT32:
-			result->i4 = lhs->i4 - rhs->i4;
+			lhs->i4 = lhs->i4 - rhs->i4;
 			break;
 		case VMI_INSTR_PROP_UINT32:
-			result->ui4 = lhs->ui4 - rhs->ui4;
+			lhs->ui4 = lhs->ui4 - rhs->ui4;
 			break;
 		case VMI_INSTR_PROP_INT64:
-			result->i8 = lhs->i8 - rhs->i8;
+			lhs->i8 = lhs->i8 - rhs->i8;
 			break;
 		case VMI_INSTR_PROP_UINT64:
-			result->ui8 = lhs->ui8 - rhs->ui8;
+			lhs->ui8 = lhs->ui8 - rhs->ui8;
 			break;
 		case VMI_INSTR_PROP_FLOAT32:
-			result->f4 = lhs->f4 - rhs->f4;
+			lhs->f4 = lhs->f4 - rhs->f4;
 			break;
 		case VMI_INSTR_PROP_FLOAT64:
-			result->f8 = lhs->f8 - rhs->f8;
+			lhs->f8 = lhs->f8 - rhs->f8;
 			break;
 		default:
 			return FALSE;
@@ -98,34 +63,34 @@ BOOL zpp_syntax_tree_merge_constants(zpp_token_type op, const vmp_const* lhs, co
 		switch (data_type)
 		{
 		case VMI_INSTR_PROP_INT8:
-			result->i1 = lhs->i1 * rhs->i1;
+			lhs->i1 = lhs->i1 * rhs->i1;
 			break;
 		case VMI_INSTR_PROP_UINT8:
-			result->ui1 = lhs->ui1 * rhs->ui1;
+			lhs->ui1 = lhs->ui1 * rhs->ui1;
 			break;
 		case VMI_INSTR_PROP_INT16:
-			result->i2 = lhs->i2 * rhs->i2;
+			lhs->i2 = lhs->i2 * rhs->i2;
 			break;
 		case VMI_INSTR_PROP_UINT16:
-			result->ui2 = lhs->ui2 * rhs->ui2;
+			lhs->ui2 = lhs->ui2 * rhs->ui2;
 			break;
 		case VMI_INSTR_PROP_INT32:
-			result->i4 = lhs->i4 * rhs->i4;
+			lhs->i4 = lhs->i4 * rhs->i4;
 			break;
 		case VMI_INSTR_PROP_UINT32:
-			result->ui4 = lhs->ui4 * rhs->ui4;
+			lhs->ui4 = lhs->ui4 * rhs->ui4;
 			break;
 		case VMI_INSTR_PROP_INT64:
-			result->i8 = lhs->i8 * rhs->i8;
+			lhs->i8 = lhs->i8 * rhs->i8;
 			break;
 		case VMI_INSTR_PROP_UINT64:
-			result->ui8 = lhs->ui8 * rhs->ui8;
+			lhs->ui8 = lhs->ui8 * rhs->ui8;
 			break;
 		case VMI_INSTR_PROP_FLOAT32:
-			result->f4 = lhs->f4 * rhs->f4;
+			lhs->f4 = lhs->f4 * rhs->f4;
 			break;
 		case VMI_INSTR_PROP_FLOAT64:
-			result->f8 = lhs->f8 * rhs->f8;
+			lhs->f8 = lhs->f8 * rhs->f8;
 			break;
 		default:
 			return FALSE;
@@ -135,34 +100,34 @@ BOOL zpp_syntax_tree_merge_constants(zpp_token_type op, const vmp_const* lhs, co
 		switch (data_type)
 		{
 		case VMI_INSTR_PROP_INT8:
-			result->i1 = lhs->i1 / rhs->i1;
+			lhs->i1 = lhs->i1 / rhs->i1;
 			break;
 		case VMI_INSTR_PROP_UINT8:
-			result->ui1 = lhs->ui1 / rhs->ui1;
+			lhs->ui1 = lhs->ui1 / rhs->ui1;
 			break;
 		case VMI_INSTR_PROP_INT16:
-			result->i2 = lhs->i2 / rhs->i2;
+			lhs->i2 = lhs->i2 / rhs->i2;
 			break;
 		case VMI_INSTR_PROP_UINT16:
-			result->ui2 = lhs->ui2 / rhs->ui2;
+			lhs->ui2 = lhs->ui2 / rhs->ui2;
 			break;
 		case VMI_INSTR_PROP_INT32:
-			result->i4 = lhs->i4 / rhs->i4;
+			lhs->i4 = lhs->i4 / rhs->i4;
 			break;
 		case VMI_INSTR_PROP_UINT32:
-			result->ui4 = lhs->ui4 / rhs->ui4;
+			lhs->ui4 = lhs->ui4 / rhs->ui4;
 			break;
 		case VMI_INSTR_PROP_INT64:
-			result->i8 = lhs->i8 / rhs->i8;
+			lhs->i8 = lhs->i8 / rhs->i8;
 			break;
 		case VMI_INSTR_PROP_UINT64:
-			result->ui8 = lhs->ui8 / rhs->ui8;
+			lhs->ui8 = lhs->ui8 / rhs->ui8;
 			break;
 		case VMI_INSTR_PROP_FLOAT32:
-			result->f4 = lhs->f4 / rhs->f4;
+			lhs->f4 = lhs->f4 / rhs->f4;
 			break;
 		case VMI_INSTR_PROP_FLOAT64:
-			result->f8 = lhs->f8 / rhs->f8;
+			lhs->f8 = lhs->f8 / rhs->f8;
 			break;
 		default:
 			return FALSE;
@@ -185,7 +150,7 @@ zpp_syntax_tree_node zpp_synax_tree_merge_binop(const zpp_compiler_state* s, zpp
 		zpp_syntax_tree_const_value* const right_value = (zpp_syntax_tree_const_value*)right;
 
 		// Try to merge the supplied values
-		if (!zpp_syntax_tree_merge_constants(binop->op, &left_value->value, &right_value->value, &left_value->value)) {
+		if (!zpp_syntax_tree_merge_constants(binop->op, &left_value->value, &right_value->value)) {
 			// TODO: Add support for uplifting the constant into more bytes
 			return ZPP_SYNTAX_TREE(binop);
 		}
@@ -298,7 +263,7 @@ void zpp_synax_tree_merge_binop2(const zpp_compiler_state* s, zpp_syntax_tree_bi
 		zpp_syntax_tree_const_value* const right_value = (zpp_syntax_tree_const_value*)right;
 
 		// Try to merge the supplied values
-		if (!zpp_syntax_tree_merge_constants(binop->op, &left_value->value, &right_value->value, &left_value->value)) {
+		if (!zpp_syntax_tree_merge_constants(binop->op, &left_value->value, &right_value->value)) {
 			// TODO: Add support for uplifting the constant into more bytes
 			return;
 		}
