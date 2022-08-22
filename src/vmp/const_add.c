@@ -12,35 +12,36 @@ BOOL vmp_const_add_i1_bool(vmp_constant* lhs, const vmp_constant* rhs)
 
 BOOL vmp_const_add_i1_i1(vmp_constant* lhs, const vmp_constant* rhs)
 {
-	lhs->i1 = lhs->i1 + rhs->i1;
+	lhs->i4 = lhs->i1 + rhs->i1;
+	lhs->type = VMI_INSTR_PROP_INT32;
 	return TRUE;
 }
 
 BOOL vmp_const_add_i1_ui1(vmp_constant* lhs, const vmp_constant* rhs)
 {
-	lhs->ui1 = lhs->i1 + rhs->ui1;
-	lhs->type = rhs->type;
+	lhs->i4 = lhs->i1 + rhs->ui1;
+	lhs->type = VMI_INSTR_PROP_INT32;
 	return TRUE;
 }
 
 BOOL vmp_const_add_i1_i2(vmp_constant* lhs, const vmp_constant* rhs)
 {
-	lhs->i2 = lhs->i1 + rhs->i2;
-	lhs->type = rhs->type;
+	lhs->i4 = lhs->i1 + rhs->i2;
+	lhs->type = VMI_INSTR_PROP_INT32;
 	return TRUE;
 }
 
 BOOL vmp_const_add_i1_ui2(vmp_constant* lhs, const vmp_constant* rhs)
 {
-	lhs->ui2 = lhs->i1 + rhs->ui2;
-	lhs->type = rhs->type;
+	lhs->i4 = lhs->i1 + rhs->ui2;
+	lhs->type = VMI_INSTR_PROP_INT32;
 	return TRUE;
 }
 
 BOOL vmp_const_add_i1_i4(vmp_constant* lhs, const vmp_constant* rhs)
 {
 	lhs->i4 = lhs->i1 + rhs->i4;
-	lhs->type = rhs->type;
+	lhs->type = VMI_INSTR_PROP_INT32;
 	return TRUE;
 }
 
