@@ -554,6 +554,17 @@ struct suite_vmp_constants : utils_vmp_vmi
 		TEST(vmp_const_add_T((vm_int8)-123, 123.12f));
 		TEST(vmp_const_add_T((vm_int8)-123, 123.12));
 
+		TEST(vmp_const_add_T((vm_uint8)129, (vm_int8)-12));
+		TEST(vmp_const_add_T((vm_uint8)129, (vm_uint8)244));
+		TEST(vmp_const_add_T((vm_uint8)129, (vm_int16)1234));
+		TEST(vmp_const_add_T((vm_uint8)129, (vm_uint16)30000));
+		TEST(vmp_const_add_T((vm_uint8)129, (vm_int32)34768));
+		TEST(vmp_const_add_T((vm_uint8)129, (vm_uint32)INT32_MAX + 100u));
+		TEST(vmp_const_add_T((vm_uint8)129, (vm_int64)UINT32_MAX + 100ll));
+		TEST(vmp_const_add_T((vm_uint8)129, (vm_uint64)INT64_MAX + 100ull));
+		TEST(vmp_const_add_T((vm_uint8)129, 123.12f));
+		TEST(vmp_const_add_T((vm_int8)129, 123.12));
+
 		TEST(vmp_const_add_T((vm_int32)1234, (vm_int32)5678));
 	}
 };
