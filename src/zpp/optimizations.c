@@ -25,42 +25,7 @@ BOOL zpp_syntax_tree_merge_constants(zpp_token_type op, vmp_const* lhs, const vm
 	case ZPP_TOKEN_OP_MINUS:
 		return vmp_const_sub(lhs, rhs);
 	case ZPP_TOKEN_OP_MULT:
-		switch (data_type)
-		{
-		case VMI_INSTR_PROP_INT8:
-			lhs->i1 = lhs->i1 * rhs->i1;
-			break;
-		case VMI_INSTR_PROP_UINT8:
-			lhs->ui1 = lhs->ui1 * rhs->ui1;
-			break;
-		case VMI_INSTR_PROP_INT16:
-			lhs->i2 = lhs->i2 * rhs->i2;
-			break;
-		case VMI_INSTR_PROP_UINT16:
-			lhs->ui2 = lhs->ui2 * rhs->ui2;
-			break;
-		case VMI_INSTR_PROP_INT32:
-			lhs->i4 = lhs->i4 * rhs->i4;
-			break;
-		case VMI_INSTR_PROP_UINT32:
-			lhs->ui4 = lhs->ui4 * rhs->ui4;
-			break;
-		case VMI_INSTR_PROP_INT64:
-			lhs->i8 = lhs->i8 * rhs->i8;
-			break;
-		case VMI_INSTR_PROP_UINT64:
-			lhs->ui8 = lhs->ui8 * rhs->ui8;
-			break;
-		case VMI_INSTR_PROP_FLOAT32:
-			lhs->f4 = lhs->f4 * rhs->f4;
-			break;
-		case VMI_INSTR_PROP_FLOAT64:
-			lhs->f8 = lhs->f8 * rhs->f8;
-			break;
-		default:
-			return FALSE;
-		}
-		break;
+		return vmp_const_mult(lhs, rhs);
 	case ZPP_TOKEN_OP_DIV:
 		switch (data_type)
 		{
