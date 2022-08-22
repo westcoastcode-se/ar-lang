@@ -728,19 +728,26 @@ end:
 	return left;
 }
 
+const vm_string* zpp_int32_type_name() {
+	static const char name[] = "int32";
+	static const vm_string str = { name, name + 5 };
+	return &str;
+}
+
+const vm_string* zpp_float64_type_name() {
+	static const char name[] = "float64";
+	static const vm_string str = { name, name + 7 };
+	return &str;
+}
+
 zpp_syntax_tree_node zpp_synax_tree_parse_atom(zpp_compiler* c, zpp_token* t, const zpp_compiler_state* state)
 {
 	if (t->type == ZPP_TOKEN_VALUE_INT) {
 		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
-		if (val == NULL) {
-			zpp_message_out_of_memory(state);
-			return zpp_syntax_tree_error();
-		}
+		if (val == NULL)
+			return zpp_synax_tree_out_of_memory(state);
 		val->closest_function_node = state->func_node;
-		vm_string type_name;
-		type_name.start = "int32";
-		type_name.end = type_name.start + 5;
-		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &type_name);
+		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, zpp_int32_type_name());
 		val->value.i4 = zpp_token_i4(t);
 		// TODO: Constant types are always known. They might have a parent CAST unaryop though
 		val->value.type = zpp_symbol_get_data_type(val->header.stack_type);
@@ -749,16 +756,11 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(zpp_compiler* c, zpp_token* t, co
 	}
 	else if (t->type == ZPP_TOKEN_VALUE_DECIMAL) {
 		zpp_syntax_tree_const_value* const val = zpp_syntax_tree_const_value_new();
-		if (val == NULL) {
-			zpp_message_out_of_memory(state);
-			return zpp_syntax_tree_error();
-		}
+		if (val == NULL)
+			return zpp_synax_tree_out_of_memory(state);
 		val->closest_function_node = state->func_node;
-		vm_string type_name;
-		type_name.start = "float32";
-		type_name.end = type_name.start + 7;
-		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, &type_name);
-		val->value.f4 = zpp_token_f4(t);
+		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, zpp_float64_type_name());
+		val->value.f8 = zpp_token_f8(t);
 		// TODO: Constant types are always known. They might have a parent CAST unaryop though
 		val->value.type = zpp_symbol_get_data_type(val->header.stack_type);
 		zpp_token_next(t);

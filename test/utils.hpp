@@ -395,6 +395,14 @@ struct utils_vm : test_utils
 		return str;
 	}
 
+	const char* to_string(vm_float64 value) {
+		// Just use new but not delete because we are lazy
+		// TODO: Make this better
+		char* str = new char[64];
+		sprintf(str, "%lf", value);
+		return str;
+	}
+
 	void verify_stack_size(vmi_thread* t, size_t expected_size)
 	{
 		const size_t size = (size_t)(t->stack.top - t->stack.blocks);

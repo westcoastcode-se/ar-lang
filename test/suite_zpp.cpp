@@ -259,13 +259,13 @@ func Get() %s {
 	void operator()()
 	{
 		TEST(const_T<vm_int32>(12345));
-		TEST(const_T<vm_float32>(123.45f));
+		TEST(const_T<vm_float64>(123.45));
 
 		TEST(const_add_T<vm_int32>(12345, 123));
-		TEST(const_add_T<vm_float32>(123.45f, 1.2f));
+		TEST(const_add_T<vm_float64>(123.45, 1.2));
 
 		TEST(const_sub_T<vm_int32>(12345, 123));
-		TEST(const_sub_T<vm_float32>(123.45f, 1.2f));
+		TEST(const_sub_T<vm_float64>(123.45, 1.2));
 	}
 };
 
