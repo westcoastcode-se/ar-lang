@@ -4,7 +4,7 @@
 
 // Merge two constants and put the result into the supplied memory. Returns FALSE if the merge was not successfull - for example
 // if the underlying memory size has to be uplifted (increased to fit the new constant value)
-BOOL zpp_syntax_tree_merge_constants(zpp_token_type op, const vmp_constant* lhs, const vmp_constant* rhs, vmp_constant* result)
+BOOL zpp_syntax_tree_merge_constants(zpp_token_type op, const vmp_const* lhs, const vmp_const* rhs, vmp_const* result)
 {
 	if (lhs->type != rhs->type) {
 		// TODO: Allow different types, for example 2 * 2.0 should result into a 4.0 decimal value

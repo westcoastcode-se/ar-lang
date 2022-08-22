@@ -29,43 +29,43 @@ struct utils_vmp : utils_vm
 		vm_memory_test_bytes_left();
 	}
 
-	vmp_constant vmp_const(vm_int8 value) {
+	vmp_const to_const(vm_int8 value) {
 		return vmp_const_i1(value);
 	}
 
-	vmp_constant vmp_const(vm_uint8 value) {
+	vmp_const to_const(vm_uint8 value) {
 		return vmp_const_ui1(value);
 	}
 
-	vmp_constant vmp_const(vm_int16 value) {
+	vmp_const to_const(vm_int16 value) {
 		return vmp_const_i2(value);
 	}
 
-	vmp_constant vmp_const(vm_uint16 value) {
+	vmp_const to_const(vm_uint16 value) {
 		return vmp_const_ui2(value);
 	}
 
-	vmp_constant vmp_const(vm_int32 value) {
+	vmp_const to_const(vm_int32 value) {
 		return vmp_const_i4(value);
 	}
 
-	vmp_constant vmp_const(vm_uint32 value) {
+	vmp_const to_const(vm_uint32 value) {
 		return vmp_const_ui4(value);
 	}
 
-	vmp_constant vmp_const(vm_int64 value) {
+	vmp_const to_const(vm_int64 value) {
 		return vmp_const_i8(value);
 	}
 
-	vmp_constant vmp_const(vm_uint64 value) {
+	vmp_const to_const(vm_uint64 value) {
 		return vmp_const_ui8(value);
 	}
 
-	vmp_constant vmp_const(vm_float32 value) {
+	vmp_const to_const(vm_float32 value) {
 		return vmp_const_f4(value);
 	}
 
-	vmp_constant vmp_const(vm_float64 value) {
+	vmp_const to_const(vm_float64 value) {
 		return vmp_const_f8(value);
 	}
 
@@ -454,7 +454,7 @@ struct suite_vmp_neg : utils_vmp_vmi
 	}
 };
 
-struct suite_vmp_constants : utils_vmp_vmi
+struct suite_vmp_consts : utils_vmp_vmi
 {
 	template<typename T>
 	void ldc_T(T value)
@@ -475,7 +475,7 @@ struct suite_vmp_constants : utils_vmp_vmi
 		//	ret
 		// }
 		vmp_func_begin_body(add);
-		vmp_func_add_instr(add, vmp_instr_ldc(primitive_type, vmp_const((T)value)));
+		vmp_func_add_instr(add, vmp_instr_ldc(primitive_type, to_const((T)value)));
 		vmp_func_add_instr(add, vmp_instr_ret());
 		vmp_func_begin_end(add);
 
@@ -490,8 +490,8 @@ struct suite_vmp_constants : utils_vmp_vmi
 	template<typename LHS, typename RHS>
 	void vmp_const_add_T(LHS lhs, RHS rhs)
 	{
-		vmp_constant lhs_const = vmp_const(lhs);
-		vmp_constant rhs_const = vmp_const(rhs);
+		vmp_const lhs_const = to_const(lhs);
+		vmp_const rhs_const = to_const(rhs);
 		vmp_const_add(&lhs_const, &rhs_const);
 
 		auto expected = lhs + rhs;
@@ -596,10 +596,10 @@ struct suite_vmp_locals : utils_vmp_vmi
 		//	retvmp_instr_stl
 		// }
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const((vm_int32)100)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const((vm_int32)100)));
 		vmp_func_add_instr(get, vmp_instr_stl(get_local1));
 		vmp_func_add_instr(get, vmp_instr_ldl(get_local1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const((vm_int32)1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const((vm_int32)1)));
 		vmp_func_add_instr(get, vmp_instr_add(get_type<vm_int32>()));
 		vmp_func_add_instr(get, vmp_instr_stl(get_local1));
 		vmp_func_add_instr(get, vmp_instr_ldl(get_local1));
@@ -634,7 +634,7 @@ struct suite_vmp_locals : utils_vmp_vmi
 		// }
 		vmp_func_begin_body(inner_get);
 		vmp_func_add_instr(inner_get, vmp_instr_lda(inner_get_arg1));
-		vmp_func_add_instr(inner_get, vmp_instr_ldc(get_type<T>(), vmp_const((T)value)));
+		vmp_func_add_instr(inner_get, vmp_instr_ldc(get_type<T>(), to_const((T)value)));
 		vmp_func_add_instr(inner_get, vmp_instr_sturef(get_type<T>()));
 		vmp_func_add_instr(inner_get, vmp_instr_ret());
 		vmp_func_begin_end(inner_get);
@@ -1165,7 +1165,7 @@ struct suite_vmp_memory : utils_vmp_vmi
 		//	ret
 		// }
 		vmp_func_begin_body(_do);
-		vmp_func_add_instr(_do, vmp_instr_ldc(get_type<vm_int32>(), vmp_const((vm_int32)sizeof(T))));
+		vmp_func_add_instr(_do, vmp_instr_ldc(get_type<vm_int32>(), to_const((vm_int32)sizeof(T))));
 		vmp_func_add_instr(_do, vmp_instr_alloch());
 		vmp_func_add_instr(_do, vmp_instr_freeh());
 		vmp_func_add_instr(_do, vmp_instr_ret());
@@ -1294,12 +1294,12 @@ struct suite_vmp_element : utils_vmp_vmi
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_ldl_a(get_local_1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(0)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<T>(), vmp_const((T)values[0])));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(0)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<T>(), to_const((T)values[0])));
 		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
 		vmp_func_add_instr(get, vmp_instr_ldl_a(get_local_1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(1)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<T>(), vmp_const((T)values[1])));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<T>(), to_const((T)values[1])));
 		vmp_func_add_instr(get, vmp_instr_stelem(array_type));
 		vmp_func_add_instr(get, vmp_instr_ldl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_ret());
@@ -1343,12 +1343,12 @@ struct suite_vmp_element : utils_vmp_vmi
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(0)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<T>(), vmp_const((T)values[0])));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(0)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<T>(), to_const((T)values[0])));
 		vmp_func_add_instr(get, vmp_instr_stelem(ptr_type));
 		vmp_func_add_instr(get, vmp_instr_lda(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(1)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<T>(), vmp_const((T)values[1])));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<T>(), to_const((T)values[1])));
 		vmp_func_add_instr(get, vmp_instr_stelem(ptr_type));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
@@ -1404,10 +1404,10 @@ struct suite_vmp_element : utils_vmp_vmi
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda_a(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(0)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(0)));
 		vmp_func_add_instr(get, vmp_instr_ldelem(array_type));
 		vmp_func_add_instr(get, vmp_instr_lda_a(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(1)));
 		vmp_func_add_instr(get, vmp_instr_ldelem(array_type));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
@@ -1454,10 +1454,10 @@ struct suite_vmp_element : utils_vmp_vmi
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(0)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(0)));
 		vmp_func_add_instr(get, vmp_instr_ldelem(ptr_type));
 		vmp_func_add_instr(get, vmp_instr_lda(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(1)));
 		vmp_func_add_instr(get, vmp_instr_ldelem(ptr_type));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
@@ -1545,7 +1545,7 @@ struct suite_vmp_compares : utils_vmp_vmi
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(10)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(10)));
 		vmp_func_add_instr(get, vmp_instr_cgt(get_type<vm_int32>()));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
@@ -1580,7 +1580,7 @@ struct suite_vmp_compares : utils_vmp_vmi
 		// }
 		vmp_func_begin_body(get);
 		vmp_func_add_instr(get, vmp_instr_lda(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(10)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(10)));
 		vmp_func_add_instr(get, vmp_instr_clt(get_type<vm_int32>()));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
@@ -1635,13 +1635,13 @@ struct suite_vmp_jumps : utils_vmp_vmi
 		vmp_func_begin_body(get);
 		auto marker = vmp_func_new_marker(get);
 		vmp_func_add_instr(get, vmp_instr_lda(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(10)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(10)));
 		vmp_func_add_instr(get, vmp_instr_clt(get_type<vm_int32>()));
 		vmp_func_add_instr(get, vmp_instr_jmpt(marker));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(50)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(50)));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_marker_set_instr(marker,
-			vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(150)))
+			vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(150)))
 		);
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
@@ -1682,13 +1682,13 @@ struct suite_vmp_jumps : utils_vmp_vmi
 		vmp_func_begin_body(get);
 		auto marker = vmp_func_new_marker(get);
 		vmp_func_add_instr(get, vmp_instr_lda(get_arg1));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(10)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(10)));
 		vmp_func_add_instr(get, vmp_instr_clt(get_type<vm_int32>()));
 		vmp_func_add_instr(get, vmp_instr_jmpf(marker));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(50)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(50)));
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_marker_set_instr(marker,
-			vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(150)))
+			vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(150)))
 		);
 		vmp_func_add_instr(get, vmp_instr_ret());
 		vmp_func_begin_end(get);
@@ -1764,8 +1764,8 @@ struct suite_vmp_calls : utils_vmp_vmi
 		auto const_val1 = 10;
 		auto const_val2 = 20;
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(const_val1)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(const_val2)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(const_val1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_call(add));
 		vmp_func_add_instr(get, vmp_instr_stl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type<vm_int32>()));
@@ -1825,8 +1825,8 @@ struct suite_vmp_calls : utils_vmp_vmi
 		auto const_val1 = 10;
 		auto const_val2 = 20;
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(const_val1)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(const_val2)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(const_val1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_callnative(add));
 		vmp_func_add_instr(get, vmp_instr_stl(get_local_1));
 		vmp_func_add_instr(get, vmp_instr_frees(get_type<vm_int32>()));
@@ -1891,8 +1891,8 @@ struct suite_vmp_calls : utils_vmp_vmi
 		auto const_val1 = 10;
 		auto const_val2 = 20;
 		vmp_func_begin_body(get);
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(const_val1)));
-		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), vmp_const(const_val2)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(const_val1)));
+		vmp_func_add_instr(get, vmp_instr_ldc(get_type<vm_int32>(), to_const(const_val2)));
 		vmp_func_add_instr(get, vmp_instr_ldf(add));
 		vmp_func_add_instr(get, vmp_instr_calluref(add));
 		vmp_func_add_instr(get, vmp_instr_stl(get_local_1));
@@ -1921,7 +1921,7 @@ struct suite_vmp_calls : utils_vmp_vmi
 void suite_vmp()
 {
 	SUITE(suite_vmp_tests);
-	SUITE(suite_vmp_constants);
+	SUITE(suite_vmp_consts);
 	SUITE(suite_vmp_locals);
 	SUITE(suite_vmp_globals);
 	SUITE(suite_vmp_add_sub_mult_div);

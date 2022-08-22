@@ -123,7 +123,7 @@ typedef struct zpp_syntax_tree_const_value
 {
 	zpp_syntax_tree header;
 	// The constant value to be pushed on the stack
-	vmp_constant value;
+	vmp_const value;
 	// Closest function node
 	zpp_syntax_tree_func* closest_function_node;
 } zpp_syntax_tree_const_value;

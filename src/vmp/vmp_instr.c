@@ -74,7 +74,7 @@ vmp_instr* vmp_instr_locals(const vmp_func* func)
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
-vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant)
+vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_const constant)
 {
 	switch (constant.type)
 	{
@@ -104,7 +104,7 @@ vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_constant constant)
 	}
 }
 
-vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_constant constant)
+vmp_instr* vmp_instr_ldc_s(const vmp_type* type, vmp_const constant)
 {
 	vmp_instr_def_ldc_s* instr = (vmp_instr_def_ldc_s*)vm_malloc(sizeof(vmp_instr_def_ldc_s));
 	if (instr == NULL)
@@ -311,7 +311,7 @@ vmp_instr* vmp_instr_ldelem(const vmp_type* type)
 	}
 }
 
-vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_constant constant)
+vmp_instr* vmp_instr_ldc_i8(const vmp_type* type, vmp_const constant)
 {
 	ASSERT_NOT_NULL(type);
 
