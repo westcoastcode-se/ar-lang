@@ -943,6 +943,17 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 			vmp_const_add_f8_f4, vmp_const_add_f8_f8,
 			vmp_const_add_f8_ptr
 		},
+		// PTR
+		{
+			vmp_const_not_implemented,
+			vmp_const_not_implemented,
+			vmp_const_not_implemented, vmp_const_not_implemented,
+			vmp_const_not_implemented, vmp_const_not_implemented,
+			vmp_const_not_implemented, vmp_const_not_implemented,
+			vmp_const_not_implemented, vmp_const_not_implemented,
+			vmp_const_not_implemented, vmp_const_not_implemented,
+			vmp_const_not_implemented
+		}
 	};
 
 	if (lhs->type <= VMI_INSTR_PROP_UNKNOWN || lhs->type >= VMI_INSTR_PROP_DATA_TYPE_COUNT)
