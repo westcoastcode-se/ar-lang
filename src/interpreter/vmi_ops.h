@@ -21,18 +21,19 @@
 // Default type defines
 //
 
-#define VMI_INSTR_PROP_BOOL (0)
-#define VMI_INSTR_PROP_I1 (1)
-#define VMI_INSTR_PROP_UI1 (2)
-#define VMI_INSTR_PROP_I2 (3)
-#define VMI_INSTR_PROP_UI2 (4)
-#define VMI_INSTR_PROP_I4 (5)
-#define VMI_INSTR_PROP_UI4 (6)
-#define VMI_INSTR_PROP_I8 (7)
-#define VMI_INSTR_PROP_UI8 (8)
-#define VMI_INSTR_PROP_F4 (9)
-#define VMI_INSTR_PROP_F8 (10)
-#define VMI_INSTR_PROP_PTR (11)
+#define VMI_INSTR_PROP_UNKNOWN (0)
+#define VMI_INSTR_PROP_BOOL (1)
+#define VMI_INSTR_PROP_I1 (2)
+#define VMI_INSTR_PROP_UI1 (3)
+#define VMI_INSTR_PROP_I2 (4)
+#define VMI_INSTR_PROP_UI2 (5)
+#define VMI_INSTR_PROP_I4 (6)
+#define VMI_INSTR_PROP_UI4 (7)
+#define VMI_INSTR_PROP_I8 (8)
+#define VMI_INSTR_PROP_UI8 (9)
+#define VMI_INSTR_PROP_F4 (10)
+#define VMI_INSTR_PROP_F8 (11)
+#define VMI_INSTR_PROP_PTR (12)
 #define VMI_INSTR_PROP_DATA_TYPE_COUNT (VMI_INSTR_PROP_PTR+1)
 
 enum vmi_icodes

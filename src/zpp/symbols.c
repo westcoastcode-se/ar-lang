@@ -563,7 +563,7 @@ vm_int32 zpp_symbol_get_data_type(zpp_symbol* s)
 		return t->data_type;
 	}
 
-	return -1;
+	return VMI_INSTR_PROP_UNKNOWN;
 }
 
 zpp_local* zpp_local_new(const vm_string* name)

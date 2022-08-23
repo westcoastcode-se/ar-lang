@@ -811,8 +811,20 @@ BOOL vmp_const_add_f8_ptr(vmp_const* lhs, const vmp_const* rhs)
 BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 {
 	static const vmp_const_combine_fn functions[VMI_INSTR_PROP_DATA_TYPE_COUNT][VMI_INSTR_PROP_DATA_TYPE_COUNT] = {
+		// UNKNOWN
+		{
+			vmp_const_not_allowed,
+			vmp_const_not_allowed,
+			vmp_const_not_allowed, vmp_const_not_allowed,
+			vmp_const_not_allowed, vmp_const_not_allowed,
+			vmp_const_not_allowed, vmp_const_not_allowed,
+			vmp_const_not_allowed, vmp_const_not_allowed,
+			vmp_const_not_allowed, vmp_const_not_allowed,
+			vmp_const_not_allowed
+		},
 		// BOOL
 		{
+			vmp_const_not_allowed,
 			vmp_const_not_allowed,
 			vmp_const_not_allowed, vmp_const_not_allowed,
 			vmp_const_not_allowed, vmp_const_not_allowed,
@@ -823,6 +835,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// INT8
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_i1_bool,
 			vmp_const_add_i1_i1, vmp_const_add_i1_ui1,
 			vmp_const_add_i1_i2, vmp_const_add_i1_ui2,
@@ -833,6 +846,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// UINT8
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_ui1_bool,
 			vmp_const_add_ui1_i1, vmp_const_add_ui1_ui1,
 			vmp_const_add_ui1_i2, vmp_const_add_ui1_ui2,
@@ -843,6 +857,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// INT16
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_i2_bool,
 			vmp_const_add_i2_i1, vmp_const_add_i2_ui1,
 			vmp_const_add_i2_i2, vmp_const_add_i2_ui2,
@@ -853,6 +868,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// UINT16
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_ui2_bool,
 			vmp_const_add_ui2_i1, vmp_const_add_ui2_ui1,
 			vmp_const_add_ui2_i2, vmp_const_add_ui2_ui2,
@@ -863,6 +879,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// INT32
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_i4_bool,
 			vmp_const_add_i4_i1, vmp_const_add_i4_ui1,
 			vmp_const_add_i4_i2, vmp_const_add_i4_ui2,
@@ -873,6 +890,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// UINT32
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_ui4_bool,
 			vmp_const_add_ui4_i1, vmp_const_add_ui4_ui1,
 			vmp_const_add_ui4_i2, vmp_const_add_ui4_ui2,
@@ -883,6 +901,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// INT64
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_i8_bool,
 			vmp_const_add_i8_i1, vmp_const_add_i8_ui1,
 			vmp_const_add_i8_i2, vmp_const_add_i8_ui2,
@@ -893,6 +912,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// UINT64
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_ui8_bool,
 			vmp_const_add_ui8_i1, vmp_const_add_ui8_ui1,
 			vmp_const_add_ui8_i2, vmp_const_add_ui8_ui2,
@@ -903,6 +923,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// FLOAT32
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_f4_bool,
 			vmp_const_add_f4_i1, vmp_const_add_f4_ui1,
 			vmp_const_add_f4_i2, vmp_const_add_f4_ui2,
@@ -913,6 +934,7 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 		// FLOAT64
 		{
+			vmp_const_not_allowed,
 			vmp_const_add_f8_bool,
 			vmp_const_add_f8_i1, vmp_const_add_f8_ui1,
 			vmp_const_add_f8_i2, vmp_const_add_f8_ui2,
@@ -923,7 +945,9 @@ BOOL vmp_const_add(vmp_const* lhs, const vmp_const* rhs)
 		},
 	};
 
-	assert(lhs->type >= VMI_INSTR_PROP_BOOL && lhs->type < VMI_INSTR_PROP_DATA_TYPE_COUNT);
-	assert(rhs->type >= VMI_INSTR_PROP_BOOL && rhs->type < VMI_INSTR_PROP_DATA_TYPE_COUNT);
+	if (lhs->type <= VMI_INSTR_PROP_UNKNOWN || lhs->type >= VMI_INSTR_PROP_DATA_TYPE_COUNT)
+		return FALSE;
+	if (rhs->type <= VMI_INSTR_PROP_UNKNOWN || rhs->type >= VMI_INSTR_PROP_DATA_TYPE_COUNT)
+		return FALSE;
 	return functions[lhs->type][rhs->type](lhs, rhs);
 }

@@ -96,6 +96,17 @@ static inline char* vm_str_cpy(char* dest, const vm_string* str)
 		_const_C##name + len \
 	}
 
+// Define a constant vm_string
+#define CONST_VM_STRING(ns, name, value, len) \
+const vm_string* ##ns##_##name() { \
+	static const char c[] = value; \
+	static const vm_string str = { c, c + len }; \
+	return &str; \
+}
+
+// Get a constant string
+#define GET_CONST_VM_STRING(ns, name) ns##_##name()
+
 // Get the address for a constant vm_string
 #define VM_STRING_CONST_GET(name) (&_const_S##name)
 
