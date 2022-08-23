@@ -78,9 +78,9 @@ vmp_instr* vmp_instr_ldc(const vmp_type* type, vmp_const constant)
 {
 	switch (constant.type)
 	{
-	case VMI_INSTR_PROP_INT64:
-	case VMI_INSTR_PROP_UINT64:
-	case VMI_INSTR_PROP_FLOAT64:
+	case VMI_INSTR_PROP_I8:
+	case VMI_INSTR_PROP_UI8:
+	case VMI_INSTR_PROP_F8:
 	{
 		vmp_instr_def_ldc* instr = (vmp_instr_def_ldc*)vm_malloc(sizeof(vmp_instr_def_ldc));
 		if (instr == NULL)
