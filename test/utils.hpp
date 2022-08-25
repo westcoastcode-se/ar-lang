@@ -8,6 +8,12 @@ struct utils_vm_datatype
 };
 
 template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_BOOL>
+{
+	typedef vm_int32 type;
+};
+
+template<>
 struct utils_vm_datatype<VMI_INSTR_PROP_I1>
 {
 	typedef vm_int8 type;
@@ -67,9 +73,25 @@ struct utils_vm_datatype<VMI_INSTR_PROP_F8>
 	typedef vm_float64 type;
 };
 
+template<>
+struct utils_vm_datatype<VMI_INSTR_PROP_PTR>
+{
+	typedef vm_byte* type;
+};
+
 template<typename T>
 struct uitls_vm_type
 {
+};
+
+template<>
+struct uitls_vm_type<bool>
+{
+	static constexpr auto name = "bool";
+	static constexpr auto ptr = "*bool";
+	static constexpr auto shorthand = "bool";
+	static constexpr auto memory = "4";
+	static constexpr auto props1 = VMI_INSTR_PROP_BOOL;
 };
 
 template<>
@@ -170,6 +192,20 @@ struct uitls_vm_type<vm_float64>
 	static constexpr auto shorthand = "f8";
 	static constexpr auto memory = "8";
 	static constexpr auto props1 = VMI_INSTR_PROP_F8;
+};
+
+template<>
+struct uitls_vm_type<void*>
+{
+	static constexpr auto name = "*void";
+	static constexpr auto ptr = "**void";
+	static constexpr auto shorthand = "void";
+#if defined(VM_64BIT)
+	static constexpr auto memory = "8";
+#else
+	static constexpr auto memory = "4";
+#endif
+	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
 };
 
 template<>
@@ -420,6 +456,13 @@ struct utils_vm : test_utils
 		}
 	}
 
+	void beforeEach()
+	{
+	}
+
+	void afterEach()
+	{
+	}
 
 	const char* to_string(vm_int8 value) {
 		// Just use new but not delete because we are lazy

@@ -21,6 +21,8 @@
 // Default type defines
 //
 
+typedef vm_int32 vmi_datatype;
+
 #define VMI_INSTR_PROP_UNKNOWN (0)
 #define VMI_INSTR_PROP_BOOL (1)
 #define VMI_INSTR_PROP_I1 (2)

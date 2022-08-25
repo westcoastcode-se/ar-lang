@@ -7,6 +7,7 @@ struct utils_vmp : utils_vm
 
 	void beforeEach()
 	{
+		utils_vm::beforeEach();
 		pipeline = vmp_pipeline_new();
 		if (pipeline == nullptr)
 			throw_(error() << "could not create a new VM pipeline");
@@ -27,6 +28,7 @@ struct utils_vmp : utils_vm
 		}
 
 		vm_memory_test_bytes_left();
+		utils_vm::afterEach();
 	}
 
 	vmp_const to_const(vm_int8 value) {
@@ -107,6 +109,8 @@ struct utils_vmp_vmi : utils_vmp
 	void beforeEach()
 	{
 		utils_vmp::beforeEach();
+		thread = nullptr;
+		process = nullptr;
 	}
 
 	void afterEach()
@@ -451,6 +455,36 @@ struct suite_vmp_neg : utils_vmp_vmi
 		TEST(neg_T<vm_uint64>((vm_uint64)(INT32_MAX + 1000i64)));
 		TEST(neg_T<vm_float32>(1.0f));
 		TEST(neg_T<vm_float64>(-10.0));
+	}
+};
+
+
+struct suite_vmp_datatypes : utils_vm
+{
+	template<typename LHS, typename RHS>
+	void vmp_const_datatype_T(LHS lhs, RHS rhs, vmi_datatype expected_data_type)
+	{
+		const vmi_datatype lhs_dt = props1_of(lhs);
+		const vmi_datatype rhs_dt = props1_of(rhs);
+		const auto data_type = vmp_const_datatype(lhs_dt, rhs_dt);
+		assert_equals(data_type, expected_data_type);
+		const vmi_datatype cpp_data_type = props1_of(lhs + rhs);
+		assert_equals(cpp_data_type, expected_data_type);
+	}
+
+	void operator()()
+	{
+		TEST(vmp_const_datatype_T((vm_int8)1, true, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_int8)INT8_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_uint8)INT8_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_int16)INT16_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_uint16)INT16_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_int32)INT32_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_uint32)INT32_MAX, VMI_INSTR_PROP_UI4));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_int64)INT64_MAX, VMI_INSTR_PROP_I8));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_uint64)INT64_MAX, VMI_INSTR_PROP_UI8));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_float32)1.0f, VMI_INSTR_PROP_F4));
+		TEST(vmp_const_datatype_T((vm_int8)1, (vm_float64)1.0, VMI_INSTR_PROP_F8));
 	}
 };
 
@@ -2084,6 +2118,7 @@ void suite_vmp()
 {
 	SUITE(suite_vmp_tests);
 	SUITE(suite_vmp_consts);
+	SUITE(suite_vmp_datatypes);
 	SUITE(suite_vmp_locals);
 	SUITE(suite_vmp_globals);
 	SUITE(suite_vmp_add_sub_mult_div);

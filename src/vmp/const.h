@@ -104,6 +104,9 @@ extern BOOL vmp_const_mult(vmp_const* lhs, const vmp_const* rhs);
 // If one of the values are a floating value then the resulting value is turned into a floating value
 extern BOOL vmp_const_div(vmp_const* lhs, const vmp_const* rhs);
 
+// Figure out the resulting datatype if two other data-types is processed by an operatur, such as add
+extern vm_int32 vmp_const_datatype(vm_int32 lhs, vm_int32 rhs);
+
 // TODO: Add more operators, such as bit manipulator operators
 
 #endif
