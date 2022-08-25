@@ -485,6 +485,42 @@ struct suite_vmp_datatypes : utils_vm
 		TEST(vmp_const_datatype_T((vm_int8)1, (vm_uint64)INT64_MAX, VMI_INSTR_PROP_UI8));
 		TEST(vmp_const_datatype_T((vm_int8)1, (vm_float32)1.0f, VMI_INSTR_PROP_F4));
 		TEST(vmp_const_datatype_T((vm_int8)1, (vm_float64)1.0, VMI_INSTR_PROP_F8));
+
+		TEST(vmp_const_datatype_T((vm_uint8)1, true, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_int8)INT8_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_uint8)INT8_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_int16)INT16_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_uint16)INT16_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_int32)INT32_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_uint32)INT32_MAX, VMI_INSTR_PROP_UI4));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_int64)INT64_MAX, VMI_INSTR_PROP_I8));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_uint64)INT64_MAX, VMI_INSTR_PROP_UI8));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_float32)1.0f, VMI_INSTR_PROP_F4));
+		TEST(vmp_const_datatype_T((vm_uint8)1, (vm_float64)1.0, VMI_INSTR_PROP_F8));
+
+		TEST(vmp_const_datatype_T((vm_int16)1, true, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_int8)INT8_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_uint8)INT8_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_int16)INT16_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_uint16)INT16_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_int32)INT32_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_uint32)INT32_MAX, VMI_INSTR_PROP_UI4));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_int64)INT64_MAX, VMI_INSTR_PROP_I8));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_uint64)INT64_MAX, VMI_INSTR_PROP_UI8));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_float32)1.0f, VMI_INSTR_PROP_F4));
+		TEST(vmp_const_datatype_T((vm_int16)1, (vm_float64)1.0, VMI_INSTR_PROP_F8));
+
+		TEST(vmp_const_datatype_T((vm_uint16)1, true, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_int8)INT8_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_uint8)INT8_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_int16)INT16_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_uint16)INT16_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_int32)INT32_MAX, VMI_INSTR_PROP_I4));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_uint32)INT32_MAX, VMI_INSTR_PROP_UI4));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_int64)INT64_MAX, VMI_INSTR_PROP_I8));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_uint64)INT64_MAX, VMI_INSTR_PROP_UI8));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_float32)1.0f, VMI_INSTR_PROP_F4));
+		TEST(vmp_const_datatype_T((vm_uint16)1, (vm_float64)1.0, VMI_INSTR_PROP_F8));
 	}
 };
 
