@@ -39,52 +39,52 @@ BOOL zpp_compiler_create_system_package(zpp_compiler* c)
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, pbool), sizeof(BOOL*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int8), sizeof(vm_int8), 0, VMI_INSTR_PROP_I1, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int8), sizeof(vm_int8), 0, VMI_INSTR_PROP_I8, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, pint8), sizeof(vm_int8*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint8), sizeof(vm_uint8), 0, VMI_INSTR_PROP_UI1, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint8), sizeof(vm_uint8), 0, VMI_INSTR_PROP_UI8, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, puint8), sizeof(vm_uint8*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int16), sizeof(vm_int16), 0, VMI_INSTR_PROP_I2, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int16), sizeof(vm_int16), 0, VMI_INSTR_PROP_I86, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, pint16), sizeof(vm_int16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint16), sizeof(vm_uint16), 0, VMI_INSTR_PROP_UI2, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint16), sizeof(vm_uint16), 0, VMI_INSTR_PROP_UI86, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, puint16), sizeof(vm_uint16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int32), sizeof(vm_int32), 0, VMI_INSTR_PROP_I4, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int32), sizeof(vm_int32), 0, VMI_INSTR_PROP_I32, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, pint32), sizeof(vm_int32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint32), sizeof(vm_uint32), 0, VMI_INSTR_PROP_UI4, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint32), sizeof(vm_uint32), 0, VMI_INSTR_PROP_UI32, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, puint32), sizeof(vm_uint32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int64), sizeof(vm_int64), 0, VMI_INSTR_PROP_I8, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int64), sizeof(vm_int64), 0, VMI_INSTR_PROP_I64, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, pint64), sizeof(vm_int64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint64), sizeof(vm_uint64), 0, VMI_INSTR_PROP_UI8, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint64), sizeof(vm_uint64), 0, VMI_INSTR_PROP_UI64, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, puint64), sizeof(vm_uint64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, float32), sizeof(vm_float32), 0, VMI_INSTR_PROP_F4, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, float32), sizeof(vm_float32), 0, VMI_INSTR_PROP_F32, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, pfloat32), sizeof(vm_float32*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, float64), sizeof(vm_float64), 0, VMI_INSTR_PROP_F8, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, float64), sizeof(vm_float64), 0, VMI_INSTR_PROP_F64, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, pfloat64), sizeof(vm_float64*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);

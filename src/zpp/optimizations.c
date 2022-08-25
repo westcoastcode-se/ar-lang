@@ -81,13 +81,13 @@ zpp_syntax_tree_node zpp_synax_tree_merge_unaryop(const zpp_compiler_state* s, z
 			if (symbol->type == ZPP_SYMBOL_TYPE) {
 				zpp_type* type = (zpp_type*)symbol;
 				// Integer type, float types and doubles
-				if (type->data_type >= VMI_INSTR_PROP_I1 && type->data_type <= VMI_INSTR_PROP_UI8) {
+				if (type->data_type >= VMI_INSTR_PROP_I8 && type->data_type <= VMI_INSTR_PROP_UI64) {
 					right_value->value.i8 = -right_value->value.i8;
 				}
-				else if (type->data_type >= VMI_INSTR_PROP_F4) {
+				else if (type->data_type >= VMI_INSTR_PROP_F32) {
 					right_value->value.f4 = -right_value->value.f4;
 				}
-				else if (type->data_type >= VMI_INSTR_PROP_F8) {
+				else if (type->data_type >= VMI_INSTR_PROP_F64) {
 					right_value->value.f8 = -right_value->value.f8;
 				}
 				else {
@@ -107,7 +107,7 @@ zpp_syntax_tree_node zpp_synax_tree_merge_unaryop(const zpp_compiler_state* s, z
 			if (symbol->type == ZPP_SYMBOL_TYPE) {
 				zpp_type* type = (zpp_type*)symbol;
 				// Integer type, float types and doubles
-				if (type->data_type >= VMI_INSTR_PROP_I1 && type->data_type <= VMI_INSTR_PROP_UI8) {
+				if (type->data_type >= VMI_INSTR_PROP_I8 && type->data_type <= VMI_INSTR_PROP_UI64) {
 					right_value->value.i8 = ~right_value->value.i8;
 				}
 				else {
@@ -190,13 +190,13 @@ void zpp_synax_tree_merge_unaryop2(const zpp_compiler_state* s, zpp_syntax_tree_
 			if (symbol->type == ZPP_SYMBOL_TYPE) {
 				zpp_type* type = (zpp_type*)symbol;
 				// Integer type, float types and doubles
-				if (type->data_type >= VMI_INSTR_PROP_I1 && type->data_type <= VMI_INSTR_PROP_UI8) {
+				if (type->data_type >= VMI_INSTR_PROP_I8 && type->data_type <= VMI_INSTR_PROP_UI64) {
 					right_value->value.i8 = -right_value->value.i8;
 				}
-				else if (type->data_type >= VMI_INSTR_PROP_F4) {
+				else if (type->data_type >= VMI_INSTR_PROP_F32) {
 					right_value->value.f4 = -right_value->value.f4;
 				}
-				else if (type->data_type >= VMI_INSTR_PROP_F8) {
+				else if (type->data_type >= VMI_INSTR_PROP_F64) {
 					right_value->value.f8 = -right_value->value.f8;
 				}
 				else {
@@ -216,7 +216,7 @@ void zpp_synax_tree_merge_unaryop2(const zpp_compiler_state* s, zpp_syntax_tree_
 			if (symbol->type == ZPP_SYMBOL_TYPE) {
 				zpp_type* type = (zpp_type*)symbol;
 				// Integer type, float types and doubles
-				if (type->data_type >= VMI_INSTR_PROP_I1 && type->data_type <= VMI_INSTR_PROP_UI8) {
+				if (type->data_type >= VMI_INSTR_PROP_I8 && type->data_type <= VMI_INSTR_PROP_UI64) {
 					right_value->value.i8 = ~right_value->value.i8;
 				}
 				else {
