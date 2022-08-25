@@ -599,4 +599,44 @@ struct utils_vm : test_utils
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
+
+	vmp_const to_const(vm_int8 value) {
+		return vmp_const_i8(value);
+	}
+
+	vmp_const to_const(vm_uint8 value) {
+		return vmp_const_ui8(value);
+	}
+
+	vmp_const to_const(vm_int16 value) {
+		return vmp_const_i86(value);
+	}
+
+	vmp_const to_const(vm_uint16 value) {
+		return vmp_const_ui86(value);
+	}
+
+	vmp_const to_const(vm_int32 value) {
+		return vmp_const_i32(value);
+	}
+
+	vmp_const to_const(vm_uint32 value) {
+		return vmp_const_ui32(value);
+	}
+
+	vmp_const to_const(vm_int64 value) {
+		return vmp_const_i64(value);
+	}
+
+	vmp_const to_const(vm_uint64 value) {
+		return vmp_const_ui64(value);
+	}
+
+	vmp_const to_const(vm_float32 value) {
+		return vmp_const_f32(value);
+	}
+
+	vmp_const to_const(vm_float64 value) {
+		return vmp_const_f64(value);
+	}
 };

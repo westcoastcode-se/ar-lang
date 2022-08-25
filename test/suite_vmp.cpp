@@ -31,46 +31,6 @@ struct utils_vmp : utils_vm
 		utils_vm::afterEach();
 	}
 
-	vmp_const to_const(vm_int8 value) {
-		return vmp_const_i1(value);
-	}
-
-	vmp_const to_const(vm_uint8 value) {
-		return vmp_const_ui1(value);
-	}
-
-	vmp_const to_const(vm_int16 value) {
-		return vmp_const_i2(value);
-	}
-
-	vmp_const to_const(vm_uint16 value) {
-		return vmp_const_ui2(value);
-	}
-
-	vmp_const to_const(vm_int32 value) {
-		return vmp_const_i4(value);
-	}
-
-	vmp_const to_const(vm_uint32 value) {
-		return vmp_const_ui4(value);
-	}
-
-	vmp_const to_const(vm_int64 value) {
-		return vmp_const_i8(value);
-	}
-
-	vmp_const to_const(vm_uint64 value) {
-		return vmp_const_ui8(value);
-	}
-
-	vmp_const to_const(vm_float32 value) {
-		return vmp_const_f4(value);
-	}
-
-	vmp_const to_const(vm_float64 value) {
-		return vmp_const_f8(value);
-	}
-
 	vmp_type* get_type(const string package, const string type_name) {
 		const vm_string package_name = { package.c_str(), package.c_str() + package.length() };
 		const vm_string type_name_str = { type_name.c_str(), type_name.c_str() + type_name.length() };

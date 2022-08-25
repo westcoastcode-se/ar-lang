@@ -55,16 +55,16 @@ typedef struct vmp_const
 	vm_int32 type;
 } vmp_const;
 
-extern vmp_const vmp_const_i1(vm_int8 value);
-extern vmp_const vmp_const_ui1(vm_uint8 value);
-extern vmp_const vmp_const_i2(vm_int16 value);
-extern vmp_const vmp_const_ui2(vm_uint16 value);
-extern vmp_const vmp_const_i4(vm_int32 value);
-extern vmp_const vmp_const_ui4(vm_uint32 value);
-extern vmp_const vmp_const_i8(vm_int64 value);
-extern vmp_const vmp_const_ui8(vm_uint64 value);
-extern vmp_const vmp_const_f4(vm_float32 value);
-extern vmp_const vmp_const_f8(vm_float64 value);
+extern vmp_const vmp_const_i8(vm_int8 value);
+extern vmp_const vmp_const_ui8(vm_uint8 value);
+extern vmp_const vmp_const_i86(vm_int16 value);
+extern vmp_const vmp_const_ui86(vm_uint16 value);
+extern vmp_const vmp_const_i32(vm_int32 value);
+extern vmp_const vmp_const_ui32(vm_uint32 value);
+extern vmp_const vmp_const_i64(vm_int64 value);
+extern vmp_const vmp_const_ui64(vm_uint64 value);
+extern vmp_const vmp_const_f32(vm_float32 value);
+extern vmp_const vmp_const_f64(vm_float64 value);
 extern vmp_const vmp_const_ptr(vm_byte* value);
 
 // A function pointer that represents when we want to combine two constants
