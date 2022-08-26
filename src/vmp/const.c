@@ -4,7 +4,7 @@
 vmp_const vmp_const_i8(vm_int8 value)
 {
 	vmp_const c = {0, 0};
-	c.i1 = value;
+	c.i8 = value;
 	c.type = VMI_INSTR_PROP_I8;
 	return c;
 }
@@ -12,7 +12,7 @@ vmp_const vmp_const_i8(vm_int8 value)
 vmp_const vmp_const_ui8(vm_uint8 value)
 {
 	vmp_const c = { 0, 0 };
-	c.ui1 = value;
+	c.ui8 = value;
 	c.type = VMI_INSTR_PROP_UI8;
 	return c;
 }
@@ -20,7 +20,7 @@ vmp_const vmp_const_ui8(vm_uint8 value)
 vmp_const vmp_const_i86(vm_int16 value)
 {
 	vmp_const c = { 0, 0 };
-	c.i2 = value;
+	c.i16 = value;
 	c.type = VMI_INSTR_PROP_I86;
 	return c;
 }
@@ -28,7 +28,7 @@ vmp_const vmp_const_i86(vm_int16 value)
 vmp_const vmp_const_ui86(vm_uint16 value)
 {
 	vmp_const c = { 0, 0 };
-	c.ui2 = value;
+	c.ui16 = value;
 	c.type = VMI_INSTR_PROP_UI86;
 	return c;
 }
@@ -36,7 +36,7 @@ vmp_const vmp_const_ui86(vm_uint16 value)
 vmp_const vmp_const_i32(vm_int32 value)
 {
 	vmp_const c = { 0, 0 };
-	c.i4 = value;
+	c.i32 = value;
 	c.type = VMI_INSTR_PROP_I32;
 	return c;
 }
@@ -44,7 +44,7 @@ vmp_const vmp_const_i32(vm_int32 value)
 vmp_const vmp_const_ui32(vm_uint32 value)
 {
 	vmp_const c = { 0, 0 };
-	c.ui4 = value;
+	c.ui32 = value;
 	c.type = VMI_INSTR_PROP_UI32;
 	return c;
 }
@@ -52,7 +52,7 @@ vmp_const vmp_const_ui32(vm_uint32 value)
 vmp_const vmp_const_i64(vm_int64 value)
 {
 	vmp_const c = { 0, 0 };
-	c.i8 = value;
+	c.i64 = value;
 	c.type = VMI_INSTR_PROP_I64;
 	return c;
 }
@@ -60,7 +60,7 @@ vmp_const vmp_const_i64(vm_int64 value)
 vmp_const vmp_const_ui64(vm_uint64 value)
 {
 	vmp_const c = { 0, 0 };
-	c.ui8 = value;
+	c.ui64 = value;
 	c.type = VMI_INSTR_PROP_UI64;
 	return c;
 }
@@ -68,7 +68,7 @@ vmp_const vmp_const_ui64(vm_uint64 value)
 vmp_const vmp_const_f32(vm_float32 value)
 {
 	vmp_const c = { 0, 0 };
-	c.f4 = value;
+	c.f32 = value;
 	c.type = VMI_INSTR_PROP_F32;
 	return c;
 }
@@ -76,7 +76,7 @@ vmp_const vmp_const_f32(vm_float32 value)
 vmp_const vmp_const_f64(vm_float64 value)
 {
 	vmp_const c = { 0, 0 };
-	c.f8 = value;
+	c.f64 = value;
 	c.type = VMI_INSTR_PROP_F64;
 	return c;
 }

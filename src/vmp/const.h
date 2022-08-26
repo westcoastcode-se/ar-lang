@@ -8,40 +8,40 @@ typedef struct vmp_const
 {
 	// Represents an unknown value up to 8 bytes
 	union {
-		vm_int64 i8;
-		vm_uint64 ui8;
-		vm_float64 f8;
+		vm_int64 i64;
+		vm_uint64 ui64;
+		vm_float64 f64;
 		struct {
-			vm_float32 f4;
-			vm_float32 f4_1;
+			vm_float32 f32;
+			vm_float32 f32_1;
 		};
 		struct {
 			vm_bool bool4;
 			vm_bool bool4_1;
 		};
 		struct {
-			vm_int32 i4;
-			vm_int32 i4_1;
+			vm_int32 i32;
+			vm_int32 i32_1;
 		};
 		struct {
-			vm_uint32 ui4;
-			vm_uint32 ui4_1;
+			vm_uint32 ui32;
+			vm_uint32 ui32_1;
 		};
 		struct {
-			vm_int16 i2;
-			vm_int16 i2_[3];
+			vm_int16 i16;
+			vm_int16 i16_[3];
 		};
 		struct {
-			vm_uint16 ui2;
-			vm_uint16 ui2_[3];
+			vm_uint16 ui16;
+			vm_uint16 ui16_[3];
 		};
 		struct {
-			vm_int8 i1;
-			vm_int8 i1_[7];
+			vm_int8 i8;
+			vm_int8 i8_[7];
 		};
 		struct {
-			vm_uint8 ui1;
-			vm_int8 ui1_[7];
+			vm_uint8 ui8;
+			vm_int8 ui8_[7];
 		};
 #if defined(VM_64BIT)
 		vm_byte* ptr;

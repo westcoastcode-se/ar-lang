@@ -385,7 +385,7 @@ extern BOOL vmp_instr_ldc_i8_leq(const vmp_instr* instr, BOOL ret_if_not_constan
 // Check if two instructions are of the same type
 extern BOOL vmp_instr_test_type_eq(const vmp_instr* instr1, const vmp_instr* instr2);
 
-// Get the i8 value from the supplied instruction
+// Get the i64 value from the supplied instruction
 extern vm_int64 vmp_instr_ldc_i8_get(const vmp_instr* instr);
 
 // Link two instructions together. If instr is NULL then next will be returned

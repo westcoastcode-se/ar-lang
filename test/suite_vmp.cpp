@@ -612,34 +612,34 @@ struct suite_vmp_consts : utils_vmp_vmi
 		auto expected = lhs + rhs;
 
 		if (std::is_same<decltype(expected), vm_int8>::value) {
-			assert_equals(lhs_const.i1, (vm_int8)expected);
+			assert_equals(lhs_const.i8, (vm_int8)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint8>::value) {
-			assert_equals(lhs_const.ui1, (vm_uint8)expected);
+			assert_equals(lhs_const.ui8, (vm_uint8)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int16>::value) {
-			assert_equals(lhs_const.i2, (vm_int16)expected);
+			assert_equals(lhs_const.i16, (vm_int16)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint16>::value) {
-			assert_equals(lhs_const.ui2, (vm_uint16)expected);
+			assert_equals(lhs_const.ui16, (vm_uint16)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int32>::value) {
-			assert_equals(lhs_const.i4, (vm_int32)expected);
+			assert_equals(lhs_const.i32, (vm_int32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint32>::value) {
-			assert_equals(lhs_const.ui4, (vm_uint32)expected);
+			assert_equals(lhs_const.ui32, (vm_uint32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int64>::value) {
-			assert_equals(lhs_const.i8, (vm_int64)expected);
+			assert_equals(lhs_const.i64, (vm_int64)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint64>::value) {
-			assert_equals(lhs_const.ui8, (vm_uint64)expected);
+			assert_equals(lhs_const.ui64, (vm_uint64)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_float32>::value) {
-			assert_equals(lhs_const.f4, (vm_float32)expected);
+			assert_equals(lhs_const.f32, (vm_float32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_float64>::value) {
-			assert_equals(lhs_const.f8, (vm_float64)expected);
+			assert_equals(lhs_const.f64, (vm_float64)expected);
 		}
 
 		assert_equals(lhs_const.type, (vm_int32)props1_of(expected));
@@ -655,34 +655,34 @@ struct suite_vmp_consts : utils_vmp_vmi
 		auto expected = lhs - rhs;
 
 		if (std::is_same<decltype(expected), vm_int8>::value) {
-			assert_equals(lhs_const.i1, (vm_int8)expected);
+			assert_equals(lhs_const.i8, (vm_int8)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint8>::value) {
-			assert_equals(lhs_const.ui1, (vm_uint8)expected);
+			assert_equals(lhs_const.ui8, (vm_uint8)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int16>::value) {
-			assert_equals(lhs_const.i2, (vm_int16)expected);
+			assert_equals(lhs_const.i16, (vm_int16)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint16>::value) {
-			assert_equals(lhs_const.ui2, (vm_uint16)expected);
+			assert_equals(lhs_const.ui16, (vm_uint16)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int32>::value) {
-			assert_equals(lhs_const.i4, (vm_int32)expected);
+			assert_equals(lhs_const.i32, (vm_int32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint32>::value) {
-			assert_equals(lhs_const.ui4, (vm_uint32)expected);
+			assert_equals(lhs_const.ui32, (vm_uint32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int64>::value) {
-			assert_equals(lhs_const.i8, (vm_int64)expected);
+			assert_equals(lhs_const.i64, (vm_int64)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint64>::value) {
-			assert_equals(lhs_const.ui8, (vm_uint64)expected);
+			assert_equals(lhs_const.ui64, (vm_uint64)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_float32>::value) {
-			assert_equals(lhs_const.f4, (vm_float32)expected);
+			assert_equals(lhs_const.f32, (vm_float32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_float64>::value) {
-			assert_equals(lhs_const.f8, (vm_float64)expected);
+			assert_equals(lhs_const.f64, (vm_float64)expected);
 		}
 
 		assert_equals(lhs_const.type, (vm_int32)props1_of(expected));
@@ -698,34 +698,34 @@ struct suite_vmp_consts : utils_vmp_vmi
 		auto expected = lhs * rhs;
 
 		if (std::is_same<decltype(expected), vm_int8>::value) {
-			assert_equals(lhs_const.i1, (vm_int8)expected);
+			assert_equals(lhs_const.i8, (vm_int8)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint8>::value) {
-			assert_equals(lhs_const.ui1, (vm_uint8)expected);
+			assert_equals(lhs_const.ui8, (vm_uint8)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int16>::value) {
-			assert_equals(lhs_const.i2, (vm_int16)expected);
+			assert_equals(lhs_const.i16, (vm_int16)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint16>::value) {
-			assert_equals(lhs_const.ui2, (vm_uint16)expected);
+			assert_equals(lhs_const.ui16, (vm_uint16)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int32>::value) {
-			assert_equals(lhs_const.i4, (vm_int32)expected);
+			assert_equals(lhs_const.i32, (vm_int32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint32>::value) {
-			assert_equals(lhs_const.ui4, (vm_uint32)expected);
+			assert_equals(lhs_const.ui32, (vm_uint32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int64>::value) {
-			assert_equals(lhs_const.i8, (vm_int64)expected);
+			assert_equals(lhs_const.i64, (vm_int64)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint64>::value) {
-			assert_equals(lhs_const.ui8, (vm_uint64)expected);
+			assert_equals(lhs_const.ui64, (vm_uint64)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_float32>::value) {
-			assert_equals(lhs_const.f4, (vm_float32)expected);
+			assert_equals(lhs_const.f32, (vm_float32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_float64>::value) {
-			assert_equals(lhs_const.f8, (vm_float64)expected);
+			assert_equals(lhs_const.f64, (vm_float64)expected);
 		}
 
 		assert_equals(lhs_const.type, (vm_int32)props1_of(expected));
@@ -741,34 +741,34 @@ struct suite_vmp_consts : utils_vmp_vmi
 		auto expected = lhs / rhs;
 
 		if (std::is_same<decltype(expected), vm_int8>::value) {
-			assert_equals(lhs_const.i1, (vm_int8)expected);
+			assert_equals(lhs_const.i8, (vm_int8)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint8>::value) {
-			assert_equals(lhs_const.ui1, (vm_uint8)expected);
+			assert_equals(lhs_const.ui8, (vm_uint8)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int16>::value) {
-			assert_equals(lhs_const.i2, (vm_int16)expected);
+			assert_equals(lhs_const.i16, (vm_int16)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint16>::value) {
-			assert_equals(lhs_const.ui2, (vm_uint16)expected);
+			assert_equals(lhs_const.ui16, (vm_uint16)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int32>::value) {
-			assert_equals(lhs_const.i4, (vm_int32)expected);
+			assert_equals(lhs_const.i32, (vm_int32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint32>::value) {
-			assert_equals(lhs_const.ui4, (vm_uint32)expected);
+			assert_equals(lhs_const.ui32, (vm_uint32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_int64>::value) {
-			assert_equals(lhs_const.i8, (vm_int64)expected);
+			assert_equals(lhs_const.i64, (vm_int64)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_uint64>::value) {
-			assert_equals(lhs_const.ui8, (vm_uint64)expected);
+			assert_equals(lhs_const.ui64, (vm_uint64)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_float32>::value) {
-			assert_equals(lhs_const.f4, (vm_float32)expected);
+			assert_equals(lhs_const.f32, (vm_float32)expected);
 		}
 		else if (std::is_same<decltype(expected), vm_float64>::value) {
-			assert_equals(lhs_const.f8, (vm_float64)expected);
+			assert_equals(lhs_const.f64, (vm_float64)expected);
 		}
 
 		assert_equals(lhs_const.type, (vm_int32)props1_of(expected));

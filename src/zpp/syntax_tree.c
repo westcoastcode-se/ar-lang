@@ -748,7 +748,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(zpp_compiler* c, zpp_token* t, co
 			return zpp_synax_tree_out_of_memory(state);
 		val->closest_function_node = state->func_node;
 		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, zpp_int32_type_name());
-		val->value.i4 = zpp_token_i4(t);
+		val->value.i32 = zpp_token_i4(t);
 		// TODO: Constant types are always known. They might have a parent CAST unaryop though
 		val->value.type = zpp_symbol_get_data_type(val->header.stack_type);
 		zpp_token_next(t);
@@ -760,7 +760,7 @@ zpp_syntax_tree_node zpp_synax_tree_parse_atom(zpp_compiler* c, zpp_token* t, co
 			return zpp_synax_tree_out_of_memory(state);
 		val->closest_function_node = state->func_node;
 		ZPP_SYNTAX_TREE_STACK_TYPE(val) = zpp_syntax_tree_find_symbol_include_imports(state->parent_node, zpp_float64_type_name());
-		val->value.f8 = zpp_token_f8(t);
+		val->value.f64 = zpp_token_f8(t);
 		// TODO: Constant types are always known. They might have a parent CAST unaryop though
 		val->value.type = zpp_symbol_get_data_type(val->header.stack_type);
 		zpp_token_next(t);

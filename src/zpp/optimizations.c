@@ -82,13 +82,13 @@ zpp_syntax_tree_node zpp_synax_tree_merge_unaryop(const zpp_compiler_state* s, z
 				zpp_type* type = (zpp_type*)symbol;
 				// Integer type, float types and doubles
 				if (type->data_type >= VMI_INSTR_PROP_I8 && type->data_type <= VMI_INSTR_PROP_UI64) {
-					right_value->value.i8 = -right_value->value.i8;
+					right_value->value.i64 = -right_value->value.i64;
 				}
 				else if (type->data_type >= VMI_INSTR_PROP_F32) {
-					right_value->value.f4 = -right_value->value.f4;
+					right_value->value.f32 = -right_value->value.f32;
 				}
 				else if (type->data_type >= VMI_INSTR_PROP_F64) {
-					right_value->value.f8 = -right_value->value.f8;
+					right_value->value.f64 = -right_value->value.f64;
 				}
 				else {
 					// TODO: Add support for this?
@@ -108,7 +108,7 @@ zpp_syntax_tree_node zpp_synax_tree_merge_unaryop(const zpp_compiler_state* s, z
 				zpp_type* type = (zpp_type*)symbol;
 				// Integer type, float types and doubles
 				if (type->data_type >= VMI_INSTR_PROP_I8 && type->data_type <= VMI_INSTR_PROP_UI64) {
-					right_value->value.i8 = ~right_value->value.i8;
+					right_value->value.i64 = ~right_value->value.i64;
 				}
 				else {
 					// TODO: Add support for this?
@@ -191,13 +191,13 @@ void zpp_synax_tree_merge_unaryop2(const zpp_compiler_state* s, zpp_syntax_tree_
 				zpp_type* type = (zpp_type*)symbol;
 				// Integer type, float types and doubles
 				if (type->data_type >= VMI_INSTR_PROP_I8 && type->data_type <= VMI_INSTR_PROP_UI64) {
-					right_value->value.i8 = -right_value->value.i8;
+					right_value->value.i64 = -right_value->value.i64;
 				}
 				else if (type->data_type >= VMI_INSTR_PROP_F32) {
-					right_value->value.f4 = -right_value->value.f4;
+					right_value->value.f32 = -right_value->value.f32;
 				}
 				else if (type->data_type >= VMI_INSTR_PROP_F64) {
-					right_value->value.f8 = -right_value->value.f8;
+					right_value->value.f64 = -right_value->value.f64;
 				}
 				else {
 					// TODO: Add support for this?
@@ -217,7 +217,7 @@ void zpp_synax_tree_merge_unaryop2(const zpp_compiler_state* s, zpp_syntax_tree_
 				zpp_type* type = (zpp_type*)symbol;
 				// Integer type, float types and doubles
 				if (type->data_type >= VMI_INSTR_PROP_I8 && type->data_type <= VMI_INSTR_PROP_UI64) {
-					right_value->value.i8 = ~right_value->value.i8;
+					right_value->value.i64 = ~right_value->value.i64;
 				}
 				else {
 					// TODO: Add support for this?
