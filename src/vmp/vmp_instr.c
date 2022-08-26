@@ -276,7 +276,7 @@ vmp_instr* vmp_instr_stelem(const vmp_type* type)
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STELEM, sizeof(vmi_instr_stelem));
-		instr->array_type = type;
+		instr->type = type;
 		return VMC_PIPELINE_INSTR_BASE(instr);
 	}
 	else {
@@ -284,7 +284,7 @@ vmp_instr* vmp_instr_stelem(const vmp_type* type)
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_STELEM_S, sizeof(vmi_instr_stelem_s));
-		instr->array_type = type;
+		instr->type = type;
 		return VMC_PIPELINE_INSTR_BASE(instr);
 	}
 }
@@ -298,7 +298,7 @@ vmp_instr* vmp_instr_ldelem(const vmp_type* type)
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDELEM, sizeof(vmi_instr_ldelem));
-		instr->array_type = type;
+		instr->type = type;
 		return VMC_PIPELINE_INSTR_BASE(instr);
 	}
 	else {
@@ -306,7 +306,7 @@ vmp_instr* vmp_instr_ldelem(const vmp_type* type)
 		if (instr == NULL)
 			return NULL;
 		VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_LDELEM_S, sizeof(vmi_instr_ldelem_s));
-		instr->array_type = type;
+		instr->type = type;
 		return VMC_PIPELINE_INSTR_BASE(instr);
 	}
 }
@@ -340,7 +340,7 @@ vmp_instr* vmp_instr_callnative(const vmp_func* func)
 	if (instr == NULL)
 		return NULL;
 	VMC_PIPELINE_INIT_HEADER(instr, VMP_INSTR_CALLNATIVE, sizeof(vmi_instr_callnative));
-	instr->func_def = func;
+	instr->target_func = func;
 	return VMC_PIPELINE_INSTR_BASE(instr);
 }
 
@@ -929,7 +929,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_STELEM:
 	{
 		const vmp_instr_def_stelem* const cmd = (vmp_instr_def_stelem*)h;
-		const vmp_type* array_type = cmd->array_type;
+		const vmp_type* array_type = cmd->type;
 
 		// requires:
 		// -1 = value
@@ -952,14 +952,14 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			// Allow pointers
 		}
 		else {
-			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			vmp_builder_message_type_not_array(builder, &cmd->type->name);
 			break;
 		}
 
 		vmi_instr_stelem instr;
 		instr.opcode = 0;
 		instr.icode = VMI_STELEM;
-		instr.size_per_element = cmd->array_type->of_type->size;
+		instr.size_per_element = cmd->type->of_type->size;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_stelem))) {
 			return NULL;
 		}
@@ -968,7 +968,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_STELEM_S:
 	{
 		const vmp_instr_def_stelem_s* const cmd = (vmp_instr_def_stelem_s*)h;
-		const vmp_type* array_type = cmd->array_type;
+		const vmp_type* array_type = cmd->type;
 
 		// requires:
 		// -1 = value
@@ -991,14 +991,14 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			// Allow pointers
 		}
 		else {
-			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			vmp_builder_message_type_not_array(builder, &cmd->type->name);
 			break;
 		}
 
 		vmi_instr_stelem_s instr;
 		instr.opcode = 0;
 		instr.icode = VMI_STELEM_S;
-		instr.size = cmd->array_type->of_type->size;
+		instr.size = cmd->type->of_type->size;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_stelem_s))) {
 			return NULL;
 		}
@@ -1007,7 +1007,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_LDELEM:
 	{
 		const vmp_instr_def_ldelem* const cmd = (vmp_instr_def_ldelem*)h;
-		const vmp_type* array_type = cmd->array_type;
+		const vmp_type* array_type = cmd->type;
 
 		// requires:
 		// -1 = value
@@ -1030,14 +1030,14 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			// Allow pointers
 		}
 		else {
-			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			vmp_builder_message_type_not_array(builder, &cmd->type->name);
 			break;
 		}
 
 		vmi_instr_ldelem instr;
 		instr.opcode = 0;
 		instr.icode = VMI_LDELEM;
-		instr.size_per_element = cmd->array_type->of_type->size;
+		instr.size_per_element = cmd->type->of_type->size;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldelem))) {
 			return NULL;
 		}
@@ -1046,7 +1046,7 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 	case VMP_INSTR_LDELEM_S:
 	{
 		const vmp_instr_def_ldelem_s* const cmd = (vmp_instr_def_ldelem_s*)h;
-		const vmp_type* array_type = cmd->array_type;
+		const vmp_type* array_type = cmd->type;
 
 		// requires:
 		// -1 = value
@@ -1069,14 +1069,14 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 			// Allow pointers
 		}
 		else {
-			vmp_builder_message_type_not_array(builder, &cmd->array_type->name);
+			vmp_builder_message_type_not_array(builder, &cmd->type->name);
 			break;
 		}
 
 		vmi_instr_ldelem_s instr;
 		instr.opcode = 0;
 		instr.icode = VMI_LDELEM_S;
-		instr.size = cmd->array_type->of_type->size;
+		instr.size = cmd->type->of_type->size;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_ldelem_s))) {
 			return NULL;
 		}
@@ -1104,8 +1104,8 @@ const vmp_instr* vmp_instr_build(const vmp_instr* h, struct vmp_builder* builder
 		vmi_instr_callnative instr;
 		instr.opcode = 0;
 		instr.icode = VMI_CALLNATIVE;
-		instr.expected_stack_size = cmd->func_def->args_stack_size;
-		instr.func_ptr = cmd->func_def->native_func;
+		instr.expected_stack_size = cmd->target_func->args_stack_size;
+		instr.func_ptr = cmd->target_func->native_func;
 		if (!vmp_builder_write(builder, &instr, sizeof(vmi_instr_call))) {
 			return NULL;
 		}

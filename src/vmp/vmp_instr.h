@@ -5,21 +5,59 @@
 #include "vmp_types.h"
 #include "../interpreter/vmi_ops.h"
 
-// lda <index>
-struct vmp_instr_def_lda
+// An instruction that makes use of an argument
+typedef struct arB_instr_arg
 {
 	VMC_PIPELINE_INSTR_HEADER;
 	const vmp_arg* arg;
-};
-typedef struct vmp_instr_def_lda vmp_instr_def_lda;
+} arB_instr_arg, vmp_instr_def_lda, vmp_instr_def_lda_a;
 
-// lda_a <index>
-struct vmp_instr_def_lda_a
+// An instruction that makes use of a function
+typedef struct arB_instr_func
 {
 	VMC_PIPELINE_INSTR_HEADER;
-	const vmp_arg* arg;
-};
-typedef struct vmp_instr_def_lda_a vmp_instr_def_lda_a;
+
+	// The function we want to push to the stack
+	const vmp_func* target_func;
+} arB_instr_func, vmp_instr_def_ldf, vmp_instr_def_call, vmp_instr_def_callnative;
+
+// Instruction that makes use of a local variable
+typedef struct arB_instr_local
+{
+	VMC_PIPELINE_INSTR_HEADER;
+	// Local reference
+	const vmp_local* local;
+} arB_instr_local, vmp_instr_def_ldl, vmp_instr_def_ldl_a, vmp_instr_def_stl;
+
+// Instruction for global variables
+typedef struct arB_instr_global
+{
+	VMC_PIPELINE_INSTR_HEADER;
+	// Global variable
+	vmp_global* global;
+} arB_instr_global, vmp_instr_def_ldg, vmp_instr_def_ldg_a, vmp_instr_def_stg;
+
+// Instruction that makes use of an constant and type
+typedef struct arB_instr_const
+{
+	VMC_PIPELINE_INSTR_HEADER;
+
+	// The constant type
+	const vmp_type* type;
+
+	// The constant value
+	vmp_const constant;
+} arB_instr_const, vmp_instr_def_ldc, vmp_instr_def_ldc_s;
+
+// An instruction that makes use of a type and nothing else
+typedef struct arB_instr_type
+{
+	VMC_PIPELINE_INSTR_HEADER;
+	// The types available are defined by the interpreter
+	const vmp_type* type;
+} arB_instr_type, vmp_instr_def_add, vmp_instr_def_sub, vmp_instr_def_mul, vmp_instr_def_div, 
+vmp_instr_def_neg, vmp_instr_def_sturef, vmp_instr_def_sturef_s, vmp_instr_def_stelem, vmp_instr_def_stelem_s,
+vmp_instr_def_ldelem, vmp_instr_def_ldelem_s;
 
 // ldr_a <index>
 struct vmp_instr_def_ldr_a
@@ -31,72 +69,12 @@ struct vmp_instr_def_ldr_a
 };
 typedef struct vmp_instr_def_ldr_a vmp_instr_def_ldr_a;
 
-// stl <index>
-struct vmp_instr_def_stl
-{
-	VMC_PIPELINE_INSTR_HEADER;
-	const vmp_local* local;
-};
-typedef struct vmp_instr_def_stl vmp_instr_def_stl;
-
 // locals
 struct vmp_instr_def_locals
 {
 	VMC_PIPELINE_INSTR_HEADER;
 };
 typedef struct vmp_instr_def_locals vmp_instr_def_locals;
-
-// ldl <index>
-struct vmp_instr_def_ldl
-{
-	VMC_PIPELINE_INSTR_HEADER;
-	const vmp_local* local;
-};
-typedef struct vmp_instr_def_ldl vmp_instr_def_ldl;
-
-// ldf <func>
-struct vmp_instr_def_ldf
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// The function we want to push to the stack
-	const vmp_func* target_func;
-};
-typedef struct vmp_instr_def_ldf vmp_instr_def_ldf;
-
-// ldl_a <index>
-struct vmp_instr_def_ldl_a
-{
-	VMC_PIPELINE_INSTR_HEADER;
-	const vmp_local* local;
-};
-typedef struct vmp_instr_def_ldl_a vmp_instr_def_ldl_a;
-
-// ldc <type> <value>
-struct vmp_instr_def_ldc
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// The constant type
-	const vmp_type* type;
-
-	// The constant value
-	vmp_const constant;
-};
-typedef struct vmp_instr_def_ldc vmp_instr_def_ldc;
-typedef struct vmp_instr_def_ldc vmp_instr_def_ldc_s;
-
-// ldg <global>
-struct vmp_instr_def_ldg
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// Global variable
-	vmp_global* global;
-};
-typedef struct vmp_instr_def_ldg vmp_instr_def_ldg;
-typedef struct vmp_instr_def_ldg vmp_instr_def_ldg_a;
-typedef struct vmp_instr_def_ldg vmp_instr_def_stg;
 
 // allocs <value|type>
 struct vmp_instr_def_allocs
@@ -113,49 +91,6 @@ typedef struct vmp_instr_def_allocs vmp_instr_def_allocs;
 typedef struct vmp_instr_def_allocs vmp_instr_def_frees;
 typedef struct vmp_instr_def_allocs vmp_instr_def_alloch;
 typedef struct vmp_instr_def_allocs vmp_instr_def_freeh;
-// sturef <type>
-struct vmp_instr_def_sturef
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// Type to unref and set
-	const vmp_type* type;
-};
-typedef struct vmp_instr_def_sturef vmp_instr_def_sturef;
-typedef struct vmp_instr_def_sturef vmp_instr_def_sturef_s;
-
-// sturef_s <type>
-struct vmp_instr_def_stelem
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// Array type to set
-	const vmp_type* array_type;
-};
-typedef struct vmp_instr_def_stelem vmp_instr_def_stelem;
-typedef struct vmp_instr_def_stelem vmp_instr_def_stelem_s;
-typedef struct vmp_instr_def_stelem vmp_instr_def_ldelem;
-typedef struct vmp_instr_def_stelem vmp_instr_def_ldelem_s;
-
-// call <func>
-struct vmp_instr_def_call
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// The function we are calling
-	const vmp_func* target_func;
-};
-typedef struct vmp_instr_def_call vmp_instr_def_call;
-
-// callnative <func>
-struct vmp_instr_def_callnative
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// Definition
-	const vmp_func* func_def;
-};
-typedef struct vmp_instr_def_callnative vmp_instr_def_callnative;
 
 // calluref <func>
 struct vmp_instr_def_calluref
@@ -167,19 +102,6 @@ struct vmp_instr_def_calluref
 	const vmp_func* func_def;
 };
 typedef struct vmp_instr_def_calluref vmp_instr_def_calluref;
-
-// add <type>
-typedef struct vmp_instr_def_add
-{
-	VMC_PIPELINE_INSTR_HEADER;
-
-	// The types available are defined by the interpreter
-	const vmp_type* type;
-} vmp_instr_def_add;
-
-typedef vmp_instr_def_add vmp_instr_def_sub;
-typedef vmp_instr_def_add vmp_instr_def_mul;
-typedef vmp_instr_def_add vmp_instr_def_div;
 
 // bit <op> <type>
 typedef struct vmp_instr_def_bit
@@ -229,13 +151,6 @@ struct vmp_instr_def_conv
 	const vmp_type* to_type;
 };
 typedef struct vmp_instr_def_conv vmp_instr_def_conv;
-
-// neg
-typedef struct vmp_instr_def_neg
-{
-	VMC_PIPELINE_INSTR_HEADER;
-	const vmp_type* type;
-} vmp_instr_def_neg;
 
 // Represents a basic instruction with no arguments
 struct vmp_instr_def_basic
