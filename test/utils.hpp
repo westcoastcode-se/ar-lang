@@ -26,13 +26,13 @@ struct utils_vm_datatype<VMI_INSTR_PROP_UI8>
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_I86>
+struct utils_vm_datatype<VMI_INSTR_PROP_I16>
 {
 	typedef vm_int16 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_UI86>
+struct utils_vm_datatype<VMI_INSTR_PROP_UI16>
 {
 	typedef vm_uint16 type;
 };
@@ -121,7 +121,7 @@ struct uitls_vm_type<vm_int16>
 	static constexpr auto ptr = "*int16";
 	static constexpr auto shorthand = "i16";
 	static constexpr auto memory = "2";
-	static constexpr auto props1 = VMI_INSTR_PROP_I86;
+	static constexpr auto props1 = VMI_INSTR_PROP_I16;
 };
 
 template<>
@@ -131,7 +131,7 @@ struct uitls_vm_type<vm_uint16>
 	static constexpr auto ptr = "*uint16";
 	static constexpr auto shorthand = "ui16";
 	static constexpr auto memory = "2";
-	static constexpr auto props1 = VMI_INSTR_PROP_UI86;
+	static constexpr auto props1 = VMI_INSTR_PROP_UI16;
 };
 
 template<>

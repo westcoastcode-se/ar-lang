@@ -58,12 +58,12 @@ void vmp_pipeline_add_vm_package(vmp_pipeline* p)
 	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(puint8), sizeof(vm_uint8*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	vmp_package_add_type(vm, type);
 
-	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(int16), sizeof(vm_int16), 0, VMI_INSTR_PROP_I86, NULL));
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(int16), sizeof(vm_int16), 0, VMI_INSTR_PROP_I16, NULL));
 	vmp_package_add_type(vm, type);
 	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(pint16), sizeof(vm_int16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	vmp_package_add_type(vm, type);
 
-	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(uint16), sizeof(vm_uint16), 0, VMI_INSTR_PROP_UI86, NULL));
+	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(uint16), sizeof(vm_uint16), 0, VMI_INSTR_PROP_UI16, NULL));
 	vmp_package_add_type(vm, type);
 	type = vmp_type_new_from_props(vmp_type_props_get(VM_STRING_CONST_GET(puint16), sizeof(vm_uint16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	vmp_package_add_type(vm, type);

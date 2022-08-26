@@ -49,12 +49,12 @@ BOOL zpp_compiler_create_system_package(zpp_compiler* c)
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, puint8), sizeof(vm_uint8*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int16), sizeof(vm_int16), 0, VMI_INSTR_PROP_I86, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, int16), sizeof(vm_int16), 0, VMI_INSTR_PROP_I16, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, pint16), sizeof(vm_int16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);
 
-	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint16), sizeof(vm_uint16), 0, VMI_INSTR_PROP_UI86, NULL));
+	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, uint16), sizeof(vm_uint16), 0, VMI_INSTR_PROP_UI16, NULL));
 	zpp_package_add_type(c->packages, type);
 	type = zpp_type_new_from_props(zpp_type_props_get(GET_CONST_VM_STRING(zpp, puint16), sizeof(vm_uint16*), VMP_TYPE_FLAGS_PTR, VMI_INSTR_PROP_PTR, type));
 	zpp_package_add_type(c->packages, type);

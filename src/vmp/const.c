@@ -21,7 +21,7 @@ vmp_const vmp_const_i86(vm_int16 value)
 {
 	vmp_const c = { 0, 0 };
 	c.i16 = value;
-	c.type = VMI_INSTR_PROP_I86;
+	c.type = VMI_INSTR_PROP_I16;
 	return c;
 }
 
@@ -29,7 +29,7 @@ vmp_const vmp_const_ui86(vm_uint16 value)
 {
 	vmp_const c = { 0, 0 };
 	c.ui16 = value;
-	c.type = VMI_INSTR_PROP_UI86;
+	c.type = VMI_INSTR_PROP_UI16;
 	return c;
 }
 
