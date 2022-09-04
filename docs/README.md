@@ -1,23 +1,23 @@
 # Documentation
 
-The virtual machine is split into three different parts:
+This programming language is in active development and is not really available for use yet.
 
-1. The lexer
-2. The compiler
-3. The interpreter
+## Source Code
+
+The source code is split into three parts:
+
+1. The virtual machine
+2. The bytecode builder
+3. The compiler
 
 Each part can be replaced assuming that each c function in the header file is implemented
 
-[operations.md](Operations)
-[data-types.md](Data Types)
-[instructions/README.md](Instructions)
-
-## Changes and investigations
-
-### Changes
-
-* ...
-
-### Investigations
-
-* [changes/INV-001_stack_based_return.md](INV-001_stack_based_return)
+- [Directory Structure](directory-structure.md)
+- [Concepts](concepts.md)
+	- [Package](concepts/package.md)
+	- [Function](concepts/function.md)
+	- [Class](concepts/class.md)
+	- [Method](concepts/method.md)
+	- [Constant](concepts/constant.md)
+	- [Generics](concepts/generics.md)
+	- [Attribute](concepts/attribute.md)

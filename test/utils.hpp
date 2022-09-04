@@ -8,75 +8,75 @@ struct utils_vm_datatype
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_BOOL>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_BOOL>
 {
-	typedef vm_int32 type;
+	typedef arInt32 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_I8>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_I8>
 {
-	typedef vm_int8 type;
+	typedef arInt8 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_UI8>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_UI8>
 {
-	typedef vm_uint8 type;
+	typedef arUint8 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_I16>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_I16>
 {
-	typedef vm_int16 type;
+	typedef arInt16 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_UI16>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_UI16>
 {
-	typedef vm_uint16 type;
+	typedef arUint16 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_I32>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_I32>
 {
-	typedef vm_int32 type;
+	typedef arInt32 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_UI32>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_UI32>
 {
-	typedef vm_uint32 type;
+	typedef arUint32 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_I64>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_I64>
 {
-	typedef vm_int64 type;
+	typedef arInt64 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_UI64>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_UI64>
 {
-	typedef vm_uint64 type;
+	typedef arUint64 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_F32>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_F32>
 {
-	typedef vm_float32 type;
+	typedef arFloat32 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_F64>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_F64>
 {
-	typedef vm_float64 type;
+	typedef arFloat64 type;
 };
 
 template<>
-struct utils_vm_datatype<VMI_INSTR_PROP_PTR>
+struct utils_vm_datatype<ARLANG_PRIMITIVE_PTR>
 {
-	typedef vm_byte* type;
+	typedef arByte* type;
 };
 
 template<typename T>
@@ -91,107 +91,107 @@ struct uitls_vm_type<bool>
 	static constexpr auto ptr = "*bool";
 	static constexpr auto shorthand = "bool";
 	static constexpr auto memory = "4";
-	static constexpr auto props1 = VMI_INSTR_PROP_BOOL;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_BOOL;
 };
 
 template<>
-struct uitls_vm_type<vm_int8>
+struct uitls_vm_type<arInt8>
 {
 	static constexpr auto name = "int8";
 	static constexpr auto ptr = "*int8";
 	static constexpr auto shorthand = "i8";
 	static constexpr auto memory = "1";
-	static constexpr auto props1 = VMI_INSTR_PROP_I8;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_I8;
 };
 
 template<>
-struct uitls_vm_type<vm_uint8>
+struct uitls_vm_type<arUint8>
 {
 	static constexpr auto name = "uint8";
 	static constexpr auto ptr = "*uint8";
 	static constexpr auto shorthand = "ui8";
 	static constexpr auto memory = "1";
-	static constexpr auto props1 = VMI_INSTR_PROP_UI8;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_UI8;
 };
 
 template<>
-struct uitls_vm_type<vm_int16>
+struct uitls_vm_type<arInt16>
 {
 	static constexpr auto name = "int16";
 	static constexpr auto ptr = "*int16";
 	static constexpr auto shorthand = "i16";
 	static constexpr auto memory = "2";
-	static constexpr auto props1 = VMI_INSTR_PROP_I16;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_I16;
 };
 
 template<>
-struct uitls_vm_type<vm_uint16>
+struct uitls_vm_type<arUint16>
 {
 	static constexpr auto name = "uint16";
 	static constexpr auto ptr = "*uint16";
 	static constexpr auto shorthand = "ui16";
 	static constexpr auto memory = "2";
-	static constexpr auto props1 = VMI_INSTR_PROP_UI16;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_UI16;
 };
 
 template<>
-struct uitls_vm_type<vm_int32>
+struct uitls_vm_type<arInt32>
 {
 	static constexpr auto name = "int32";
 	static constexpr auto ptr = "*int32";
 	static constexpr auto shorthand = "i32";
 	static constexpr auto memory = "4";
-	static constexpr auto props1 = VMI_INSTR_PROP_I32;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_I32;
 };
 
 template<>
-struct uitls_vm_type<vm_uint32>
+struct uitls_vm_type<arUint32>
 {
 	static constexpr auto name = "uint32";
 	static constexpr auto ptr = "*uint32";
 	static constexpr auto shorthand = "ui32";
 	static constexpr auto memory = "4";
-	static constexpr auto props1 = VMI_INSTR_PROP_UI32;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_UI32;
 };
 
 template<>
-struct uitls_vm_type<vm_int64>
+struct uitls_vm_type<arInt64>
 {
 	static constexpr auto name = "int64";
 	static constexpr auto ptr = "*int64";
 	static constexpr auto shorthand = "i64";
 	static constexpr auto memory = "8";
-	static constexpr auto props1 = VMI_INSTR_PROP_I64;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_I64;
 };
 
 template<>
-struct uitls_vm_type<vm_uint64>
+struct uitls_vm_type<arUint64>
 {
 	static constexpr auto name = "uint64";
 	static constexpr auto ptr = "*uint64";
 	static constexpr auto shorthand = "ui64";
 	static constexpr auto memory = "8";
-	static constexpr auto props1 = VMI_INSTR_PROP_UI64;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_UI64;
 };
 
 template<>
-struct uitls_vm_type<vm_float32>
+struct uitls_vm_type<arFloat32>
 {
 	static constexpr auto name = "float32";
 	static constexpr auto ptr = "*float32";
 	static constexpr auto shorthand = "f32";
 	static constexpr auto memory = "4";
-	static constexpr auto props1 = VMI_INSTR_PROP_F32;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_F32;
 };
 
 template<>
-struct uitls_vm_type<vm_float64>
+struct uitls_vm_type<arFloat64>
 {
 	static constexpr auto name = "float64";
 	static constexpr auto ptr = "*float64";
 	static constexpr auto shorthand = "f64";
 	static constexpr auto memory = "8";
-	static constexpr auto props1 = VMI_INSTR_PROP_F64;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_F64;
 };
 
 template<>
@@ -200,155 +200,155 @@ struct uitls_vm_type<void*>
 	static constexpr auto name = "*void";
 	static constexpr auto ptr = "**void";
 	static constexpr auto shorthand = "void";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_int8*>
+struct uitls_vm_type<arInt8*>
 {
 	static constexpr auto name = "*int8";
 	static constexpr auto ptr = "**int8";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_uint8*>
+struct uitls_vm_type<arUint8*>
 {
 	static constexpr auto name = "*uint8";
 	static constexpr auto ptr = "**uint8";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_int16*>
+struct uitls_vm_type<arInt16*>
 {
 	static constexpr auto name = "*int16";
 	static constexpr auto ptr = "**int16";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_uint16*>
+struct uitls_vm_type<arUint16*>
 {
 	static constexpr auto name = "*uint16";
 	static constexpr auto ptr = "**uint16";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_int32*>
+struct uitls_vm_type<arInt32*>
 {
 	static constexpr auto name = "*int32";
 	static constexpr auto ptr = "**int32";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_uint32*>
+struct uitls_vm_type<arUint32*>
 {
 	static constexpr auto name = "*uint32";
 	static constexpr auto ptr = "**uint32";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_int64*>
+struct uitls_vm_type<arInt64*>
 {
 	static constexpr auto name = "*int64";
 	static constexpr auto ptr = "**int64";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_uint64*>
+struct uitls_vm_type<arUint64*>
 {
 	static constexpr auto name = "*uint64";
 	static constexpr auto ptr = "**uint64";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_float32*>
+struct uitls_vm_type<arFloat32*>
 {
 	static constexpr auto name = "*float32";
 	static constexpr auto ptr = "**float32";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
 template<>
-struct uitls_vm_type<vm_float64*>
+struct uitls_vm_type<arFloat64*>
 {
 	static constexpr auto name = "*float64";
 	static constexpr auto ptr = "**float64";
 	static constexpr auto shorthand = "ptr";
-#if defined(VM_64BIT)
+#if defined(ARLANG_64BIT)
 	static constexpr auto memory = "8";
 #else
 	static constexpr auto memory = "4";
 #endif
-	static constexpr auto props1 = VMI_INSTR_PROP_PTR;
+	static constexpr arPrimitive props1 = ARLANG_PRIMITIVE_PTR;
 };
 
-struct utils_vm : test_utils
+struct utils_arlang : test_utils
 {
 	template<typename T>
 	static const char* name() {
@@ -391,12 +391,12 @@ struct utils_vm : test_utils
 	}
 
 	template<typename T>
-	static vm_int8 props1() {
+	static arPrimitive props1() {
 		return uitls_vm_type<T>::props1;
 	}
 
 	template<typename T>
-	static vm_int8 props1_of(T) {
+	static arPrimitive props1_of(T) {
 		return uitls_vm_type<T>::props1;
 	}
 
@@ -464,23 +464,23 @@ struct utils_vm : test_utils
 	{
 	}
 
-	const char* to_string(vm_int8 value) {
+	const char* to_string(arInt8 value) {
 		// Just use new but not delete because we are lazy
 		// TODO: Make this better
 		char* str = new char[64];
-		sprintf(str, "%d", (vm_int32)value);
+		sprintf(str, "%d", (arInt32)value);
 		return str;
 	}
 
-	const char* to_string(vm_int16 value) {
+	const char* to_string(arInt16 value) {
 		// Just use new but not delete because we are lazy
 		// TODO: Make this better
 		char* str = new char[64];
-		sprintf(str, "%d", (vm_int32)value);
+		sprintf(str, "%d", (arInt32)value);
 		return str;
 	}
 
-	const char* to_string(vm_int32 value) {
+	const char* to_string(arInt32 value) {
 		// Just use new but not delete because we are lazy
 		// TODO: Make this better
 		char* str = new char[64];
@@ -488,7 +488,7 @@ struct utils_vm : test_utils
 		return str;
 	}
 
-	const char* to_string(vm_int64 value) {
+	const char* to_string(arInt64 value) {
 		// Just use new but not delete because we are lazy
 		// TODO: Make this better
 		char* str = new char[64];
@@ -496,7 +496,7 @@ struct utils_vm : test_utils
 		return str;
 	}
 
-	const char* to_string(vm_float32 value) {
+	const char* to_string(arFloat32 value) {
 		// Just use new but not delete because we are lazy
 		// TODO: Make this better
 		char* str = new char[64];
@@ -504,7 +504,7 @@ struct utils_vm : test_utils
 		return str;
 	}
 
-	const char* to_string(vm_float64 value) {
+	const char* to_string(arFloat64 value) {
 		// Just use new but not delete because we are lazy
 		// TODO: Make this better
 		char* str = new char[64];
@@ -512,7 +512,7 @@ struct utils_vm : test_utils
 		return str;
 	}
 
-	void verify_stack_size(vmi_thread* t, size_t expected_size)
+	void verify_stack_size(arThread* t, size_t expected_size)
 	{
 		const size_t size = (size_t)(t->stack.top - t->stack.blocks);
 		if (expected_size != size) {
@@ -520,123 +520,123 @@ struct utils_vm : test_utils
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int8 value)
+	void verify_stack(arThread* t, arInt32 offset, arInt8 value)
 	{
-		const vm_int8* byte = (vm_int8*)(t->stack.blocks + offset);
+		const arInt8* byte = (arInt8*)(t->stack.blocks + offset);
 		if (*byte != value) {
-			throw_(error() << "expected stack value at " << offset << " to be " << (vm_int32)value << " but was " << (vm_int32)*byte);
+			throw_(error() << "expected stack value at " << offset << " to be " << (arInt32)value << " but was " << (arInt32)*byte);
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_uint8 value)
+	void verify_stack(arThread* t, arInt32 offset, arUint8 value)
 	{
-		const vm_uint8* byte = (vm_uint8*)(t->stack.blocks + offset);
+		const arUint8* byte = (arUint8*)(t->stack.blocks + offset);
 		if (*byte != value) {
-			throw_(error() << "expected stack value at " << offset << " to be " << (vm_int32)value << " but was " << (vm_int32)*byte);
+			throw_(error() << "expected stack value at " << offset << " to be " << (arInt32)value << " but was " << (arInt32)*byte);
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int16 value)
+	void verify_stack(arThread* t, arInt32 offset, arInt16 value)
 	{
-		const vm_int16* byte = (vm_int16*)(t->stack.blocks + offset);
-		if (*byte != value) {
-			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
-		}
-	}
-
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_uint16 value)
-	{
-		const vm_uint16* byte = (vm_uint16*)(t->stack.blocks + offset);
+		const arInt16* byte = (arInt16*)(t->stack.blocks + offset);
 		if (*byte != value) {
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int32 value)
+	void verify_stack(arThread* t, arInt32 offset, arUint16 value)
 	{
-		const vm_int32* byte = (vm_int32*)(t->stack.blocks + offset);
+		const arUint16* byte = (arUint16*)(t->stack.blocks + offset);
 		if (*byte != value) {
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_uint32 value)
+	void verify_stack(arThread* t, arInt32 offset, arInt32 value)
 	{
-		const vm_uint32* byte = (vm_uint32*)(t->stack.blocks + offset);
+		const arInt32* byte = (arInt32*)(t->stack.blocks + offset);
 		if (*byte != value) {
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_int64 value)
+	void verify_stack(arThread* t, arInt32 offset, arUint32 value)
 	{
-		const vm_int64* byte = (vm_int64*)(t->stack.blocks + offset);
+		const arUint32* byte = (arUint32*)(t->stack.blocks + offset);
 		if (*byte != value) {
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_uint64 value)
+	void verify_stack(arThread* t, arInt32 offset, arInt64 value)
 	{
-		const vm_uint64* byte = (vm_uint64*)(t->stack.blocks + offset);
+		const arInt64* byte = (arInt64*)(t->stack.blocks + offset);
 		if (*byte != value) {
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_float32 value)
+	void verify_stack(arThread* t, arInt32 offset, arUint64 value)
 	{
-		const vm_float32* byte = (vm_float32*)(t->stack.blocks + offset);
+		const arUint64* byte = (arUint64*)(t->stack.blocks + offset);
+		if (*byte != value) {
+			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
+		}
+	}
+
+	void verify_stack(arThread* t, arInt32 offset, arFloat32 value)
+	{
+		const arFloat32* byte = (arFloat32*)(t->stack.blocks + offset);
 		if (abs(*byte - value) > FLT_EPSILON) {
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
 
-	void verify_stack(vmi_thread* t, vm_int32 offset, vm_float64 value)
+	void verify_stack(arThread* t, arInt32 offset, arFloat64 value)
 	{
-		const vm_float64* byte = (vm_float64*)(t->stack.blocks + offset);
+		const arFloat64* byte = (arFloat64*)(t->stack.blocks + offset);
 		if (abs(*byte - value) > DBL_EPSILON) {
 			throw_(error() << "expected stack value at " << offset << " to be " << value << " but was " << *byte);
 		}
 	}
 
-	vmp_const to_const(vm_int8 value) {
-		return vmp_const_i8(value);
+	arPrimitiveValue to_const(arInt8 value) {
+		return arPrimitiveValue_i8(value);
 	}
 
-	vmp_const to_const(vm_uint8 value) {
-		return vmp_const_ui8(value);
+	arPrimitiveValue to_const(arUint8 value) {
+		return arPrimitiveValue_ui8(value);
 	}
 
-	vmp_const to_const(vm_int16 value) {
-		return vmp_const_i86(value);
+	arPrimitiveValue to_const(arInt16 value) {
+		return arPrimitiveValue_i86(value);
 	}
 
-	vmp_const to_const(vm_uint16 value) {
-		return vmp_const_ui86(value);
+	arPrimitiveValue to_const(arUint16 value) {
+		return arPrimitiveValue_ui86(value);
 	}
 
-	vmp_const to_const(vm_int32 value) {
-		return vmp_const_i32(value);
+	arPrimitiveValue to_const(arInt32 value) {
+		return arPrimitiveValue_i32(value);
 	}
 
-	vmp_const to_const(vm_uint32 value) {
-		return vmp_const_ui32(value);
+	arPrimitiveValue to_const(arUint32 value) {
+		return arPrimitiveValue_ui32(value);
 	}
 
-	vmp_const to_const(vm_int64 value) {
-		return vmp_const_i64(value);
+	arPrimitiveValue to_const(arInt64 value) {
+		return arPrimitiveValue_i64(value);
 	}
 
-	vmp_const to_const(vm_uint64 value) {
-		return vmp_const_ui64(value);
+	arPrimitiveValue to_const(arUint64 value) {
+		return arPrimitiveValue_ui64(value);
 	}
 
-	vmp_const to_const(vm_float32 value) {
-		return vmp_const_f32(value);
+	arPrimitiveValue to_const(arFloat32 value) {
+		return arPrimitiveValue_f32(value);
 	}
 
-	vmp_const to_const(vm_float64 value) {
-		return vmp_const_f64(value);
+	arPrimitiveValue to_const(arFloat64 value) {
+		return arPrimitiveValue_f64(value);
 	}
 };

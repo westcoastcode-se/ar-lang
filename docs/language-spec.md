@@ -29,7 +29,7 @@ Invoke Using C++
 vm_process* vm = vm_open();
 // ...
 // Create a new thread used to execute bytecode with
-vm_thread* thread = vmi_thread_new(vm);
+vm_thread* thread = arThread_new(vm);
 
 // Search for the PlayerComponent and it's update method
 vm_package* package = vm_get_package(vm, "dp");

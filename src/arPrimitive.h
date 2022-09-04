@@ -1,0 +1,28 @@
+#ifndef _ARLANG_PRIMITIVE_H_
+#define _ARLANG_PRIMITIVE_H_
+
+#include "arconf.h"
+
+// A primitive type descriptor
+typedef arInt32 arPrimitive;
+
+// Types of primitives that's built-in into the language
+typedef enum arPrimitiveType
+{
+	ARLANG_PRIMITIVE_UNKNOWN = 0,
+	ARLANG_PRIMITIVE_BOOL,
+	ARLANG_PRIMITIVE_I8,
+	ARLANG_PRIMITIVE_UI8,
+	ARLANG_PRIMITIVE_I16,
+	ARLANG_PRIMITIVE_UI16,
+	ARLANG_PRIMITIVE_I32,
+	ARLANG_PRIMITIVE_UI32,
+	ARLANG_PRIMITIVE_I64,
+	ARLANG_PRIMITIVE_UI64,
+	ARLANG_PRIMITIVE_F32,
+	ARLANG_PRIMITIVE_F64,
+	ARLANG_PRIMITIVE_PTR,
+	ARLANG_PRIMITIVE_COUNT
+} arPrimitiveType;
+
+#endif

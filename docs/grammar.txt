@@ -40,11 +40,14 @@ PAREN_R:
 NOT:
 	!
 
+END_KEYWORD:
+	;
+
 keyword:
-	KEYWORD:VAR IDENTIFIER = comp-expr |
-	KEYWORD:IF comp-expr |
-	KEYWORD:RETURN comp-expr |
-	comp-expr
+	KEYWORD:VAR IDENTIFIER = comp-expr END_KEYWORD |
+	KEYWORD:IF comp-expr END_KEYWORD |
+	KEYWORD:RETURN comp-expr END_KEYWORD |
+	comp-expr END_KEYWORD
 
 block:
 	{ keyword* }

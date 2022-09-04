@@ -13,10 +13,10 @@ struct suite_lexer_utils : test_utils
 		vmc_lexer_next_newline(&token);
 		if (type != token.type)
 			throw_(error() << "error token: " << type << " but was : " << token.type);
-		if (!vm_string_cmpsz(&token.string, str, strlen(str)))
+		if (!arString_cmpsz(&token.string, str, strlen(str)))
 			throw_("expected \"'%s'\" but was \"'%.*s'\"",
 				str,
-				vm_string_length(&token.string), token.string.start);
+				arString_length(&token.string), token.string.start);
 	}
 
 	void verify_whitespace_until_eof(vmc_lexer_token& token) {
@@ -28,7 +28,7 @@ struct suite_lexer_utils : test_utils
 			throw_(error() << "expected eof but was " << token.type);
 	}
 
-	void verify_modifier(vmc_lexer_token& t, vm_int32 bit) {
+	void verify_modifier(vmc_lexer_token& t, arInt32 bit) {
 		if ((t.modifier & bit) != bit)
 			throw_(error() << "expected modifier " << bit << " to be set in value " << t.modifier);
 	}
