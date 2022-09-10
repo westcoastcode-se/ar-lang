@@ -93,6 +93,7 @@ struct utils_compiler_success : utils_compiler
 	{
 		utils_compiler::beforeEach();
 		process = NULL;
+		thread = NULL;
 	}
 
 	void afterEach()

@@ -129,7 +129,7 @@ arB_type* arB_type_from_props(const arB_type_props* props)
 	return p;
 }
 
-const arB_type_props* arB_type_props_get(const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, const arB_type* of_type)
+const arB_type_props* arB_type_props_get(const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, arB_type* of_type)
 {
 	static arB_type_props p;
 	p.name = *name;

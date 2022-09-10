@@ -4,10 +4,11 @@
 #include "messages.h"
 #include "../arMemory.h"
 #include "../arCompiler.h"
+#include "../arBuilder.h"
 
 arC_syntax_tree_node arC_syntax_tree_error()
 {
-	static arC_syntax_tree instance = { AR_SYNTAX_TREE_ERROR, NULL, NULL, NULL };
+	static arC_syntax_tree instance = { arC_SYNTAX_TREE_ERROR, NULL, NULL, NULL };
 	return &instance;
 }
 
@@ -21,6 +22,11 @@ BOOL arC_syntax_tree_has_parent(arC_syntax_tree_node st)
 	return st->parent != NULL;
 }
 
+BOOL arC_syntax_tree_has_children(arC_syntax_tree_node st)
+{
+	return st->node != NULL;
+}
+
 arC_syntax_tree_node arC_syntax_tree_get_parent(arC_syntax_tree_node st)
 {
 	return st->parent;
@@ -29,7 +35,7 @@ arC_syntax_tree_node arC_syntax_tree_get_parent(arC_syntax_tree_node st)
 // Get the underlying arC_func function representation from the supplied state
 arC_func* arCompiler_state_get_func(const arC_state* s)
 {
-	return s->func_node->function;
+	return s->func_node->symbol;
 }
 
 void arC_syntax_tree_add(arC_syntax_tree* st, arC_syntax_tree_node node)
@@ -85,11 +91,13 @@ void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_tree_node ol
 		tail->head = new_node;
 }
 
-arC_syntax_tree_node arC_syntax_tree_find_parent_type(arC_syntax_tree_node s, arC_syntax_tree_type type)
+arC_syntax_tree_node arC_syntax_tree_find_incl_parents(arC_syntax_tree_node s, arInt32 types)
 {
+	if ((BIT(s->type) & types) != 0)
+		return s;
 	s = s->parent;
 	while (s) {
-		if (s->type == type) {
+		if ((BIT(s->type) & types) != 0) {
 			return s;
 		}
 		s = s->parent;
@@ -106,38 +114,47 @@ void arC_syntax_tree_init(arC_syntax_tree* st, arC_syntax_tree_type type)
 	st->node = st->node_end = NULL;
 }
 
-BOOL arC_syntax_tree_compile_root(arCompiler* c, arC_syntax_tree_root* st)
+BOOL arC_compiler_out_of_memory(arCompiler* c)
 {
-	arC_syntax_tree* node = asC_syntax_tree(st)->node;
-	while (node != NULL) {
-		if (!arC_syntax_tree_compile(c, node))
-			return FALSE;
-		node = node->tail;
-	}
-	return TRUE;
+	const arC_state state = { c, NULL, NULL, NULL, NULL, NULL };
+	return arC_message_out_of_memory(&state);
+}
+
+BOOL arC_compiler_symbol_unresolved(arCompiler* c, const arString* name)
+{
+	const arC_state state = { c, NULL, NULL, NULL, NULL, NULL };
+	return arC_message_symbol_unresolved(&state, name);
 }
 
 BOOL arC_syntax_tree_compile_package(arCompiler* c, arC_syntax_tree_node_package* st)
 {
+	ASSERT_NOT_NULL(st->symbol->package);
+	arBuilder_add_package(c->pipeline, st->symbol->package);
+
 	arC_syntax_tree* node = asC_syntax_tree(st)->node;
 	while (node != NULL) {
 		if (!arC_syntax_tree_compile(c, node))
 			return FALSE;
 		node = node->tail;
 	}
+
 	return TRUE;
 }
 
 BOOL arC_syntax_tree_compile_func(arCompiler* c, arC_syntax_tree_node_func* st)
 {
-	arB_func_body_begin(st->function->func);
+	if (!arC_syntax_tree_has_children(asC_syntax_tree(st))) {
+		return arC_compiler_symbol_unresolved(c, asC_symbol_name(st->symbol));
+	}
+
+	arB_func_body_begin(st->symbol->func);
 	arC_syntax_tree* node = asC_syntax_tree(st)->node;
 	while (node != NULL) {
 		if (!arC_syntax_tree_compile(c, node))
 			return FALSE;
 		node = node->tail;
 	}
-	arB_func_body_end(st->function->func);
+	arB_func_body_end(st->symbol->func);
 	return TRUE;
 }
 
@@ -149,7 +166,7 @@ BOOL arC_syntax_tree_compile_return(arCompiler* c, arC_syntax_tree_node_return* 
 			return FALSE;
 		node = node->tail;
 	}
-	arB_func_add_instr(st->closest_function_node->function->func, arB_instr_ret());
+	arB_func_add_instr(st->closest_function_node->symbol->func, arB_instr_ret());
 	return TRUE;
 }
 
@@ -165,31 +182,33 @@ BOOL arC_syntax_tree_compile_binop(arCompiler* c, arC_syntax_tree_node_binop* bi
 	node = node->tail;
 	if (!arC_syntax_tree_compile(c, node))
 		return FALSE;
+	arC_type* const stack_type = (arC_type*)asC_syntax_tree_stack_type(binop);
+	ASSERT_NOT_NULL(stack_type);
 	switch (binop->op)
 	{
 	case ARTOK_OP_MINUS:
-		arB_func_add_instr(binop->closest_function_node->function->func, 
-			arB_instr_sub(arC_symbol_resolve_type(asC_syntax_tree_stack_type(binop), c)));
+		arB_func_add_instr(binop->closest_function_node->symbol->func,
+			arB_instr_sub(stack_type->type));
 		return TRUE;
 	case ARTOK_OP_PLUS:
-		arB_func_add_instr(binop->closest_function_node->function->func,
-			arB_instr_add(arC_symbol_resolve_type(asC_syntax_tree_stack_type(binop), c)));
+		arB_func_add_instr(binop->closest_function_node->symbol->func,
+			arB_instr_add(stack_type->type));
 		return TRUE;
 	case ARTOK_OP_MULT:
-		arB_func_add_instr(binop->closest_function_node->function->func,
-			arB_instr_mul(arC_symbol_resolve_type(asC_syntax_tree_stack_type(binop), c)));
+		arB_func_add_instr(binop->closest_function_node->symbol->func,
+			arB_instr_mul(stack_type->type));
 		return TRUE;
 	case ARTOK_OP_DIV:
-		arB_func_add_instr(binop->closest_function_node->function->func,
-			arB_instr_div(arC_symbol_resolve_type(asC_syntax_tree_stack_type(binop), c)));
+		arB_func_add_instr(binop->closest_function_node->symbol->func,
+			arB_instr_div(stack_type->type));
 		return TRUE;
 	case ARTOK_TEST_LT:
-		arB_func_add_instr(binop->closest_function_node->function->func,
-			arB_instr_clt(arC_symbol_resolve_type(asC_syntax_tree_stack_type(binop), c)));
+		arB_func_add_instr(binop->closest_function_node->symbol->func,
+			arB_instr_clt(stack_type->type));
 		return TRUE;
 	case ARTOK_TEST_GT:
-		arB_func_add_instr(binop->closest_function_node->function->func,
-			arB_instr_cgt(arC_symbol_resolve_type(asC_syntax_tree_stack_type(binop), c)));
+		arB_func_add_instr(binop->closest_function_node->symbol->func,
+			arB_instr_cgt(stack_type->type));
 		return TRUE;
 	default:
 		// TODO: Add support for alternate operators
@@ -205,15 +224,17 @@ BOOL arC_syntax_tree_compile_unaryop(arCompiler* c, arC_syntax_tree_node_unaryop
 	arC_syntax_tree* node = asC_syntax_tree(unaryop)->node;
 	if (!arC_syntax_tree_compile(c, node))
 		return FALSE;
+	arC_type* const stack_type = (arC_type*)asC_syntax_tree_stack_type(unaryop);
+	ASSERT_NOT_NULL(stack_type);
 	switch (unaryop->op)
 	{
 	case ARTOK_OP_MINUS:
-		arB_func_add_instr(unaryop->closest_function_node->function->func, 
-			arB_instr_neg(arC_symbol_resolve_type(asC_syntax_tree_stack_type(unaryop), c)));
+		arB_func_add_instr(unaryop->closest_function_node->symbol->func,
+			arB_instr_neg(stack_type->type));
 		return TRUE;
 	case ARTOK_BIT_NOT:
-		arB_func_add_instr(unaryop->closest_function_node->function->func,
-			arB_instr_bit_not(arC_symbol_resolve_type(asC_syntax_tree_stack_type(unaryop), c)));
+		arB_func_add_instr(unaryop->closest_function_node->symbol->func,
+			arB_instr_bit_not(stack_type->type));
 		return TRUE;
 	default:
 		// TODO: Add support for alternate operators
@@ -223,9 +244,12 @@ BOOL arC_syntax_tree_compile_unaryop(arCompiler* c, arC_syntax_tree_node_unaryop
 
 BOOL arC_syntax_tree_compile_const_value(arCompiler* c, arC_syntax_tree_node_const_value* val)
 {
+	arC_type* const stack_type = (arC_type*)asC_syntax_tree_stack_type(val);
+	ASSERT_NOT_NULL(stack_type);
+
 	// ldc
-	arB_func_add_instr(val->closest_function_node->function->func, 
-		arB_instr_ldc(arC_symbol_resolve_type(asC_syntax_tree_stack_type(val), c), val->value));
+	arB_func_add_instr(val->closest_function_node->symbol->func,
+		arB_instr_ldc(stack_type->type, val->value));
 	return TRUE;
 }
 
@@ -239,7 +263,7 @@ BOOL arC_syntax_tree_compile_assign(arCompiler* c, arC_syntax_tree_node_assign* 
 	if (assign->target->type == arC_SYMBOL_LOCAL) {
 		// stl <index>
 		arC_local* const local = (arC_local*)assign->target;
-		arB_func_add_instr(assign->closest_function_node->function->func, arB_instr_stl(local->local));
+		arB_func_add_instr(assign->closest_function_node->symbol->func, arB_instr_stl(local->local));
 		return TRUE;
 	}
 	// Unknown assign expression
@@ -248,250 +272,266 @@ BOOL arC_syntax_tree_compile_assign(arCompiler* c, arC_syntax_tree_node_assign* 
 
 BOOL arC_syntax_tree_compile_load_local(arCompiler* c, arC_syntax_tree_node_load_local* local)
 {
-	arB_func_add_instr(local->closest_function_node->function->func, arB_instr_ldl(local->target->local));
+	arB_func_add_instr(local->closest_function_node->symbol->func, arB_instr_ldl(local->target->local));
 	return TRUE;
 }
 
 BOOL arC_syntax_tree_compile_load_arg(arCompiler* c, arC_syntax_tree_node_load_arg* arg)
 {
-	arB_func_add_instr(arg->closest_function_node->function->func, arB_instr_lda(arg->target->arg));
+	arB_func_add_instr(arg->closest_function_node->symbol->func, arB_instr_lda(arg->target->arg));
 	return TRUE;
 }
 
-arC_syntax_tree_root* arC_syntax_tree_root_new()
+void arC_syntax_tree_node_destroy(arC_syntax_tree* st)
 {
-	arC_syntax_tree_root* p = arSafeMalloc(arC_syntax_tree_root);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_ROOT);
-	return p;
-}
-
-void arC_syntax_tree_root_add(arC_syntax_tree_root* root, arC_syntax_tree_node node)
-{
-	arC_syntax_tree_add(asC_syntax_tree(root), node);
-}
-
-arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(arC_package* pkg)
-{
-	arC_syntax_tree_node_package* p = arSafeMalloc(arC_syntax_tree_node_package);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_PACKAGE);
-	p->package = pkg;
-	return p;
-}
-
-void arC_syntax_tree_node_package_add_func(arC_syntax_tree_node_package* package, arC_syntax_tree_node_func* func)
-{
-	func->closest_package_node = package;
-	arC_syntax_tree_node_package_add(package, asC_syntax_tree(func));
-}
-
-void arC_syntax_tree_node_package_add(arC_syntax_tree_node_package* package, arC_syntax_tree_node node)
-{
-	arC_syntax_tree_add(asC_syntax_tree(package), node);
-}
-
-arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(struct arC_func* func)
-{
-	arC_syntax_tree_node_func* p = arSafeMalloc(arC_syntax_tree_node_func);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_FUNC);
-	p->function = func;
-	p->closest_package_node = NULL;
-	return p;
-}
-
-BOOL arC_syntax_tree_compile(arCompiler* c, arC_syntax_tree* st)
-{
-	switch (st->type) {
-	case AR_SYNTAX_TREE_ROOT:
-		return arC_syntax_tree_compile_root(c, (arC_syntax_tree_root*)st);
-	case AR_SYNTAX_TREE_PACKAGE:
-		return arC_syntax_tree_compile_package(c, (arC_syntax_tree_node_package*)st);
-	case AR_SYNTAX_TREE_FUNC:
-		return arC_syntax_tree_compile_func(c, (arC_syntax_tree_node_func*)st);
-	case AR_SYNTAX_TREE_RETURN:
-		return arC_syntax_tree_compile_return(c, (arC_syntax_tree_node_return*)st);
-	case AR_SYNTAX_TREE_BINOP:
-		return arC_syntax_tree_compile_binop(c, (arC_syntax_tree_node_binop*)st);
-	case AR_SYNTAX_TREE_UNARYOP:
-		return arC_syntax_tree_compile_unaryop(c, (arC_syntax_tree_node_unaryop*)st);
-	case AR_SYNTAX_TREE_CONST_VALUE:
-		return arC_syntax_tree_compile_const_value(c, (arC_syntax_tree_node_const_value*)st);
-	case AR_SYNTAX_TREE_ASSIGN:
-		return arC_syntax_tree_compile_assign(c, (arC_syntax_tree_node_assign*)st);
-	case AR_SYNTAX_TREE_LOAD_LOCAL:
-		return arC_syntax_tree_compile_load_local(c, (arC_syntax_tree_node_load_local*)st);
-	case AR_SYNTAX_TREE_LOAD_ARGUMENT:
-		return arC_syntax_tree_compile_load_arg(c, (arC_syntax_tree_node_load_arg*)st);
-	case AR_SYNTAX_TREE_TYPE:
-		return TRUE;
-	case AR_SYNTAX_TREE_ERROR:
-		return FALSE;
-	default:
-		return FALSE;
-	}
-	return TRUE;
-}
-
-arC_symbol* arC_symbol_find_symbol0(arC_syntax_tree* st, const arString* name, BOOL recursive, BOOL include_imports)
-{
-	// TODO: Add support for constants and global variables
-	// 
-
-	// 
 	switch (st->type)
 	{
-	case AR_SYNTAX_TREE_TYPE:
+	case arC_SYNTAX_TREE_PACKAGE:
 	{
-		arC_syntax_tree_node_type* const type = (arC_syntax_tree_node_type*)st;
-		if (arC_symbol_has_name(asC_symbol(type->type), name)) {
-			return asC_symbol(type->type);
+		arC_syntax_tree_node_package* package = (arC_syntax_tree_node_package*)st;
+		if (package->symbol) {
+			arC_package_destroy(package->symbol);
+			package->symbol = NULL;
 		}
 	}
 	break;
-	case AR_SYNTAX_TREE_FUNC:
-	{
-		arC_syntax_tree_node_func* const func = (arC_syntax_tree_node_func*)st;
-		if (arC_symbol_has_name(asC_symbol(func->function), name)) {
-			return asC_symbol(func->function);
-		}
-
-		// Check local function types
-		arC_symbol* result = arC_func_find_symbol(func->function, name);
-		if (result)
-			return result;
-
-		// Search all function children in root 
-		if (recursive) {
-			arC_syntax_tree* node = st->node;
-			while (node) {
-				arC_symbol* const symbol = arC_symbol_find_symbol0(node, name, FALSE, FALSE);
-				if (symbol)
-					return symbol;
-				node = node->tail;
-			}
-		}
-	}
-	break;
-	case AR_SYNTAX_TREE_IMPORT:
-	{
-		if (!include_imports)
-			break;
-
-		arC_syntax_tree_node_import* const import = (arC_syntax_tree_node_import*)st;
-		if (arC_symbol_has_name(asC_symbol(import->package), name)) {
-			return asC_symbol(import->package);
-		}
-		// Search the imported package after something with the supplied name
-		arC_symbol* const symbol = arC_package_find_symbol(import->package, name);
-		if (symbol) {
-			return symbol;
-		}
-	}
-	break;
-	case AR_SYNTAX_TREE_PACKAGE:
-	{
-		arC_syntax_tree_node_package* const pkg = (arC_syntax_tree_node_package*)st;
-		if (arC_symbol_has_name(asC_symbol(pkg->package), name)) {
-			return asC_symbol(pkg->package);
-		}
-		// Search all children if requested
-		if (recursive) {
-			arC_syntax_tree* node = st->node;
-			while (node) {
-				arC_symbol* const symbol = arC_symbol_find_symbol0(node, name, FALSE, include_imports);
-				if (symbol)
-					return symbol;
-				node = node->tail;
-			}
-		}
-	}
-	break;
-	case AR_SYNTAX_TREE_ROOT:
-	{
-		arC_syntax_tree_root* const root = (arC_syntax_tree_root*)st;
-		// Search all children in root 
-		if (recursive) {
-			arC_syntax_tree* node = st->node;
-			while (node) {
-				arC_symbol* const symbol = arC_symbol_find_symbol0(node, name, FALSE, FALSE);
-				if (symbol)
-					return symbol;
-				node = node->tail;
-			}
-		}
-		// We've reached the root node, which is as far we are allowed to search
-		return NULL;
-	}
-	break;
-	}
-
-	if (st->parent != NULL && recursive) {
-		return arC_symbol_find_symbol0(st->parent, name, recursive, include_imports);
-	}
-	return NULL;
-}
-
-arC_symbol* arC_syntax_tree_find_symbol(arC_syntax_tree* st, const arString* name)
-{
-	return arC_symbol_find_symbol0(st, name, FALSE, TRUE);
-}
-
-arC_symbol* arC_syntax_tree_find_symbol_incl_imports(arC_syntax_tree* st, const arString* name)
-{
-
-	return arC_symbol_find_symbol0(st, name, TRUE, TRUE);
-}
-
-arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(arC_type* type)
-{
-	arC_syntax_tree_node_type* p = arSafeMalloc(arC_syntax_tree_node_type);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_TYPE);
-	p->type = type;
-	return p;
-}
-
-void arC_syntax_tree_node_type_destroy(arC_syntax_tree* st)
-{
-	switch (st->type) {
-	case AR_SYNTAX_TREE_ROOT:
-		break;
-	case AR_SYNTAX_TREE_PACKAGE:
-		break;
-	case AR_SYNTAX_TREE_FUNC:
-		break;
-	case AR_SYNTAX_TREE_TYPE:
-		break;
-	case AR_SYNTAX_TREE_RETURN:
-		break;
-	case AR_SYNTAX_TREE_CONST_VALUE:
-		break;
-	case AR_SYNTAX_TREE_ASSIGN:
-		break;
-	case AR_SYNTAX_TREE_BINOP:
-		break;
-	case AR_SYNTAX_TREE_UNARYOP:
-		break;
-	case AR_SYNTAX_TREE_LOAD_LOCAL:
-		break;
-	case AR_SYNTAX_TREE_LOAD_ARGUMENT:
-		break;
-	default:
-		assert(FALSE); // Add 
 	}
 
 	arC_syntax_tree* node = st->node;
 	while (node) {
 		arC_syntax_tree_node tail = node->tail;
-		arC_syntax_tree_node_type_destroy(node);
+		arC_syntax_tree_node_destroy(node);
 		node = tail;
 	}
 
 	arFree(st);
 }
 
+arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arString* name)
+{
+	arC_package* const symbol = arC_package_new(name);
+	if (symbol == NULL)
+		return NULL;
+	arC_syntax_tree_node_package* const p = arMalloc(sizeof(arC_syntax_tree_node_package));
+	if (p == NULL) {
+		arFree(symbol);
+		return NULL;
+	}
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_PACKAGE);
+	p->symbol = symbol;
+	return p;
+}
+
+arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const arString* name)
+{
+	arC_func* const symbol = arC_func_new(name);
+	if (symbol == NULL)
+		return NULL;
+
+	arC_syntax_tree_node_func* const p = arMalloc(sizeof(arC_syntax_tree_node_func));
+	if (p == NULL) {
+		arFree(symbol);
+		return NULL;
+	}
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_FUNC);
+	p->symbol = symbol;
+	p->closest_package_node = NULL;
+	return p;
+}
+
+arC_syntax_tree_node_import* arC_syntax_tree_node_import_new(arC_syntax_tree_node_package* package)
+{
+	arC_syntax_tree_node_import* const p = arSafeMalloc(arC_syntax_tree_node_import);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_IMPORT);
+	p->alias = *asC_symbol_name(package->symbol);
+	p->package = package;
+	return p;
+}
+
+BOOL arC_syntax_tree_compile(arCompiler* c, arC_syntax_tree* st)
+{
+	switch (st->type) {
+	case arC_SYNTAX_TREE_PACKAGE:
+		return arC_syntax_tree_compile_package(c, (arC_syntax_tree_node_package*)st);
+	case arC_SYNTAX_TREE_FUNC:
+		return arC_syntax_tree_compile_func(c, (arC_syntax_tree_node_func*)st);
+	case arC_SYNTAX_TREE_RETURN:
+		return arC_syntax_tree_compile_return(c, (arC_syntax_tree_node_return*)st);
+	case arC_SYNTAX_TREE_BINOP:
+		return arC_syntax_tree_compile_binop(c, (arC_syntax_tree_node_binop*)st);
+	case arC_SYNTAX_TREE_UNARYOP:
+		return arC_syntax_tree_compile_unaryop(c, (arC_syntax_tree_node_unaryop*)st);
+	case arC_SYNTAX_TREE_CONST_VALUE:
+		return arC_syntax_tree_compile_const_value(c, (arC_syntax_tree_node_const_value*)st);
+	case arC_SYNTAX_TREE_ASSIGN:
+		return arC_syntax_tree_compile_assign(c, (arC_syntax_tree_node_assign*)st);
+	case arC_SYNTAX_TREE_LOAD_LOCAL:
+		return arC_syntax_tree_compile_load_local(c, (arC_syntax_tree_node_load_local*)st);
+	case arC_SYNTAX_TREE_LOAD_ARGUMENT:
+		return arC_syntax_tree_compile_load_arg(c, (arC_syntax_tree_node_load_arg*)st);
+	case arC_SYNTAX_TREE_IMPORT:
+	case arC_SYNTAX_TREE_TYPE:
+		return TRUE;
+	case arC_SYNTAX_TREE_ERROR:
+		return FALSE;
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+arC_syntax_tree_node arC_syntax_tree_find_incl_imports0(arC_syntax_tree_node node, const arString* name, arInt32 types, BOOL recursive)
+{
+	ASSERT_NOT_NULL(node);
+	ASSERT_NOT_NULL(name);
+
+	// Is this a type of the same type that we are looking for? Then see if it's this node that has the supplied name
+	if ((BIT(node->type) & types) != 0)
+	{
+		switch (node->type)
+		{
+		case arC_SYNTAX_TREE_TYPE:
+			if (arString_cmp(asC_symbol_name(((arC_syntax_tree_node_type*)node)->symbol), name)) {
+				return node;
+			}
+			break;
+		case arC_SYNTAX_TREE_FUNC:
+			if (arString_cmp(asC_symbol_name(((arC_syntax_tree_node_func*)node)->symbol), name)) {
+				return node;
+			}
+			break;
+		case arC_SYNTAX_TREE_IMPORT:
+			if (arString_cmp(&((arC_syntax_tree_node_import*)node)->alias, name)) {
+				return node;
+			}
+			break;
+		case arC_SYNTAX_TREE_PACKAGE:
+			if (arString_cmp(asC_symbol_name(((arC_syntax_tree_node_package*)node)->symbol), name)) {
+				return node;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (recursive) {
+		arC_syntax_tree_node child = node->node;
+		while (child != NULL) {
+			arC_syntax_tree_node result = arC_syntax_tree_find_incl_imports0(child, name, types, FALSE);
+			if (result != NULL)
+				return result;
+			child = child->tail;
+		}
+		if (node->parent != NULL) {
+			return arC_syntax_tree_find_incl_imports0(node->parent, name, types, recursive);
+		}
+	}
+
+	return NULL;
+}
+
+arC_syntax_tree_node arC_syntax_tree_find_incl_imports(arC_syntax_tree_node node, const arString* name, arInt32 types)
+{
+	ASSERT_NOT_NULL(node);
+	ASSERT_NOT_NULL(name);
+	if (types == 0)
+		return NULL;
+	return arC_syntax_tree_find_incl_imports0(node, name, types, TRUE);
+}
+
+arC_syntax_tree_node arC_syntax_tree_find_child_with_type(arC_syntax_tree_node node, const arString* name, arInt32 types)
+{
+	arC_syntax_tree_node child = node->node;
+	while (child) {
+		if ((child->type & types) != 0) {
+			switch (child->type) {
+			case arC_SYNTAX_TREE_TYPE:
+				if (arString_cmp(asC_symbol_name(((arC_syntax_tree_node_type*)child)->symbol), name)) {
+					return child;
+				}
+				break;
+			case arC_SYNTAX_TREE_FUNC:
+				if (arString_cmp(asC_symbol_name(((arC_syntax_tree_node_func*)child)->symbol), name)) {
+					return child;
+				}
+				break;
+			case arC_SYNTAX_TREE_IMPORT:
+				if (arString_cmp(&((arC_syntax_tree_node_import*)child)->alias, name)) {
+					return child;
+				}
+				break;
+			case arC_SYNTAX_TREE_PACKAGE:
+				if (arString_cmp(asC_symbol_name(((arC_syntax_tree_node_package*)child)->symbol), name)) {
+					return child;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		child = child->tail;
+	}
+	return NULL;
+}
+
+arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arString* name)
+{
+	arC_type* const symbol = arC_type_new(name);
+	if (symbol == NULL)
+		return NULL;
+	arC_syntax_tree_node_type* const p = arMalloc(sizeof(arC_syntax_tree_node_type));
+	if (p == NULL) {
+		arFree(symbol);
+		return NULL;
+	}
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_TYPE);
+	p->symbol = symbol;
+	return p;
+}
+
+void arC_syntax_tree_node_type_set_symbol(arC_syntax_tree_node_type* node, arC_type* type)
+{
+	node->symbol = type;
+}
+
+BOOL arC_syntax_tree_node_resolve(arC_syntax_tree_node node, const struct arC_state* s)
+{
+	ASSERT_NOT_NULL(node);
+	ASSERT_NOT_NULL(s);
+
+	switch (node->type)
+	{
+	case arC_SYNTAX_TREE_PACKAGE:
+		if (!arC_package_resolve(((arC_syntax_tree_node_package*)node)->symbol, s)) {
+			return FALSE;
+		}
+		break;
+	case arC_SYNTAX_TREE_TYPE:
+		if (!arC_type_resolve(((arC_syntax_tree_node_type*)node)->symbol, s)) {
+			return FALSE;
+		}
+		break;
+	case arC_SYNTAX_TREE_FUNC:
+		if (!arC_func_resolve(((arC_syntax_tree_node_func*)node)->symbol, s)) {
+			return FALSE;
+		}
+		break;
+	}
+
+	arC_syntax_tree_node child = node->node;
+	while (child) {
+		if (!arC_syntax_tree_node_resolve(child, s))
+			return FALSE;
+		child = child->tail;
+	}
+	return TRUE;
+}
+
 arC_syntax_tree_node_unaryop* arC_syntax_tree_unaryop_new(arC_syntax_tree_node left, arC_tokens op)
 {
 	arC_syntax_tree_node_unaryop* const p = arSafeMalloc(arC_syntax_tree_node_unaryop);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_UNARYOP);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_UNARYOP);
 	p->header.stack_type = left->stack_type;
 	p->op = op;
 	p->closest_function_node = NULL;
@@ -502,7 +542,7 @@ arC_syntax_tree_node_unaryop* arC_syntax_tree_unaryop_new(arC_syntax_tree_node l
 arC_syntax_tree_node_binop* arC_syntax_tree_binop_new(arC_syntax_tree_node left, arC_syntax_tree_node right, arC_tokens op)
 {
 	arC_syntax_tree_node_binop* const p = arSafeMalloc(arC_syntax_tree_node_binop);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_BINOP);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_BINOP);
 	p->header.stack_type = right->stack_type;
 	p->op = op;
 	p->closest_function_node = NULL;
@@ -514,7 +554,7 @@ arC_syntax_tree_node_binop* arC_syntax_tree_binop_new(arC_syntax_tree_node left,
 arC_syntax_tree_node_const_value* arC_syntax_tree_const_value_new()
 {
 	arC_syntax_tree_node_const_value* const p = arSafeMalloc(arC_syntax_tree_node_const_value);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_CONST_VALUE);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_CONST_VALUE);
 	p->closest_function_node = NULL;
 	p->value.type = 0;
 	return p;
@@ -523,7 +563,7 @@ arC_syntax_tree_node_const_value* arC_syntax_tree_const_value_new()
 arC_syntax_tree_node_load_local* arC_syntax_tree_load_local_new()
 {
 	arC_syntax_tree_node_load_local* const p = arSafeMalloc(arC_syntax_tree_node_load_local);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_LOAD_LOCAL);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_LOAD_LOCAL);
 	p->target = NULL;
 	p->closest_function_node = NULL;
 	return p;
@@ -532,7 +572,7 @@ arC_syntax_tree_node_load_local* arC_syntax_tree_load_local_new()
 arC_syntax_tree_node_load_arg* arC_syntax_tree_load_argument_new()
 {
 	arC_syntax_tree_node_load_arg* const p = arSafeMalloc(arC_syntax_tree_node_load_arg);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_LOAD_ARGUMENT);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_LOAD_ARGUMENT);
 	p->target = NULL;
 	p->closest_function_node = NULL;
 	return p;
@@ -541,14 +581,14 @@ arC_syntax_tree_node_load_arg* arC_syntax_tree_load_argument_new()
 arC_syntax_tree_node_return* arC_syntax_tree_return_new()
 {
 	arC_syntax_tree_node_return* const p = arSafeMalloc(arC_syntax_tree_node_return);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_RETURN);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_RETURN);
 	return p;
 }
 
 arC_syntax_tree_node_assign* arC_syntax_tree_assign_new(arC_syntax_tree_node expr, arC_symbol* target)
 {
 	arC_syntax_tree_node_assign* const p = arSafeMalloc(arC_syntax_tree_node_assign);
-	arC_syntax_tree_init(asC_syntax_tree(p), AR_SYNTAX_TREE_ASSIGN);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_ASSIGN);
 	p->target = target;
 	arC_syntax_tree_add(asC_syntax_tree(p), expr);
 	return p;
@@ -691,17 +731,8 @@ end:
 	return left;
 }
 
-const arString* arC_int32_type_name() {
-	static const char name[] = "int32";
-	static const arString str = { name, name + 5 };
-	return &str;
-}
-
-const arString* arC_float64_type_name() {
-	static const char name[] = "float64";
-	static const arString str = { name, name + 7 };
-	return &str;
-}
+CONST_VM_STRING(arC_syntax_tree, int32, "int32", 5);
+CONST_VM_STRING(arC_syntax_tree, float64, "float64", 7);
 
 arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, const arC_state* state)
 {
@@ -710,10 +741,12 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 		if (val == NULL)
 			return arC_synax_tree_out_of_memory(state);
 		val->closest_function_node = state->func_node;
-		asC_syntax_tree_stack_type(val) = arC_syntax_tree_find_symbol_incl_imports(state->parent_node, arC_int32_type_name());
+		arC_syntax_tree_node_type* stack_type_node =
+			(arC_syntax_tree_node_type*)arC_syntax_tree_find_incl_imports(state->parent_node, 
+				GET_CONST_VM_STRING(arC_syntax_tree, int32), BIT(arC_SYNTAX_TREE_TYPE));
+		asC_syntax_tree_stack_type(val) = stack_type_node->symbol;
 		val->value.i32 = arC_token_i4(t);
-		// TODO: Constant types are always known. They might have a parent CAST unaryop though
-		val->value.type = arC_symbol_get_data_type(val->header.stack_type);
+		val->value.type = val->header.stack_type->data_type;
 		arC_token_next(t);
 		return asC_syntax_tree(val);
 	}
@@ -722,16 +755,18 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 		if (val == NULL)
 			return arC_synax_tree_out_of_memory(state);
 		val->closest_function_node = state->func_node;
-		asC_syntax_tree_stack_type(val) = arC_syntax_tree_find_symbol_incl_imports(state->parent_node, arC_float64_type_name());
+		arC_syntax_tree_node_type* stack_type_node =
+			(arC_syntax_tree_node_type*)arC_syntax_tree_find_incl_imports(state->parent_node, 
+				GET_CONST_VM_STRING(arC_syntax_tree, float64), BIT(arC_SYNTAX_TREE_TYPE));
+		asC_syntax_tree_stack_type(val) = stack_type_node->symbol;
 		val->value.f64 = arC_token_f8(t);
-		// TODO: Constant types are always known. They might have a parent CAST unaryop though
-		val->value.type = arC_symbol_get_data_type(val->header.stack_type);
+		val->value.type = val->header.stack_type->data_type;
 		arC_token_next(t);
 		return asC_syntax_tree(val);
 	}
 	if (t->type == ARTOK_IDENTITY) {
 		const arString identity = t->string;
-		arC_symbol* symbol = arC_func_find_symbol(state->func_node->function, &identity);
+		arC_symbol* symbol = arC_func_find_symbol(state->func_node->symbol, &identity);
 		arC_token_next(t);
 
 		if (t->type == ARTOK_DECL_ASSIGN) {
@@ -757,7 +792,7 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 			}
 			local->type = decl_expression->stack_type;
 			local->header.name = identity;
-			arC_func_add_local(state->func_node->function, local);
+			arC_func_add_local(state->func_node->symbol, local);
 
 			arC_syntax_tree_node_assign* assign = arC_syntax_tree_assign_new(decl_expression, asC_symbol(local));
 			if (assign == NULL) {
@@ -900,7 +935,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_keywords(arCompiler* c, arC_token* t,
 
 			// The number of expressions that are left
 			arInt32 return_expressions_left = arC_func_count_returns(arCompiler_state_get_func(s));
-			arC_return* return_symbol = s->func_node->function->returns;
+			arC_return* return_symbol = s->func_node->symbol->returns;
 
 			// Fetch all return statements 
 			// TODO: Allow for skipping return values and let the compiler return the default value for you
@@ -917,7 +952,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_keywords(arCompiler* c, arC_token* t,
 				// Verify that the return_expression results in the same type as the return type
 				arC_syntax_tree_add(asC_syntax_tree(ret), return_expr);
 
-				if (!arC_symbol_equals(return_expr->stack_type, return_symbol->type)) {
+				if (return_expr->stack_type != return_symbol->type) {
 					// Add a cast tree node
 					// TODO: Traverse and search for constants that can be merged?
 				}

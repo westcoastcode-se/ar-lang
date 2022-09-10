@@ -19,10 +19,7 @@ typedef struct arCompiler
 	arC_source_code* sources;
 	arC_source_code* sources_end;
 	// The root node where everything originates from
-	arC_syntax_tree_root* root_node;
-	// Packages generated during the compilation time
-	arC_package* packages;
-	arC_package* packages_end;
+	arC_syntax_tree_node_package* root_node;
 	// Pipeline and builder for generating the machine code
 	arBuilder* pipeline;
 } arCompiler;

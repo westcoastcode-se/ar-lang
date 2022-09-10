@@ -41,7 +41,7 @@ arC_syntax_tree_node arC_synax_tree_merge_binop(const arC_state* s, arC_syntax_t
 	arC_syntax_tree* const right = left->tail;
 
 	// Merge the two constant values into a single constant value node
-	if (left->type == AR_SYNTAX_TREE_CONST_VALUE && right->type == AR_SYNTAX_TREE_CONST_VALUE) {
+	if (left->type == arC_SYNTAX_TREE_CONST_VALUE && right->type == arC_SYNTAX_TREE_CONST_VALUE) {
 		arC_syntax_tree_node_const_value* const left_value = (arC_syntax_tree_node_const_value*)left;
 		arC_syntax_tree_node_const_value* const right_value = (arC_syntax_tree_node_const_value*)right;
 
@@ -55,8 +55,8 @@ arC_syntax_tree_node arC_synax_tree_merge_binop(const arC_state* s, arC_syntax_t
 		binop->header.node = binop->header.node_end = NULL;
 		left_value->header.head = left_value->header.tail = NULL;
 		right_value->header.head = right_value->header.tail = NULL;
-		arC_syntax_tree_node_type_destroy(asC_syntax_tree(binop));
-		arC_syntax_tree_node_type_destroy(asC_syntax_tree(right_value));
+		arC_syntax_tree_node_destroy(asC_syntax_tree(binop));
+		arC_syntax_tree_node_destroy(asC_syntax_tree(right_value));
 
 		// Return the node which is considered the "merged" node
 		return asC_syntax_tree(left_value);
@@ -71,30 +71,23 @@ arC_syntax_tree_node arC_synax_tree_merge_binop(const arC_state* s, arC_syntax_t
 arC_syntax_tree_node arC_synax_tree_merge_unaryop(const arC_state* s, arC_syntax_tree_node_unaryop* unaryop)
 {
 	arC_syntax_tree* const right = asC_syntax_tree(unaryop)->node;
-	if (right->type == AR_SYNTAX_TREE_CONST_VALUE) {
+	if (right->type == arC_SYNTAX_TREE_CONST_VALUE) {
 		arC_syntax_tree_node_const_value* const right_value = (arC_syntax_tree_node_const_value*)right;
 
 		// Compile time resolve the unaryop
 		switch (unaryop->op) {
 		case ARTOK_OP_MINUS:
 		{
-			arC_symbol* symbol = right_value->header.stack_type;
-			if (symbol->type == arC_SYMBOL_TYPE) {
-				arC_type* type = (arC_type*)symbol;
-				// Integer type, float types and doubles
-				if (type->data_type >= ARLANG_PRIMITIVE_I8 && type->data_type <= ARLANG_PRIMITIVE_UI64) {
-					right_value->value.i64 = -right_value->value.i64;
-				}
-				else if (type->data_type >= ARLANG_PRIMITIVE_F32) {
-					right_value->value.f32 = -right_value->value.f32;
-				}
-				else if (type->data_type >= ARLANG_PRIMITIVE_F64) {
-					right_value->value.f64 = -right_value->value.f64;
-				}
-				else {
-					// TODO: Add support for this?
-					return asC_syntax_tree(unaryop);
-				}
+			arC_type* type = right_value->header.stack_type;
+			// Integer type, float types and doubles
+			if (type->data_type >= ARLANG_PRIMITIVE_I8 && type->data_type <= ARLANG_PRIMITIVE_UI64) {
+				right_value->value.i64 = -right_value->value.i64;
+			}
+			else if (type->data_type >= ARLANG_PRIMITIVE_F32) {
+				right_value->value.f32 = -right_value->value.f32;
+			}
+			else if (type->data_type >= ARLANG_PRIMITIVE_F64) {
+				right_value->value.f64 = -right_value->value.f64;
 			}
 			else {
 				// TODO: Add support for this?
@@ -104,17 +97,10 @@ arC_syntax_tree_node arC_synax_tree_merge_unaryop(const arC_state* s, arC_syntax
 		break;
 		case ARTOK_BIT_NOT:
 		{
-			arC_symbol* symbol = right_value->header.stack_type;
-			if (symbol->type == arC_SYMBOL_TYPE) {
-				arC_type* type = (arC_type*)symbol;
-				// Integer type, float types and doubles
-				if (type->data_type >= ARLANG_PRIMITIVE_I8 && type->data_type <= ARLANG_PRIMITIVE_UI64) {
-					right_value->value.i64 = ~right_value->value.i64;
-				}
-				else {
-					// TODO: Add support for this?
-					return asC_syntax_tree(unaryop);
-				}
+			arC_type* type = right_value->header.stack_type;
+			// Integer type, float types and doubles
+			if (type->data_type >= ARLANG_PRIMITIVE_I8 && type->data_type <= ARLANG_PRIMITIVE_UI64) {
+				right_value->value.i64 = ~right_value->value.i64;
 			}
 			else {
 				// TODO: Add support for this?
@@ -129,7 +115,7 @@ arC_syntax_tree_node arC_synax_tree_merge_unaryop(const arC_state* s, arC_syntax
 		// Detach value node and remove the unaryop
 		unaryop->header.node = unaryop->header.node_end = NULL;
 		right_value->header.head = right_value->header.tail = NULL;
-		arC_syntax_tree_node_type_destroy(asC_syntax_tree(unaryop));
+		arC_syntax_tree_node_destroy(asC_syntax_tree(unaryop));
 
 		// Return the node which is considered the "merged" node
 		return asC_syntax_tree(right_value);
@@ -139,10 +125,10 @@ arC_syntax_tree_node arC_synax_tree_merge_unaryop(const arC_state* s, arC_syntax
 
 arC_syntax_tree_node arC_synax_tree_merge_children(const arC_state* s, arC_syntax_tree_node node)
 {
-	if (node->type == AR_SYNTAX_TREE_BINOP) {
+	if (node->type == arC_SYNTAX_TREE_BINOP) {
 		return arC_synax_tree_merge_binop(s, (arC_syntax_tree_node_binop*)node);
 	}
-	else if (node->type == AR_SYNTAX_TREE_UNARYOP) {
+	else if (node->type == arC_SYNTAX_TREE_UNARYOP) {
 		return arC_synax_tree_merge_unaryop(s, (arC_syntax_tree_node_unaryop*)node);
 	}
 	return node;
@@ -154,7 +140,7 @@ void arC_synax_tree_merge_binop2(const arC_state* s, arC_syntax_tree_node_binop*
 	arC_syntax_tree* const right = left->tail;
 
 	// Merge the two constant values into a single constant value node
-	if (left->type == AR_SYNTAX_TREE_CONST_VALUE && right->type == AR_SYNTAX_TREE_CONST_VALUE) {
+	if (left->type == arC_SYNTAX_TREE_CONST_VALUE && right->type == arC_SYNTAX_TREE_CONST_VALUE) {
 		arC_syntax_tree_node_const_value* const left_value = (arC_syntax_tree_node_const_value*)left;
 		arC_syntax_tree_node_const_value* const right_value = (arC_syntax_tree_node_const_value*)right;
 
@@ -169,8 +155,8 @@ void arC_synax_tree_merge_binop2(const arC_state* s, arC_syntax_tree_node_binop*
 		left_value->header.head = left_value->header.tail = NULL;
 		right_value->header.head = right_value->header.tail = NULL;
 		arC_syntax_tree_remove_replace(binop->header.parent, asC_syntax_tree(binop), asC_syntax_tree(left_value));
-		arC_syntax_tree_node_type_destroy(asC_syntax_tree(binop));
-		arC_syntax_tree_node_type_destroy(asC_syntax_tree(right_value));
+		arC_syntax_tree_node_destroy(asC_syntax_tree(binop));
+		arC_syntax_tree_node_destroy(asC_syntax_tree(right_value));
 	}
 	else {
 		// TODO: Add support for this?
@@ -180,30 +166,23 @@ void arC_synax_tree_merge_binop2(const arC_state* s, arC_syntax_tree_node_binop*
 void arC_synax_tree_merge_unaryop2(const arC_state* s, arC_syntax_tree_node_unaryop* unaryop)
 {
 	arC_syntax_tree* const right = asC_syntax_tree(unaryop)->node;
-	if (right->type == AR_SYNTAX_TREE_CONST_VALUE) {
+	if (right->type == arC_SYNTAX_TREE_CONST_VALUE) {
 		arC_syntax_tree_node_const_value* const right_value = (arC_syntax_tree_node_const_value*)right;
 
 		// Compile time resolve the unaryop
 		switch (unaryop->op) {
 		case ARTOK_OP_MINUS:
 		{
-			arC_symbol* symbol = right_value->header.stack_type;
-			if (symbol->type == arC_SYMBOL_TYPE) {
-				arC_type* type = (arC_type*)symbol;
-				// Integer type, float types and doubles
-				if (type->data_type >= ARLANG_PRIMITIVE_I8 && type->data_type <= ARLANG_PRIMITIVE_UI64) {
-					right_value->value.i64 = -right_value->value.i64;
-				}
-				else if (type->data_type >= ARLANG_PRIMITIVE_F32) {
-					right_value->value.f32 = -right_value->value.f32;
-				}
-				else if (type->data_type >= ARLANG_PRIMITIVE_F64) {
-					right_value->value.f64 = -right_value->value.f64;
-				}
-				else {
-					// TODO: Add support for this?
-					return;
-				}
+			arC_type* const type = right_value->header.stack_type;
+			// Integer type, float types and doubles
+			if (type->data_type >= ARLANG_PRIMITIVE_I8 && type->data_type <= ARLANG_PRIMITIVE_UI64) {
+				right_value->value.i64 = -right_value->value.i64;
+			}
+			else if (type->data_type >= ARLANG_PRIMITIVE_F32) {
+				right_value->value.f32 = -right_value->value.f32;
+			}
+			else if (type->data_type >= ARLANG_PRIMITIVE_F64) {
+				right_value->value.f64 = -right_value->value.f64;
 			}
 			else {
 				// TODO: Add support for this?
@@ -213,17 +192,10 @@ void arC_synax_tree_merge_unaryop2(const arC_state* s, arC_syntax_tree_node_unar
 		break;
 		case ARTOK_BIT_NOT:
 		{
-			arC_symbol* symbol = right_value->header.stack_type;
-			if (symbol->type == arC_SYMBOL_TYPE) {
-				arC_type* type = (arC_type*)symbol;
-				// Integer type, float types and doubles
-				if (type->data_type >= ARLANG_PRIMITIVE_I8 && type->data_type <= ARLANG_PRIMITIVE_UI64) {
-					right_value->value.i64 = ~right_value->value.i64;
-				}
-				else {
-					// TODO: Add support for this?
-					return;
-				}
+			arC_type* const type = right_value->header.stack_type;
+			// Integer type, float types and doubles
+			if (type->data_type >= ARLANG_PRIMITIVE_I8 && type->data_type <= ARLANG_PRIMITIVE_UI64) {
+				right_value->value.i64 = ~right_value->value.i64;
 			}
 			else {
 				// TODO: Add support for this?
@@ -239,16 +211,16 @@ void arC_synax_tree_merge_unaryop2(const arC_state* s, arC_syntax_tree_node_unar
 		unaryop->header.node = unaryop->header.node_end = NULL;
 		right_value->header.head = right_value->header.tail = NULL;
 		arC_syntax_tree_remove_replace(unaryop->header.parent, asC_syntax_tree(unaryop), asC_syntax_tree(right_value));
-		arC_syntax_tree_node_type_destroy(asC_syntax_tree(unaryop));
+		arC_syntax_tree_node_destroy(asC_syntax_tree(unaryop));
 	}
 }
 
 void arC_synax_tree_merge_children2(const arC_state* s, arC_syntax_tree_node node)
 {
-	if (node->type == AR_SYNTAX_TREE_BINOP) {
+	if (node->type == arC_SYNTAX_TREE_BINOP) {
 		arC_synax_tree_merge_binop2(s, (arC_syntax_tree_node_binop*)node);
 	}
-	else if (node->type == AR_SYNTAX_TREE_UNARYOP) {
+	else if (node->type == arC_SYNTAX_TREE_UNARYOP) {
 		arC_synax_tree_merge_unaryop2(s, (arC_syntax_tree_node_unaryop*)node);
 	}
 }
@@ -297,7 +269,7 @@ BOOL arC_synax_tree_merge_package(const struct arC_state* s, arC_syntax_tree_nod
 	arC_syntax_tree_node node = parent->header.node;
 	while (node) {
 		switch (node->type) {
-		case AR_SYNTAX_TREE_FUNC:
+		case arC_SYNTAX_TREE_FUNC:
 			if (!arC_synax_tree_merge_func(&inner_scope, (arC_syntax_tree_node_func*)node)) {
 				return FALSE;
 			}
@@ -309,7 +281,7 @@ BOOL arC_synax_tree_merge_package(const struct arC_state* s, arC_syntax_tree_nod
 	return TRUE;
 }
 
-BOOL arC_synax_tree_optimize(const struct arC_state* s, arC_syntax_tree_root* root_node)
+BOOL arC_synax_tree_optimize(const struct arC_state* s, arC_syntax_tree_node_package* root_node)
 {
 	const arC_state inner_scope = {
 		s->compiler, s->token, asC_syntax_tree(root_node), NULL, NULL, NULL
@@ -318,7 +290,7 @@ BOOL arC_synax_tree_optimize(const struct arC_state* s, arC_syntax_tree_root* ro
 	arC_syntax_tree_node node = root_node->header.node;
 	while (node) {
 		switch (node->type) {
-		case AR_SYNTAX_TREE_PACKAGE:
+		case arC_SYNTAX_TREE_PACKAGE:
 			if (!arC_synax_tree_merge_package(&inner_scope, (arC_syntax_tree_node_package*)node)) {
 				return FALSE;
 			}

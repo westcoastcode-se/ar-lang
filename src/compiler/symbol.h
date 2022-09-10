@@ -14,11 +14,7 @@ typedef enum arC_symbol_type
 	arC_SYMBOL_GLOBAL,
 	arC_SYMBOL_LOCAL,
 	arC_SYMBOL_ARGUMENT,
-	arC_SYMBOL_RETURN,
-	
-	// An unresolved symbol. This is normally used for when you are referring to
-	// something before it's declared by the developer
-	arC_SYMBOL_UNRESOLVED
+	arC_SYMBOL_RETURN
 } arC_symbol_type;
 
 // Represents a symbol, such as a package or a function
@@ -28,12 +24,15 @@ typedef struct arC_symbol
 	arC_symbol_type type;
 	// The name of this symbol
 	arString name;
-	// This symbol is initialized
-	BOOL initialized;
-} arC_symbol, arCompilerSymbolHeader;
+} arC_symbol;
 
 // Get the base class for a specific symbol
 #define asC_symbol(s) (&s->header)
+
+// Get the name of the supplied symbol
+#define asC_symbol_name(s) (&(s->header.name))
+// Get the signature of the supplied symbol. TODO: Differentiate name and signature
+#define asC_symbol_signature(s) asC_symbol_name(s)
 
 // Check to see if the supplied symbol has the name
 ARLANG_API BOOL arC_symbol_has_name(arC_symbol* s, const arString* name);
@@ -133,7 +132,7 @@ typedef struct arC_arg
 	arC_symbol header;
 
 	// The expected argument type
-	arC_symbol* type;
+	arC_type* type;
 
 	// Intrusive linked list
 	struct arC_arg* head;
@@ -149,7 +148,7 @@ typedef struct arC_local
 	arC_symbol header;
 
 	// The expected argument type
-	arC_symbol* type;
+	arC_type* type;
 
 	// Intrusive linked list
 	struct arC_local* head;
@@ -165,7 +164,7 @@ typedef struct arC_return
 	arC_symbol header;
 	
 	// The return type returned
-	arC_symbol* type;
+	arC_type* type;
 
 	// Intrusive linked list
 	struct arC_return* head;
@@ -214,10 +213,6 @@ typedef struct arC_func
 	arC_local* locals;
 	arC_local* locals_end;
 
-	// Syntax tree
-	struct arC_syntax_tree* syntax_tree;
-	struct arC_syntax_tree* syntax_tree_end;
-
 	// Intrusive linked list
 	struct arC_func* head;
 	struct arC_func* tail;
@@ -237,13 +232,10 @@ ARLANG_API arC_type* arC_type_new(const arString* name);
 ARLANG_API arC_type* arC_type_from_props(const arC_type_props* props);
 
 // Destroy the supplied type
-ARLANG_API void arC_type_type(arC_type* p);
+ARLANG_API void arC_type_destroy(arC_type* p);
 
 // Resolve the supplied type and get the type
-ARLANG_API arB_type* arC_type_resolve_type(arC_type* t, struct arCompiler* c);
-
-// Initialize the underlying pipeline type
-ARLANG_API BOOL arC_type_initialize_type(arC_type* t, struct arCompiler* c);
+ARLANG_API BOOL arC_type_resolve(arC_type* t, const struct arC_state* s);
 
 // Create a new package
 ARLANG_API arC_package* arC_package_new(const arString* name);
@@ -252,7 +244,7 @@ ARLANG_API arC_package* arC_package_new(const arString* name);
 ARLANG_API void arC_package_destroy(arC_package* ptr);
 
 // Resolve the supplied type and get the type
-ARLANG_API arB_package* arC_package_resolve_package(arC_package* p, struct arCompiler* c);
+ARLANG_API BOOL arC_package_resolve(arC_package* p, const struct arC_state* s);
 
 // Search for a function
 ARLANG_API arC_func* arC_package_find_func(arC_package* p, const arString* name);
@@ -263,33 +255,20 @@ ARLANG_API arC_type* arC_package_find_type(arC_package* p, const arString* name)
 // Search for a generic symbol. It might be a function, type, constant or global variable
 ARLANG_API arC_symbol* arC_package_find_symbol(arC_package* p, const arString* name);
 
-// Result of when adding an item
-typedef enum arC_package_add_result
-{
-	// Add failed because out of memory
-	arC_PACKAGE_ADD_OUT_OF_MEMORY = 0,
-	// The item already exist
-	arC_PACKAGE_ADD_DUPLICATE = 1,
-	// Add successfully
-	arC_PACKAGE_ADD_ADDED = 2
-} arC_package_add_result;
+// Add a type in the supplied package
+ARLANG_API void arC_package_add_type(arC_package* p, arC_type* t);
 
-// Add a type in the supplied package. If the return value is non-zero then the type exists in the package. If the value
-// is VMCD_PACKAGE_ADD_DUPLICATE then the item is already added
-ARLANG_API arC_package_add_result arC_package_add_type(arC_package* p, arC_type* t);
+// Add a function in the supplied package
+ARLANG_API void arC_package_add_func(arC_package* p, arC_func* f);
 
-// Add a function in the supplied package. If the return value is non-zero then the function exists in the package. If the value
-// is VMCD_PACKAGE_ADD_DUPLICATE then the item is already added
-ARLANG_API arC_package_add_result arC_package_add_func(arC_package* p, arC_func* f);
+// Add a sub-package in the supplied package
+ARLANG_API void arC_package_add_package(arC_package* p, arC_package* sub_package);
 
 // Create a new function
 ARLANG_API arC_func* arC_func_new(const arString* name);
 
 // Destroy the supplied function
 ARLANG_API void arC_func_destroy(arC_func* f);
-
-// Add a syntax tree node to the supplied function
-ARLANG_API void arC_func_add_syntax_tree(arC_func* f, arC_syntax_tree_node node);
 
 // Add the supplied argument
 ARLANG_API void arC_func_add_arg(arC_func* f, arC_arg* a);
@@ -301,7 +280,7 @@ ARLANG_API void arC_func_add_return(arC_func* f, arC_return* r);
 ARLANG_API void arC_func_add_local(arC_func* f, arC_local* l);
 
 // Resolve the supplied type and get the type
-ARLANG_API arB_func* arC_func_resolve_func(arC_func* f, struct arCompiler* c);
+ARLANG_API BOOL arC_func_resolve(arC_func* f, const struct arC_state* s);
 
 // Search for a local variable in this function
 ARLANG_API arC_local* arC_func_find_local(arC_func* f, const arString* name);
@@ -329,12 +308,6 @@ ARLANG_API arC_return* arC_return_new();
 
 // Destroy the supplied ret
 ARLANG_API void arC_return_destroy(arC_return* ptr);
-
-// Resolve a type based on a specific symbol
-ARLANG_API arB_type* arC_symbol_resolve_type(arC_symbol* s, struct arCompiler* c);
-
-// Try to figure out the data type for the supplied symbol. Will return -1 if no data_type could be resolved
-ARLANG_API arInt32 arC_symbol_get_data_type(arC_symbol* s);
 
 // Create a new local variable
 ARLANG_API arC_local* arC_local_new(const arString* name);

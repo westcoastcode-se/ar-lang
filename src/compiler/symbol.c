@@ -1,4 +1,5 @@
 #include "symbol.h"
+#include "messages.h"
 #include "../arCompiler.h"
 #include "../arMemory.h"
 
@@ -8,11 +9,10 @@ DEFINE_LIST_FIND(arC_inherits_from, arC_type, header.name);
 DEFINE_LIST_BASE_RELEASE_ONLY(arC_inherited_by, arC_type, 2, 2);
 DEFINE_LIST_FIND(arC_inherited_by, arC_type, header.name);
 
-void arCompilerSymbol_init(arCompilerSymbolHeader* s, arC_symbol_type type)
+void arCompilerSymbol_init(arC_symbol* s, arC_symbol_type type)
 {
 	s->type = type;
 	arString_zero(&s->name);
-	s->initialized = FALSE;
 }
 
 BOOL arC_symbol_has_name(arC_symbol* s, const arString* name)
@@ -28,11 +28,6 @@ BOOL arC_symbol_equals(arC_symbol* t1, arC_symbol* t2)
 	if (t1 == t2) {
 		return TRUE;
 	}
-
-	if (t1->type == arC_SYMBOL_UNRESOLVED || t2->type == arC_SYMBOL_UNRESOLVED) {
-		assert(false && "Not implemented");
-	}
-
 	return FALSE;
 }
 
@@ -81,65 +76,71 @@ arC_type* arC_type_from_props(const arC_type_props* props)
 	return p;
 }
 
-void arC_type_type(arC_type* p)
+void arC_type_destroy(arC_type* p)
 {
 	arC_inherited_by_release(&p->inherited_by);
 	arC_inherits_from_release(&p->inherits_from);
 	arFree(p);
 }
 
-arB_type* arC_type_resolve_type(arC_type* t, struct arCompiler* c)
+BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_state* s)
 {
-	if (t->type != NULL)
-		return t->type;
+	if (t == root_type) {
+		// TODO: Circular dependencies message error
+		return FALSE;
+	}
 
-	// Make sure to set the type as soon as possible. This will ensure that
-	// we exit this function quickly if recursion happen 
+	if (t->type != NULL)
+		return TRUE;
+
 	arB_type* const type = arB_type_new(&t->header.name);
 	if (type == NULL) {
-		// arC_message_out_of_memory(s);
-		return NULL;
+		// TODO: arC_message_out_of_memory(s);
+		return FALSE;
 	}
 	t->type = type;
 	type->size = t->size;
 	type->data_type = t->data_type;
-	if (t->of_type != NULL) {
-		type->of_type = arC_type_resolve_type(t->of_type, c);
-	}
 	if (BIT_ISSET(t->flags, arC_TYPE_FLAG_PTR))
 		type->flags |= arB_TYPE_FLAGS_PTR;
 	if (BIT_ISSET(t->flags, arC_TYPE_FLAG_ARRAY))
 		type->flags |= arB_TYPE_FLAGS_ARRAY;
-	return type;
+
+	if (t->of_type != NULL) {
+		if (!arC_type_resolve_type0(t->of_type, root_type, s))
+			return FALSE;
+	}
+	ASSERT_NOT_NULL(t->package->package);
+	if (arB_package_add_type(t->package->package, type) != VMP_LIST_ADDED)
+		return arC_message_out_of_memory(s);
+	return TRUE;
 }
 
-BOOL arC_type_initialize_type(arC_type* t, struct arCompiler* c)
+BOOL arC_type_resolve(arC_type* t, const arC_state* s)
 {
-	if (t->header.initialized)
+	if (t->type != NULL)
 		return TRUE;
 
-	arB_type* type = t->type;
+	arB_type* const type = arB_type_new(&t->header.name);
 	if (type == NULL) {
-		type = arB_type_new(&t->header.name);
-		if (type == NULL) {
-			// arC_message_out_of_memory(s);
-			return FALSE;
-		}
-		t->type = type;
-		type->size = t->size;
-		type->data_type = t->data_type;
-		if (t->of_type != NULL) {
-			// TODO: Handle circular dependencies?
-			if (arC_type_initialize_type(t->of_type, c))
-				return FALSE;
-		}
-		if (BIT_ISSET(t->flags, arC_TYPE_FLAG_PTR))
-			type->flags |= arB_TYPE_FLAGS_PTR;
-		if (BIT_ISSET(t->flags, arC_TYPE_FLAG_ARRAY))
-			type->flags |= arB_TYPE_FLAGS_ARRAY;
+		// TODO: arC_message_out_of_memory(s);
+		return FALSE;
 	}
-	
-	t->header.initialized = TRUE;
+	t->type = type;
+	type->size = t->size;
+	type->data_type = t->data_type;
+	if (BIT_ISSET(t->flags, arC_TYPE_FLAG_PTR))
+		type->flags |= arB_TYPE_FLAGS_PTR;
+	if (BIT_ISSET(t->flags, arC_TYPE_FLAG_ARRAY))
+		type->flags |= arB_TYPE_FLAGS_ARRAY;
+
+	if (t->of_type != NULL) {
+		if (!arC_type_resolve_type0(t->of_type, t, s))
+			return FALSE;
+	}
+	ASSERT_NOT_NULL(t->package->package);
+	if (arB_package_add_type(t->package->package, type) != VMP_LIST_ADDED)
+		return arC_message_out_of_memory(s);
 	return TRUE;
 }
 
@@ -165,13 +166,15 @@ void arC_package_destroy(arC_package* ptr)
 		arC_package_destroy(package);
 		package = tail;
 	}
+	ptr->children = ptr->children_end = NULL;
 
 	arC_type* type = ptr->types;
 	while (type) {
 		arC_type* const tail = type->tail;
-		arC_type_type(type);
+		arC_type_destroy(type);
 		type = tail;
 	}
+	ptr->types = ptr->types_end = NULL;
 
 	arC_func* func = ptr->funcs;
 	while (func) {
@@ -179,53 +182,38 @@ void arC_package_destroy(arC_package* ptr)
 		arC_func_destroy(func);
 		func = tail;
 	}
+	ptr->funcs = ptr->funcs_end = NULL;
+
 	arFree(ptr);
 }
 
-arB_package* arC_package_resolve_package(arC_package* p, struct arCompiler* c)
+BOOL arC_package_resolve(arC_package* p, const arC_state* s)
 {
 	if (p->package != NULL)
-		return p->package;
+		return TRUE;
 
-	arB_package* package = arB_package_new(&p->header.name);
-	if (package == NULL) {
-		// arC_message_out_of_memory(s);
-		return NULL;
-	}
+	arB_package* const package = arB_package_new(&p->header.name);
+	if (package == NULL)
+		return arC_message_out_of_memory(s);
 	p->package = package;
 
-	// Resolve types
+	// Resolve types	
 	arC_type* type = p->types;
 	while (type) {
-		arB_type* const t = arC_type_resolve_type(type, c);
-		if (t == NULL) {
-			// arC_message_out_of_memory(s);
-			return NULL;
-		}
-		if (arB_package_add_type(p->package, t) != VMP_LIST_ADDED) {
-			// arC_message_out_of_memory(s);
-			return NULL;
-		}
+		if (!arC_type_resolve(type, s))
+			return FALSE;
 		type = type->tail;
 	}
 
 	// Resolve functions
 	arC_func* func = p->funcs;
 	while (func) {
-		arB_func* f = arC_func_resolve_func(func, c);
-		if (f == NULL) {
-			// arC_message_out_of_memory(s);
-			return NULL;
-		}
-		if (arB_package_add_func(package, f) != VMP_LIST_ADDED) {
-			// arC_message_out_of_memory(s);
-			return NULL;
-		}
+		if (!arC_func_resolve(func, s))
+			return FALSE;
 		func = func->tail;
 	}
 
-	p->header.initialized = TRUE;
-	return package;
+	return TRUE;
 }
 
 arC_func* arC_package_find_func(arC_package* p, const arString* name)
@@ -267,7 +255,7 @@ arC_symbol* arC_package_find_symbol(arC_package* p, const arString* name)
 	return NULL;
 }
 
-arC_package_add_result arC_package_add_type(arC_package* p, arC_type* t)
+void arC_package_add_type(arC_package* p, arC_type* t)
 {
 	ASSERT_NOT_NULL(p);
 	ASSERT_NOT_NULL(t);
@@ -282,10 +270,9 @@ arC_package_add_result arC_package_add_type(arC_package* p, arC_type* t)
 		t->head = p->types_end;
 		p->types_end = t;
 	}
-	return arC_PACKAGE_ADD_ADDED;
 }
 
-arC_package_add_result arC_package_add_func(arC_package* p, arC_func* f)
+void arC_package_add_func(arC_package* p, arC_func* f)
 {
 	ASSERT_NOT_NULL(p);
 	ASSERT_NOT_NULL(f);
@@ -300,7 +287,23 @@ arC_package_add_result arC_package_add_func(arC_package* p, arC_func* f)
 		f->head = p->funcs_end;
 		p->funcs_end = f;
 	}
-	return arC_PACKAGE_ADD_ADDED;
+}
+
+void arC_package_add_package(arC_package* p, arC_package* sub_package)
+{
+	ASSERT_NOT_NULL(p);
+	ASSERT_NOT_NULL(sub_package);
+	assert(sub_package->parent == NULL && "Expected the function to not be added to another package");
+
+	sub_package->parent = p;
+	if (sub_package->children_end == NULL) {
+		p->children = p->children_end = sub_package;
+	}
+	else {
+		p->children_end->tail = sub_package;
+		sub_package->head = p->children_end;
+		p->children_end = sub_package;
+	}
 }
 
 arC_func* arC_func_new(const arString* name)
@@ -314,7 +317,6 @@ arC_func* arC_func_new(const arString* name)
 	p->returns = p->returns_end = NULL;
 	p->returns_count = 0;
 	p->locals = p->locals_end = NULL;
-	p->syntax_tree = p->syntax_tree_end = NULL;
 	p->tail = p->head = NULL;
 	p->func = NULL;
 	return p;
@@ -344,21 +346,6 @@ void arC_func_destroy(arC_func* f)
 	}
 
 	arFree(f);
-}
-
-void arC_func_add_syntax_tree(arC_func* f, arC_syntax_tree_node node)
-{
-	ASSERT_NOT_NULL(f);
-	ASSERT_NOT_NULL(node);
-
-	if (f->syntax_tree_end == NULL) {
-		f->syntax_tree = f->syntax_tree_end = node;
-	}
-	else {
-		f->syntax_tree_end->tail = node;
-		node->head = f->syntax_tree_end;
-		f->syntax_tree_end = node;
-	}
 }
 
 void arC_func_add_arg(arC_func* f, arC_arg* a)
@@ -408,59 +395,51 @@ void arC_func_add_local(arC_func* f, arC_local* l)
 	}
 }
 
-arB_func* arC_func_resolve_func(arC_func* f, struct arCompiler* c)
+BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 {
 	ASSERT_NOT_NULL(f);
-	ASSERT_NOT_NULL(c);
+	ASSERT_NOT_NULL(s);
 
 	if (f->func)
-		return f->func;
+		return TRUE;
 
-	arB_func* const func = arB_func_new(&f->header.name);
-	if (func == NULL) {
-		// arC_message_out_of_memory(s);
-		return NULL;
-	}
+	arB_func* const func = arB_func_new(asC_symbol_name(f));
+	if (func == NULL)
+		return arC_message_out_of_memory(s);
 	f->func = func;
 
 	// add arguments
 	arC_arg* arg = f->arguments;
 	while (arg != NULL) {
-		arB_arg* a = arB_func_new_arg(f->func, arC_symbol_resolve_type(arg->type, c));
-		if (a == NULL) {
-			//vmcd_message_out_of_memory(s);
-			return NULL;
-		}
-		arB_arg_set_name(a, &f->header.name);
-		arg->arg = a;
+		if (!arC_type_resolve(arg->type, s))
+			return FALSE;
+		arg->arg = arB_func_new_arg(f->func, arg->type->type);
+		arB_arg_set_name(arg->arg, asC_symbol_name(arg));
 		arg = arg->tail;
 	}
 
 	// add return values
 	arC_return* ret = f->returns;
 	while (ret != NULL) {
-		arB_return* r = arB_func_new_return(f->func, arC_symbol_resolve_type(ret->type, c));
-		if (r == NULL) {
-			//vmcd_message_out_of_memory(s);
-			return NULL;
-		}
-		ret->ret = r;
+		if (!arC_type_resolve(ret->type, s))
+			return FALSE;
+		ret->ret = arB_func_new_return(f->func, ret->type->type);
 		ret = ret->tail;
 	}
 
 	// add local values
 	arC_local* local = f->locals;
 	while (local != NULL) {
-		arB_local* l = arB_func_new_local(f->func, arC_symbol_resolve_type(local->type, c));
-		if (l == NULL) {
-			//vmcd_message_out_of_memory(s);
-			return NULL;
-		}
-		local->local = l;
+		if (!arC_type_resolve(local->type, s))
+			return FALSE;
+		local->local = arB_func_new_local(f->func, local->type->type);
+		arB_local_set_name(local->local, asC_symbol_name(local));
 		local = local->tail;
 	}
-
-	return f->func;
+	ASSERT_NOT_NULL(f->package->package);
+	if (arB_package_add_func(f->package->package, func) != VMP_LIST_ADDED)
+		return arC_message_out_of_memory(s);
+	return TRUE;
 }
 
 arC_local* arC_func_find_local(arC_func* f, const arString* name)
@@ -539,35 +518,6 @@ arC_return* arC_return_new()
 void arC_return_destroy(arC_return* ptr)
 {
 	arFree(ptr);
-}
-
-arB_type* arC_symbol_resolve_type(arC_symbol* s, struct arCompiler* c)
-{
-	ASSERT_NOT_NULL(s);
-	ASSERT_NOT_NULL(c);
-	
-	if (s->type == arC_SYMBOL_TYPE) {
-		arC_type* const t = (arC_type*)s;
-		return arC_type_resolve_type(t, c);
-	}
-	
-	if (s->type == arC_SYMBOL_UNRESOLVED) {
-		// This is a proxy symbol
-		// TODO: Add support for trying to resolve an unresolved symbol
-	}
-	return NULL;
-}
-
-arInt32 arC_symbol_get_data_type(arC_symbol* s)
-{
-	ASSERT_NOT_NULL(s);
-
-	if (s->type == arC_SYMBOL_TYPE) {
-		arC_type* const t = (arC_type*)s;
-		return t->data_type;
-	}
-
-	return ARLANG_PRIMITIVE_UNKNOWN;
 }
 
 arC_local* arC_local_new(const arString* name)

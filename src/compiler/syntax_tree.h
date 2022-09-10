@@ -7,19 +7,18 @@
 // Syntax tree types
 typedef enum arC_syntax_tree_type
 {
-	AR_SYNTAX_TREE_ERROR = 1,
-	AR_SYNTAX_TREE_ROOT,
-	AR_SYNTAX_TREE_PACKAGE,
-	AR_SYNTAX_TREE_IMPORT,
-	AR_SYNTAX_TREE_TYPE,
-	AR_SYNTAX_TREE_FUNC,
-	AR_SYNTAX_TREE_RETURN,
-	AR_SYNTAX_TREE_ASSIGN,
-	AR_SYNTAX_TREE_CONST_VALUE,
-	AR_SYNTAX_TREE_LOAD_LOCAL,
-	AR_SYNTAX_TREE_LOAD_ARGUMENT,
-	AR_SYNTAX_TREE_BINOP,
-	AR_SYNTAX_TREE_UNARYOP
+	arC_SYNTAX_TREE_ERROR = 1,
+	arC_SYNTAX_TREE_PACKAGE,
+	arC_SYNTAX_TREE_IMPORT,
+	arC_SYNTAX_TREE_TYPE,
+	arC_SYNTAX_TREE_FUNC,
+	arC_SYNTAX_TREE_RETURN,
+	arC_SYNTAX_TREE_ASSIGN,
+	arC_SYNTAX_TREE_CONST_VALUE,
+	arC_SYNTAX_TREE_LOAD_LOCAL,
+	arC_SYNTAX_TREE_LOAD_ARGUMENT,
+	arC_SYNTAX_TREE_BINOP,
+	arC_SYNTAX_TREE_UNARYOP
 } arC_syntax_tree_type;
 
 // Base class for a operation to be executed in a function
@@ -33,8 +32,8 @@ typedef struct arC_syntax_tree {
 	struct arC_syntax_tree* node;
 	struct arC_syntax_tree* node_end;
 
-	// Type of the data on the stack this syntax item results into
-	struct arC_symbol* stack_type;
+	// Type of the data. It can be either arC_type or arC_proxy
+	struct arC_type* stack_type;
 
 	// Intrusive Linked List (siblings)
 	struct arC_syntax_tree* head;
@@ -52,6 +51,9 @@ ARLANG_API BOOL arC_syntax_tree_is_error(arC_syntax_tree_node st);
 // Does the supplied node have a parent
 ARLANG_API BOOL arC_syntax_tree_has_parent(arC_syntax_tree_node st);
 
+// Does the supplied node have child-nodes
+ARLANG_API BOOL arC_syntax_tree_has_children(arC_syntax_tree_node st);
+
 // Get the parent ST node
 ARLANG_API arC_syntax_tree_node arC_syntax_tree_get_parent(arC_syntax_tree_node st);
 
@@ -61,45 +63,36 @@ ARLANG_API void arC_syntax_tree_add(arC_syntax_tree* st, arC_syntax_tree_node no
 // Remove a node from the syntax tree and replace it with a new one at the same location as the old one
 ARLANG_API void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_tree_node old_node, arC_syntax_tree_node new_node);
 
-// Search for the closest ST parent of the supplied type
-ARLANG_API arC_syntax_tree_node arC_syntax_tree_find_parent_type(arC_syntax_tree_node st, arC_syntax_tree_type type);
+// Search for the closest ST parent of one of the supplied types
+ARLANG_API arC_syntax_tree_node arC_syntax_tree_find_incl_parents(arC_syntax_tree_node st, arInt32 types);
 
 #define asC_syntax_tree(st) (&st->header)
 #define asC_syntax_tree_stack_type(st) (asC_syntax_tree(st)->stack_type)
-
-// A root tree node. This keep track of all package nodes and global
-// functions, types and variables (such as int32)
-typedef struct arC_syntax_tree_root
-{
-	arC_syntax_tree header;
-} arC_syntax_tree_root;
 
 // Package that contains child syntax trees
 typedef struct arC_syntax_tree_node_package
 {
 	arC_syntax_tree header;
-
 	// The actual, underlying, package for this syntax tree node
-	struct arC_package* package;
+	struct arC_package* symbol;
 } arC_syntax_tree_node_package;
 
 // Import node
 typedef struct arC_syntax_tree_node_import
 {
 	arC_syntax_tree header;
-
-	// The actual, underlying, package for this syntax tree node
-	struct arC_package* package;
+	// Alias
+	arString alias;
+	// The package we are importing
+	arC_syntax_tree_node_package* package;
 } arC_syntax_tree_node_import;
 
 // Type that represents things like data types, typedefs and structs and things like that
 typedef struct arC_syntax_tree_node_type
 {
 	arC_syntax_tree header;
-
 	// The actual, underlying, type for this node
-	struct arC_type* type;
-
+	struct arC_type* symbol;
 	// TODO: Add fields
 } arC_syntax_tree_node_type;
 
@@ -107,10 +100,8 @@ typedef struct arC_syntax_tree_node_type
 typedef struct arC_syntax_tree_node_func
 {
 	arC_syntax_tree header;
-
 	// The actual, underlying, function for this syntax tree node
-	struct arC_func* function;
-
+	struct arC_func* symbol;
 	// Closest package node
 	arC_syntax_tree_node_package* closest_package_node;
 } arC_syntax_tree_node_func;
@@ -199,38 +190,35 @@ typedef struct arC_state
 	arC_syntax_tree_node_type* type_node;
 } arC_state;
 
-// Create a new root node
-ARLANG_API arC_syntax_tree_root* arC_syntax_tree_root_new();
-
-// Add the supplied type as a global type
-ARLANG_API void arC_syntax_tree_root_add(arC_syntax_tree_root* root, arC_syntax_tree_node node);
-
 // Create a new package tree node
-ARLANG_API arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(struct arC_package* pkg);
-
-// Add the supplied function node to the package
-ARLANG_API void arC_syntax_tree_node_package_add_func(arC_syntax_tree_node_package* package, arC_syntax_tree_node_func* func);
-
-// Add a new child node
-ARLANG_API void arC_syntax_tree_node_package_add(arC_syntax_tree_node_package* package, arC_syntax_tree_node node);
+ARLANG_API arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arString* name);
 
 // Create a new function
-ARLANG_API arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(struct arC_func* func);
+ARLANG_API arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const arString* name);
+
+// The package we are importing
+ARLANG_API arC_syntax_tree_node_import* arC_syntax_tree_node_import_new(arC_syntax_tree_node_package* package);
 
 // Compile the supplied syntax tree
 ARLANG_API BOOL arC_syntax_tree_compile(struct arCompiler* c, arC_syntax_tree* st);
 
-// Search for a symbol of a specific name
-ARLANG_API struct arC_symbol* arC_syntax_tree_find_symbol(arC_syntax_tree* st, const arString* name);
+// Search for a node of a specific type. The query will search upwards to all parents until including the first level of all imports + root
+ARLANG_API arC_syntax_tree_node arC_syntax_tree_find_incl_imports(arC_syntax_tree_node node, const arString* name, arInt32 types);
 
-// Search for a symbol of a specific name. Search recursively upwards until you reach the package tree node
-ARLANG_API struct arC_symbol* arC_syntax_tree_find_symbol_incl_imports(arC_syntax_tree* st, const arString* name);
+// Search for a tree node of the supplied name and type
+ARLANG_API arC_syntax_tree_node arC_syntax_tree_find_child_with_type(arC_syntax_tree_node node, const arString* name, arInt32 types);
 
 // Create a new syntax tree type
-ARLANG_API arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(struct arC_type* type);
+ARLANG_API arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arString* name);
+
+// Create a new syntax tree type
+ARLANG_API void arC_syntax_tree_node_type_set_symbol(arC_syntax_tree_node_type* node, struct arC_type* type);
 
 // Destroy the supplied syntax tree
-ARLANG_API void arC_syntax_tree_node_type_destroy(arC_syntax_tree* st);
+ARLANG_API void arC_syntax_tree_node_destroy(arC_syntax_tree* st);
+
+// Resolve syntax tree node types and initialize the necessary builder objects and symbols
+ARLANG_API BOOL arC_syntax_tree_node_resolve(arC_syntax_tree_node node, const struct arC_state* s);
 
 // Parse function
 typedef arC_syntax_tree_node (*arC_syntax_tree_parse_fn)(struct arCompiler*, arC_token*, const struct arC_state*);

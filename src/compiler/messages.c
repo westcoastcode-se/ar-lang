@@ -8,6 +8,8 @@
 #define arC_MESSAGE_EXPECTED_PACKAGE_STR "expected package but was '%.*s' at %d:%d"
 #define arC_MESSAGE_EXPECTED_IDENTIFIER_STR "expected identifier but was '%.*s' at %d:%d"
 #define arC_MESSAGE_SYNTAX_ERROR_STR "%s but was '%.*s' at %d:%d"
+#define arC_MESSAGE_ALREADY_DEFINED_STR "'%.*s' is already defined at %d:%d"
+#define arC_MESSAGE_SYMBOL_UNRESOLVED_STR "'%.*s' is unresolved"
 
 BOOL arC_message_panic(const arC_state* s, const char* str, arC_message_code code)
 {
@@ -93,5 +95,38 @@ BOOL arC_message_syntax_error(const arC_state* s, const char* msg)
 	message->line = line;
 	message->line_offset = line_offset;
 	message->offset = offset;
+	return FALSE;
+}
+
+ARLANG_API BOOL arC_message_already_defined(const struct arC_state* s, const arString* name)
+{
+	const arC_token* const t = s->token;
+	arMessages* const m = &s->compiler->messages;
+
+	int line, line_offset, offset;
+	arC_token_get_metadata(t, &line, &line_offset, &offset);
+	arMessage* const message = arMessages_add(m,
+		arC_MESSAGE_PREFIX,
+		arC_MESSAGE_ALREADY_DEFINED,
+		arC_MESSAGE_ALREADY_DEFINED_STR,
+		arString_length(name), name->start, line, line_offset);
+	message->line = line;
+	message->line_offset = line_offset;
+	message->offset = offset;
+	return FALSE;
+}
+
+BOOL arC_message_symbol_unresolved(const struct arC_state* s, const arString* name)
+{
+	arMessages* const m = &s->compiler->messages;
+
+	arMessage* const message = arMessages_add(m,
+		arC_MESSAGE_PREFIX,
+		arC_MESSAGE_SYMBOL_UNRESOLVED,
+		arC_MESSAGE_SYMBOL_UNRESOLVED_STR,
+		arString_length(name), name->start);
+	message->line = 0;
+	message->line_offset = 0;
+	message->offset = 0;
 	return FALSE;
 }

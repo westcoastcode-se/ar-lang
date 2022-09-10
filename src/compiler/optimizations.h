@@ -13,6 +13,6 @@ extern arC_syntax_tree_node arC_synax_tree_merge_unaryop(const struct arC_state*
 extern arC_syntax_tree_node arC_synax_tree_merge_children(const struct arC_state* s, arC_syntax_tree_node node);
 
 // Try to merge all tree nodes in the supplied root node
-extern BOOL arC_synax_tree_optimize(const struct arC_state* s, arC_syntax_tree_root* root_node);
+extern BOOL arC_synax_tree_optimize(const struct arC_state* s, arC_syntax_tree_node_package* root_node);
 
 #endif

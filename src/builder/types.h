@@ -250,7 +250,7 @@ ARLANG_API arB_type* arB_type_from_props(const arB_type_props* props);
 
 // Get properties that can be used when creating a new type.
 // Important! This function is not thread-safe
-ARLANG_API const arB_type_props* arB_type_props_get(const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, const arB_type* of_type);
+ARLANG_API const arB_type_props* arB_type_props_get(const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, arB_type* of_type);
 
 // Mark the supplied type as an of type
 ARLANG_API BOOL arB_type_set_of_type(arB_type* t, const arB_type* of_type);
