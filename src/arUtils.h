@@ -9,6 +9,9 @@ ARLANG_API BOOL arStrcmp(const char* s1, int l1, const char* s2, int l2);
 // Copy the content of a string into a new memory location
 ARLANG_API char* arStrcpy(char* dest, const char* src, int len);
 
+// Copy the content of a string into a new memory location
+ARLANG_API char* arStrcpy_s(char* dest, int* bytes_left, const char* src, int len);
+
 // Calculate the length of a NULL terminated string
 ARLANG_API int arStrlen(const char* str);
 

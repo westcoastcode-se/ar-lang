@@ -100,18 +100,18 @@ arInt32 ar_pipeline_resolve_package(arBuilder* p, arInt32 offset, arB_package* p
 void ar_pipeline_resolve_header_size(arBuilder* p)
 {
 	const arInt32 num_packages = p->packages.count;
-	arInt32 size = sizeof(ar_process_header);
+	arInt32 size = sizeof(arProcessHeader);
 	arInt32 i, j;
 
 	for(i = 0; i < num_packages; ++i)
 	{
 		const arB_package* const package = vmp_list_packages_get(&p->packages, i);
-		size += sizeof(ar_package_header) + arString_length(&package->name);
+		size += sizeof(arPackageHeader) + arString_length(&package->signature);
 
 		for(j = 0; j < package->funcs.count; ++j)
 		{
 			const arB_func* const f = arB_funcs_get(&package->funcs, j);
-			size += sizeof(ar_function_header) + arString_length(&f->name);
+			size += sizeof(arFunctionHeader) + arString_length(&f->signature);
 		}
 	}
 	p->total_header_size = size;
@@ -175,16 +175,16 @@ BOOL arBuilder_compile_package(arBuilder* b, const arB_package* p)
 
 void ar_builder_write_header(arBuilder* b)
 {
-	ar_process_header header;
+	arProcessHeader header;
 	header.header[0] = 'V';
 	header.header[1] = 'M';
 	header.header[2] = '0';
 	header.version = VM_VERSION;
 	header.data_offset = 0;
 	header.code_offset = b->total_header_size;
-	header.first_package_offset = sizeof(ar_process_header);
+	header.first_package_offset = sizeof(arProcessHeader);
 	header.packages_count = b->packages.count;
-	arBuilder_write(b, &header, sizeof(ar_process_header));
+	arBuilder_write(b, &header, sizeof(arProcessHeader));
 }
 
 arInt32 ar_builder_get_num_functions(arBuilder* b)
@@ -208,30 +208,30 @@ void ar_builder_write_metadata(arBuilder* b)
 	
 	// Memory structure for package information:
 	// <Package Header>
-	// char[]	| name bytes
+	// char[]	| signature bytes
 
 	for (i = 0; i < size; ++i) {
 		const arB_package* const package = vmp_list_packages_get(&b->packages, i);
-		ar_package_header package_header = {
-			arString_length(&package->name),
+		arPackageHeader package_header = {
+			arString_length(&package->signature),
 			package->funcs.count,
 			package->types.count
 		};
-		arBuilder_write(b, &package_header, sizeof(ar_package_header));
-		arBuilder_write(b, package->name.start, arString_length(&package->name)); // name bytes
+		arBuilder_write(b, &package_header, sizeof(arPackageHeader));
+		arBuilder_write(b, package->signature.start, arString_length(&package->signature)); // signature bytes
 
 		// Memory structure for function information:
 		// int32	| name length
-		// char[]	| name bytes
+		// char[]	| signature bytes
 		for (j = 0; j < package->funcs.count; ++j) {
 			const arB_func* const f = arB_funcs_get(&package->funcs, j);
-			ar_function_header func_header = {
-				arString_length(&f->name),
+			arFunctionHeader func_header = {
+				arString_length(&f->signature),
 				f->offset,
 				f->args_stack_size
 			};
-			arBuilder_write(b, &func_header, sizeof(ar_function_header));
-			arBuilder_write(b, f->name.start, arString_length(&f->name)); // name bytes
+			arBuilder_write(b, &func_header, sizeof(arFunctionHeader));
+			arBuilder_write(b, f->signature.start, arString_length(&f->signature)); // signature bytes
 		}
 
 		// Memory structure for type information:

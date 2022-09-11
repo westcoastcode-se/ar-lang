@@ -4,7 +4,7 @@
 #include "arconf.h"
 
 // Header that describes the bytecode. The header is always at the start of the binary blob
-typedef struct ar_process_header
+typedef struct arProcessHeader
 {
 	// "VM0"
 	char header[3];
@@ -23,13 +23,13 @@ typedef struct ar_process_header
 
 	// Offset where the first package is found
 	arUint32 first_package_offset;
-} ar_process_header;
+} arProcessHeader;
 
 // Header for a function in the bytecode
-typedef struct ar_function_header
+typedef struct arFunctionHeader
 {
 	// Length of the name
-	arUint32 name_length;
+	arUint32 signature_length;
 
 	// Offset where the function starts (in relation to the start of the bytecode)
 	arUint32 ptr_start;
@@ -37,17 +37,17 @@ typedef struct ar_function_header
 	// How many bytes are expected to be pushed for this function to work
 	arInt32 expected_stack_size;
 
-	// char name[]
-} ar_function_header;
+	// char signature[]
+} arFunctionHeader;
 
 // Header for a package in the bytecode
-typedef struct ar_package_header
+typedef struct arPackageHeader
 {
-	arUint32 name_length;
+	arUint32 signature_length;
 	arUint32 functions_count;
 	arUint32 types_count;
-	// char name[]
+	// char signature[]
 	// functions[]
-} ar_package_header;
+} arPackageHeader;
 
 #endif

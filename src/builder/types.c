@@ -39,11 +39,23 @@ arB_package* arB_package_newsz(const char* name, arInt32 len)
 	if (p == NULL)
 		return NULL;
 	arString_setsz(&p->name, name, len);
+	// TODO: Use the name of the signature for now, but should not be in the future
+	arString_setsz(&p->signature, name, len);
 	p->pipeline = NULL;
 	arB_types_init(&p->types);
 	arB_funcs_init(&p->funcs);
 	vmp_list_globals_init(&p->globals);
 	return p;
+}
+
+void arB_package_set_signature(arB_package* p, const arString* name)
+{
+	p->signature = *name;
+}
+
+void arB_package_set_signaturesz(arB_package* p, const char* name, arInt32 len)
+{
+	arString_setsz(&p->signature, name, len);
 }
 
 void arB_package_destroy(arB_package* p)
@@ -103,6 +115,8 @@ arB_type* arB_type_new(const arString* name)
 	if (p == NULL)
 		return NULL;
 	p->name = *name;
+	// TODO: Use the name of the signature for now, but should not be in the future
+	p->signature = *name;
 	p->package = NULL;
 	p->size = 0;
 	p->flags = 0;
@@ -119,6 +133,8 @@ arB_type* arB_type_from_props(const arB_type_props* props)
 	if (p == NULL)
 		return NULL;
 	p->name = props->name;
+	// TODO: Use the name of the signature for now, but should not be in the future
+	p->signature = props->name;
 	p->package = NULL;
 	p->size = props->size;
 	p->flags = props->flags;
@@ -155,6 +171,11 @@ void arB_type_destroy(arB_type* p)
 	arB_inherited_by_release(&p->inherited_by);
 	arB_inherits_from_release(&p->inherits_from);
 	arFree(p);
+}
+
+void arB_type_set_signature(arB_type* p, const arString* name)
+{
+	p->signature = *name;
 }
 
 BOOL arB_type_test_inherits_from(const arB_type* type, const arB_type* inherits_from)
@@ -300,6 +321,8 @@ arB_func* arB_func_newsz(const char* name, arInt32 name_len)
 {
 	arB_func* p = arSafeMalloc(arB_func);
 	arString_setsz(&p->name, name, name_len);
+	// TODO: Use the name of the signature for now, but should not be in the future
+	arString_setsz(&p->signature, name, name_len);
 	p->package = NULL;
 	p->offset = 0;
 	p->body_size = 0;
@@ -333,6 +356,10 @@ void arB_func_destroy(arB_func* f)
 	arFree(f);
 }
 
+void arB_func_set_signature(arB_func* func, const arString* name)
+{
+	func->signature = *name;
+}
 
 void arB_func_add_flag(arB_func* p, arInt32 flag)
 {

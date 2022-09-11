@@ -37,10 +37,6 @@ typedef struct arC_symbol
 // Check to see if the supplied symbol has the name
 ARLANG_API BOOL arC_symbol_has_name(arC_symbol* s, const arString* name);
 
-// Check to see if the two symbols are the same. If one, or both, is a unresolved type then this
-// verifies against the resolved type instead
-ARLANG_API BOOL arC_symbol_equals(arC_symbol* t1, arC_symbol* t2);
-
 // The package
 typedef struct arC_package
 {
@@ -49,9 +45,14 @@ typedef struct arC_package
 	// Parent package
 	struct arC_package* parent;
 
+	// The signature of this type
+	arString signature;
+
 	// Child packages
 	struct arC_package* children;
 	struct arC_package* children_end;
+	struct arC_package* children_head;
+	struct arC_package* children_tail;
 
 	// Types part of this package
 	struct arC_type* types;
@@ -60,10 +61,6 @@ typedef struct arC_package
 	// Functions part of this package
 	struct arC_func* funcs;
 	struct arC_func* funcs_end;
-
-	// Intrusive linked list
-	struct arC_package* head;
-	struct arC_package* tail;
 
 	arB_package* package;
 } arC_package;
@@ -88,6 +85,9 @@ typedef struct arC_type
 
 	// The package this type is part of
 	arC_package* package;
+
+	// The signature of this type
+	arString signature;
 
 	// The size of this type
 	arInt32 size;
@@ -199,6 +199,9 @@ typedef struct arC_func
 	// Package this function is part of
 	arC_package* package;
 
+	// The signature of this type
+	arString signature;
+
 	// All arguments required by this function
 	arC_arg* arguments;
 	arC_arg* arguments_end;
@@ -234,6 +237,12 @@ ARLANG_API arC_type* arC_type_from_props(const arC_type_props* props);
 // Destroy the supplied type
 ARLANG_API void arC_type_destroy(arC_type* p);
 
+// Create a signature for the supplied type. Returns TRUE if the signature was successfully created
+ARLANG_API BOOL arC_type_build_signature(arC_type* ptr, const struct arC_state* s);
+
+// Manually set the signature
+ARLANG_API void arC_type_set_signature(arC_type* ptr, const arString* sig);
+
 // Resolve the supplied type and get the type
 ARLANG_API BOOL arC_type_resolve(arC_type* t, const struct arC_state* s);
 
@@ -242,6 +251,12 @@ ARLANG_API arC_package* arC_package_new(const arString* name);
 
 // Destroy the supplied package
 ARLANG_API void arC_package_destroy(arC_package* ptr);
+
+// Create a signature for the supplied package. Returns TRUE if the signature was successfully created
+ARLANG_API BOOL arC_package_build_signature(arC_package* ptr, const struct arC_state* s);
+
+// Manually set the signature for 
+ARLANG_API void arC_package_set_signature(arC_package* ptr, const arString* sig);
 
 // Resolve the supplied type and get the type
 ARLANG_API BOOL arC_package_resolve(arC_package* p, const struct arC_state* s);
@@ -267,6 +282,9 @@ ARLANG_API void arC_package_add_package(arC_package* p, arC_package* sub_package
 // Create a new function
 ARLANG_API arC_func* arC_func_new(const arString* name);
 
+// Manually set a functions signature 
+ARLANG_API void arC_func_set_signature(arC_func* func, const arString* signature);
+
 // Destroy the supplied function
 ARLANG_API void arC_func_destroy(arC_func* f);
 
@@ -278,6 +296,9 @@ ARLANG_API void arC_func_add_return(arC_func* f, arC_return* r);
 
 // Add the supplied local value
 ARLANG_API void arC_func_add_local(arC_func* f, arC_local* l);
+
+// Create a signature for the supplied function. Returns TRUE if the signature was successfully created
+ARLANG_API BOOL arC_func_build_signature(arC_func* func, const struct arC_state* s);
 
 // Resolve the supplied type and get the type
 ARLANG_API BOOL arC_func_resolve(arC_func* f, const struct arC_state* s);

@@ -14,6 +14,12 @@ typedef struct arFunction
 	// Unique id for this function
 	arObjectId id;
 
+	// Signature of the function
+	arString signature;
+
+	// A short-hand version of the signature. This doesn't contain any information of the package
+	arString short_signature;
+
 	// Name of the function
 	arString name;
 
@@ -36,14 +42,17 @@ typedef struct arPackage
 	// Unique id for this package
 	arObjectId id;
 
+	// Process this package is part of
+	struct arProcess* process;
+
+	// Signature of the package
+	arString signature;
+
 	// Name of the package
 	arString name;
 
 	// All functions part of this package
 	vmi_list_functions functions;
-
-	// Process this package is part of
-	struct arProcess* process;
 } arPackage;
 
 // Create a new package
@@ -84,8 +93,8 @@ ARLANG_API arInt32 arProcess_load(arProcess* p, const arByte* bytecode);
 // Execute the supplied thread
 ARLANG_API arInt32 arProcess_exec(arProcess* p, struct arThread* t, const arFunction* func);
 
-// Search for a package with the supplied name
-ARLANG_API const arPackage* arProcess_find_package(const arProcess* p, const char* name, int len);
+// Search for a package with the supplied signature
+ARLANG_API const arPackage* arProcess_find_package(const arProcess* p, const char* signature, int len);
 
 // Search for a function with the supplied name
 ARLANG_API const arFunction* arPackage_find_function(const arPackage* p, const char* name, int len);

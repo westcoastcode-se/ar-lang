@@ -30,6 +30,9 @@ typedef struct arB_package
 	// The name of the package
 	arString name;
 
+	// THe signature of the package
+	arString signature;
+
 	// Pipeline this package is added to
 	struct arBuilder* pipeline;
 
@@ -54,6 +57,9 @@ typedef struct arB_type
 {
 	// The name of the type
 	arString name;
+
+	// The signature of the type
+	arString signature;
 
 	// The package this type is part of
 	arB_package* package;
@@ -107,6 +113,9 @@ typedef struct arB_func
 {
 	// The name of the function
 	arString name;
+
+	// The signature of the function
+	arString signature;
 
 	// The package this function is part of
 	arB_package* package;
@@ -230,6 +239,12 @@ ARLANG_API arB_package* arB_package_new(const arString* name);
 // New package
 ARLANG_API arB_package* arB_package_newsz(const char* name, arInt32 len);
 
+// Set the signature of the package
+ARLANG_API void arB_package_set_signature(arB_package* p, const arString* name);
+
+// Set the signature of the package
+ARLANG_API void arB_package_set_signaturesz(arB_package* p, const char* name, arInt32 len);
+
 // Destroy package
 ARLANG_API void arB_package_destroy(arB_package* p);
 
@@ -257,6 +272,9 @@ ARLANG_API BOOL arB_type_set_of_type(arB_type* t, const arB_type* of_type);
 
 // Destroy type
 ARLANG_API void arB_type_destroy(arB_type* p);
+
+// Set the signature of the type
+ARLANG_API void arB_type_set_signature(arB_type* p, const arString* name);
 
 // Check to see if the supplied type inherits from the test
 ARLANG_API BOOL arB_type_test_inherits_from(const arB_type* type, const arB_type* inherits_from);
@@ -320,6 +338,9 @@ ARLANG_API arB_func* arB_func_newsz(const char* name, arInt32 name_len);
 
 // Destroy type
 ARLANG_API void arB_func_destroy(arB_func* p);
+
+// Set the signature of the function
+ARLANG_API void arB_func_set_signature(arB_func* func, const arString* name);
 
 // Add a specific flag
 ARLANG_API void arB_func_add_flag(arB_func* p, arInt32 flag);

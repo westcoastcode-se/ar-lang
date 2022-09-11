@@ -22,6 +22,14 @@ char* arStrcpy(char* dest, const char* src, int len)
 	return dest;
 }
 
+char* arStrcpy_s(char* dest, int* bytes_left, const char* src, int len)
+{
+	if (*bytes_left < len)
+		len = *bytes_left;
+	*bytes_left -= len;
+	return arStrcpy(dest, src, len);
+}
+
 int arStrlen(const char* str)
 {
 	const char* s = str;

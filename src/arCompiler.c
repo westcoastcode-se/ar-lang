@@ -51,6 +51,7 @@ arC_syntax_tree_node_type* arCompiler_root_add_type(arC_syntax_tree_node_package
 	node->symbol->size = size;
 	arC_package_add_type(root->symbol, node->symbol);
 	arC_syntax_tree_add(asC_syntax_tree(root), asC_syntax_tree(node));
+	arC_type_set_signature(node->symbol, name);
 	return node;
 }
 
@@ -107,7 +108,11 @@ arCompiler* arCompiler_new()
 		arCompiler_destroy(p);
 		return NULL;
 	}
-	p->pipeline = NULL;
+	p->pipeline = arBuilder_new();
+	if (p->pipeline == NULL) {
+		arCompiler_destroy(p);
+		return NULL;
+	}
 	return p;
 }
 
@@ -188,6 +193,8 @@ arC_type* arCompiler_find_or_create_type(arC_token* t, const arC_state* s)
 			node = asC_symbol(package_node);
 			arC_syntax_tree_add(asC_symbol(closet_package_node), node);
 			arC_package_add_package(closet_package_node->symbol, package_node->symbol);
+			if (!arC_package_build_signature(package_node->symbol, s))
+				return FALSE;
 			closet_package_node = package_node;
 		}
 		else {
@@ -221,6 +228,8 @@ arC_type* arCompiler_find_or_create_type(arC_token* t, const arC_state* s)
 					node = asC_symbol(package_node);
 					arC_syntax_tree_add(parent_node, node);
 					arC_package_add_package(closet_package_node->symbol, package_node->symbol);
+					if (!arC_package_build_signature(package_node->symbol, s))
+						return FALSE;
 					closet_package_node = package_node;
 				}
 			}
@@ -291,41 +300,24 @@ BOOL arCompiler_parse_body(arCompiler* c, arC_token* t, const arC_state* state)
 	return TRUE;
 }
 
-BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
+arC_syntax_tree_node_func* arCompiler_find_or_create_func(arC_token* t, const arC_state* s)
 {
 	// Expected function name
 	if (t->type != ARTOK_IDENTITY) {
-		return arC_message_expected_identifier(s);
+		arC_message_expected_identifier(s);
+		return NULL;
 	}
 
-	// Search for a function with the supplied name
-	arC_syntax_tree_node_func* func = (arC_syntax_tree_node_func*)arC_syntax_tree_find_child_with_type(s->parent_node, &t->string, arC_SYNTAX_TREE_FUNC);
-	if (func == NULL) {
-		// Create the node if it cant be found
-		func = arC_syntax_tree_node_func_new(&t->string);
-		if (func == NULL)
-			return arC_message_out_of_memory(s);
-
-		//arC_syntax_tree_node closest_container = arC_syntax_tree_find_incl_parents(s->parent_node, BIT(arC_SYNTAX_TREE_FUNC) | BIT(arC_SYNTAX_TREE_PACKAGE));
-		// TODO: Add support for functions with scope in functions
-		//if (closest_container->type != arC_SYNTAX_TREE_FUNC)
-		//	return arC_message_not_implemented(s);
-		func->closest_package_node = s->package_node;
-		// Add this function to the parent node. The parent node might've been a package or another function (inner)
-		arC_syntax_tree_add(s->parent_node, asC_syntax_tree(func));
-		arC_package_add_func(s->package_node->symbol, func->symbol);
-	}
-	arC_func* const symbol = func->symbol;
-
-	// Function is already defined
-	if (arC_syntax_tree_has_children(asC_syntax_tree(func))) {
-		// TODO: Might already be defined. Perhaps this function has another signature?
-		return arC_message_already_defined(s, asC_symbol_signature(symbol));
-	}
+	arString func_name = t->string;
+	arC_arg* arguments[32];
+	arInt32 arguments_count = 0;
+	arC_return* returns[32];
+	arInt32 returns_count = 0;
 
 	// Expected a '(' rune
 	if (arC_token_next(t) != ARTOK_PARAN_L) {
-		return arC_message_syntax_error(s, "expected: (");
+		arC_message_syntax_error(s, "expected: (");
+		return NULL;
 	}
 
 	// Parse argument information until we reach that end ')' token
@@ -333,13 +325,15 @@ BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
 	while (t->type != ARTOK_PARAN_R) {
 		// Ignore comma
 		if (t->type == ARTOK_COMMA) {
-			if (arC_token_next(t) != ARTOK_IDENTITY)
-				return arC_message_expected_identifier(s);
+			if (arC_token_next(t) != ARTOK_IDENTITY) {
+				arC_message_expected_identifier(s);
+				return NULL;
+			}
 		}
 
 		// Identity first
 		arC_arg* arg = arC_arg_new(&t->string);
-		arC_func_add_arg(symbol, arg);
+		arguments[arguments_count++] = arg;
 		arC_token_next(t);
 
 		// Find the type
@@ -354,7 +348,11 @@ BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
 	if (t->type == ARTOK_IDENTITY) {
 		// One return type
 		arC_return* ret = arC_return_new();
-		arC_func_add_return(symbol, ret);
+		if (ret == NULL) {
+			arC_message_out_of_memory(s);
+			return NULL;
+		}
+		returns[returns_count++] = ret;
 
 		// Find the type
 		arC_type* type = arCompiler_find_or_create_type(t, s);
@@ -368,12 +366,18 @@ BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
 		while (t->type != ARTOK_PARAN_R) {
 			// Ignore comma
 			if (t->type == ARTOK_COMMA) {
-				if (arC_token_next(t) != ARTOK_IDENTITY)
-					return arC_message_expected_identifier(s);
+				if (arC_token_next(t) != ARTOK_IDENTITY) {
+					arC_message_expected_identifier(s);
+					return NULL;
+				}
 			}
 
 			arC_return* ret = arC_return_new();
-			arC_func_add_return(symbol, ret);
+			if (ret == NULL) {
+				arC_message_out_of_memory(s);
+				return NULL;
+			}
+			returns[returns_count++] = ret;
 
 			// Find the type
 			arC_type* type = arCompiler_find_or_create_type(t, s);
@@ -384,6 +388,49 @@ BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
 		// Skip ')'
 		arC_token_next(t);
 	}
+
+	arC_syntax_tree_node_func* func = (arC_syntax_tree_node_func*)arC_syntax_tree_find_child_with_type(s->parent_node, &func_name, arC_SYNTAX_TREE_FUNC);
+	if (func == NULL) {
+		// Create the node if it cant be found
+		func = arC_syntax_tree_node_func_new(&func_name);
+		if (func == NULL) {
+			arC_message_out_of_memory(s);
+			return NULL;
+		}
+
+		arC_func* const symbol = func->symbol;
+		int i;
+		for (i = 0; i < arguments_count; ++i)
+			arC_func_add_arg(symbol, arguments[i]);
+		for (i = 0; i < returns_count; ++i)
+			arC_func_add_return(symbol, returns[i]);
+
+		//arC_syntax_tree_node closest_container = arC_syntax_tree_find_incl_parents(s->parent_node, BIT(arC_SYNTAX_TREE_FUNC) | BIT(arC_SYNTAX_TREE_PACKAGE));
+		// TODO: Add support for functions with scope in functions
+		//if (closest_container->type != arC_SYNTAX_TREE_FUNC)
+		//	return arC_message_not_implemented(s);
+		func->closest_package_node = s->package_node;
+		// Add this function to the parent node. The parent node might've been a package or another function (inner)
+		arC_syntax_tree_add(s->parent_node, asC_syntax_tree(func));
+		arC_package_add_func(s->package_node->symbol, func->symbol);
+		if (!arC_func_build_signature(func->symbol, s)) {
+			return FALSE;
+		}
+	}
+	return func;
+}
+
+BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
+{
+	// Expected function name
+	if (t->type != ARTOK_IDENTITY) {
+		return arC_message_expected_identifier(s);
+	}
+
+	// Search for a function with the supplied name
+	arC_syntax_tree_node_func* func = arCompiler_find_or_create_func(t, s);
+	if (func == NULL)
+		return FALSE;
 
 	// Expected body for now. Perhaps re-use this function to parse a function pointer definition in the future
 	if (t->type != ARTOK_BRACKET_L) {
@@ -426,6 +473,11 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 		if (!arCompiler_import_root(package, s))
 			return FALSE;
 		arC_syntax_tree_add(s->parent_node, asC_syntax_tree(package));
+		// Does this package have a parent that's not the root node
+		if (s->package_node != NULL && s->package_node != c->root_node) {
+			arC_package_add_package(s->package_node->symbol, package->symbol);
+		}
+		arC_package_build_signature(package->symbol, s);
 	}
 	arC_token_next(t);
 
@@ -533,8 +585,6 @@ void arCompiler_raise_message(arCompiler* c, arMessage* msg)
 
 arByte* arCompiler_compile(arCompiler* c)
 {
-	c->pipeline = arBuilder_new();
-	
 	const arC_state state = {
 		c, NULL, NULL, NULL, NULL, NULL
 	};

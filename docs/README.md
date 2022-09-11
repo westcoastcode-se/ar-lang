@@ -13,6 +13,7 @@ The source code is split into three parts:
 Each part can be replaced assuming that each c function in the header file is implemented
 
 - [Directory Structure](directory-structure.md)
+- [Working with the Source Code](working-with-source-code.md)
 - [Concepts](concepts.md)
 	- [Package](concepts/package.md)
 	- [Function](concepts/function.md)
@@ -21,3 +22,15 @@ Each part can be replaced assuming that each c function in the header file is im
 	- [Constant](concepts/constant.md)
 	- [Generics](concepts/generics.md)
 	- [Attribute](concepts/attribute.md)
+
+## Hello World
+
+```
+package Demo
+
+import System
+
+func Main() {
+	Printf("Hello World!")
+}
+```

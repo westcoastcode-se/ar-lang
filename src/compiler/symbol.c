@@ -2,6 +2,7 @@
 #include "messages.h"
 #include "../arCompiler.h"
 #include "../arMemory.h"
+#include "../arUtils.h"
 
 DEFINE_LIST_BASE_RELEASE_ONLY(arC_inherits_from, arC_type, 2, 2);
 DEFINE_LIST_FIND(arC_inherits_from, arC_type, header.name);
@@ -48,6 +49,7 @@ arC_type* arC_type_new(const arString* name)
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_TYPE);
 	p->header.name = *name;
 	p->package = NULL;
+	arString_zero(&p->signature);
 	p->size = -1;
 	p->flags = 0;
 	p->data_type = 0;
@@ -65,6 +67,7 @@ arC_type* arC_type_from_props(const arC_type_props* props)
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_TYPE);
 	p->header.name = props->name;
 	p->package = NULL;
+	arString_zero(&p->signature);
 	p->size = props->size;
 	p->flags = props->flags;
 	p->data_type = props->data_type;
@@ -83,6 +86,35 @@ void arC_type_destroy(arC_type* p)
 	arFree(p);
 }
 
+BOOL arC_type_build_signature(arC_type* ptr, const arC_state* s)
+{
+	ASSERT_NOT_NULL(ptr);
+
+	int bytes_left = 1024;
+	arByte signature_data[1024];
+	arByte* sig = signature_data;
+
+	sig = arStrcpy_s(sig, &bytes_left, ptr->package->signature.start, arString_length(&ptr->package->signature));
+	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
+	sig = arStrcpy_s(sig, &bytes_left, ptr->header.name.start, arString_length(&ptr->header.name));
+	if (bytes_left == 0) {
+		// Size of the signature is too large
+		arC_message_not_implemented(s);
+		return FALSE;
+	}
+
+	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
+	if (result == NULL)
+		return arC_message_out_of_memory(s);
+	arC_type_set_signature(ptr, result);
+	return TRUE;
+}
+
+void arC_type_set_signature(arC_type* ptr, const arString* sig)
+{
+	ptr->signature = *sig;
+}
+
 BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_state* s)
 {
 	if (t == root_type) {
@@ -94,10 +126,10 @@ BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_s
 		return TRUE;
 
 	arB_type* const type = arB_type_new(&t->header.name);
-	if (type == NULL) {
-		// TODO: arC_message_out_of_memory(s);
-		return FALSE;
-	}
+	if (type == NULL)
+		return arC_message_out_of_memory(s);
+	arB_type_set_signature(type, &t->signature);
+
 	t->type = type;
 	type->size = t->size;
 	type->data_type = t->data_type;
@@ -122,10 +154,10 @@ BOOL arC_type_resolve(arC_type* t, const arC_state* s)
 		return TRUE;
 
 	arB_type* const type = arB_type_new(&t->header.name);
-	if (type == NULL) {
-		// TODO: arC_message_out_of_memory(s);
-		return FALSE;
-	}
+	if (type == NULL)
+		return arC_message_out_of_memory(s);
+	arB_type_set_signature(type, &t->signature);
+
 	t->type = type;
 	type->size = t->size;
 	type->data_type = t->data_type;
@@ -150,23 +182,19 @@ arC_package* arC_package_new(const arString* name)
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_PACKAGE);
 	p->header.name = *name;
 	p->parent = NULL;
+	arString_zero(&p->signature);
 	p->children = p->children_end = NULL;
+	p->children_head = p->children_tail = NULL;
 	p->types = p->types_end = NULL;
 	p->funcs = p->funcs_end = NULL;
-	p->head = p->tail = NULL;
 	p->package = NULL;
 	return p;
 }
 
 void arC_package_destroy(arC_package* ptr)
 {
-	arC_package* package = ptr->children;
-	while (package) {
-		arC_package* const tail = package->tail;
-		arC_package_destroy(package);
-		package = tail;
-	}
 	ptr->children = ptr->children_end = NULL;
+	ptr->children_head = ptr->children_tail = NULL;
 
 	arC_type* type = ptr->types;
 	while (type) {
@@ -187,6 +215,43 @@ void arC_package_destroy(arC_package* ptr)
 	arFree(ptr);
 }
 
+BOOL arC_package_build_signature0(arC_package* p, const struct arC_state* s)
+{
+	int bytes_left = 1024;
+	arByte signature_data[1024];
+	arByte* sig = signature_data;
+
+	sig = arStrcpy_s(sig, &bytes_left, p->parent->signature.start, arString_length(&p->parent->signature));
+	sig = arStrcpy_s(sig, &bytes_left, ".", 1);
+	sig = arStrcpy_s(sig, &bytes_left, p->header.name.start, arString_length(&p->header.name));
+	if (bytes_left == 0) {
+		// Size of the signature is too large
+		arC_message_not_implemented(s);
+		return FALSE;
+	}
+
+	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
+	if (result == NULL)
+		return arC_message_out_of_memory(s);
+	arC_package_set_signature(p, result);
+	return TRUE;
+}
+
+BOOL arC_package_build_signature(arC_package* p, const struct arC_state* s)
+{
+	ASSERT_NOT_NULL(p);
+	if (p->parent == NULL) {
+		p->signature = p->header.name;
+		return TRUE;
+	}
+	return arC_package_build_signature0(p, s);
+}
+
+void arC_package_set_signature(arC_package* ptr, const arString* sig)
+{
+	ptr->signature = *sig;
+}
+
 BOOL arC_package_resolve(arC_package* p, const arC_state* s)
 {
 	if (p->package != NULL)
@@ -195,6 +260,7 @@ BOOL arC_package_resolve(arC_package* p, const arC_state* s)
 	arB_package* const package = arB_package_new(&p->header.name);
 	if (package == NULL)
 		return arC_message_out_of_memory(s);
+	arB_package_set_signature(package, &p->signature);
 	p->package = package;
 
 	// Resolve types	
@@ -300,8 +366,8 @@ void arC_package_add_package(arC_package* p, arC_package* sub_package)
 		p->children = p->children_end = sub_package;
 	}
 	else {
-		p->children_end->tail = sub_package;
-		sub_package->head = p->children_end;
+		p->children_end->children_tail = sub_package;
+		sub_package->children_head = p->children_end;
 		p->children_end = sub_package;
 	}
 }
@@ -312,14 +378,21 @@ arC_func* arC_func_new(const arString* name)
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_FUNC);
 	p->header.name = *name;
 	p->package = NULL;
+	arString_zero(&p->signature);
 	p->arguments = p->arguments_end = NULL;
 	p->arguments_count = 0;
 	p->returns = p->returns_end = NULL;
 	p->returns_count = 0;
+	arString_zero(&p->signature);
 	p->locals = p->locals_end = NULL;
 	p->tail = p->head = NULL;
 	p->func = NULL;
 	return p;
+}
+
+void arC_func_set_signature(arC_func* func, const arString* signature)
+{
+	func->signature = *signature;
 }
 
 void arC_func_destroy(arC_func* f)
@@ -395,6 +468,49 @@ void arC_func_add_local(arC_func* f, arC_local* l)
 	}
 }
 
+BOOL arC_func_build_signature(arC_func* func, const arC_state* s)
+{
+	ASSERT_NOT_NULL(func);
+
+	int i;
+	int bytes_left = 1024;
+	arByte signature_data[1024];
+	arByte* sig = signature_data;
+
+	sig = arStrcpy_s(sig, &bytes_left, func->package->signature.start, arString_length(&func->package->signature));
+	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
+	sig = arStrcpy_s(sig, &bytes_left, func->header.name.start, arString_length(&func->header.name));
+	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
+	arC_arg* arg = func->arguments;
+	for (i = 0; i < func->arguments_count; ++i, arg = arg->tail) {
+		if (i > 0)
+			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
+		const arString* type_sig = &arg->type->signature;
+		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
+	}
+	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
+	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
+	arC_return* ret = func->returns;
+	for (i = 0; i < func->returns_count; ++i, ret = ret->tail) {
+		if (i > 0)
+			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
+		const arString* type_sig = &ret->type->signature;
+		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
+	}
+	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
+	if (bytes_left == 0) {
+		// Size of the signature is too large
+		arC_message_not_implemented(s);
+		return FALSE;
+	}
+
+	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
+	if (result == NULL)
+		return arC_message_out_of_memory(s);
+	arC_func_set_signature(func, result);
+	return TRUE;
+}
+
 BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 {
 	ASSERT_NOT_NULL(f);
@@ -406,6 +522,7 @@ BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 	arB_func* const func = arB_func_new(asC_symbol_name(f));
 	if (func == NULL)
 		return arC_message_out_of_memory(s);
+	arB_func_set_signature(func, &f->signature);
 	f->func = func;
 
 	// add arguments
