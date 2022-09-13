@@ -15,11 +15,17 @@ void arCompilerSymbol_init(arC_symbol* s, arC_symbol_type type)
 {
 	s->type = type;
 	arString_zero(&s->name);
+	arString_zero(&s->signature);
 }
 
 BOOL arC_symbol_has_name(arC_symbol* s, const arString* name)
 {
 	return arString_cmp(&s->name, name);
+}
+
+BOOL arC_symbol_has_signature(arC_symbol* s, const arString* signature)
+{
+	return arString_cmp(&s->signature, signature);
 }
 
 BOOL arC_symbol_equals(arC_symbol* t1, arC_symbol* t2)
@@ -50,7 +56,6 @@ arC_type* arC_type_new(const arString* name)
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_TYPE);
 	p->header.name = *name;
 	p->package = NULL;
-	arString_zero(&p->signature);
 	p->size = -1;
 	p->flags = 0;
 	p->data_type = 0;
@@ -68,7 +73,6 @@ arC_type* arC_type_from_props(const arC_type_props* props)
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_TYPE);
 	p->header.name = props->name;
 	p->package = NULL;
-	arString_zero(&p->signature);
 	p->size = props->size;
 	p->flags = props->flags;
 	p->data_type = props->data_type;
@@ -95,7 +99,7 @@ BOOL arC_type_build_signature(arC_type* ptr, const arC_state* s)
 	arByte signature_data[1024];
 	arByte* sig = signature_data;
 
-	sig = arStrcpy_s(sig, &bytes_left, ptr->package->signature.start, arString_length(&ptr->package->signature));
+	sig = arStrcpy_s(sig, &bytes_left, asC_symbol_signature(ptr->package)->start, arString_length(asC_symbol_signature(ptr->package)));
 	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
 	sig = arStrcpy_s(sig, &bytes_left, ptr->header.name.start, arString_length(&ptr->header.name));
 	if (bytes_left == 0) {
@@ -113,7 +117,7 @@ BOOL arC_type_build_signature(arC_type* ptr, const arC_state* s)
 
 void arC_type_set_signature(arC_type* ptr, const arString* sig)
 {
-	ptr->signature = *sig;
+	ptr->header.signature = *sig;
 }
 
 BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_state* s)
@@ -129,7 +133,7 @@ BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_s
 	arB_type* const type = arB_type_new(&t->header.name);
 	if (type == NULL)
 		return arC_message_out_of_memory(s);
-	arB_type_set_signature(type, &t->signature);
+	arB_type_set_signature(type, asC_symbol_signature(t));
 
 	t->type = type;
 	type->size = t->size;
@@ -157,7 +161,7 @@ BOOL arC_type_resolve(arC_type* t, const arC_state* s)
 	arB_type* const type = arB_type_new(&t->header.name);
 	if (type == NULL)
 		return arC_message_out_of_memory(s);
-	arB_type_set_signature(type, &t->signature);
+	arB_type_set_signature(type, asC_symbol_signature(t));
 
 	t->type = type;
 	type->size = t->size;
@@ -183,7 +187,6 @@ arC_package* arC_package_new(const arString* name)
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_PACKAGE);
 	p->header.name = *name;
 	p->parent = NULL;
-	arString_zero(&p->signature);
 	p->children = p->children_end = NULL;
 	p->children_head = p->children_tail = NULL;
 	p->types = p->types_end = NULL;
@@ -222,7 +225,7 @@ BOOL arC_package_build_signature0(arC_package* p, const struct arC_state* s)
 	arByte signature_data[1024];
 	arByte* sig = signature_data;
 
-	sig = arStrcpy_s(sig, &bytes_left, p->parent->signature.start, arString_length(&p->parent->signature));
+	sig = arStrcpy_s(sig, &bytes_left, asC_symbol_signature(p->parent)->start, arString_length(asC_symbol_signature(p->parent)));
 	sig = arStrcpy_s(sig, &bytes_left, ".", 1);
 	sig = arStrcpy_s(sig, &bytes_left, p->header.name.start, arString_length(&p->header.name));
 	if (bytes_left == 0) {
@@ -234,7 +237,7 @@ BOOL arC_package_build_signature0(arC_package* p, const struct arC_state* s)
 	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
 	if (result == NULL)
 		return arC_message_out_of_memory(s);
-	arC_package_set_signature(p, result);
+	p->header.signature = *result;
 	return TRUE;
 }
 
@@ -242,15 +245,10 @@ BOOL arC_package_build_signature(arC_package* p, const struct arC_state* s)
 {
 	ASSERT_NOT_NULL(p);
 	if (p->parent == NULL) {
-		p->signature = p->header.name;
+		p->header.signature = p->header.name;
 		return TRUE;
 	}
 	return arC_package_build_signature0(p, s);
-}
-
-void arC_package_set_signature(arC_package* ptr, const arString* sig)
-{
-	ptr->signature = *sig;
 }
 
 BOOL arC_package_resolve(arC_package* p, const arC_state* s)
@@ -261,7 +259,7 @@ BOOL arC_package_resolve(arC_package* p, const arC_state* s)
 	arB_package* const package = arB_package_new(&p->header.name);
 	if (package == NULL)
 		return arC_message_out_of_memory(s);
-	arB_package_set_signature(package, &p->signature);
+	arB_package_set_signature(package, asC_symbol_signature(p));
 	p->package = package;
 
 	// Resolve types	
@@ -489,15 +487,15 @@ BOOL arC_func_sign_build(arC_func_sign* sign, const arC_state* s)
 	arByte signature_data[1024];
 	arByte* sig = signature_data;
 
-	sig = arStrcpy_s(sig, &bytes_left, sign->package->signature.start, arString_length(&sign->package->signature));
+	sig = arString_cpy_s(sig, &bytes_left, asC_symbol_signature(sign->package));
 	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
-	sig = arStrcpy_s(sig, &bytes_left, sign->name.start, arString_length(&sign->name));
+	sig = arString_cpy_s(sig, &bytes_left, &sign->name);
 	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
 	arC_arg* arg = sign->arguments;
 	for (i = 0; i < sign->arguments_count; ++i, arg = arg->tail) {
 		if (i > 0)
 			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
-		const arString* type_sig = &arg->type->signature;
+		const arString* type_sig = asC_symbol_signature(arg->type);
 		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
 	}
 	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
@@ -506,7 +504,7 @@ BOOL arC_func_sign_build(arC_func_sign* sign, const arC_state* s)
 	for (i = 0; i < sign->returns_count; ++i, ret = ret->tail) {
 		if (i > 0)
 			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
-		const arString* type_sig = &ret->type->signature;
+		const arString* type_sig = asC_symbol_signature(ret->type);
 		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
 	}
 	sig = arStrcpy_s(sig, &bytes_left, ")", 1);

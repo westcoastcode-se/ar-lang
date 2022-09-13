@@ -59,3 +59,8 @@ char* arString_get(const arString* src, char* dest, int* len)
 	*len = arString_length(src);
 	return arStrcpy(dest, src->start, *len);
 }
+
+char* arString_cpy_s(char* dest, int* bytes_left, const arString* src)
+{
+	return arStrcpy_s(dest, bytes_left, src->start, arString_length(src));
+}

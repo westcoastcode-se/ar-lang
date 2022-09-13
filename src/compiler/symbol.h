@@ -24,18 +24,22 @@ typedef struct arC_symbol
 	arC_symbol_type type;
 	// The name of this symbol
 	arString name;
+	// The unique "full name"/signature of this symbol 
+	arString signature;
 } arC_symbol;
 
 // Get the base class for a specific symbol
 #define asC_symbol(s) (&s->header)
-
 // Get the name of the supplied symbol
 #define asC_symbol_name(s) (&(s->header.name))
-// Get the signature of the supplied symbol. TODO: Differentiate name and signature
-#define asC_symbol_signature(s) asC_symbol_name(s)
+// Get the signature of the supplied symbol
+#define asC_symbol_signature(s) (&(s->header.signature))
 
 // Check to see if the supplied symbol has the name
 ARLANG_API BOOL arC_symbol_has_name(arC_symbol* s, const arString* name);
+
+// Check to see if the supplied symbol has the signature
+ARLANG_API BOOL arC_symbol_has_signature(arC_symbol* s, const arString* signature);
 
 // The package
 typedef struct arC_package
@@ -44,9 +48,6 @@ typedef struct arC_package
 
 	// Parent package
 	struct arC_package* parent;
-
-	// The signature of this type
-	arString signature;
 
 	// Child packages
 	struct arC_package* children;
@@ -85,9 +86,6 @@ typedef struct arC_type
 
 	// The package this type is part of
 	arC_package* package;
-
-	// The signature of this type
-	arString signature;
 
 	// The size of this type
 	arInt32 size;
@@ -197,6 +195,9 @@ typedef struct arC_func_sign
 	// The name of the function
 	arString name;
 
+	// The complete signature
+	arString signature;
+
 	// Package this function is part of
 	arC_package* package;
 
@@ -209,9 +210,6 @@ typedef struct arC_func_sign
 	arC_return* returns;
 	arC_return* returns_end;
 	arInt32 returns_count;
-
-	// The complete signature
-	arString signature;
 } arC_func_sign;
 
 // The function
@@ -264,9 +262,6 @@ ARLANG_API void arC_package_destroy(arC_package* ptr);
 
 // Create a signature for the supplied package. Returns TRUE if the signature was successfully created
 ARLANG_API BOOL arC_package_build_signature(arC_package* ptr, const struct arC_state* s);
-
-// Manually set the signature for 
-ARLANG_API void arC_package_set_signature(arC_package* ptr, const arString* sig);
 
 // Resolve the supplied type and get the type
 ARLANG_API BOOL arC_package_resolve(arC_package* p, const struct arC_state* s);
