@@ -322,9 +322,9 @@ arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arString* n
 	return p;
 }
 
-arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const arString* name)
+arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const arC_func_sign* signature)
 {
-	arC_func* const symbol = arC_func_new(name);
+	arC_func* const symbol = arC_func_new(signature);
 	if (symbol == NULL)
 		return NULL;
 
@@ -935,7 +935,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_keywords(arCompiler* c, arC_token* t,
 
 			// The number of expressions that are left
 			arInt32 return_expressions_left = arC_func_count_returns(arCompiler_state_get_func(s));
-			arC_return* return_symbol = s->func_node->symbol->returns;
+			arC_return* return_symbol = s->func_node->symbol->signature.returns;
 
 			// Fetch all return statements 
 			// TODO: Allow for skipping return values and let the compiler return the default value for you

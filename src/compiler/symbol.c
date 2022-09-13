@@ -1,5 +1,6 @@
 #include "symbol.h"
 #include "messages.h"
+#include "tokens.h"
 #include "../arCompiler.h"
 #include "../arMemory.h"
 #include "../arUtils.h"
@@ -342,9 +343,9 @@ void arC_package_add_func(arC_package* p, arC_func* f)
 {
 	ASSERT_NOT_NULL(p);
 	ASSERT_NOT_NULL(f);
-	assert(f->package == NULL && "Expected the function to not be added to another package");
+	assert(f->signature.package == NULL || f->signature.package == p && "Expected the function to not be added to another package");
 
-	f->package = p;
+	f->signature.package = p;
 	if (p->funcs_end == NULL) {
 		p->funcs = p->funcs_end = f;
 	}
@@ -372,39 +373,48 @@ void arC_package_add_package(arC_package* p, arC_package* sub_package)
 	}
 }
 
-arC_func* arC_func_new(const arString* name)
+void arC_func_sign_init(arC_func_sign* p)
 {
-	arC_func* const p = arSafeMalloc(arC_func);
-	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_FUNC);
-	p->header.name = *name;
+	arString_zero(&p->name);
 	p->package = NULL;
-	arString_zero(&p->signature);
+	p->package = NULL;
 	p->arguments = p->arguments_end = NULL;
 	p->arguments_count = 0;
 	p->returns = p->returns_end = NULL;
 	p->returns_count = 0;
 	arString_zero(&p->signature);
+}
+
+arC_func* arC_func_new(const arC_func_sign* signature)
+{
+	arC_func* const p = arSafeMalloc(arC_func);
+	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_FUNC);
+	p->header.name = signature->signature;
+	p->signature = *signature;
 	p->locals = p->locals_end = NULL;
 	p->tail = p->head = NULL;
 	p->func = NULL;
 	return p;
 }
 
-void arC_func_set_signature(arC_func* func, const arString* signature)
+void arC_func_set_signature(arC_func* func, const arC_func_sign* signature)
 {
+	func->header.name = signature->signature;
 	func->signature = *signature;
 }
 
 void arC_func_destroy(arC_func* f)
 {
-	arC_arg* arg = f->arguments;
+	const arC_func_sign* s = &f->signature;
+
+	arC_arg* arg = s->arguments;
 	while (arg) {
 		arC_arg* const tail = arg->tail;
 		arC_arg_destroy(arg);
 		arg = tail;
 	}
 
-	arC_return* ret = f->returns;
+	arC_return* ret = s->returns;
 	while (ret) {
 		arC_return* const tail = ret->tail;
 		arC_return_destroy(ret);
@@ -425,32 +435,34 @@ void arC_func_add_arg(arC_func* f, arC_arg* a)
 {
 	ASSERT_NOT_NULL(f);
 	ASSERT_NOT_NULL(a);
+	arC_func_sign* s = &f->signature;
 
-	if (f->arguments == NULL) {
-		f->arguments = f->arguments_end = a;
+	if (s->arguments == NULL) {
+		s->arguments = s->arguments_end = a;
 	}
 	else {
-		f->arguments_end->tail = a;
-		a->head = f->arguments_end;
-		f->arguments_end = a;
+		s->arguments_end->tail = a;
+		a->head = s->arguments_end;
+		s->arguments_end = a;
 	}
-	f->arguments_count++;
+	s->arguments_count++;
 }
 
 void arC_func_add_return(arC_func* f, arC_return* r)
 {
 	ASSERT_NOT_NULL(f);
 	ASSERT_NOT_NULL(r);
+	arC_func_sign* s = &f->signature;
 
-	if (f->returns == NULL) {
-		f->returns = f->returns_end = r;
+	if (s->returns == NULL) {
+		s->returns = s->returns_end = r;
 	}
 	else {
-		f->returns_end->tail = r;
-		r->head = f->returns_end;
-		f->returns_end = r;
+		s->returns_end->tail = r;
+		r->head = s->returns_end;
+		s->returns_end = r;
 	}
-	f->returns_count++;
+	s->returns_count++;
 }
 
 void arC_func_add_local(arC_func* f, arC_local* l)
@@ -468,21 +480,21 @@ void arC_func_add_local(arC_func* f, arC_local* l)
 	}
 }
 
-BOOL arC_func_build_signature(arC_func* func, const arC_state* s)
+BOOL arC_func_sign_build(arC_func_sign* sign, const arC_state* s)
 {
-	ASSERT_NOT_NULL(func);
+	ASSERT_NOT_NULL(sign);
 
 	int i;
 	int bytes_left = 1024;
 	arByte signature_data[1024];
 	arByte* sig = signature_data;
 
-	sig = arStrcpy_s(sig, &bytes_left, func->package->signature.start, arString_length(&func->package->signature));
+	sig = arStrcpy_s(sig, &bytes_left, sign->package->signature.start, arString_length(&sign->package->signature));
 	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
-	sig = arStrcpy_s(sig, &bytes_left, func->header.name.start, arString_length(&func->header.name));
+	sig = arStrcpy_s(sig, &bytes_left, sign->name.start, arString_length(&sign->name));
 	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
-	arC_arg* arg = func->arguments;
-	for (i = 0; i < func->arguments_count; ++i, arg = arg->tail) {
+	arC_arg* arg = sign->arguments;
+	for (i = 0; i < sign->arguments_count; ++i, arg = arg->tail) {
 		if (i > 0)
 			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
 		const arString* type_sig = &arg->type->signature;
@@ -490,8 +502,8 @@ BOOL arC_func_build_signature(arC_func* func, const arC_state* s)
 	}
 	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
 	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
-	arC_return* ret = func->returns;
-	for (i = 0; i < func->returns_count; ++i, ret = ret->tail) {
+	arC_return* ret = sign->returns;
+	for (i = 0; i < sign->returns_count; ++i, ret = ret->tail) {
 		if (i > 0)
 			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
 		const arString* type_sig = &ret->type->signature;
@@ -500,14 +512,13 @@ BOOL arC_func_build_signature(arC_func* func, const arC_state* s)
 	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
 	if (bytes_left == 0) {
 		// Size of the signature is too large
-		arC_message_not_implemented(s);
-		return FALSE;
+		return arC_message_not_implemented(s);
 	}
 
 	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
 	if (result == NULL)
 		return arC_message_out_of_memory(s);
-	arC_func_set_signature(func, result);
+	sign->signature = *result;
 	return TRUE;
 }
 
@@ -522,11 +533,11 @@ BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 	arB_func* const func = arB_func_new(asC_symbol_name(f));
 	if (func == NULL)
 		return arC_message_out_of_memory(s);
-	arB_func_set_signature(func, &f->signature);
+	arB_func_set_signature(func, &f->signature.signature);
 	f->func = func;
 
 	// add arguments
-	arC_arg* arg = f->arguments;
+	arC_arg* arg = f->signature.arguments;
 	while (arg != NULL) {
 		if (!arC_type_resolve(arg->type, s))
 			return FALSE;
@@ -536,7 +547,7 @@ BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 	}
 
 	// add return values
-	arC_return* ret = f->returns;
+	arC_return* ret = f->signature.returns;
 	while (ret != NULL) {
 		if (!arC_type_resolve(ret->type, s))
 			return FALSE;
@@ -553,8 +564,8 @@ BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 		arB_local_set_name(local->local, asC_symbol_name(local));
 		local = local->tail;
 	}
-	ASSERT_NOT_NULL(f->package->package);
-	if (arB_package_add_func(f->package->package, func) != VMP_LIST_ADDED)
+	ASSERT_NOT_NULL(f->signature.package->package);
+	if (arB_package_add_func(f->signature.package->package, func) != VMP_LIST_ADDED)
 		return arC_message_out_of_memory(s);
 	return TRUE;
 }
@@ -572,7 +583,7 @@ arC_local* arC_func_find_local(arC_func* f, const arString* name)
 
 arC_arg* arC_func_find_arg(arC_func* f, const arString* name)
 {
-	arC_arg* arg = f->arguments;
+	arC_arg* arg = f->signature.arguments;
 	while (arg != NULL) {
 		if (arString_cmp(&arg->header.name, name))
 			return arg;
@@ -597,13 +608,13 @@ arC_symbol* arC_func_find_symbol(arC_func* f, const arString* name)
 arInt32 arC_func_count_args(arC_func* f)
 {
 	ASSERT_NOT_NULL(f);
-	return f->arguments_count;
+	return f->signature.arguments_count;
 }
 
 arInt32 arC_func_count_returns(arC_func* f)
 {
 	ASSERT_NOT_NULL(f);
-	return f->returns_count;
+	return f->signature.returns_count;
 }
 
 arC_arg* arC_arg_new(const arString* name)

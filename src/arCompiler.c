@@ -300,6 +300,122 @@ BOOL arCompiler_parse_body(arCompiler* c, arC_token* t, const arC_state* state)
 	return TRUE;
 }
 
+// Create a function signature 
+const arString* arCompiler_create_signature(const arString* name, arC_arg* arguments, arC_return* returns)
+{
+
+}
+
+BOOL arC_func_sign_parse(arC_func_sign* sign, const arC_state* s)
+{
+	arC_token* const t = s->token;
+
+	// Expected function name
+	if (t->type != ARTOK_IDENTITY)
+		return arC_message_expected_identifier(s);
+
+	sign->name = t->string;
+	sign->arguments = sign->arguments_end = NULL;
+	sign->arguments_count = 0;
+	sign->returns = sign->returns_end = NULL;
+	sign->returns_count = 0;
+	sign->package = s->package_node->symbol;
+
+	// Expected a '(' rune
+	if (arC_token_next(t) != ARTOK_PARAN_L)
+		return arC_message_syntax_error(s, "expected: (");
+
+	// Parse argument information until we reach that end ')' token
+	arC_token_next(t);
+	while (t->type != ARTOK_PARAN_R) {
+		// Ignore comma
+		if (t->type == ARTOK_COMMA) {
+			if (arC_token_next(t) != ARTOK_IDENTITY)
+				return arC_message_expected_identifier(s);
+		}
+
+		// Identity first
+		arC_arg* const arg = arC_arg_new(&t->string);
+		if (arg == NULL)
+			return arC_message_out_of_memory(s);
+
+		if (sign->arguments == NULL) {
+			sign->arguments = sign->arguments_end = arg;
+		}
+		else {
+			sign->arguments_end->tail = arg;
+			arg->head = sign->arguments_end;
+			sign->arguments_end = arg;
+		}
+		sign->arguments_count++;
+
+		// Find the type
+		arC_token_next(t);
+		arg->type = arCompiler_find_or_create_type(t, s);
+		if (arg->type == NULL)
+			return FALSE;
+	}
+	arC_token_next(t);
+
+	// Return values present?
+	if (t->type == ARTOK_IDENTITY) {
+		// One return type
+		arC_return* const ret = arC_return_new();
+		if (ret == NULL)
+			return arC_message_out_of_memory(s);
+
+		if (sign->returns == NULL) {
+			sign->returns = sign->returns_end = ret;
+		}
+		else {
+			sign->returns_end->tail = ret;
+			ret->head = sign->returns_end;
+			sign->returns_end = ret;
+		}
+		sign->returns_count++;
+
+		// Find the type
+		ret->type = arCompiler_find_or_create_type(t, s);
+		if (ret->type == NULL)
+			return FALSE;
+	}
+	else if (t->type == ARTOK_PARAN_L) {
+		// Parse return information until we reach that end ')' token
+		arC_token_next(t);
+		while (t->type != ARTOK_PARAN_R) {
+			// Ignore comma
+			if (t->type == ARTOK_COMMA) {
+				arC_token_next(t);
+			}
+
+			arC_return* const ret = arC_return_new();
+			if (ret == NULL)
+				return arC_message_out_of_memory(s);
+
+			if (sign->returns == NULL) {
+				sign->returns = sign->returns_end = ret;
+			}
+			else {
+				sign->returns_end->tail = ret;
+				ret->head = sign->returns_end;
+				sign->returns_end = ret;
+			}
+			sign->returns_count++;
+
+			// Find the type
+			ret->type = arCompiler_find_or_create_type(t, s);
+			if (ret->type == NULL)
+				return FALSE;
+		}
+		// Skip ')'
+		arC_token_next(t);
+	}
+
+	if (!arC_func_sign_build(sign, s))
+		return FALSE;
+	return TRUE;
+}
+
 arC_syntax_tree_node_func* arCompiler_find_or_create_func(arC_token* t, const arC_state* s)
 {
 	// Expected function name
@@ -308,102 +424,20 @@ arC_syntax_tree_node_func* arCompiler_find_or_create_func(arC_token* t, const ar
 		return NULL;
 	}
 
-	arString func_name = t->string;
-	arC_arg* arguments[32];
-	arInt32 arguments_count = 0;
-	arC_return* returns[32];
-	arInt32 returns_count = 0;
+	// Parse the signature
+	arC_func_sign signature;
+	if (!arC_func_sign_parse(&signature, s))
+		return FALSE;
 
-	// Expected a '(' rune
-	if (arC_token_next(t) != ARTOK_PARAN_L) {
-		arC_message_syntax_error(s, "expected: (");
-		return NULL;
-	}
-
-	// Parse argument information until we reach that end ')' token
-	arC_token_next(t);
-	while (t->type != ARTOK_PARAN_R) {
-		// Ignore comma
-		if (t->type == ARTOK_COMMA) {
-			if (arC_token_next(t) != ARTOK_IDENTITY) {
-				arC_message_expected_identifier(s);
-				return NULL;
-			}
-		}
-
-		// Identity first
-		arC_arg* arg = arC_arg_new(&t->string);
-		arguments[arguments_count++] = arg;
-		arC_token_next(t);
-
-		// Find the type
-		arC_type* type = arCompiler_find_or_create_type(t, s);
-		if (type == NULL)
-			return FALSE;
-		arg->type = type;
-	}
-	arC_token_next(t);
-
-	// Return values present?
-	if (t->type == ARTOK_IDENTITY) {
-		// One return type
-		arC_return* ret = arC_return_new();
-		if (ret == NULL) {
-			arC_message_out_of_memory(s);
-			return NULL;
-		}
-		returns[returns_count++] = ret;
-
-		// Find the type
-		arC_type* type = arCompiler_find_or_create_type(t, s);
-		if (type == NULL)
-			return FALSE;
-		ret->type = type;
-	}
-	else if (t->type == ARTOK_PARAN_L) {
-		// Parse return information until we reach that end ')' token
-		arC_token_next(t);
-		while (t->type != ARTOK_PARAN_R) {
-			// Ignore comma
-			if (t->type == ARTOK_COMMA) {
-				if (arC_token_next(t) != ARTOK_IDENTITY) {
-					arC_message_expected_identifier(s);
-					return NULL;
-				}
-			}
-
-			arC_return* ret = arC_return_new();
-			if (ret == NULL) {
-				arC_message_out_of_memory(s);
-				return NULL;
-			}
-			returns[returns_count++] = ret;
-
-			// Find the type
-			arC_type* type = arCompiler_find_or_create_type(t, s);
-			if (type == NULL)
-				return FALSE;
-			ret->type = type;
-		}
-		// Skip ')'
-		arC_token_next(t);
-	}
-
-	arC_syntax_tree_node_func* func = (arC_syntax_tree_node_func*)arC_syntax_tree_find_child_with_type(s->parent_node, &func_name, arC_SYNTAX_TREE_FUNC);
+	// Search for the function using the signature. If no one is found then create a function node
+	arC_syntax_tree_node_func* func = (arC_syntax_tree_node_func*)arC_syntax_tree_find_child_with_type(s->parent_node, &signature.signature, arC_SYNTAX_TREE_FUNC);
 	if (func == NULL) {
 		// Create the node if it cant be found
-		func = arC_syntax_tree_node_func_new(&func_name);
+		func = arC_syntax_tree_node_func_new(&signature);
 		if (func == NULL) {
 			arC_message_out_of_memory(s);
 			return NULL;
 		}
-
-		arC_func* const symbol = func->symbol;
-		int i;
-		for (i = 0; i < arguments_count; ++i)
-			arC_func_add_arg(symbol, arguments[i]);
-		for (i = 0; i < returns_count; ++i)
-			arC_func_add_return(symbol, returns[i]);
 
 		//arC_syntax_tree_node closest_container = arC_syntax_tree_find_incl_parents(s->parent_node, BIT(arC_SYNTAX_TREE_FUNC) | BIT(arC_SYNTAX_TREE_PACKAGE));
 		// TODO: Add support for functions with scope in functions
@@ -413,9 +447,6 @@ arC_syntax_tree_node_func* arCompiler_find_or_create_func(arC_token* t, const ar
 		// Add this function to the parent node. The parent node might've been a package or another function (inner)
 		arC_syntax_tree_add(s->parent_node, asC_syntax_tree(func));
 		arC_package_add_func(s->package_node->symbol, func->symbol);
-		if (!arC_func_build_signature(func->symbol, s)) {
-			return FALSE;
-		}
 	}
 	return func;
 }

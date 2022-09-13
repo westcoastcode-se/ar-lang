@@ -194,7 +194,7 @@ typedef struct arC_state
 ARLANG_API arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arString* name);
 
 // Create a new function
-ARLANG_API arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const arString* name);
+ARLANG_API arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const struct arC_func_sign* signature);
 
 // The package we are importing
 ARLANG_API arC_syntax_tree_node_import* arC_syntax_tree_node_import_new(arC_syntax_tree_node_package* package);
