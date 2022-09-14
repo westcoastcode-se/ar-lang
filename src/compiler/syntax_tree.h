@@ -212,7 +212,7 @@ ARLANG_API arC_syntax_tree_node arC_syntax_tree_find_incl_imports(arC_syntax_tre
 ARLANG_API arC_syntax_tree_node arC_syntax_tree_find_child_with_type(arC_syntax_tree_node node, const arString* name, arInt32 types);
 
 // Create a new syntax tree type
-ARLANG_API arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arString* name);
+ARLANG_API arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const struct arC_type_sign* signature);
 
 // Create a new syntax tree type
 ARLANG_API void arC_syntax_tree_node_type_set_symbol(arC_syntax_tree_node_type* node, struct arC_type* type);

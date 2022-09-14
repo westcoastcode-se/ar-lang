@@ -39,44 +39,57 @@ BOOL arC_symbol_equals(arC_symbol* t1, arC_symbol* t2)
 	return FALSE;
 }
 
-const arC_type_props* arC_type_props_get(const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, arC_type* of_type)
+void arC_type_sign_init(arC_type_sign* sign)
 {
-	static arC_type_props p;
-	p.name = *name;
-	p.size = size;
-	p.flags = flags;
-	p.data_type = data_type;
-	p.of_type = of_type;
-	return &p;
+	arString_zero(&sign->signature);
+	arString_zero(&sign->short_signature);
+	arString_zero(&sign->name);
+	sign->package = NULL;
 }
 
-arC_type* arC_type_new(const arString* name)
+BOOL arC_type_sign_build(arC_type_sign* sign, const arC_state* s)
+{
+	ASSERT_NOT_NULL(sign);
+
+	int bytes_left = 1024;
+	arByte signature_data[1024];
+	arByte* sig = signature_data;
+
+	sig = arStrcpy_s(sig, &bytes_left, asC_symbol_signature(sign->package)->start, arString_length(asC_symbol_signature(sign->package)));
+	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
+	sig = arStrcpy_s(sig, &bytes_left, sign->name.start, arString_length(&sign->name));
+	if (bytes_left == 0) {
+		// Size of the signature is too large
+		arC_message_not_implemented(s);
+		return FALSE;
+	}
+
+	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
+	if (result == NULL)
+		return arC_message_out_of_memory(s);
+	sign->signature = *result;
+	// The short signature for the function startd after the "<package signature>#"
+	sign->short_signature.start = sign->signature.start + arString_length(asC_symbol_signature(sign->package)) + 1;
+	sign->short_signature.end = sign->signature.end;
+	return TRUE;
+}
+
+BOOL arC_type_sign_parse(arC_type_sign* sign, const arC_state* s)
+{
+	return TRUE;
+}
+
+arC_type* arC_type_new(const arC_type_sign* sign)
 {
 	arC_type* const p = arSafeMalloc(arC_type);
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_TYPE);
-	p->header.name = *name;
-	p->package = NULL;
+	p->header.name = sign->name;
+	p->header.signature = sign->signature;
+	p->signature = *sign;
 	p->size = -1;
 	p->flags = 0;
 	p->data_type = 0;
 	p->of_type = NULL; 
-	arC_inherits_from_init(&p->inherits_from);
-	arC_inherited_by_init(&p->inherited_by);
-	p->head = p->tail = NULL;
-	p->type = NULL;
-	return p;
-}
-
-arC_type* arC_type_from_props(const arC_type_props* props)
-{
-	arC_type* const p = arSafeMalloc(arC_type);
-	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_TYPE);
-	p->header.name = props->name;
-	p->package = NULL;
-	p->size = props->size;
-	p->flags = props->flags;
-	p->data_type = props->data_type;
-	p->of_type = props->of_type;
 	arC_inherits_from_init(&p->inherits_from);
 	arC_inherited_by_init(&p->inherited_by);
 	p->head = p->tail = NULL;
@@ -93,31 +106,7 @@ void arC_type_destroy(arC_type* p)
 
 BOOL arC_type_build_signature(arC_type* ptr, const arC_state* s)
 {
-	ASSERT_NOT_NULL(ptr);
-
-	int bytes_left = 1024;
-	arByte signature_data[1024];
-	arByte* sig = signature_data;
-
-	sig = arStrcpy_s(sig, &bytes_left, asC_symbol_signature(ptr->package)->start, arString_length(asC_symbol_signature(ptr->package)));
-	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
-	sig = arStrcpy_s(sig, &bytes_left, ptr->header.name.start, arString_length(&ptr->header.name));
-	if (bytes_left == 0) {
-		// Size of the signature is too large
-		arC_message_not_implemented(s);
-		return FALSE;
-	}
-
-	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
-	if (result == NULL)
-		return arC_message_out_of_memory(s);
-	arC_type_set_signature(ptr, result);
-	return TRUE;
-}
-
-void arC_type_set_signature(arC_type* ptr, const arString* sig)
-{
-	ptr->header.signature = *sig;
+	
 }
 
 BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_state* s)
@@ -147,8 +136,8 @@ BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_s
 		if (!arC_type_resolve_type0(t->of_type, root_type, s))
 			return FALSE;
 	}
-	ASSERT_NOT_NULL(t->package->package);
-	if (arB_package_add_type(t->package->package, type) != VMP_LIST_ADDED)
+	ASSERT_NOT_NULL(t->signature.package->package);
+	if (arB_package_add_type(t->signature.package->package, type) != VMP_LIST_ADDED)
 		return arC_message_out_of_memory(s);
 	return TRUE;
 }
@@ -175,8 +164,8 @@ BOOL arC_type_resolve(arC_type* t, const arC_state* s)
 		if (!arC_type_resolve_type0(t->of_type, t, s))
 			return FALSE;
 	}
-	ASSERT_NOT_NULL(t->package->package);
-	if (arB_package_add_type(t->package->package, type) != VMP_LIST_ADDED)
+	ASSERT_NOT_NULL(t->signature.package->package);
+	if (arB_package_add_type(t->signature.package->package, type) != VMP_LIST_ADDED)
 		return arC_message_out_of_memory(s);
 	return TRUE;
 }
@@ -324,9 +313,9 @@ void arC_package_add_type(arC_package* p, arC_type* t)
 {
 	ASSERT_NOT_NULL(p);
 	ASSERT_NOT_NULL(t);
-	assert(t->package == NULL && "Expected the type to not be added to another package");
+	assert((t->signature.package == NULL || t->signature.package == p) && "Expected the type to not be added to another package");
 
-	t->package = p;
+	t->signature.package = p;
 	if (p->types_end == NULL) {
 		p->types = p->types_end = t;
 	}
@@ -341,7 +330,7 @@ void arC_package_add_func(arC_package* p, arC_func* f)
 {
 	ASSERT_NOT_NULL(p);
 	ASSERT_NOT_NULL(f);
-	assert(f->signature.package == NULL || f->signature.package == p && "Expected the function to not be added to another package");
+	assert((f->signature.package == NULL || f->signature.package == p) && "Expected the function to not be added to another package");
 
 	f->signature.package = p;
 	if (p->funcs_end == NULL) {

@@ -30,7 +30,16 @@ CONST_VM_STRING(arCompiler, root, "<root>", 6)
 
 arC_syntax_tree_node_type* arCompiler_root_add_type(arC_syntax_tree_node_package* root, const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, arC_syntax_tree_node_type* of_type)
 {
-	arC_syntax_tree_node_type* const node = arC_syntax_tree_node_type_new(name);
+	// Prepare a signature for types in the root package
+	arC_type_sign signature;
+	arC_type_sign_init(&signature);
+	signature.name = *name;
+	signature.package = root->symbol;
+	signature.signature = *name;
+	signature.short_signature = *name;
+
+	// Create the type node
+	arC_syntax_tree_node_type* const node = arC_syntax_tree_node_type_new(&signature);
 	if (node == NULL) {
 		// TODO: Out of memory
 		return NULL;
@@ -42,7 +51,6 @@ arC_syntax_tree_node_type* arCompiler_root_add_type(arC_syntax_tree_node_package
 	node->symbol->size = size;
 	arC_package_add_type(root->symbol, node->symbol);
 	arC_syntax_tree_add(asC_syntax_tree(root), asC_syntax_tree(node));
-	arC_type_set_signature(node->symbol, name);
 	return node;
 }
 

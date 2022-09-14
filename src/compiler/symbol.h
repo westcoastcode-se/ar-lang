@@ -80,14 +80,27 @@ DECLARE_LIST_TYPE_FIND(arC_inherits_from, arC_type);
 DECLARE_LIST_TYPE(arC_inherited_by, arC_type);
 DECLARE_LIST_TYPE_FIND(arC_inherited_by, arC_type);
 
+// The signature for the type
+typedef struct arC_type_sign
+{
+	// The complete signature in string format. The signature is application unique
+	arString signature;
+	// The signature in a short version. The package name is not part of this signature variation
+	arString short_signature;
+	// The name of the type
+	arString name;
+	// The package this type is part of
+	arC_package* package;
+} arC_type_sign;
+
 // Represents a type
 typedef struct arC_type
 {
 	arC_symbol header;
-	
-	// The package this type is part of
-	arC_package* package;
 
+	// The signature, in object format
+	arC_type_sign signature;
+	
 	// The size of this type
 	arInt32 size;
 
@@ -114,16 +127,6 @@ typedef struct arC_type
 	// and the actual compilation has started
 	arB_type* type;
 } arC_type;
-
-// Structure used to help creating a type
-typedef struct arC_type_props
-{
-	arString name;
-	arUint32 size;
-	arUint32 flags;
-	arUint8 data_type;
-	arC_type* of_type;
-} arC_type_props;
 
 // An argument
 typedef struct arC_arg
@@ -237,24 +240,23 @@ typedef struct arC_func
 	arB_func* func;
 } arC_func;
 
-// Fetch a properties object that can be used to create a new type
-ARLANG_API const arC_type_props* arC_type_props_get(const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, arC_type* of_type);
+// Initialize the memory of the supplied signature
+ARLANG_API void arC_type_sign_init(arC_type_sign* sign);
+
+// Create a signature for a type. Returns TRUE if the signature was successfully created
+ARLANG_API BOOL arC_type_sign_build(arC_type_sign* sign, const struct arC_state* s);
+
+// Parse the supplied compiler state and build a type signature from it
+ARLANG_API BOOL arC_type_sign_parse(arC_type_sign* sign, const struct arC_state* s);
 
 // Create a new type.
-// TODO Make it possible to create a new type based on a vmp type
-ARLANG_API arC_type* arC_type_new(const arString* name);
-
-// Create a new type from a properties structure
-ARLANG_API arC_type* arC_type_from_props(const arC_type_props* props);
+ARLANG_API arC_type* arC_type_new(const arC_type_sign* sign);
 
 // Destroy the supplied type
 ARLANG_API void arC_type_destroy(arC_type* p);
 
 // Create a signature for the supplied type. Returns TRUE if the signature was successfully created
 ARLANG_API BOOL arC_type_build_signature(arC_type* ptr, const struct arC_state* s);
-
-// Manually set the signature
-ARLANG_API void arC_type_set_signature(arC_type* ptr, const arString* sig);
 
 // Resolve the supplied type and get the type
 ARLANG_API BOOL arC_type_resolve(arC_type* t, const struct arC_state* s);
@@ -290,9 +292,9 @@ ARLANG_API void arC_package_add_func(arC_package* p, arC_func* f);
 ARLANG_API void arC_package_add_package(arC_package* p, arC_package* sub_package);
 
 // Initialize the memory of the supplied signature
-ARLANG_API void arC_func_sign_init(arC_func_sign* signature);
+ARLANG_API void arC_func_sign_init(arC_func_sign* sign);
 
-// Create a signature for the supplied function. Returns TRUE if the signature was successfully created
+// Create a signature for a function. Returns TRUE if the signature was successfully created
 ARLANG_API BOOL arC_func_sign_build(arC_func_sign* sign, const struct arC_state* s);
 
 // Parse the supplied compiler state and build a function signature from it

@@ -484,9 +484,9 @@ arC_syntax_tree_node arC_syntax_tree_find_child_with_type(arC_syntax_tree_node n
 	return NULL;
 }
 
-arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arString* name)
+arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arC_type_sign* signature)
 {
-	arC_type* const symbol = arC_type_new(name);
+	arC_type* const symbol = arC_type_new(signature);
 	if (symbol == NULL)
 		return NULL;
 	arC_syntax_tree_node_type* const p = arMalloc(sizeof(arC_syntax_tree_node_type));
