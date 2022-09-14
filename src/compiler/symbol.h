@@ -84,7 +84,7 @@ DECLARE_LIST_TYPE_FIND(arC_inherited_by, arC_type);
 typedef struct arC_type
 {
 	arC_symbol header;
-
+	
 	// The package this type is part of
 	arC_package* package;
 
@@ -348,8 +348,5 @@ ARLANG_API arC_local* arC_local_new(const arString* name);
 
 // Destroy the supplied local
 ARLANG_API void arC_local_destroy(arC_local* ptr);
-
-// Parse the actual signature from the current string
-ARLANG_API BOOL arC_func_sign_parse(arC_func_sign* sign, const arC_state* s);
 
 #endif
