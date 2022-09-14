@@ -28,15 +28,6 @@ CONST_VM_STRING(arCompiler, float64, "float64", 7)
 CONST_VM_STRING(arCompiler, pfloat64, "*float64", 8)
 CONST_VM_STRING(arCompiler, root, "<root>", 6)
 
-BOOL arCompiler_import_root(arC_syntax_tree_node_package* package, const arC_state* s)
-{
-	arC_syntax_tree_node_import* import = arC_syntax_tree_node_import_new(s->compiler->root_node);
-	if (import == NULL)
-		return arC_message_out_of_memory(s);
-	arC_syntax_tree_add(asC_syntax_tree(package), asC_syntax_tree(import));
-	return TRUE;
-}
-
 arC_syntax_tree_node_type* arCompiler_root_add_type(arC_syntax_tree_node_package* root, const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, arC_syntax_tree_node_type* of_type)
 {
 	arC_syntax_tree_node_type* const node = arC_syntax_tree_node_type_new(name);
@@ -138,124 +129,6 @@ void arCompiler_destroy(arCompiler* ptr)
 	arFree(ptr);
 }
 
-arC_type* arCompiler_find_or_create_type(arC_token* t, const arC_state* s)
-{
-	// Is this a pointer type - for example: *int32
-	if (t->type == ARTOK_PTR) {
-		arC_token_next(t);
-		// Fetch the type the pointer is based on. If NULL then an error has occurred
-		arC_type* of_type = arCompiler_find_or_create_type(t, s);
-		if (of_type == NULL)
-			return NULL;
-
-		// TODO: Implement the rest!
-		arC_message_not_implemented(s);
-		return NULL;
-	}
-	// Is this an array type - for example: [2]int32
-	else if (t->type == ARTOK_SQUARE_L) {
-		// TODO: Implement the rest!
-		arC_message_not_implemented(s);
-		return NULL;
-	}
-	
-	if (t->type != ARTOK_IDENTITY) {
-		arC_message_expected_identifier(s);
-		return NULL;
-	}
-
-	arC_syntax_tree_node_package* closet_package_node = s->package_node;
-
-	//
-	// There are some rules regarding where types are allowed to be defined:
-	// 
-	// 1. Types in a package can be defined anywhere in the package
-	// 2. Types inside functions MUST be defined before the type is used
-	// 3. Types are not allowed to be inside other types
-	// 4. Imports should only be considered on the first level of access
-
-	arC_syntax_tree_node parent_node = s->parent_node;
-	arString name = t->string;
-	arC_syntax_tree_node node = arC_syntax_tree_find_incl_imports(parent_node, &name, BIT(arC_SYNTAX_TREE_TYPE) | BIT(arC_SYNTAX_TREE_PACKAGE));
-	if (node == NULL) {
-		arC_token_next(t);
-		// This might be a package or a type. If the next token is a dot then 
-		// assume that the type we searched for is a package. If it's a package then all searches we are doing after this should 
-		// only include children
-		if (t->type == ARTOK_DOT) {
-			arC_syntax_tree_node_package* const package_node = arC_syntax_tree_node_package_new(&name);
-			if (package_node == NULL) {
-				arC_message_out_of_memory(s);
-				return NULL;
-			}
-			if (!arCompiler_import_root(package_node, s))
-				return FALSE;
-			node = asC_symbol(package_node);
-			arC_syntax_tree_add(asC_symbol(closet_package_node), node);
-			arC_package_add_package(closet_package_node->symbol, package_node->symbol);
-			if (!arC_package_build_signature(package_node->symbol, s))
-				return FALSE;
-			closet_package_node = package_node;
-		}
-		else {
-			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&name);
-			if (type_node == NULL) {
-				arC_message_out_of_memory(s);
-				return NULL;
-			}
-			node = asC_symbol(type_node);
-			arC_syntax_tree_add(parent_node, node);
-			arC_package_add_type(closet_package_node->symbol, type_node->symbol);
-		}
-	}
-
-	if (node != NULL && node->type == arC_SYNTAX_TREE_PACKAGE) {
-		// If this is a package, then assume we have the format: Package1.Package2.Type
-		while (TRUE) {
-			parent_node = node;
-			name = t->string;
-			node = arC_syntax_tree_find_child_with_type(parent_node, &name, BIT(arC_SYNTAX_TREE_TYPE) | BIT(arC_SYNTAX_TREE_PACKAGE));
-			arC_token_next(t);
-			if (node == NULL) {
-				if (t->type == ARTOK_DOT) {
-					arC_syntax_tree_node_package* const package_node = arC_syntax_tree_node_package_new(&name);
-					if (package_node == NULL) {
-						arC_message_out_of_memory(s);
-						return NULL;
-					}
-					if (!arCompiler_import_root(package_node, s))
-						return FALSE;
-					node = asC_symbol(package_node);
-					arC_syntax_tree_add(parent_node, node);
-					arC_package_add_package(closet_package_node->symbol, package_node->symbol);
-					if (!arC_package_build_signature(package_node->symbol, s))
-						return FALSE;
-					closet_package_node = package_node;
-				}
-			}
-
-			if (t->type != ARTOK_DOT)
-				break;
-		}
-
-		// If we never found a node at the end of the package-chain then assume that that's a type (that's not defined yet)
-		if (node == NULL) {
-			// Prepare a node for the package
-			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&name);
-			if (type_node == NULL) {
-				arC_message_out_of_memory(s);
-				return NULL;
-			}
-			node = asC_symbol(type_node);
-			arC_syntax_tree_add(parent_node, node);
-			arC_package_add_type(closet_package_node->symbol, type_node->symbol);
-		}
-	}
-	arC_token_next(t);
-	assert(node->type == arC_SYNTAX_TREE_TYPE);
-	return ((arC_syntax_tree_node_type*)node)->symbol;
-}
-
 BOOL arCompiler_parse_type(arCompiler* c, arC_token* t, const arC_state* state)
 {
 	return arC_message_not_implemented(state);
@@ -298,12 +171,6 @@ BOOL arCompiler_parse_body(arCompiler* c, arC_token* t, const arC_state* state)
 	}
 
 	return TRUE;
-}
-
-// Create a function signature 
-const arString* arCompiler_create_signature(const arString* name, arC_arg* arguments, arC_return* returns)
-{
-
 }
 
 BOOL arC_func_sign_parse(arC_func_sign* sign, const arC_state* s)
@@ -351,9 +218,10 @@ BOOL arC_func_sign_parse(arC_func_sign* sign, const arC_state* s)
 
 		// Find the type
 		arC_token_next(t);
-		arg->type = arCompiler_find_or_create_type(t, s);
-		if (arg->type == NULL)
+		arC_syntax_tree_node_type* node_type = arC_syntax_tree_node_type_parse(t, s);
+		if (node_type == NULL)
 			return FALSE;
+		arg->type = node_type->symbol;
 	}
 	arC_token_next(t);
 
@@ -375,9 +243,10 @@ BOOL arC_func_sign_parse(arC_func_sign* sign, const arC_state* s)
 		sign->returns_count++;
 
 		// Find the type
-		ret->type = arCompiler_find_or_create_type(t, s);
-		if (ret->type == NULL)
+		arC_syntax_tree_node_type* node_type = arC_syntax_tree_node_type_parse(t, s);
+		if (node_type == NULL)
 			return FALSE;
+		ret->type = node_type->symbol;
 	}
 	else if (t->type == ARTOK_PARAN_L) {
 		// Parse return information until we reach that end ')' token
@@ -403,9 +272,10 @@ BOOL arC_func_sign_parse(arC_func_sign* sign, const arC_state* s)
 			sign->returns_count++;
 
 			// Find the type
-			ret->type = arCompiler_find_or_create_type(t, s);
-			if (ret->type == NULL)
+			arC_syntax_tree_node_type* node_type = arC_syntax_tree_node_type_parse(t, s);
+			if (node_type == NULL)
 				return FALSE;
+			ret->type = node_type->symbol;
 		}
 		// Skip ')'
 		arC_token_next(t);
@@ -501,7 +371,7 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 		package = arC_syntax_tree_node_package_new(&t->string);
 		if (package == NULL)
 			return arC_message_out_of_memory(s);
-		if (!arCompiler_import_root(package, s))
+		if (!arC_syntax_tree_node_import_root(package, s))
 			return FALSE;
 		arC_syntax_tree_add(s->parent_node, asC_syntax_tree(package));
 		// Does this package have a parent that's not the root node

@@ -199,6 +199,9 @@ ARLANG_API arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const struct
 // The package we are importing
 ARLANG_API arC_syntax_tree_node_import* arC_syntax_tree_node_import_new(arC_syntax_tree_node_package* package);
 
+// Create a new import statement for the root package and put it into the supplied package
+ARLANG_API BOOL arC_syntax_tree_node_import_root(arC_syntax_tree_node_package* package, const arC_state* s);
+
 // Compile the supplied syntax tree
 ARLANG_API BOOL arC_syntax_tree_compile(struct arCompiler* c, arC_syntax_tree* st);
 
@@ -213,6 +216,9 @@ ARLANG_API arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arStri
 
 // Create a new syntax tree type
 ARLANG_API void arC_syntax_tree_node_type_set_symbol(arC_syntax_tree_node_type* node, struct arC_type* type);
+
+// Parse a new type from the currently working source code. This will create an unresolved/pending type if it isn't found
+ARLANG_API arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const arC_state* s);
 
 // Destroy the supplied syntax tree
 ARLANG_API void arC_syntax_tree_node_destroy(arC_syntax_tree* st);

@@ -24,7 +24,8 @@ typedef struct arC_symbol
 	arC_symbol_type type;
 	// The name of this symbol
 	arString name;
-	// The unique "full name"/signature of this symbol 
+	// The unique "full name"/signature of this symbol. A full signature is application unique - no
+	// two symbols are allowed to have the same signature
 	arString signature;
 } arC_symbol;
 
@@ -192,7 +193,7 @@ typedef enum arC_func_flag
 // A functions signature that represents a local signature
 typedef struct arC_func_sign
 {
-	// The complete signature in string format
+	// The complete signature in string format. The signature is application unique
 	arString signature;
 
 	// The signature in a short version. This signature does not contain the
@@ -291,11 +292,14 @@ ARLANG_API void arC_package_add_package(arC_package* p, arC_package* sub_package
 // Initialize the memory of the supplied signature
 ARLANG_API void arC_func_sign_init(arC_func_sign* signature);
 
-// Create a new function using a signature
-ARLANG_API arC_func* arC_func_new(const arC_func_sign* signature);
+// Create a signature for the supplied function. Returns TRUE if the signature was successfully created
+ARLANG_API BOOL arC_func_sign_build(arC_func_sign* sign, const struct arC_state* s);
 
-// Manually set a functions signature 
-ARLANG_API void arC_func_set_signature(arC_func* func, const arC_func_sign* signature);
+// Parse the supplied compiler state and build a function signature from it
+ARLANG_API BOOL arC_func_sign_parse(arC_func_sign* sign, const struct arC_state* s);
+
+// Create a new function using the supplied signature
+ARLANG_API arC_func* arC_func_new(const arC_func_sign* signature);
 
 // Destroy the supplied function
 ARLANG_API void arC_func_destroy(arC_func* f);
@@ -308,9 +312,6 @@ ARLANG_API void arC_func_add_return(arC_func* f, arC_return* r);
 
 // Add the supplied local value
 ARLANG_API void arC_func_add_local(arC_func* f, arC_local* l);
-
-// Create a signature for the supplied function. Returns TRUE if the signature was successfully created
-ARLANG_API BOOL arC_func_sign_build(arC_func_sign* sign, const struct arC_state* s);
 
 // Resolve the supplied type and get the type
 ARLANG_API BOOL arC_func_resolve(arC_func* f, const struct arC_state* s);

@@ -370,7 +370,6 @@ void arC_package_add_package(arC_package* p, arC_package* sub_package)
 		p->children_end = sub_package;
 	}
 }
-
 void arC_func_sign_init(arC_func_sign* p)
 {
 	arString_zero(&p->signature);
@@ -384,22 +383,63 @@ void arC_func_sign_init(arC_func_sign* p)
 	p->returns_count = 0;
 }
 
+BOOL arC_func_sign_build(arC_func_sign* sign, const arC_state* s)
+{
+	ASSERT_NOT_NULL(sign);
+
+	int i;
+	int bytes_left = 1024;
+	int short_signature_length = 0;
+	arByte signature_data[1024];
+	arByte* sig = signature_data;
+
+	sig = arString_cpy_s(sig, &bytes_left, asC_symbol_signature(sign->package));
+	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
+	sig = arString_cpy_s(sig, &bytes_left, &sign->name);
+	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
+	arC_arg* arg = sign->arguments;
+	for (i = 0; i < sign->arguments_count; ++i, arg = arg->tail) {
+		if (i > 0)
+			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
+		const arString* type_sig = asC_symbol_signature(arg->type);
+		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
+	}
+	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
+	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
+	arC_return* ret = sign->returns;
+	for (i = 0; i < sign->returns_count; ++i, ret = ret->tail) {
+		if (i > 0)
+			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
+		const arString* type_sig = asC_symbol_signature(ret->type);
+		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
+	}
+	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
+	if (bytes_left == 0) {
+		// Size of the signature is too large
+		return arC_message_not_implemented(s);
+	}
+
+	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
+	if (result == NULL)
+		return arC_message_out_of_memory(s);
+	sign->signature = *result;
+	// The short signature for the function startd after the "<package signature>#"
+	sign->short_signature.start = sign->signature.start + arString_length(asC_symbol_signature(sign->package)) + 1;
+	sign->short_signature.end = sign->signature.end;
+	return TRUE;
+}
+
 arC_func* arC_func_new(const arC_func_sign* signature)
 {
 	arC_func* const p = arSafeMalloc(arC_func);
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_FUNC);
-	p->header.name = signature->signature;
+	p->header.name = signature->name;
+	p->header.signature = signature->signature;
 	p->signature = *signature;
 	p->locals = p->locals_end = NULL;
 	p->tail = p->head = NULL;
 	p->func = NULL;
 	return p;
-}
-
-void arC_func_set_signature(arC_func* func, const arC_func_sign* signature)
-{
-	func->header.name = signature->signature;
-	func->signature = *signature;
 }
 
 void arC_func_destroy(arC_func* f)
@@ -477,52 +517,6 @@ void arC_func_add_local(arC_func* f, arC_local* l)
 		l->head = f->locals_end;
 		f->locals_end = l;
 	}
-}
-
-BOOL arC_func_sign_build(arC_func_sign* sign, const arC_state* s)
-{
-	ASSERT_NOT_NULL(sign);
-
-	int i;
-	int bytes_left = 1024;
-	int short_signature_length = 0;
-	arByte signature_data[1024];
-	arByte* sig = signature_data;
-
-	sig = arString_cpy_s(sig, &bytes_left, asC_symbol_signature(sign->package));
-	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
-	sig = arString_cpy_s(sig, &bytes_left, &sign->name);
-	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
-	arC_arg* arg = sign->arguments;
-	for (i = 0; i < sign->arguments_count; ++i, arg = arg->tail) {
-		if (i > 0)
-			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
-		const arString* type_sig = asC_symbol_signature(arg->type);
-		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
-	}
-	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
-	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
-	arC_return* ret = sign->returns;
-	for (i = 0; i < sign->returns_count; ++i, ret = ret->tail) {
-		if (i > 0)
-			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
-		const arString* type_sig = asC_symbol_signature(ret->type);
-		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
-	}
-	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
-	if (bytes_left == 0) {
-		// Size of the signature is too large
-		return arC_message_not_implemented(s);
-	}
-
-	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
-	if (result == NULL)
-		return arC_message_out_of_memory(s);
-	sign->signature = *result;
-	// The short signature for the function startd after the "<package signature>#"
-	sign->short_signature.start = sign->signature.start + arString_length(asC_symbol_signature(sign->package)) + 1;
-	sign->short_signature.end = sign->signature.end;
-	return TRUE;
 }
 
 BOOL arC_func_resolve(arC_func* f, const arC_state* s)
