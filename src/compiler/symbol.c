@@ -104,11 +104,6 @@ void arC_type_destroy(arC_type* p)
 	arFree(p);
 }
 
-BOOL arC_type_build_signature(arC_type* ptr, const arC_state* s)
-{
-	
-}
-
 BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_state* s)
 {
 	if (t == root_type) {

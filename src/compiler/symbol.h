@@ -255,9 +255,6 @@ ARLANG_API arC_type* arC_type_new(const arC_type_sign* sign);
 // Destroy the supplied type
 ARLANG_API void arC_type_destroy(arC_type* p);
 
-// Create a signature for the supplied type. Returns TRUE if the signature was successfully created
-ARLANG_API BOOL arC_type_build_signature(arC_type* ptr, const struct arC_state* s);
-
 // Resolve the supplied type and get the type
 ARLANG_API BOOL arC_type_resolve(arC_type* t, const struct arC_state* s);
 
