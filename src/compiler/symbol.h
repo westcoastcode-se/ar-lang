@@ -192,11 +192,15 @@ typedef enum arC_func_flag
 // A functions signature that represents a local signature
 typedef struct arC_func_sign
 {
+	// The complete signature in string format
+	arString signature;
+
+	// The signature in a short version. This signature does not contain the
+	// package name
+	arString short_signature;
+
 	// The name of the function
 	arString name;
-
-	// The complete signature
-	arString signature;
 
 	// Package this function is part of
 	arC_package* package;

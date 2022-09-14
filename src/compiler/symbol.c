@@ -373,6 +373,8 @@ void arC_package_add_package(arC_package* p, arC_package* sub_package)
 
 void arC_func_sign_init(arC_func_sign* p)
 {
+	arString_zero(&p->signature);
+	arString_zero(&p->short_signature);
 	arString_zero(&p->name);
 	p->package = NULL;
 	p->package = NULL;
@@ -380,7 +382,6 @@ void arC_func_sign_init(arC_func_sign* p)
 	p->arguments_count = 0;
 	p->returns = p->returns_end = NULL;
 	p->returns_count = 0;
-	arString_zero(&p->signature);
 }
 
 arC_func* arC_func_new(const arC_func_sign* signature)
@@ -484,6 +485,7 @@ BOOL arC_func_sign_build(arC_func_sign* sign, const arC_state* s)
 
 	int i;
 	int bytes_left = 1024;
+	int short_signature_length = 0;
 	arByte signature_data[1024];
 	arByte* sig = signature_data;
 
@@ -517,6 +519,9 @@ BOOL arC_func_sign_build(arC_func_sign* sign, const arC_state* s)
 	if (result == NULL)
 		return arC_message_out_of_memory(s);
 	sign->signature = *result;
+	// The short signature for the function startd after the "<package signature>#"
+	sign->short_signature.start = sign->signature.start + arString_length(asC_symbol_signature(sign->package)) + 1;
+	sign->short_signature.end = sign->signature.end;
 	return TRUE;
 }
 
