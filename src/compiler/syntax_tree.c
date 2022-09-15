@@ -564,7 +564,12 @@ arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const a
 			closet_package_node = package_node;
 		}
 		else {
-			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&name);
+			arC_type_sign type_signature;
+			type_signature.package = closet_package_node->symbol;
+			type_signature.name = name;
+			arC_type_sign_build(&type_signature, s);
+
+			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&type_signature);
 			if (type_node == NULL) {
 				arC_message_out_of_memory(s);
 				return NULL;
@@ -606,8 +611,14 @@ arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const a
 
 		// If we never found a node at the end of the package-chain then assume that that's a type (that's not defined yet)
 		if (node == NULL) {
+			// Prepare the signature
+			arC_type_sign type_signature;
+			type_signature.package = closet_package_node->symbol;
+			type_signature.name = name;
+			arC_type_sign_build(&type_signature, s);
+
 			// Prepare a node for the package
-			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&name);
+			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&type_signature);
 			if (type_node == NULL) {
 				arC_message_out_of_memory(s);
 				return NULL;

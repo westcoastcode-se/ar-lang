@@ -83,7 +83,7 @@ arC_type* arC_type_new(const arC_type_sign* sign)
 {
 	arC_type* const p = arSafeMalloc(arC_type);
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_TYPE);
-	p->header.name = sign->name;
+	p->header.name = sign->short_signature;
 	p->header.signature = sign->signature;
 	p->signature = *sign;
 	p->size = -1;
@@ -417,7 +417,7 @@ arC_func* arC_func_new(const arC_func_sign* signature)
 {
 	arC_func* const p = arSafeMalloc(arC_func);
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_FUNC);
-	p->header.name = signature->name;
+	p->header.name = signature->short_signature;
 	p->header.signature = signature->signature;
 	p->signature = *signature;
 	p->locals = p->locals_end = NULL;
