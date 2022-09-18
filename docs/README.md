@@ -22,6 +22,7 @@ Each part can be replaced assuming that each c function in the header file is im
 	- [Constant](concepts/constant.md)
 	- [Generics](concepts/generics.md)
 	- [Attribute](concepts/attribute.md)
+	- [Signatures](concepts/signatures.md)
 
 ## Hello World
 

@@ -28,20 +28,27 @@ CONST_VM_STRING(arCompiler, float64, "float64", 7)
 CONST_VM_STRING(arCompiler, pfloat64, "*float64", 8)
 CONST_VM_STRING(arCompiler, root, "<root>", 6)
 
+BOOL arCompiler_out_of_memory(arCompiler* c)
+{
+	const arC_state state = {
+		c, NULL, NULL, NULL, NULL, NULL
+	};
+	return arC_message_out_of_memory(&state);
+}
+
 arC_syntax_tree_node_type* arCompiler_root_add_type(arC_syntax_tree_node_package* root, const arString* name, arUint32 size, arUint32 flags, arUint8 data_type, arC_syntax_tree_node_type* of_type)
 {
 	// Prepare a signature for types in the root package
-	arC_type_sign signature;
-	arC_type_sign_init(&signature);
+	arC_signature_type signature;
+	arC_signature_type_init(&signature);
 	signature.name = *name;
-	signature.package = root->symbol;
+	signature.parent = asC_symbol(root->symbol);
 	signature.signature = *name;
-	signature.short_signature = *name;
+	signature.local_signature = *name;
 
 	// Create the type node
 	arC_syntax_tree_node_type* const node = arC_syntax_tree_node_type_new(&signature);
 	if (node == NULL) {
-		// TODO: Out of memory
 		return NULL;
 	}
 	node->symbol->flags = flags;
@@ -56,7 +63,12 @@ arC_syntax_tree_node_type* arCompiler_root_add_type(arC_syntax_tree_node_package
 
 arC_syntax_tree_node_package* arCompiler_create_system_package()
 {
-	arC_syntax_tree_node_package* const root = arC_syntax_tree_node_package_new(GET_CONST_VM_STRING(arCompiler, root));
+	arC_signature_package signature;
+	signature.name = *GET_CONST_VM_STRING(arCompiler, root);
+	signature.local_signature = signature.name;
+	signature.signature = signature.name;
+	signature.parent = NULL;
+	arC_syntax_tree_node_package* const root = arC_syntax_tree_node_package_new(&signature);
 	if (root == NULL)
 		return NULL;
 
@@ -83,7 +95,10 @@ arC_syntax_tree_node_package* arCompiler_create_system_package()
 	type = arCompiler_root_add_type(root, GET_CONST_VM_STRING(arCompiler, pfloat32), sizeof(arFloat32*), arB_TYPE_FLAGS_PTR, ARLANG_PRIMITIVE_PTR, type);
 	type = arCompiler_root_add_type(root, GET_CONST_VM_STRING(arCompiler, float64), sizeof(arFloat64), 0, ARLANG_PRIMITIVE_F64, NULL);
 	type = arCompiler_root_add_type(root, GET_CONST_VM_STRING(arCompiler, pfloat64), sizeof(arFloat64*), arB_TYPE_FLAGS_PTR, ARLANG_PRIMITIVE_PTR, type);
-
+	if (type == NULL) {
+		arC_syntax_tree_node_destroy(asC_syntax_tree(root));
+		return NULL;
+	}
 	return root;
 }
 
@@ -139,7 +154,7 @@ void arCompiler_destroy(arCompiler* ptr)
 
 BOOL arCompiler_parse_type(arCompiler* c, arC_token* t, const arC_state* state)
 {
-	return arC_message_not_implemented(state);
+	return arC_message_not_implemented(state, "#8 add support for type aliases");
 }
 
 BOOL arCompiler_parse_body(arCompiler* c, arC_token* t, const arC_state* state)
@@ -148,14 +163,12 @@ BOOL arCompiler_parse_body(arCompiler* c, arC_token* t, const arC_state* state)
 
 	while (t->type != ARTOK_BRACKET_R) {
 		if (t->type == ARTOK_BRACKET_L) {
-			const arC_state child_scope = {
-				state->compiler,
-				state->token,
+			const arC_state child_scope = asC_state(state,
 				node,
 				state->package_node,
 				state->func_node,
 				state->type_node
-			};
+			);
 			arC_token_next(t);
 			if (!arCompiler_parse_body(c, t, &child_scope))
 				return FALSE;
@@ -181,119 +194,6 @@ BOOL arCompiler_parse_body(arCompiler* c, arC_token* t, const arC_state* state)
 	return TRUE;
 }
 
-BOOL arC_func_sign_parse(arC_func_sign* sign, const arC_state* s)
-{
-	arC_token* const t = s->token;
-
-	// Expected function name
-	if (t->type != ARTOK_IDENTITY)
-		return arC_message_expected_identifier(s);
-
-	sign->name = t->string;
-	sign->arguments = sign->arguments_end = NULL;
-	sign->arguments_count = 0;
-	sign->returns = sign->returns_end = NULL;
-	sign->returns_count = 0;
-	sign->package = s->package_node->symbol;
-
-	// Expected a '(' rune
-	if (arC_token_next(t) != ARTOK_PARAN_L)
-		return arC_message_syntax_error(s, "expected: (");
-
-	// Parse argument information until we reach that end ')' token
-	arC_token_next(t);
-	while (t->type != ARTOK_PARAN_R) {
-		// Ignore comma
-		if (t->type == ARTOK_COMMA) {
-			if (arC_token_next(t) != ARTOK_IDENTITY)
-				return arC_message_expected_identifier(s);
-		}
-
-		// Identity first
-		arC_arg* const arg = arC_arg_new(&t->string);
-		if (arg == NULL)
-			return arC_message_out_of_memory(s);
-
-		if (sign->arguments == NULL) {
-			sign->arguments = sign->arguments_end = arg;
-		}
-		else {
-			sign->arguments_end->tail = arg;
-			arg->head = sign->arguments_end;
-			sign->arguments_end = arg;
-		}
-		sign->arguments_count++;
-
-		// Find the type
-		arC_token_next(t);
-		arC_syntax_tree_node_type* node_type = arC_syntax_tree_node_type_parse(t, s);
-		if (node_type == NULL)
-			return FALSE;
-		arg->type = node_type->symbol;
-	}
-	arC_token_next(t);
-
-	// Return values present?
-	if (t->type == ARTOK_IDENTITY) {
-		// One return type
-		arC_return* const ret = arC_return_new();
-		if (ret == NULL)
-			return arC_message_out_of_memory(s);
-
-		if (sign->returns == NULL) {
-			sign->returns = sign->returns_end = ret;
-		}
-		else {
-			sign->returns_end->tail = ret;
-			ret->head = sign->returns_end;
-			sign->returns_end = ret;
-		}
-		sign->returns_count++;
-
-		// Find the type
-		arC_syntax_tree_node_type* node_type = arC_syntax_tree_node_type_parse(t, s);
-		if (node_type == NULL)
-			return FALSE;
-		ret->type = node_type->symbol;
-	}
-	else if (t->type == ARTOK_PARAN_L) {
-		// Parse return information until we reach that end ')' token
-		arC_token_next(t);
-		while (t->type != ARTOK_PARAN_R) {
-			// Ignore comma
-			if (t->type == ARTOK_COMMA) {
-				arC_token_next(t);
-			}
-
-			arC_return* const ret = arC_return_new();
-			if (ret == NULL)
-				return arC_message_out_of_memory(s);
-
-			if (sign->returns == NULL) {
-				sign->returns = sign->returns_end = ret;
-			}
-			else {
-				sign->returns_end->tail = ret;
-				ret->head = sign->returns_end;
-				sign->returns_end = ret;
-			}
-			sign->returns_count++;
-
-			// Find the type
-			arC_syntax_tree_node_type* node_type = arC_syntax_tree_node_type_parse(t, s);
-			if (node_type == NULL)
-				return FALSE;
-			ret->type = node_type->symbol;
-		}
-		// Skip ')'
-		arC_token_next(t);
-	}
-
-	if (!arC_func_sign_build(sign, s))
-		return FALSE;
-	return TRUE;
-}
-
 arC_syntax_tree_node_func* arCompiler_find_or_create_func(arC_token* t, const arC_state* s)
 {
 	// Expected function name
@@ -303,12 +203,13 @@ arC_syntax_tree_node_func* arCompiler_find_or_create_func(arC_token* t, const ar
 	}
 
 	// Parse the signature
-	arC_func_sign signature;
-	if (!arC_func_sign_parse(&signature, s))
+	arC_signature_func signature;
+	arC_signature_func_init(&signature);
+	if (!arC_signature_func_parse(&signature, s))
 		return FALSE;
 
 	// Search for the function using the signature. If no one is found then create a function node
-	arC_syntax_tree_node_func* func = (arC_syntax_tree_node_func*)arC_syntax_tree_find_child_with_type(s->parent_node, &signature.signature, arC_SYNTAX_TREE_FUNC);
+	arC_syntax_tree_node_func* func = (arC_syntax_tree_node_func*)arC_syntax_tree_find_child_with_type(s->parent_node, &signature.local_signature, arC_SYNTAX_TREE_FUNC);
 	if (func == NULL) {
 		// Create the node if it cant be found
 		func = arC_syntax_tree_node_func_new(&signature);
@@ -348,14 +249,12 @@ BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
 	arC_token_next(t);
 
 	// Parse the body
-	const arC_state child_scope = {
-			s->compiler,
-			s->token,
-			asC_syntax_tree(func),
-			s->package_node,
-			func,
-			s->type_node
-	};
+	const arC_state child_scope = asC_state(s,
+		asC_syntax_tree(func),
+		s->package_node,
+		func,
+		s->type_node
+	);
 	if (!arCompiler_parse_body(c, t, &child_scope))
 		return FALSE;
 	arC_token_next(t);
@@ -375,8 +274,16 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 	// Search for a package in the syntax tree
 	arC_syntax_tree_node_package* package = (arC_syntax_tree_node_package*)arC_syntax_tree_find_child_with_type(s->parent_node, &t->string, BIT(arC_SYNTAX_TREE_PACKAGE));
 	if (package == NULL) {
+		// Get the signature of the package
+		arC_signature_package signature;
+		arC_signature_package_init(&signature);
+		signature.name = t->string;
+		signature.parent = s->package_node->symbol;
+		if (!arC_signature_package_build(&signature, s))
+			return FALSE;
+
 		// Create a package and put it into the current parent node
-		package = arC_syntax_tree_node_package_new(&t->string);
+		package = arC_syntax_tree_node_package_new(&signature);
 		if (package == NULL)
 			return arC_message_out_of_memory(s);
 		if (!arC_syntax_tree_node_import_root(package, s))
@@ -386,27 +293,24 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 		if (s->package_node != NULL && s->package_node != c->root_node) {
 			arC_package_add_package(s->package_node->symbol, package->symbol);
 		}
-		arC_package_build_signature(package->symbol, s);
 	}
 	arC_token_next(t);
 
 	// This is a recursive package name. Continue until we don't have any more package symbols
 	if (t->type == ARTOK_DOT) {
-		const arC_state child_scope = {
-			s->compiler,
-			s->token,
+		const arC_state child_scope = asC_state(s,
 			asC_syntax_tree(package),
 			package,
 			s->func_node,
 			s->type_node
-		};
+		);
 		arC_token_next(t);
 		return arCompiler_parse_package(c, t, &child_scope);
 	}
 
 	if (t->type != ARTOK_NEWLINE) {
 		// arC_message_expected_newline(c);
-		return arC_message_not_implemented(s);
+		return arC_message_not_implemented(s, "N/A");
 	}
 
 	// Parse package content
@@ -417,14 +321,12 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 		case ARTOK_KEYWORD_FUNC:
 		{
 			arC_token_next(t);
-			const arC_state child_scope = {
-				s->compiler,
-				s->token,
+			const arC_state child_scope = asC_state(s,
 				asC_syntax_tree(package),
 				package,
 				s->func_node,
 				s->type_node
-			};
+			);
 			if (!arCompiler_parse_func(c, t, &child_scope)) {
 				return FALSE;
 			}
@@ -438,7 +340,7 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 		case ARTOK_EOF:
 			return TRUE;
 		default:
-			return arC_message_not_implemented(s);
+			return arC_message_not_implemented(s, "N/A");
 		}
 	}
 }

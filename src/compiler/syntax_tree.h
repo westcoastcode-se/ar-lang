@@ -2,6 +2,7 @@
 #define _ARC_SYNTAX_TREE_H_
 
 #include "lexer.h"
+#include "signatures.h"
 #include "../arPrimitiveValue.h"
 
 // Syntax tree types
@@ -190,11 +191,17 @@ typedef struct arC_state
 	arC_syntax_tree_node_type* type_node;
 } arC_state;
 
+#define asC_state(state, parent_node, package_node, func_node, type_node) \
+	{ state->compiler, state->token, parent_node, package_node, func_node, type_node }
+
+// Get the string pool associated with the supplied state
+ARLANG_API struct arStringPool* arC_state_get_string_pool(const arC_state* s);
+
 // Create a new package tree node
-ARLANG_API arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arString* name);
+ARLANG_API arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arC_signature_package* signature);
 
 // Create a new function
-ARLANG_API arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const struct arC_func_sign* signature);
+ARLANG_API arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const arC_signature_func* signature);
 
 // The package we are importing
 ARLANG_API arC_syntax_tree_node_import* arC_syntax_tree_node_import_new(arC_syntax_tree_node_package* package);
@@ -212,7 +219,7 @@ ARLANG_API arC_syntax_tree_node arC_syntax_tree_find_incl_imports(arC_syntax_tre
 ARLANG_API arC_syntax_tree_node arC_syntax_tree_find_child_with_type(arC_syntax_tree_node node, const arString* name, arInt32 types);
 
 // Create a new syntax tree type
-ARLANG_API arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const struct arC_type_sign* signature);
+ARLANG_API arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arC_signature_type* signature);
 
 // Create a new syntax tree type
 ARLANG_API void arC_syntax_tree_node_type_set_symbol(arC_syntax_tree_node_type* node, struct arC_type* type);

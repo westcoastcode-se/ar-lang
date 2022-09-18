@@ -24,8 +24,11 @@ typedef enum arC_message_code
 	// Generic syntax error
 	arC_MESSAGE_SYNTAX_ERROR,
 
-	// A type or function is already defined
+	// A symbol is already defined
 	arC_MESSAGE_ALREADY_DEFINED,
+
+	// A required symbol is not defined
+	arC_MESSAGE_NOT_DEFINED,
 
 	// A symbol is unresolved
 	arC_MESSAGE_SYMBOL_UNRESOLVED

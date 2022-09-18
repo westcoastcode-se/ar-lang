@@ -26,9 +26,9 @@ void arStringPool_init(arStringPool* p)
 
 void arStringPool_destroy(arStringPool* p)
 {
-	arStringPool_entry* e = p->first;
+	arStringPoolEntry* e = p->first;
 	while (e != NULL) {
-		arStringPool_entry* const next = e->next;
+		arStringPoolEntry* const next = e->next;
 		arFree((void*)e->value.start);
 		arFree(e);
 		e = next;
@@ -39,7 +39,7 @@ void arStringPool_destroy(arStringPool* p)
 const arString* arStringPool_stringsz(arStringPool* p, const char* str, int len)
 {
 	// Try to find an existing string
-	arStringPool_entry* e = p->first;
+	arStringPoolEntry* e = p->first;
 	while (e != NULL) {
 		if (arString_cmpsz(&e->value, str, len)) {
 			return &e->value;
@@ -48,7 +48,7 @@ const arString* arStringPool_stringsz(arStringPool* p, const char* str, int len)
 	}
 
 	// If not, then add it to the string pool
-	e = (arStringPool_entry*)arMalloc(sizeof(arStringPool_entry));
+	e = (arStringPoolEntry*)arMalloc(sizeof(arStringPoolEntry));
 	if (e == NULL) {
 		return NULL;
 	}
@@ -57,12 +57,10 @@ const arString* arStringPool_stringsz(arStringPool* p, const char* str, int len)
 	if (p->last != NULL) {
 		p->last->next = e;
 		e->index = p->last->index + 1;
-		e->offset = p->last->offset + arString_length(&p->last->value);
 		p->last = e;
 	}
 	else {
 		e->index = 0;
-		e->offset = 0;
 		p->first = p->last = e;
 	}
 	return &e->value;

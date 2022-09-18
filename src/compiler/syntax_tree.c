@@ -307,9 +307,15 @@ void arC_syntax_tree_node_destroy(arC_syntax_tree* st)
 	arFree(st);
 }
 
-arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arString* name)
+arStringPool* arC_state_get_string_pool(const arC_state* s)
 {
-	arC_package* const symbol = arC_package_new(name);
+	ASSERT_NOT_NULL(s->compiler);
+	return &s->compiler->pipeline->string_pool;
+}
+
+arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arC_signature_package* signature)
+{
+	arC_package* const symbol = arC_package_new(signature);
 	if (symbol == NULL)
 		return NULL;
 	arC_syntax_tree_node_package* const p = arMalloc(sizeof(arC_syntax_tree_node_package));
@@ -322,7 +328,7 @@ arC_syntax_tree_node_package* arC_syntax_tree_node_package_new(const arString* n
 	return p;
 }
 
-arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const arC_func_sign* signature)
+arC_syntax_tree_node_func* arC_syntax_tree_node_func_new(const arC_signature_func* signature)
 {
 	arC_func* const symbol = arC_func_new(signature);
 	if (symbol == NULL)
@@ -484,7 +490,7 @@ arC_syntax_tree_node arC_syntax_tree_find_child_with_type(arC_syntax_tree_node n
 	return NULL;
 }
 
-arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arC_type_sign* signature)
+arC_syntax_tree_node_type* arC_syntax_tree_node_type_new(const arC_signature_type* signature)
 {
 	arC_type* const symbol = arC_type_new(signature);
 	if (symbol == NULL)
@@ -515,13 +521,13 @@ arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const a
 			return NULL;
 
 		// TODO: Implement the rest!
-		arC_message_not_implemented(s);
+		arC_message_not_implemented(s, "#10 add support for pointer types");
 		return NULL;
 	}
 	// Is this an array type - for example: [2]int32
 	else if (t->type == ARTOK_SQUARE_L) {
 		// TODO: Implement the rest!
-		arC_message_not_implemented(s);
+		arC_message_not_implemented(s, "#9 add support for array types");
 		return NULL;
 	}
 
@@ -549,7 +555,15 @@ arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const a
 		// assume that the type we searched for is a package. If it's a package then all searches we are doing after this should 
 		// only include children
 		if (t->type == ARTOK_DOT) {
-			arC_syntax_tree_node_package* const package_node = arC_syntax_tree_node_package_new(&name);
+			// Get the signature of the package
+			arC_signature_package signature;
+			arC_signature_package_init(&signature);
+			signature.name = name;
+			signature.parent = closet_package_node->symbol;
+			if (!arC_signature_package_build(&signature, s))
+				return FALSE;
+
+			arC_syntax_tree_node_package* const package_node = arC_syntax_tree_node_package_new(&signature);
 			if (package_node == NULL) {
 				arC_message_out_of_memory(s);
 				return NULL;
@@ -559,17 +573,13 @@ arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const a
 			node = asC_symbol(package_node);
 			arC_syntax_tree_add(asC_symbol(closet_package_node), node);
 			arC_package_add_package(closet_package_node->symbol, package_node->symbol);
-			if (!arC_package_build_signature(package_node->symbol, s))
-				return FALSE;
 			closet_package_node = package_node;
 		}
 		else {
-			arC_type_sign type_signature;
-			type_signature.package = closet_package_node->symbol;
-			type_signature.name = name;
-			arC_type_sign_build(&type_signature, s);
+			arC_signature_type signature;
+			arC_signature_type_init_and_build(&signature, &name, asC_symbol(closet_package_node->symbol), s);
 
-			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&type_signature);
+			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&signature);
 			if (type_node == NULL) {
 				arC_message_out_of_memory(s);
 				return NULL;
@@ -589,7 +599,15 @@ arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const a
 			arC_token_next(t);
 			if (node == NULL) {
 				if (t->type == ARTOK_DOT) {
-					arC_syntax_tree_node_package* const package_node = arC_syntax_tree_node_package_new(&name);
+					// Get the signature of the package
+					arC_signature_package signature;
+					arC_signature_package_init(&signature);
+					signature.name = name;
+					signature.parent = closet_package_node->symbol;
+					if (!arC_signature_package_build(&signature, s))
+						return FALSE;
+
+					arC_syntax_tree_node_package* const package_node = arC_syntax_tree_node_package_new(&signature);
 					if (package_node == NULL) {
 						arC_message_out_of_memory(s);
 						return NULL;
@@ -599,8 +617,6 @@ arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const a
 					node = asC_symbol(package_node);
 					arC_syntax_tree_add(parent_node, node);
 					arC_package_add_package(closet_package_node->symbol, package_node->symbol);
-					if (!arC_package_build_signature(package_node->symbol, s))
-						return FALSE;
 					closet_package_node = package_node;
 				}
 			}
@@ -612,13 +628,11 @@ arC_syntax_tree_node_type* arC_syntax_tree_node_type_parse(arC_token* t, const a
 		// If we never found a node at the end of the package-chain then assume that that's a type (that's not defined yet)
 		if (node == NULL) {
 			// Prepare the signature
-			arC_type_sign type_signature;
-			type_signature.package = closet_package_node->symbol;
-			type_signature.name = name;
-			arC_type_sign_build(&type_signature, s);
+			arC_signature_type signature;
+			arC_signature_type_init_and_build(&signature, &name, asC_symbol(closet_package_node->symbol), s);
 
 			// Prepare a node for the package
-			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&type_signature);
+			arC_syntax_tree_node_type* const type_node = arC_syntax_tree_node_type_new(&signature);
 			if (type_node == NULL) {
 				arC_message_out_of_memory(s);
 				return NULL;
@@ -745,7 +759,7 @@ arC_syntax_tree_node arC_synax_tree_out_of_memory(const arC_state* s)
 
 arC_syntax_tree_node arC_synax_tree_not_implemented(const arC_state* s)
 {
-	arC_message_not_implemented(s);
+	arC_message_not_implemented(s, "N/A");
 	return arC_syntax_tree_error();
 }
 
@@ -912,8 +926,7 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 
 			// Check to see if the local variable exists, and if not then add it
 			if (symbol != NULL) {
-				// Symbol is already defined
-				arC_message_not_implemented(state);
+				arC_message_already_defined(state, &identity);
 				return arC_syntax_tree_error();
 			}
 
@@ -946,9 +959,8 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 
 			// Check to see if the local variable exists, and if not then add it
 			if (symbol == NULL) {
-				// Not defined yet
-				// TODO: Add support for an "unresolved" assignable type
-				arC_message_not_implemented(state);
+				// TODO: Add support for an "unresolved" assignable type, such as globals
+				arC_message_not_defined(state, &identity);
 				return arC_syntax_tree_error();
 			}
 
@@ -968,7 +980,7 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 		else {
 			if (symbol == NULL) {
 				// TODO: Add support for "unresolved" types (which is later on resolved as the "closest" type)
-				arC_message_not_implemented(state);
+				arC_message_not_implemented(state, "N/A");
 				return arC_syntax_tree_error();
 			}
 
@@ -999,7 +1011,7 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 
 			// Unknown variable type
 			if (result == NULL) {
-				arC_message_not_implemented(state);
+				arC_message_not_implemented(state, "N/A");
 				return arC_syntax_tree_error();
 			}
 
@@ -1073,7 +1085,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_keywords(arCompiler* c, arC_token* t,
 
 			// The number of expressions that are left
 			arInt32 return_expressions_left = arC_func_count_returns(arCompiler_state_get_func(s));
-			arC_return* return_symbol = s->func_node->symbol->signature.returns;
+			arC_return* return_symbol = s->func_node->symbol->returns;
 
 			// Fetch all return statements 
 			// TODO: Allow for skipping return values and let the compiler return the default value for you
@@ -1103,7 +1115,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_keywords(arCompiler* c, arC_token* t,
 		case ARTOK_KEYWORD_VAR:
 			return arC_synax_tree_not_implemented(s);
 		default:
-			arC_message_not_implemented(s);
+			arC_message_not_implemented(s, "N/A");
 			return arC_syntax_tree_error();
 		}
 	}

@@ -40,6 +40,9 @@ ARLANG_API char* arString_get(const arString* src, char* dest, int* len);
 // Copy the string content into the supplied destination buffer
 ARLANG_API char* arString_cpy_s(char* dest, int* bytes_left, const arString* src);
 
+// Copy the string content into the supplied destination buffer
+ARLANG_API char* arString_cpy(char* dest, const arString* src);
+
 // Define a constant arString
 #define CONST_VM_STRING(ns, name, value, len) \
 const arString* ##ns##_##name() { \

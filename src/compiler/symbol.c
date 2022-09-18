@@ -39,53 +39,14 @@ BOOL arC_symbol_equals(arC_symbol* t1, arC_symbol* t2)
 	return FALSE;
 }
 
-void arC_type_sign_init(arC_type_sign* sign)
-{
-	arString_zero(&sign->signature);
-	arString_zero(&sign->short_signature);
-	arString_zero(&sign->name);
-	sign->package = NULL;
-}
-
-BOOL arC_type_sign_build(arC_type_sign* sign, const arC_state* s)
-{
-	ASSERT_NOT_NULL(sign);
-
-	int bytes_left = 1024;
-	arByte signature_data[1024];
-	arByte* sig = signature_data;
-
-	sig = arStrcpy_s(sig, &bytes_left, asC_symbol_signature(sign->package)->start, arString_length(asC_symbol_signature(sign->package)));
-	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
-	sig = arStrcpy_s(sig, &bytes_left, sign->name.start, arString_length(&sign->name));
-	if (bytes_left == 0) {
-		// Size of the signature is too large
-		arC_message_not_implemented(s);
-		return FALSE;
-	}
-
-	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
-	if (result == NULL)
-		return arC_message_out_of_memory(s);
-	sign->signature = *result;
-	// The short signature for the function startd after the "<package signature>#"
-	sign->short_signature.start = sign->signature.start + arString_length(asC_symbol_signature(sign->package)) + 1;
-	sign->short_signature.end = sign->signature.end;
-	return TRUE;
-}
-
-BOOL arC_type_sign_parse(arC_type_sign* sign, const arC_state* s)
-{
-	return TRUE;
-}
-
-arC_type* arC_type_new(const arC_type_sign* sign)
+arC_type* arC_type_new(const arC_signature_type* sign)
 {
 	arC_type* const p = arSafeMalloc(arC_type);
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_TYPE);
-	p->header.name = sign->short_signature;
+	p->header.name = sign->local_signature;
 	p->header.signature = sign->signature;
-	p->signature = *sign;
+	p->name = sign->name;
+	p->parent = sign->parent;
 	p->size = -1;
 	p->flags = 0;
 	p->data_type = 0;
@@ -131,9 +92,17 @@ BOOL arC_type_resolve_type0(arC_type* t, arC_type* root_type, const struct arC_s
 		if (!arC_type_resolve_type0(t->of_type, root_type, s))
 			return FALSE;
 	}
-	ASSERT_NOT_NULL(t->signature.package->package);
-	if (arB_package_add_type(t->signature.package->package, type) != VMP_LIST_ADDED)
-		return arC_message_out_of_memory(s);
+
+	ASSERT_NOT_NULL(t->parent);
+	if (t->parent->type == arC_SYMBOL_PACKAGE) {
+		if (arB_package_add_type(((arC_package*)t->parent)->package, type) != VMP_LIST_ADDED)
+			return arC_message_out_of_memory(s);
+	}
+	else {
+		// TODO: Add support for functions inside functions
+		return arC_message_not_implemented(s, "#11 we should allow types inside functions");
+	}
+
 	return TRUE;
 }
 
@@ -159,18 +128,25 @@ BOOL arC_type_resolve(arC_type* t, const arC_state* s)
 		if (!arC_type_resolve_type0(t->of_type, t, s))
 			return FALSE;
 	}
-	ASSERT_NOT_NULL(t->signature.package->package);
-	if (arB_package_add_type(t->signature.package->package, type) != VMP_LIST_ADDED)
-		return arC_message_out_of_memory(s);
+	ASSERT_NOT_NULL(t->parent);
+	if (t->parent->type == arC_SYMBOL_PACKAGE) {
+		if (arB_package_add_type(((arC_package*)t->parent)->package, type) != VMP_LIST_ADDED)
+			return arC_message_out_of_memory(s);
+	}
+	else {
+		// TODO: Add support for functions inside functions
+		return arC_message_not_implemented(s, "#11 we should allow types inside functions");
+	}
 	return TRUE;
 }
 
-arC_package* arC_package_new(const arString* name)
+arC_package* arC_package_new(const arC_signature_package* signature)
 {
 	arC_package* const p = arSafeMalloc(arC_package);
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_PACKAGE);
-	p->header.name = *name;
-	p->parent = NULL;
+	p->header.signature = signature->signature;
+	p->header.name = signature->local_signature;
+	p->parent = signature->parent;
 	p->children = p->children_end = NULL;
 	p->children_head = p->children_tail = NULL;
 	p->types = p->types_end = NULL;
@@ -201,38 +177,6 @@ void arC_package_destroy(arC_package* ptr)
 	ptr->funcs = ptr->funcs_end = NULL;
 
 	arFree(ptr);
-}
-
-BOOL arC_package_build_signature0(arC_package* p, const struct arC_state* s)
-{
-	int bytes_left = 1024;
-	arByte signature_data[1024];
-	arByte* sig = signature_data;
-
-	sig = arStrcpy_s(sig, &bytes_left, asC_symbol_signature(p->parent)->start, arString_length(asC_symbol_signature(p->parent)));
-	sig = arStrcpy_s(sig, &bytes_left, ".", 1);
-	sig = arStrcpy_s(sig, &bytes_left, p->header.name.start, arString_length(&p->header.name));
-	if (bytes_left == 0) {
-		// Size of the signature is too large
-		arC_message_not_implemented(s);
-		return FALSE;
-	}
-
-	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
-	if (result == NULL)
-		return arC_message_out_of_memory(s);
-	p->header.signature = *result;
-	return TRUE;
-}
-
-BOOL arC_package_build_signature(arC_package* p, const struct arC_state* s)
-{
-	ASSERT_NOT_NULL(p);
-	if (p->parent == NULL) {
-		p->header.signature = p->header.name;
-		return TRUE;
-	}
-	return arC_package_build_signature0(p, s);
 }
 
 BOOL arC_package_resolve(arC_package* p, const arC_state* s)
@@ -308,9 +252,8 @@ void arC_package_add_type(arC_package* p, arC_type* t)
 {
 	ASSERT_NOT_NULL(p);
 	ASSERT_NOT_NULL(t);
-	assert((t->signature.package == NULL || t->signature.package == p) && "Expected the type to not be added to another package");
+	assert((t->parent != NULL) && "Expected the type to not be added to another package");
 
-	t->signature.package = p;
 	if (p->types_end == NULL) {
 		p->types = p->types_end = t;
 	}
@@ -325,9 +268,8 @@ void arC_package_add_func(arC_package* p, arC_func* f)
 {
 	ASSERT_NOT_NULL(p);
 	ASSERT_NOT_NULL(f);
-	assert((f->signature.package == NULL || f->signature.package == p) && "Expected the function to not be added to another package");
+	assert((f->parent == asC_symbol(p)) && "Expected the function signature to be part of the supplied package already");
 
-	f->signature.package = p;
 	if (p->funcs_end == NULL) {
 		p->funcs = p->funcs_end = f;
 	}
@@ -342,9 +284,8 @@ void arC_package_add_package(arC_package* p, arC_package* sub_package)
 {
 	ASSERT_NOT_NULL(p);
 	ASSERT_NOT_NULL(sub_package);
-	assert(sub_package->parent == NULL && "Expected the function to not be added to another package");
+	assert((sub_package->parent == p) && "Expected the function to not be added to another package");
 
-	sub_package->parent = p;
 	if (sub_package->children_end == NULL) {
 		p->children = p->children_end = sub_package;
 	}
@@ -354,72 +295,21 @@ void arC_package_add_package(arC_package* p, arC_package* sub_package)
 		p->children_end = sub_package;
 	}
 }
-void arC_func_sign_init(arC_func_sign* p)
-{
-	arString_zero(&p->signature);
-	arString_zero(&p->short_signature);
-	arString_zero(&p->name);
-	p->package = NULL;
-	p->package = NULL;
-	p->arguments = p->arguments_end = NULL;
-	p->arguments_count = 0;
-	p->returns = p->returns_end = NULL;
-	p->returns_count = 0;
-}
 
-BOOL arC_func_sign_build(arC_func_sign* sign, const arC_state* s)
-{
-	ASSERT_NOT_NULL(sign);
-
-	int i;
-	int bytes_left = 1024;
-	int short_signature_length = 0;
-	arByte signature_data[1024];
-	arByte* sig = signature_data;
-
-	sig = arString_cpy_s(sig, &bytes_left, asC_symbol_signature(sign->package));
-	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
-	sig = arString_cpy_s(sig, &bytes_left, &sign->name);
-	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
-	arC_arg* arg = sign->arguments;
-	for (i = 0; i < sign->arguments_count; ++i, arg = arg->tail) {
-		if (i > 0)
-			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
-		const arString* type_sig = asC_symbol_signature(arg->type);
-		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
-	}
-	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
-	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
-	arC_return* ret = sign->returns;
-	for (i = 0; i < sign->returns_count; ++i, ret = ret->tail) {
-		if (i > 0)
-			sig = arStrcpy_s(sig, &bytes_left, ",", 1);
-		const arString* type_sig = asC_symbol_signature(ret->type);
-		sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
-	}
-	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
-	if (bytes_left == 0) {
-		// Size of the signature is too large
-		return arC_message_not_implemented(s);
-	}
-
-	const arString* const result = arStringPool_stringsz(&s->compiler->pipeline->string_pool, signature_data, 1024 - bytes_left);
-	if (result == NULL)
-		return arC_message_out_of_memory(s);
-	sign->signature = *result;
-	// The short signature for the function startd after the "<package signature>#"
-	sign->short_signature.start = sign->signature.start + arString_length(asC_symbol_signature(sign->package)) + 1;
-	sign->short_signature.end = sign->signature.end;
-	return TRUE;
-}
-
-arC_func* arC_func_new(const arC_func_sign* signature)
+arC_func* arC_func_new(const arC_signature_func* signature)
 {
 	arC_func* const p = arSafeMalloc(arC_func);
 	arCompilerSymbol_init(asC_symbol(p), arC_SYMBOL_FUNC);
-	p->header.name = signature->short_signature;
+	p->header.name = signature->local_signature;
 	p->header.signature = signature->signature;
-	p->signature = *signature;
+	p->name = signature->name;
+	p->parent = signature->parent;
+	p->arguments = signature->arguments;
+	p->arguments_end = signature->arguments_end;
+	p->arguments_count = signature->arguments_count;
+	p->returns = signature->returns;
+	p->returns_end = signature->returns_end;
+	p->returns_count = signature->returns_count;
 	p->locals = p->locals_end = NULL;
 	p->tail = p->head = NULL;
 	p->func = NULL;
@@ -428,16 +318,14 @@ arC_func* arC_func_new(const arC_func_sign* signature)
 
 void arC_func_destroy(arC_func* f)
 {
-	const arC_func_sign* s = &f->signature;
-
-	arC_arg* arg = s->arguments;
+	arC_arg* arg = f->arguments;
 	while (arg) {
 		arC_arg* const tail = arg->tail;
 		arC_arg_destroy(arg);
 		arg = tail;
 	}
 
-	arC_return* ret = s->returns;
+	arC_return* ret = f->returns;
 	while (ret) {
 		arC_return* const tail = ret->tail;
 		arC_return_destroy(ret);
@@ -452,40 +340,6 @@ void arC_func_destroy(arC_func* f)
 	}
 
 	arFree(f);
-}
-
-void arC_func_add_arg(arC_func* f, arC_arg* a)
-{
-	ASSERT_NOT_NULL(f);
-	ASSERT_NOT_NULL(a);
-	arC_func_sign* s = &f->signature;
-
-	if (s->arguments == NULL) {
-		s->arguments = s->arguments_end = a;
-	}
-	else {
-		s->arguments_end->tail = a;
-		a->head = s->arguments_end;
-		s->arguments_end = a;
-	}
-	s->arguments_count++;
-}
-
-void arC_func_add_return(arC_func* f, arC_return* r)
-{
-	ASSERT_NOT_NULL(f);
-	ASSERT_NOT_NULL(r);
-	arC_func_sign* s = &f->signature;
-
-	if (s->returns == NULL) {
-		s->returns = s->returns_end = r;
-	}
-	else {
-		s->returns_end->tail = r;
-		r->head = s->returns_end;
-		s->returns_end = r;
-	}
-	s->returns_count++;
 }
 
 void arC_func_add_local(arC_func* f, arC_local* l)
@@ -514,11 +368,11 @@ BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 	arB_func* const func = arB_func_new(asC_symbol_name(f));
 	if (func == NULL)
 		return arC_message_out_of_memory(s);
-	arB_func_set_signature(func, &f->signature.signature);
+	arB_func_set_signature(func, &f->header.signature);
 	f->func = func;
 
 	// add arguments
-	arC_arg* arg = f->signature.arguments;
+	arC_arg* arg = f->arguments;
 	while (arg != NULL) {
 		if (!arC_type_resolve(arg->type, s))
 			return FALSE;
@@ -528,7 +382,7 @@ BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 	}
 
 	// add return values
-	arC_return* ret = f->signature.returns;
+	arC_return* ret = f->returns;
 	while (ret != NULL) {
 		if (!arC_type_resolve(ret->type, s))
 			return FALSE;
@@ -545,9 +399,15 @@ BOOL arC_func_resolve(arC_func* f, const arC_state* s)
 		arB_local_set_name(local->local, asC_symbol_name(local));
 		local = local->tail;
 	}
-	ASSERT_NOT_NULL(f->signature.package->package);
-	if (arB_package_add_func(f->signature.package->package, func) != VMP_LIST_ADDED)
-		return arC_message_out_of_memory(s);
+	ASSERT_NOT_NULL(f->parent);
+	if (f->parent->type == arC_SYMBOL_PACKAGE) {
+		if (arB_package_add_func(((arC_package*)f->parent)->package, func) != VMP_LIST_ADDED)
+			return arC_message_out_of_memory(s);
+	}
+	else {
+		// TODO: Add support for functions inside functions
+		return arC_message_not_implemented(s, "#7 we should allow functions in functions");
+	}
 	return TRUE;
 }
 
@@ -564,7 +424,7 @@ arC_local* arC_func_find_local(arC_func* f, const arString* name)
 
 arC_arg* arC_func_find_arg(arC_func* f, const arString* name)
 {
-	arC_arg* arg = f->signature.arguments;
+	arC_arg* arg = f->arguments;
 	while (arg != NULL) {
 		if (arString_cmp(&arg->header.name, name))
 			return arg;
@@ -589,13 +449,13 @@ arC_symbol* arC_func_find_symbol(arC_func* f, const arString* name)
 arInt32 arC_func_count_args(arC_func* f)
 {
 	ASSERT_NOT_NULL(f);
-	return f->signature.arguments_count;
+	return f->arguments_count;
 }
 
 arInt32 arC_func_count_returns(arC_func* f)
 {
 	ASSERT_NOT_NULL(f);
-	return f->signature.returns_count;
+	return f->returns_count;
 }
 
 arC_arg* arC_arg_new(const arString* name)

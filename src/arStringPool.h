@@ -4,7 +4,7 @@
 #include "arString.h"
 
 // A string entry
-typedef struct arStringPool_entry
+typedef struct arStringPoolEntry
 {
 	// The actual string
 	arString value;
@@ -12,19 +12,16 @@ typedef struct arStringPool_entry
 	// String index
 	arUint32 index;
 
-	// Offset where the string starts if all strings are located in the same memory block
-	arUint32 offset;
-
 	// Next entry
-	struct arStringPool_entry* next;
-} arStringPool_entry;
+	struct arStringPoolEntry* next;
+} arStringPoolEntry;
 
 // Pool containing all strings to be saved in the bytecode during the link process
 typedef struct arStringPool
 {
 	// List
-	arStringPool_entry* first;
-	arStringPool_entry* last;
+	arStringPoolEntry* first;
+	arStringPoolEntry* last;
 } arStringPool;
 
 // Initialize the supplied string pool
