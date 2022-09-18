@@ -288,6 +288,61 @@ func Get() %s {
 	}
 };
 
+struct suite_compiler_functions : utils_compiler_success
+{
+	void calling_before()
+	{
+		static const auto source = R"(
+package main
+
+func innerGet() int32 {
+	return -12345
+}
+
+func Get() int32 {
+	return innerGet()
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()(int32)");
+
+		verify_stack_size(thread, sizeof(arInt32));
+		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret, -12345);
+	}
+
+	void calling_after()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
+	return innerGet()
+}
+
+func innerGet() int32 {
+	return -12345
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()(int32)");
+
+		verify_stack_size(thread, sizeof(arInt32));
+		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret, -12345);
+	}
+
+	void operator()()
+	{
+		TEST(calling_before());
+		TEST(calling_after());
+	}
+};
+
 struct suite_compiler_tests : utils_compiler_success
 {
 	void return4()
@@ -1144,7 +1199,8 @@ func () int32 {
 
 void suite_compiler()
 {
-	SUITE(suite_compiler_tests);
 	SUITE(suite_compiler_get_const);
+	SUITE(suite_compiler_functions);
+	SUITE(suite_compiler_tests);
 	SUITE(suite_compiler_errors);
 }
