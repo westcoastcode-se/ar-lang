@@ -282,6 +282,14 @@ BOOL arC_syntax_tree_compile_load_arg(arCompiler* c, arC_syntax_tree_node_load_a
 	return TRUE;
 }
 
+BOOL arC_syntax_tree_compile_callfunc(arCompiler* c, arC_syntax_tree_node_callfunc* call)
+{
+	arB_func_add_instr(call->closest_function_node->symbol->func, 
+		arB_instr_call(call->func->func));
+	// TODO: How do we pop values from the stack when done?
+	return TRUE;
+}
+
 void arC_syntax_tree_node_destroy(arC_syntax_tree* st)
 {
 	switch (st->type)
@@ -384,6 +392,8 @@ BOOL arC_syntax_tree_compile(arCompiler* c, arC_syntax_tree* st)
 		return arC_syntax_tree_compile_load_local(c, (arC_syntax_tree_node_load_local*)st);
 	case arC_SYNTAX_TREE_LOAD_ARGUMENT:
 		return arC_syntax_tree_compile_load_arg(c, (arC_syntax_tree_node_load_arg*)st);
+	case arC_SYNTAX_TREE_CALLFUNC:
+		return arC_syntax_tree_compile_callfunc(c, (arC_syntax_tree_node_callfunc*)st);
 	case arC_SYNTAX_TREE_IMPORT:
 	case arC_SYNTAX_TREE_TYPE:
 		return TRUE;
@@ -680,6 +690,17 @@ BOOL arC_syntax_tree_node_resolve(arC_syntax_tree_node node, const struct arC_st
 	return TRUE;
 }
 
+arC_syntax_tree_node_callfunc* arC_syntax_tree_node_callfunc_new(arC_syntax_tree_node left, arC_func* func)
+{
+	arC_syntax_tree_node_callfunc* const p = arSafeMalloc(arC_syntax_tree_node_callfunc);
+	arC_syntax_tree_init(asC_syntax_tree(p), arC_SYNTAX_TREE_CALLFUNC);
+	p->header.stack_type = left->stack_type;
+	p->func = func;
+	p->closest_function_node = NULL;
+	arC_syntax_tree_add(asC_syntax_tree(p), left);
+	return p;
+}
+
 arC_syntax_tree_node_unaryop* arC_syntax_tree_unaryop_new(arC_syntax_tree_node left, arC_tokens op)
 {
 	arC_syntax_tree_node_unaryop* const p = arSafeMalloc(arC_syntax_tree_node_unaryop);
@@ -918,10 +939,11 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 	}
 	if (t->type == ARTOK_IDENTITY) {
 		const arString identity = t->string;
-		arC_symbol* symbol = arC_func_find_symbol(state->func_node->symbol, &identity);
 		arC_token_next(t);
 
 		if (t->type == ARTOK_DECL_ASSIGN) {
+			arC_symbol* symbol = arC_func_find_symbol(state->func_node->symbol, &identity);
+
 			arC_token_next(t);
 
 			// Check to see if the local variable exists, and if not then add it
@@ -954,6 +976,8 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 			return asC_syntax_tree(assign);
 		}
 		else if (t->type == ARTOK_ASSIGN) {
+			arC_symbol* symbol = arC_func_find_symbol(state->func_node->symbol, &identity);
+
 			// Existing variable, might be a local, argument or a global variable
 			arC_token_next(t);
 
@@ -977,7 +1001,27 @@ arC_syntax_tree_node arC_synax_tree_parse_atom(arCompiler* c, arC_token* t, cons
 			assign->closest_function_node = state->func_node;
 			return asC_syntax_tree(assign);
 		}
+		else if (t->type == ARTOK_PARAN_L) {
+			// Start parsing the function signature
+			arC_token_next(t);
+
+			// 1. Expected return values should not be part of the search for functions.
+			// 2. Expected arguments should be fetched from
+
+			// Function or method call
+			arC_signature_func signature;
+			arC_signature_func_init(&signature);
+			//if (!arC_signature_func_parse_call(&signature, &identity, state))
+			//	return arC_syntax_tree_error();
+			
+			// Try to find the function we want to call
+			arC_syntax_tree* dest_func = arC_syntax_tree_find_incl_imports(state->parent_node, &signature.local_signature,
+				BIT(arC_SYNTAX_TREE_FUNC));
+			arC_message_not_implemented(state, "N/A");
+			return arC_syntax_tree_error();
+		}
 		else {
+			arC_symbol* symbol = arC_func_find_symbol(state->func_node->symbol, &identity);
 			if (symbol == NULL) {
 				// TODO: Add support for "unresolved" types (which is later on resolved as the "closest" type)
 				arC_message_not_implemented(state, "N/A");

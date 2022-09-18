@@ -219,7 +219,7 @@ func Get() %s {
 	return %s
 }
 )", name<T>(), to_string((T)value));
-		const char* signature = format_signature("Get()(%s)", name<T>());
+		const char* signature = format_signature("Get()");
 
 		add_source_code(source, "/main.arl");
 		compile();
@@ -241,7 +241,7 @@ func Get() %s {
 	return %s + %s
 }
 )", name<T>(), to_string((T)lhs), to_string((T)rhs));
-		const char* signature = format_signature("Get()(%s)", name<T>());
+		const char* signature = format_signature("Get()");
 
 		add_source_code(source, "/main.arl");
 		compile();
@@ -263,7 +263,7 @@ func Get() %s {
 	return %s - %s
 }
 )", name<T>(), to_string((T)lhs), to_string((T)rhs));
-		const char* signature = format_signature("Get()(%s)", name<T>());
+		const char* signature = format_signature("Get()");
 
 		add_source_code(source, "/main.arl");
 		compile();
@@ -306,7 +306,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -329,7 +329,7 @@ func innerGet() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -357,7 +357,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -376,7 +376,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -395,7 +395,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -414,7 +414,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -433,7 +433,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -452,7 +452,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -471,7 +471,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -490,7 +490,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -509,7 +509,7 @@ func Get() (int32, int32) {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("WestCoastCode.InnerPackage", "Get()(int32,int32)");
+		invoke("WestCoastCode.InnerPackage", "Get()");
 
 		verify_stack_size(thread, sizeof(arInt32) * 2);
 		auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -531,7 +531,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -552,7 +552,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -573,7 +573,7 @@ func Get() int32 {
 		add_source_code(source, "/main.arl");
 		compile();
 
-		invoke("Get()(int32)");
+		invoke("Get()");
 
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -594,7 +594,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(10000);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) * 2);
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -617,7 +617,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(10000);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) * 2);
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -640,7 +640,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(10000);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) * 2);
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -664,7 +664,7 @@ func Args(value1 int32, value2 int32) int32 {
 		const auto value1 = push_value<int>(10000);
 		const auto value2 = push_value<int>(123);
 
-		invoke("Args(int32,int32)(int32)");
+		invoke("Args(int32,int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) * 3);
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -690,7 +690,7 @@ func Args(value1 int32, value2 int32) (int32, int32) {
 		const auto value1 = push_value<int>(10000);
 		const auto value2 = push_value<int>(123);
 
-		invoke("Args(int32,int32)(int32,int32)");
+		invoke("Args(int32,int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) * 4);
 		auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -717,7 +717,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(5);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arBool));
 		const auto ret = *(arBool*)arThread_popStack(thread, sizeof(arBool));
@@ -740,7 +740,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(5);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arBool));
 		const auto ret = *(arBool*)arThread_popStack(thread, sizeof(arBool));
@@ -763,7 +763,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(95);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arBool));
 		const auto ret = *(arBool*)arThread_popStack(thread, sizeof(arBool));
@@ -786,7 +786,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(5);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arBool));
 		const auto ret = *(arBool*)arThread_popStack(thread, sizeof(arBool));
@@ -809,7 +809,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(5);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arBool));
 		const auto ret = *(arBool*)arThread_popStack(thread, sizeof(arBool));
@@ -832,7 +832,7 @@ func Arg(value int32) int32 {
 
 		const auto value = push_value<int>(95);
 
-		invoke("Arg(int32)(int32)");
+		invoke("Arg(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arBool));
 		const auto ret = *(arBool*)arThread_popStack(thread, sizeof(arBool));
@@ -855,7 +855,7 @@ func BitNot(value int32) int32 {
 
 		const auto value = push_value<int>(100);
 
-		invoke("BitNot(int32)(int32)");
+		invoke("BitNot(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -878,7 +878,7 @@ func BitNot(value int32) int32 {
 
 		const auto value = push_value<int>(100);
 
-		invoke("BitNot(int32)(int32)");
+		invoke("BitNot(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -901,7 +901,7 @@ func BitNot(value int32) int32 {
 
 		const auto value = push_value<int>(100);
 
-		invoke("BitNot(int32)(int32)");
+		invoke("BitNot(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -924,7 +924,7 @@ func BitNot(value int32) int32 {
 
 		const auto value = push_value<int>(100);
 
-		invoke("BitNot(int32)(int32)");
+		invoke("BitNot(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -947,7 +947,7 @@ func BitNot(value int32) int32 {
 
 		const auto value = push_value<int>(100);
 
-		invoke("BitNot(int32)(int32)");
+		invoke("BitNot(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) + sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -974,7 +974,7 @@ func Complex(value int32) int32 {
 
 		const auto value = push_value<int>(123);
 
-		invoke("Complex(int32)(int32)");
+		invoke("Complex(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) * 2);
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -1001,7 +1001,7 @@ func Complex(value int32) int32 {
 
 		const auto value = push_value<int>(123);
 
-		invoke("Complex(int32)(int32)");
+		invoke("Complex(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) * 2);
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
@@ -1035,7 +1035,7 @@ func FuncRef(value int32) int32 {
 
 		const auto value = push_value<int>(10);
 
-		invoke("FuncRef(int32)(int32)");
+		invoke("FuncRef(int32)");
 
 		verify_stack_size(thread, sizeof(arInt32) * 2);
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));

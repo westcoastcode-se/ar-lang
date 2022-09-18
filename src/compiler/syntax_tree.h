@@ -18,6 +18,7 @@ typedef enum arC_syntax_tree_type
 	arC_SYNTAX_TREE_CONST_VALUE,
 	arC_SYNTAX_TREE_LOAD_LOCAL,
 	arC_SYNTAX_TREE_LOAD_ARGUMENT,
+	arC_SYNTAX_TREE_CALLFUNC,
 	arC_SYNTAX_TREE_BINOP,
 	arC_SYNTAX_TREE_UNARYOP
 } arC_syntax_tree_type;
@@ -116,6 +117,16 @@ typedef struct arC_syntax_tree_node_const_value
 	// Closest function node
 	arC_syntax_tree_node_func* closest_function_node;
 } arC_syntax_tree_node_const_value;
+
+// Call another function
+typedef struct arC_syntax_tree_node_callfunc
+{
+	arC_syntax_tree header;
+	// Function to call
+	struct arC_func* func;
+	// Closest function node
+	arC_syntax_tree_node_func* closest_function_node;
+} arC_syntax_tree_node_callfunc;
 
 // Syntax tree for the return statement
 typedef struct arC_syntax_tree_node_return

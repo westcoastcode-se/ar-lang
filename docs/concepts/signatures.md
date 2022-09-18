@@ -17,7 +17,7 @@ Given that we have two packages: `WestCoastCode` and `Engine`. The `Engine` pack
 
 Given a package `Calculator` that have a function `Add` that takes two `int32` arguments and return an `int32` argument, then:
 
-1. The signature is `Calculator#Add(int32,int32)(int32)`
-1. The local signature is `Add(int32,int32)(int32)
+1. The signature is `Calculator#Add(int32,int32)`
+1. The local signature is `Add(int32,int32)`
 
 Please note the `#` character, which separates the package signature and the function's local signature

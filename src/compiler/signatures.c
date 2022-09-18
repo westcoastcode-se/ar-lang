@@ -284,18 +284,6 @@ BOOL arC_signature_func_build(arC_signature_func* sign, const arC_state* s)
 		}
 	}
 	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
-	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
-	if (sign->returns != NULL) {
-		arC_return* ret = sign->returns;
-		const arC_return* const last = sign->returns_end->tail;
-		for (; ret != last; ret = ret->tail) {
-			if (ret != sign->returns)
-				sig = arStrcpy_s(sig, &bytes_left, ",", 1);
-			const arString* type_sig = asC_symbol_signature(ret->type);
-			sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
-		}
-	}
-	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
 	if (bytes_left == 0) {
 		// Size of the signature is too large
 		return arC_message_not_implemented(s, "dynamic set memory size?");
