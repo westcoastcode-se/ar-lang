@@ -29,14 +29,15 @@ BOOL arString_cmp_char(const arString* s, char c)
 	return *s->start == c;
 }
 
-BOOL arString_starts_with(const arString* s, const char* other_string, int length)
+BOOL arString_starts_with(const arString* s, const arString* prefix)
 {
 	int i;
-	if (arString_length(s) < length)
+	const int len = arString_length(prefix);
+	if (arString_length(s) < len)
 		return FALSE;
-	for (i = 0; i < length; ++i)
+	for (i = 0; i < len; ++i)
 	{
-		if (s->start[i] != other_string[i])
+		if (s->start[i] != prefix->start[i])
 			return FALSE;
 	}
 	return TRUE;

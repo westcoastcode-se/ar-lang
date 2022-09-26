@@ -26,7 +26,7 @@ ARLANG_API BOOL arString_cmp(const arString* s1, const arString* s2);
 ARLANG_API BOOL arString_cmp_char(const arString* s, char c);
 
 // Check to see if the string starts with the supplied value
-ARLANG_API BOOL arString_starts_with(const arString* s, const char* other_string, int length);
+ARLANG_API BOOL arString_starts_with(const arString* s, const arString* prefix);
 
 // Check to see if the string ends with the supplied character
 ARLANG_API BOOL arString_ends_with(const arString* s, char c);
