@@ -63,7 +63,8 @@ add_library(arlang
     "src/compiler/source_code.c" 
     "src/compiler/messages.c"
     "src/compiler/optimizations.c"     
-  "src/compiler/signatures.c")
+    "src/compiler/signatures.c"
+    "src/compiler/search.c")
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)
