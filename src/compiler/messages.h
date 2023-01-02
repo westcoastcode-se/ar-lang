@@ -14,5 +14,7 @@ ARLANG_API BOOL arC_message_syntax_error(const struct arC_state* s, const char* 
 ARLANG_API BOOL arC_message_already_defined(const struct arC_state* s, const arString* name);
 ARLANG_API BOOL arC_message_not_defined(const struct arC_state* s, const arString* name);
 ARLANG_API BOOL arC_message_symbol_unresolved(const struct arC_state* s, const arString* name);
+ARLANG_API BOOL arC_message_type_unresolved(const struct arC_state* s, const arString* name);
+ARLANG_API BOOL arC_message_type_recursive_dependency(const struct arC_state* s, const char* relationships);
 
 #endif

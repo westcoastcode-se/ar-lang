@@ -83,6 +83,11 @@ typedef arUint8 arIncode;
 #	define VM_LOCALS_MIN_SIZE (32768)
 #endif
 
+// Size of the memory pool
+#if !defined(ARLANG_MEMORY_POOL_SIZE)
+#	define ARLANG_MEMORY_POOL_SIZE (32768)
+#endif
+
 // Enable memory tracking. This is enabled by default when compiling in debug mode
 #if !defined(VM_MEMORY_TRACKING)
 #	if !defined(NDEBUG)

@@ -12,6 +12,11 @@ void arString_zero(arString* s)
 	s->start = s->end = NULL;
 }
 
+BOOL arString_is_zero(const arString* s)
+{
+	return s->start == s->end;
+}
+
 BOOL arString_cmpsz(const arString* s, const char* other_string, int length)
 {
 	return arStrcmp(s->start, arString_length(s), other_string, length);

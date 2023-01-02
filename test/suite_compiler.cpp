@@ -8,6 +8,8 @@ struct utils_compiler : utils_arlang
 	{
 		// Create a new pipeline to put bytecode into
 		compiler = arCompiler_new();
+		if (compiler == nullptr)
+			throw_(error() << "could not initialize compiler");
 	}
 
 	void afterEach()
@@ -101,21 +103,21 @@ struct utils_compiler_success : utils_compiler
 
 	void beforeEach()
 	{
+		process = nullptr;
+		thread = nullptr;
 		utils_compiler::beforeEach();
-		process = NULL;
-		thread = NULL;
 	}
 
 	void afterEach()
 	{
-		if (thread != NULL) {
+		if (thread != nullptr) {
 			arThread_destroy(thread);
-			thread = NULL;
+			thread = nullptr;
 		}
 
-		if (process != NULL) {
+		if (process != nullptr) {
 			arProcess_destroy(process);
-			process = NULL;
+			process = nullptr;
 		}
 
 		utils_compiler::afterEach();

@@ -83,11 +83,17 @@ typedef struct arB_type
 	arB_inherited_by inherited_by;
 } arB_type;
 
+// Define which marks this type as a void
+#define arB_TYPE_FLAGS_VOID (1 << 0)
+
+// Define which marks a type as a primitive
+#define arB_TYPE_FLAGS_PRIMITIVE (1 << 1)
+
 // Define which marks a type as a pointer
-#define arB_TYPE_FLAGS_PTR (1 << 0)
+#define arB_TYPE_FLAGS_PTR (1 << 2)
 
 // Define which marks a type as an array
-#define arB_TYPE_FLAGS_ARRAY (1 << 1)
+#define arB_TYPE_FLAGS_ARRAY (1 << 3)
 
 // Structure used to help creating a type
 typedef struct arB_type_props

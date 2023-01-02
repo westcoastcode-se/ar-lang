@@ -1,6 +1,5 @@
 #include "messages.h"
 #include "syntax_tree.h"
-#include "symbol.h"
 #include "../arCompiler.h"
 
 #define arC_MESSAGE_PREFIX 'C'
@@ -11,6 +10,8 @@
 #define arC_MESSAGE_ALREADY_DEFINED_STR "'%.*s' is already defined at %d:%d"
 #define arC_MESSAGE_NOT_DEFINED_STR "'%.*s' is not defined but used at %d:%d"
 #define arC_MESSAGE_SYMBOL_UNRESOLVED_STR "'%.*s' is unresolved"
+#define arC_MESSAGE_TYPE_UNRESOLVED_STR "'%.*s' is not a type"
+#define arC_MESSAGE_TYPE_RECURSIVE_DEPENDENCY_STR "recursive dependency chain detected %s"
 
 BOOL arC_message_panic(const arC_state* s, const char* str, arC_message_code code)
 {
@@ -144,6 +145,36 @@ BOOL arC_message_symbol_unresolved(const struct arC_state* s, const arString* na
 		arC_MESSAGE_SYMBOL_UNRESOLVED,
 		arC_MESSAGE_SYMBOL_UNRESOLVED_STR,
 		arString_length(name), name->start);
+	message->line = 0;
+	message->line_offset = 0;
+	message->offset = 0;
+	return FALSE;
+}
+
+BOOL arC_message_type_unresolved(const struct arC_state* s, const arString* name)
+{
+	arMessages* const m = &s->compiler->messages;
+
+	arMessage* const message = arMessages_add(m,
+		arC_MESSAGE_PREFIX,
+		arC_MESSAGE_TYPE_UNRESOLVED,
+		arC_MESSAGE_TYPE_UNRESOLVED_STR,
+		arString_length(name), name->start);
+	message->line = 0;
+	message->line_offset = 0;
+	message->offset = 0;
+	return FALSE;
+}
+
+BOOL arC_message_type_recursive_dependency(const struct arC_state* s, const char* relationships)
+{
+	arMessages* const m = &s->compiler->messages;
+
+	arMessage* const message = arMessages_add(m,
+		arC_MESSAGE_PREFIX,
+		arC_MESSAGE_TYPE_RECURSIVE_DEPENDENCY,
+		arC_MESSAGE_TYPE_RECURSIVE_DEPENDENCY_STR,
+		relationships);
 	message->line = 0;
 	message->line_offset = 0;
 	message->offset = 0;

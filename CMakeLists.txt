@@ -37,6 +37,7 @@ add_library(arlang
     "src/arString.c" 
     "src/arMessage.c" 
     "src/arMemory.c" 
+    "src/arMemoryPool.c"
     "src/arStringPool.c"
     "src/arUtils.c"
     "src/arByteStream.c" 
@@ -59,12 +60,16 @@ add_library(arlang
 
     "src/compiler/syntax_tree.c" 
     "src/compiler/lexer.c" 
-    "src/compiler/symbol.c" 
-    "src/compiler/source_code.c" 
+    "src/compiler/search.c"
+    "src/compiler/signature.c"
     "src/compiler/messages.c"
-    "src/compiler/optimizations.c"     
-    "src/compiler/signatures.c"
-    "src/compiler/search.c")
+
+    #"src/compiler/symbol.c"
+    "src/compiler/source_code.c" 
+    "src/compiler/optimizations.c"    
+    "src/compiler/syntax_tree_compiler.c"
+    "src/compiler/syntax_tree_resolve.c"
+)
 
 # Tests
 set(CMAKE_CXX_STANDARD 17)

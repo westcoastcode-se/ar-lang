@@ -16,6 +16,9 @@ ARLANG_API void arString_setsz(arString* s, const char* src, int len);
 // Initialize the supplied string to zero
 ARLANG_API void arString_zero(arString* s);
 
+// Is the supplied string zero/empty
+ARLANG_API BOOL arString_is_zero(const arString* s);
+
 // Compare two strings
 ARLANG_API BOOL arString_cmpsz(const arString* s, const char* other_string, int length);
 

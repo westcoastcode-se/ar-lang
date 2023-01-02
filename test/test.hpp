@@ -63,5 +63,9 @@ struct test_utils
 		cerr << " - ERROR: " << e.what() << endl; \
 		_tests_success = false; \
 		_tests_failed++;\
-		afterEach(); \
+		try { \
+			afterEach(); \
+		} catch (const std::exception& e) { \
+			cerr << " - ERROR: " << e.what() << endl; \
+		} \
 	}
