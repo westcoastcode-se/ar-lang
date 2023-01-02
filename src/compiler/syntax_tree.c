@@ -172,7 +172,6 @@ arC_syntax_tree_typedef* arC_syntax_tree_typedef_new(const arC_state* s)
 		sizeof(arC_syntax_tree_typedef), arC_SYNTAX_TREE_TYPEDEF);
 	if (p == NULL)
 		return NULL;
-	p->resolved.stack_size = -1;
 	return p;
 }
 
@@ -568,7 +567,7 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	}
 	case arC_SYNTAX_TREE_FUNCDEF: {
 		arC_syntax_tree_funcdef* def = (arC_syntax_tree_funcdef*)st;
-		printf("funcdef name=%.*s", arString_length(&def->name), def->name.start);
+		printf("funcdef name=%.*s", arString_length(&def->signature.name), def->signature.name.start);
 		break;
 	}
 	case arC_SYNTAX_TREE_FUNCDEF_ARGS: {

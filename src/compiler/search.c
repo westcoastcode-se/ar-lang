@@ -18,7 +18,7 @@ arC_syntax_tree_node arC_search_test(arC_syntax_tree_node node, arInt32 types, c
 		}
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF:
-		if (arString_cmp(&((arC_syntax_tree_funcdef*)node)->name, query)) {
+		if (arString_cmp(&((arC_syntax_tree_funcdef*)node)->signature.name, query)) {
 			return node;
 		}
 		break;

@@ -278,7 +278,7 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 	arC_syntax_tree_funcdef* const func = arC_syntax_tree_funcdef_new(s);
 	if (func == NULL)
 		return NULL;
-	func->name = funcName;
+	func->signature.name = funcName;
 
 	// Add tree node for arguments
 	arC_syntax_tree_funcdef_args* const args = arC_syntax_tree_funcdef_args_new(s);
@@ -303,6 +303,7 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 		if (arg == NULL)
 			return NULL;
 		arg->name = t->string;
+		arg->func = func;
 		arC_syntax_tree_add_child(asC_syntax_tree(args), asC_syntax_tree(arg));
 
 		// Type second
@@ -328,6 +329,7 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 		arC_syntax_tree_funcdef_ret* const ret = arC_syntax_tree_funcdef_ret_new(s);
 		if (ret == NULL)
 			return NULL;
+		ret->func = func;
 		arC_syntax_tree_add_child(asC_syntax_tree(rets), asC_syntax_tree(ret));
 		rets->count++;
 
@@ -349,6 +351,7 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 			arC_syntax_tree_funcdef_ret* const ret = arC_syntax_tree_funcdef_ret_new(s);
 			if (ret == NULL)
 				return NULL;
+			ret->func = func;
 			arC_syntax_tree_add_child(asC_syntax_tree(rets), asC_syntax_tree(ret));
 			rets->count++;
 
@@ -449,6 +452,7 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 		// Automatically add the root import to the package
 		arC_syntax_tree_import* const root = arC_syntax_tree_import_new(s);
 		root->resolved.ref = c->root_node;
+		asC_syntax_tree_phase_set(root, arC_SYNTAX_TREE_PHASE_RESOLVE);
 		arC_syntax_tree_package_add_import(package, root);
 
 		// Add the new package to the parent package

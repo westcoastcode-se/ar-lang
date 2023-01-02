@@ -26,6 +26,8 @@ typedef enum arC_syntax_tree_type
 	arC_SYNTAX_TREE_FUNCDEF_ARG,
 	arC_SYNTAX_TREE_FUNCDEF_RETS,
 	arC_SYNTAX_TREE_FUNCDEF_RET,
+	arC_SYNTAX_TREE_FUNCDEF_LOCALS,
+	arC_SYNTAX_TREE_FUNCDEF_LOCAL,
 	arC_SYNTAX_TREE_FUNCDEF_BODY,
 
 	arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN,
@@ -37,12 +39,18 @@ typedef enum arC_syntax_tree_type
 	arC_SYNTAX_TREE_FUNCDEF_BODY_CALLFUNC,
 } arC_syntax_tree_type;
 
+// Bits used to keep track of which phase a syntax_tree node has completed
+typedef enum arC_syntax_tree_phase_bits {
+	arC_SYNTAX_TREE_PHASE_RESOLVE = (1 << 0),
+	arC_SYNTAX_TREE_PHASE_COMPILE = (1 << 1)
+} arC_syntax_tree_phase_bits;
+typedef arInt32 arC_syntax_tree_phase;
+
 // Base type for all syntax tree nodes
 typedef struct arC_syntax_tree
 {
 	// The type of the tree node
-	arC_syntax_tree_type type;
-	
+	arC_syntax_tree_type type;	
 	// Parent tree node
 	struct arC_syntax_tree* parent;
 	// Children
@@ -53,7 +61,8 @@ typedef struct arC_syntax_tree
 	// Siblings
 	struct arC_syntax_tree* head;
 	struct arC_syntax_tree* tail;
-
+	// Which phases this node is processed
+	arC_syntax_tree_phase phase;
 	// Version, used as a way to know if we are iterating over a tree while being updated
 	// at the same time
 	arInt32 version;
@@ -61,6 +70,9 @@ typedef struct arC_syntax_tree
 
 #define asC_syntax_tree(st) (&st->header)
 #define asC_syntax_tree_type(st) (st->header.type)
+#define asC_syntax_tree_phase(st) (st->header.phase)
+#define asC_syntax_tree_phase_set(st, p) (st->header.phase |= p)
+#define asC_syntax_tree_phase_done(st, phase) ((asC_syntax_tree_phase(st) & phase) == phase)
 
 // The package statement
 typedef struct arC_syntax_tree_package
@@ -170,18 +182,21 @@ typedef struct arC_syntax_tree_funcdef
 {
 	arC_syntax_tree header;
 
-	// Name of the function
-	arString name;
+	// The signature of the function. It contains both the local and full signature
+	arC_signature signature;
 	// The arguments
 	struct arC_syntax_tree_funcdef_args* args;
 	// The returns
 	struct arC_syntax_tree_funcdef_rets* rets;
+	// Locals
+	struct arC_syntax_tree_funcdef_locals* locals;
 	// The body
 	struct arC_syntax_tree_funcdef_body* body;
-	// Properties set during the resolve phase
-	struct funcdef_resolved {
-		arB_func* func;
-	} resolved;
+	// Properties set during the compile phase
+	struct funcdef_compiled {
+		// The type symbol
+		arB_func* symbol;
+	} compiled;
 } arC_syntax_tree_funcdef;
 
 // The function arguments block
@@ -200,12 +215,20 @@ typedef struct arC_syntax_tree_funcdef_arg
 
 	// Name of the argument
 	arString name;
+	// The function this argument is part of
+	struct arC_syntax_tree_funcdef* func;
 	// Reference to the type (is also a child of the argument)
 	struct arC_syntax_tree_typeref* type;
 	// Properties set during the resolve phase
-	struct funcarg_resolved {
-		arB_arg* arg;
+	struct funcdef_arg_resolved {
+		// The type
+		struct arC_syntax_tree_typedef* def;
 	} resolved;
+	// Properties set during the compile phase
+	struct funcdef_arg_compiled {
+		// Argument
+		arB_arg* symbol;
+	} compiled;
 } arC_syntax_tree_funcdef_arg;
 
 // The function returns block
@@ -221,14 +244,54 @@ typedef struct arC_syntax_tree_funcdef_rets
 typedef struct arC_syntax_tree_funcdef_ret
 {
 	arC_syntax_tree header;
+	// The function this return is part of
+	struct arC_syntax_tree_funcdef* func;
 	// TODO: Add support for named returns?
 	// Reference to the type (is also a child of the argument)
 	struct arC_syntax_tree_typeref* type;
 	// Properties set during the resolve phase
-	struct funcret_resolved {
-		arB_return* ret;
+	struct funcdef_ret_resolved {
+		// The type
+		struct arC_syntax_tree_typedef* def;
 	} resolved;
+	// Properties set during the compile phase
+	struct funcdef_ret_compiled {
+		// Return
+		arB_return* symbol;
+	} compiled;
 } arC_syntax_tree_funcdef_ret;
+
+// The function locals block
+typedef struct arC_syntax_tree_funcdef_locals
+{
+	arC_syntax_tree header;
+
+	// Number of locals
+	arInt32 count;
+} arC_syntax_tree_funcdef_locals;
+
+// A local
+typedef struct arC_syntax_tree_funcdef_local
+{
+	arC_syntax_tree header;
+
+	// Name of the local
+	arString name;
+	// The function this local is part of
+	struct arC_syntax_tree_funcdef* func;
+	// Reference to the type (is also a child of the locals)
+	struct arC_syntax_tree_typeref* type;
+	// Properties set during the resolve phase
+	struct funcdef_local_resolved {
+		// The type
+		struct arC_syntax_tree_typedef* def;
+	} resolved;
+	// Properties set during the compile phase
+	struct funcdef_local_compiled {
+		// Local
+		arB_local* symbol;
+	} compiled;
+} arC_syntax_tree_funcdef_local;
 
 // The body for the function
 typedef struct arC_syntax_tree_funcdef_body
@@ -274,6 +337,11 @@ typedef struct arC_syntax_tree_funcdef_body_unaryop
 	arC_syntax_tree_funcdef* closest_function_node;
 } arC_syntax_tree_funcdef_body_unaryop;
 
+// Get the signature of the syntax tree node
+#define asC_syntax_tree_signature(st) &st->signature.signature
+// Get the name of the syntax tree node
+#define asC_syntax_tree_name(st) &st->signature.name
+
 // The state
 typedef struct arC_state
 {
@@ -295,6 +363,7 @@ typedef struct arC_state
 
 #define asC_state(state, parent_node, package_node, func_node, type_node) \
 	{ state->compiler, state->memory_pool, state->token, parent_node, package_node, func_node, type_node }
+
 
 // Get a string pool associated with the supplied state
 arStringPool* arC_state_get_string_pool(const arC_state* s);
