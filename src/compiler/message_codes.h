@@ -39,6 +39,8 @@ typedef enum arC_message_code
 	// A type is part of a recursive dependency
 	arC_MESSAGE_TYPE_RECURSIVE_DEPENDENCY,
 
+	// A feature is not implemented yet
+	arC_MESSAGE_TYPE_FEATURE_MISSING,
 } arC_message_code;
 
 #endif

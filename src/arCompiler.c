@@ -62,7 +62,10 @@ arC_syntax_tree_typedef* arCompiler_root_add_type(const arC_state* s, arC_syntax
 	node->flags = flags;
 	node->resolved.data_type = data_type;
 	node->resolved.stack_size = size;
+	node->resolved.signature = *name;
 	node->package = root;
+	node->compiled.symbol = arB_type_new(name);
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	arC_syntax_tree_add_child(asC_syntax_tree(root), asC_syntax_tree(node));
 	return node;
 }
@@ -370,6 +373,7 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 			arC_syntax_tree_typeref* const type = arCompiler_parse_typeref(t, s);
 			if (type == NULL)
 				return NULL;
+			ret->type = type;
 			arC_syntax_tree_add_child(asC_syntax_tree(ret), asC_syntax_tree(type));
 		}
 		// Skip ')'
@@ -554,7 +558,7 @@ arByte* arCompiler_compile(arCompiler* c)
 	if (!arC_syntax_tree_resolve_references(&state, asC_syntax_tree(c->root_node)))
 		return NULL;
 
-	arC_syntax_tree_stdout(asC_syntax_tree(c->root_node));
+	//arC_syntax_tree_stdout(asC_syntax_tree(c->root_node));
 
 	// Optimize tree
 	if (!arC_syntax_tree_optimize(&state, c->root_node))

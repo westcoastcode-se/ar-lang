@@ -95,15 +95,15 @@ void arC_syntax_tree_detach(arC_syntax_tree_node node)
 
 	// If the node is the last child
 	if (parent->child_tail == node) {
-		parent->child_tail = node->head;
 		parent->child_tail->head = node->head;
+		parent->child_tail = node->head;
 		node->head = NULL;
 	}
 
 	// If the node is the first child
 	if (parent->child_head == node) {
-		parent->child_head = node->tail;
 		parent->child_head->tail = node->tail;
+		parent->child_head = node->tail;
 		node->tail = NULL;
 	}
 

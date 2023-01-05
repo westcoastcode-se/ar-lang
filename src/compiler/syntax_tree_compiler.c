@@ -155,6 +155,14 @@ BOOL arC_syntax_tree_compile_funcdef(const arC_state* s, arC_syntax_tree_funcdef
 	}
 	arB_func_body_end(p->compiled.symbol);
 
+
+	// TODO: Add support for functions in functions
+	if (p->header.parent->type != arC_SYNTAX_TREE_PACKAGE) {
+		return arC_message_not_implemented(s, "#7 add support for functions inside functions");
+	}
+	arC_syntax_tree_package* package = (arC_syntax_tree_package*)p->header.parent;
+	arB_package_add_func(package->compiled.symbol, p->compiled.symbol);
+
 	asC_syntax_tree_phase_set(p, arC_SYNTAX_TREE_PHASE_COMPILE);
 	return TRUE;
 }

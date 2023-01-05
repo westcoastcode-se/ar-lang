@@ -48,12 +48,13 @@ const arC_syntax_tree* arC_recursion_tracker_find(const arC_recursion_tracker* r
 	return NULL;
 }
 
-void arC_syntax_tree_resolve_package_signature(const arC_state* s, arC_syntax_tree_package* ref)
+BOOL arC_syntax_tree_resolve_package_signature(const arC_state* s, arC_syntax_tree_package* ref)
 {
 	// Calculate the package signature
 	arByte signature_data[1024];
 	arByte* sig = signature_data;
-	if (ref->header.parent != NULL) {
+	// If We don't have a parent AND the parent isn't the root parent
+	if (ref->header.parent != NULL && ref->header.parent->parent) {
 		arC_syntax_tree_package* const parent = (arC_syntax_tree_package*)ref->header.parent;
 		sig = arString_cpy(sig, &parent->resolve.signature);
 		sig = arStrcpy(sig, ".", 1);
@@ -61,9 +62,10 @@ void arC_syntax_tree_resolve_package_signature(const arC_state* s, arC_syntax_tr
 	sig = arString_cpy(sig, &ref->name);
 	const arString* const result = arStringPool_stringsz(arC_state_get_string_pool(s), signature_data, (int)(sig - signature_data));
 	if (result == NULL)
-		arC_message_out_of_memory(s);
+		return arC_message_out_of_memory(s);
 	else
 		ref->resolve.signature = *result;
+	return TRUE;
 }
 
 BOOL arC_syntax_tree_resolve_package(const arC_state* s, const arC_recursion_tracker* rt,
@@ -175,14 +177,14 @@ BOOL arC_syntax_tree_resolve_arg(const arC_state* s, const arC_recursion_tracker
 	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
-	if (node->type == NULL) {
-		return arC_message_not_implemented(s, "no type defined for argument");
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node))) {
+		return FALSE;
 	}
 
 	node->compiled.symbol = arB_arg_new();
 	arB_arg_set_name(node->compiled.symbol, &node->name);
 	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
+	return TRUE;
 }
 
 BOOL arC_syntax_tree_resolve_ret(const arC_state* s, const arC_recursion_tracker* rt,
@@ -191,13 +193,13 @@ BOOL arC_syntax_tree_resolve_ret(const arC_state* s, const arC_recursion_tracker
 	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
-	if (node->type == NULL) {
-		return arC_message_not_implemented(s, "no type defined for return");
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node))) {
+		return FALSE;
 	}
 
 	node->compiled.symbol = arB_return_new();
 	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
+	return TRUE;
 }
 
 BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tracker* rt, 
@@ -241,6 +243,52 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tra
 	return TRUE;
 }
 
+BOOL arC_syntax_tree_resolve_funcdef_signature(const arC_state* s, arC_syntax_tree_funcdef* node)
+{
+	// Calculate the package signature
+	int bytes_left = 1024;
+	arByte signature_data[1024];
+	arByte* sig = signature_data;
+
+	// TODO: Add support for functions in functions
+	if (node->header.parent->type != arC_SYNTAX_TREE_PACKAGE) {
+		return arC_message_not_implemented(s, "#7 add support for functions inside functions");
+	}
+
+	arC_syntax_tree_package* package = (arC_syntax_tree_package*)node->header.parent;
+	sig = arString_cpy_s(sig, &bytes_left, &package->resolve.signature);
+	if (bytes_left == 0) return arC_message_not_implemented(s, "dynamic set memory size?");
+	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
+	if (bytes_left == 0) return arC_message_not_implemented(s, "dynamic set memory size?");
+	sig = arString_cpy_s(sig, &bytes_left, &node->name);
+	if (bytes_left == 0) return arC_message_not_implemented(s, "dynamic set memory size?");
+
+	sig = arStrcpy_s(sig, &bytes_left, "(", 1);
+	if (bytes_left == 0) return arC_message_not_implemented(s, "dynamic set memory size?");
+	if (node->args != NULL) {
+		arC_syntax_tree* arg_node = node->args->header.child_head;
+		while (arg_node) {
+			if (arg_node != node->args->header.child_tail) {
+				sig = arStrcpy_s(sig, &bytes_left, ",", 1);
+			}
+			arC_syntax_tree_funcdef_arg* const arg = (arC_syntax_tree_funcdef_arg*)arg_node;
+			arC_syntax_tree_typedef* const type = arg->type->resolved.def;
+			const arString* type_sig = &type->resolved.signature;
+			sig = arStrcpy_s(sig, &bytes_left, type_sig->start, arString_length(type_sig));
+			arg_node = arg_node->tail;
+		}
+	}
+	sig = arStrcpy_s(sig, &bytes_left, ")", 1);
+	if (bytes_left == 0) return arC_message_not_implemented(s, "dynamic set memory size?");
+
+	const arString* const result = arStringPool_stringsz(arC_state_get_string_pool(s), signature_data, (int)(sig - signature_data));
+	if (result == NULL)
+		return arC_message_out_of_memory(s);
+	else
+		node->resolve.signature = *result;
+	return TRUE;
+}
+
 BOOL arC_syntax_tree_resolve_funcdef(const arC_state* s, const arC_recursion_tracker* rt,
 	arC_syntax_tree_funcdef* node)
 {
@@ -248,7 +296,9 @@ BOOL arC_syntax_tree_resolve_funcdef(const arC_state* s, const arC_recursion_tra
 		return TRUE;
 	node->compiled.symbol = arB_func_new(&node->name);
 	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node)))
+		return FALSE;
+	return arC_syntax_tree_resolve_funcdef_signature(s, node);
 }
 
 BOOL arC_syntax_tree_resolve_funcdef_body_binop(const arC_state* s, const arC_recursion_tracker* rt,
