@@ -50,6 +50,7 @@ arC_syntax_tree_node arC_syntax_tree_merge_binop(const arC_state* s, arC_syntax_
 			return asC_syntax_tree(binop);
 		}
 		// Return the node which is considered the "merged" node
+		arC_syntax_tree_detach(asC_syntax_tree(left_value));
 		return asC_syntax_tree(left_value);
 	}
 	else {
@@ -103,6 +104,7 @@ arC_syntax_tree_node arC_syntax_tree_merge_unaryop(const arC_state* s, arC_synta
 			return asC_syntax_tree(unaryop);
 		}
 		// Return the node which is considered the "merged" node
+		arC_syntax_tree_detach(asC_syntax_tree(right_value));
 		return asC_syntax_tree(right_value);
 	}
 	return asC_syntax_tree(unaryop);

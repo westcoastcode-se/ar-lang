@@ -6,6 +6,23 @@
 #include "../arStringPool.h"
 #include "../arUtils.h"
 
+BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion_tracker* rt,
+	const arC_syntax_tree* st);
+
+// Resolve all child nodes
+BOOL arC_syntax_tree_resolve_children(const arC_state* s, const arC_recursion_tracker* rt,
+	const arC_syntax_tree* st)
+{
+	arC_syntax_tree_node child = st->child_head;
+	while (child) {
+		const arC_recursion_tracker child_rt = arC_recursion_tracker_next(rt, child);
+		if (!arC_syntax_tree_resolve_references0(s, &child_rt, child))
+			return FALSE;
+		child = child->tail;
+	}
+	return TRUE;
+}
+
 // Is the supplied node part of the recursion tree? Then give us the item which closest path to where
 // the recursion happened in the first place
 const arC_syntax_tree* arC_recursion_tracker_find(const arC_recursion_tracker* rt, const arC_syntax_tree* st)
@@ -57,12 +74,16 @@ BOOL arC_syntax_tree_resolve_package(const arC_state* s, const arC_recursion_tra
 	arC_syntax_tree_resolve_package_signature(s, ref);
 	ref->compiled.symbol = arB_package_new(&ref->name);
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return TRUE;
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref));
 }
 
 BOOL arC_syntax_tree_resolve_import(const arC_state* s, const arC_recursion_tracker* rt,
 	arC_syntax_tree_import* ref)
 {
+	// Resolve import block nodes before resolving import node
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref)))
+		return FALSE;
+
 	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
@@ -90,7 +111,8 @@ BOOL arC_syntax_tree_resolve_import(const arC_state* s, const arC_recursion_trac
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_resolve_import_block(const arC_state* s, arC_syntax_tree_import_block* ref)
+BOOL arC_syntax_tree_resolve_import_block(const arC_state* s, const arC_recursion_tracker* rt, 
+	arC_syntax_tree_import_block* ref)
 {
 	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
@@ -121,41 +143,11 @@ BOOL arC_syntax_tree_resolve_import_block(const arC_state* s, arC_syntax_tree_im
 		ref->resolved.ref = (arC_syntax_tree_package*)hit;
 	}
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return TRUE;
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref));
 }
 
-BOOL arC_syntax_tree_resolve_arg(const arC_state* s, const arC_recursion_tracker* rt, 
-	arC_syntax_tree_funcdef_arg* arg)
-{
-	if (asC_syntax_tree_phase_done(arg, arC_SYNTAX_TREE_PHASE_RESOLVE))
-		return TRUE;
-
-	if (arg->type == NULL) {
-		return arC_message_not_implemented(s, "no type defined for argument");
-	}
-
-	arg->compiled.symbol = arB_arg_new();
-	arB_arg_set_name(arg->compiled.symbol, &arg->name);
-	asC_syntax_tree_phase_set(arg, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return TRUE;
-}
-
-BOOL arC_syntax_tree_resolve_ret(const arC_state* s, const arC_recursion_tracker* rt,
-	arC_syntax_tree_funcdef_ret* ret)
-{
-	if (asC_syntax_tree_phase_done(ret, arC_SYNTAX_TREE_PHASE_RESOLVE))
-		return TRUE;
-
-	if (ret->type == NULL) {
-		return arC_message_not_implemented(s, "no type defined for return");
-	}
-
-	ret->compiled.symbol = arB_return_new();
-	asC_syntax_tree_phase_set(ret, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return TRUE;
-}
-
-BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, arC_syntax_tree_typeref* ref)
+BOOL arC_syntax_tree_resolve_typeref_block(const arC_state* s, const arC_recursion_tracker* rt, 
+	arC_syntax_tree_typeref_block* ref)
 {
 	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
@@ -172,28 +164,106 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, arC_syntax_tree_typeref
 		// TODO: What if multiple hits are found?
 		ref->resolved.def = hit;
 	}
+
+	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref));
+}
+
+BOOL arC_syntax_tree_resolve_arg(const arC_state* s, const arC_recursion_tracker* rt, 
+	arC_syntax_tree_funcdef_arg* node)
+{
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (node->type == NULL) {
+		return arC_message_not_implemented(s, "no type defined for argument");
+	}
+
+	node->compiled.symbol = arB_arg_new();
+	arB_arg_set_name(node->compiled.symbol, &node->name);
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
+}
+
+BOOL arC_syntax_tree_resolve_ret(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_funcdef_ret* node)
+{
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (node->type == NULL) {
+		return arC_message_not_implemented(s, "no type defined for return");
+	}
+
+	node->compiled.symbol = arB_return_new();
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
+}
+
+BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tracker* rt, 
+	arC_syntax_tree_typeref* ref)
+{
+	// Resolve type ref block nodes before resolving typeref node
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref)))
+		return FALSE;
+
+	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (ref->resolved.def == NULL) {
+		// The last block in the "typeref block" tree should point to the actual type we are referring to.
+		// If it's ref is NULL then the type is not found
+		const arC_syntax_tree_typeref_block* block = (const arC_syntax_tree_typeref_block*)ref->header.child_head;
+		while (1) {
+			// Check to see if the block failed to be resolved
+			if (block->resolved.def == NULL) {
+				// TODO: The package name should be the signature and not the block name
+				return arC_message_symbol_unresolved(s, &block->name);
+			}
+			// Current block is the last last element in the parent-child relationship
+			if (block->header.child_head == NULL) {
+				break;
+			}
+			block = (const arC_syntax_tree_typeref_block*)ref->header.child_head;
+			ASSERT_NOT_NULL(block);
+		}
+
+		// The last block must be a type
+		if (block->resolved.def->type != arC_SYNTAX_TREE_TYPEDEF) {
+			arC_message_type_unresolved(s, &block->name);
+			return FALSE;
+		}
+
+		// TODO: What if multiple hits are found?
+		ref->resolved.def = (arC_syntax_tree_typedef*)block->resolved.def;
+	}
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
 
 BOOL arC_syntax_tree_resolve_funcdef(const arC_state* s, const arC_recursion_tracker* rt,
-	arC_syntax_tree_funcdef* def)
+	arC_syntax_tree_funcdef* node)
 {
-	def->compiled.symbol = arB_func_new(&def->name);
-	asC_syntax_tree_phase_set(def, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return TRUE;
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+	node->compiled.symbol = arB_func_new(&node->name);
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
 }
 
 BOOL arC_syntax_tree_resolve_funcdef_body_binop(const arC_state* s, const arC_recursion_tracker* rt,
-	arC_syntax_tree_funcdef_body_binop* def)
+	arC_syntax_tree_funcdef_body_binop* node)
 {
-	arC_syntax_tree_node left = def->header.child_head;
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	arC_syntax_tree_node left = node->header.child_head;
 	arC_syntax_tree_node right = left->tail;
 	
 	// TODO: ??
 	
-	asC_syntax_tree_phase_set(def, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return TRUE;
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
 }
 
 BOOL arC_syntax_tree_resolve_funcdef_body_const_value(const arC_state* s, const arC_recursion_tracker* rt,
@@ -202,21 +272,8 @@ BOOL arC_syntax_tree_resolve_funcdef_body_const_value(const arC_state* s, const 
 	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
-	if (node->resolved.def == NULL) {
-		const arString str = node->type->name;
-		arC_search_upwards_context ctx;
-		arC_search_upwards_begin(asC_syntax_tree(node), &str, node->type->valid_types,
-			arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
-		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-		if (hit == NULL) {
-			arC_message_symbol_unresolved(s, &node->type->name);
-			return FALSE;
-		}
-		// TODO: What if multiple hits are found?
-		node->resolved.def = (arC_syntax_tree_typedef*)hit;
-	}
 	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return TRUE;
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
 }
 
 BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tracker* rt, 
@@ -227,6 +284,11 @@ BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tra
 	// The type is already resolved
 	if (asC_syntax_tree_phase_done(def, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
+	def->compiled.symbol = arB_type_new(&def->name);
+
+	// Resolve children first
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(def)))
+		return FALSE;
 
 	const arC_syntax_tree* found = arC_recursion_tracker_find(rt, asC_syntax_tree(def));
 	if (found != NULL) {
@@ -236,64 +298,50 @@ BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tra
 	}
 
 	// Does this type inherit from another type in a way that affects it's memory consumption
-	if (def->inherits_from != NULL && def->resolved.inherits_from == NULL) {
-		const arString str = def->inherits_from->name;
-		arC_search_upwards_context ctx;
-		arC_search_upwards_begin(asC_syntax_tree(def), &str,
-			def->inherits_from->valid_types,
-			arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
-		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-		if (hit == NULL) {
-			arC_message_symbol_unresolved(s, &str);
-			return FALSE;
-		}
-		assert(hit->type == arC_SYNTAX_TREE_TYPEDEF &&
-			"add support for other inherit-types here, such as functions");
-		def->resolved.inherits_from = (arC_syntax_tree_typedef*)hit;
+	if (def->inherits_from != NULL) {
+		arC_syntax_tree_typeref* const inherits_from = def->inherits_from;
+		if (inherits_from->resolved.def == NULL) {
+			const arC_recursion_tracker child_rt1 = arC_recursion_tracker_next(rt, asC_syntax_tree(inherits_from));
+			if (!arC_syntax_tree_resolve_typeref(s, &child_rt1, inherits_from))
+				return FALSE;
 
-		// Try to resolve the inherited type. This is so that we can:
-		// 1. Know the total stack size
-		// 2. Know that recursion is not detected
-		// 
-		// The following recursions should be prevented:
-		// type A : B {}
-		// type B : A {}
-		const arC_recursion_tracker child_rt = arC_recursion_tracker_next(rt, 
-			asC_syntax_tree(def->resolved.inherits_from));
-		if (!arC_syntax_tree_resolve_typedef(s, &child_rt, def->resolved.inherits_from)) {
-			return FALSE;
+			// Try to resolve the inherited type. This is so that we can:
+			// 1. Know the total stack size
+			// 2. Know that recursion is not detected
+			// 
+			// The following recursions should be prevented:
+			// type A : B {}
+			// type B : A {}
+			const arC_recursion_tracker child_rt2 = arC_recursion_tracker_next(rt, 
+				asC_syntax_tree(inherits_from->resolved.def));
+			if (!arC_syntax_tree_resolve_typedef(s, &child_rt2, inherits_from->resolved.def)) {
+				return FALSE;
+			}
 		}
 	}
 
 	// If this type is indirectly dependent of a specific type. This type of dependency does not always affect
 	// the type's underlying memory consumption.
-	if (def->of_type != NULL && def->resolved.of_type == NULL) {
-		const arString str = def->of_type->name;
-		arC_search_upwards_context ctx;
-		arC_search_upwards_begin(asC_syntax_tree(def), &str,
-			def->of_type->valid_types,
-			arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
-		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-		if (def->resolved.of_type == NULL) {
-			arC_message_symbol_unresolved(s, &def->of_type->name);
-			return FALSE;
-		}
-		assert(hit->type == arC_SYNTAX_TREE_TYPEDEF &&
-			"add support for other inherit-types here, such as functions");
-		def->resolved.of_type = (arC_syntax_tree_typedef*)hit;
-
-		// If this is an array then have to resolve the underlying type because we
-		// have to know about it's memory consumption
-		// 
-		// The following recursions should be prevented:
-		// type A : struct {
-		//   Value [2]A
-		// }
-		if ((def->flags & arB_TYPE_FLAGS_ARRAY) != 0) {
-			const arC_recursion_tracker child_rt = arC_recursion_tracker_next(rt, 
-				asC_syntax_tree(def->resolved.of_type));
-			if (!arC_syntax_tree_resolve_typedef(s, &child_rt, def->resolved.of_type)) {
+	if (def->of_type != NULL) {
+		arC_syntax_tree_typeref* const of_type = def->of_type;
+		if (of_type->resolved.def == NULL) {
+			const arC_recursion_tracker child_rt = arC_recursion_tracker_next(rt, asC_syntax_tree(of_type));
+			if (!arC_syntax_tree_resolve_typeref(s, &child_rt, of_type))
 				return FALSE;
+
+			// If this is an array then have to resolve the underlying type because we
+			// have to know about it's memory consumption
+			// 
+			// The following recursions should be prevented:
+			// type A : struct {
+			//   Value [2]A
+			// }
+			if ((def->flags & arB_TYPE_FLAGS_ARRAY) != 0) {
+				const arC_recursion_tracker child_rt = arC_recursion_tracker_next(rt, 
+					asC_syntax_tree(of_type->resolved.def));
+				if (!arC_syntax_tree_resolve_typedef(s, &child_rt, of_type->resolved.def)) {
+					return FALSE;
+				}
 			}
 		}
 	}
@@ -304,9 +352,10 @@ BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tra
 
 	// Calculate the stack size etc
 	def->resolved.stack_size = 0;
-	if (def->resolved.inherits_from != NULL) {
-		def->resolved.stack_size += def->resolved.inherits_from->resolved.stack_size;
-		def->resolved.data_type = def->resolved.inherits_from->resolved.data_type;
+	if (def->inherits_from != NULL) {
+		arC_syntax_tree_typedef* const inherits_from = def->inherits_from->resolved.def;
+		def->resolved.stack_size += inherits_from->resolved.stack_size;
+		def->resolved.data_type = inherits_from->resolved.data_type;
 	}
 	if ((def->flags & arB_TYPE_FLAGS_PTR) != 0) {
 		// All pointers inherit from *void
@@ -315,7 +364,6 @@ BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tra
 	}
 	// TODO: Iterate over all members
 
-	def->compiled.symbol = arB_type_new(&def->name);
 	asC_syntax_tree_phase_set(def, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
@@ -333,22 +381,26 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		if (!arC_syntax_tree_resolve_package(s, rt, (arC_syntax_tree_package*)st))
 			return FALSE;
 		break;
+	case arC_SYNTAX_TREE_IMPORT:
+		if (!arC_syntax_tree_resolve_import(s, rt, (arC_syntax_tree_import*)st))
+			return FALSE;
+		break;
 	case arC_SYNTAX_TREE_IMPORT_BLOCK:
-		if (!arC_syntax_tree_resolve_import_block(s, (arC_syntax_tree_import_block*)st))
+		if (!arC_syntax_tree_resolve_import_block(s, rt, (arC_syntax_tree_import_block*)st))
 			return FALSE;
 		break;
 	case arC_SYNTAX_TREE_TYPEDEF:
 		if (!arC_syntax_tree_resolve_typedef(s, rt, (arC_syntax_tree_typedef*)st))
 			return FALSE;
 		break;
-	case arC_SYNTAX_TREE_TYPEDEF_MEMBERDEF:
-		break;
 	case arC_SYNTAX_TREE_TYPEREF:
-		if (!arC_syntax_tree_resolve_typeref(s, (arC_syntax_tree_typeref*)st))
+		if (!arC_syntax_tree_resolve_typeref(s, rt, (arC_syntax_tree_typeref*)st))
 			return FALSE;
 		break;
-	case arC_SYNTAX_TREE_TYPEREF_MEMBERREF:
-		break;		
+	case arC_SYNTAX_TREE_TYPEREF_BLOCK:
+		if (!arC_syntax_tree_resolve_typeref_block(s, rt, (arC_syntax_tree_typeref_block*)st))
+			return FALSE;
+		break;
 	case arC_SYNTAX_TREE_FUNCDEF_ARG:
 		if (!arC_syntax_tree_resolve_arg(s, rt, (arC_syntax_tree_funcdef_arg*)st))
 			return FALSE;
@@ -365,27 +417,14 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		if (!arC_syntax_tree_resolve_funcdef_body_const_value(s, rt, (arC_syntax_tree_funcdef_body_const_value*)st))
 			return FALSE;
 		break;
-	}
-
-	// Resolve children
-	arC_syntax_tree_node child = st->child_head;
-	while (child) {
-		const arC_recursion_tracker child_rt = arC_recursion_tracker_next(rt, child);
-		if (!arC_syntax_tree_resolve_references0(s, &child_rt, child))
-			return FALSE;
-		child = child->tail;
-	}
-
-	// Resolve after
-	switch (st->type)
-	{
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP:
 		if (!arC_syntax_tree_resolve_funcdef_body_binop(s, rt, (arC_syntax_tree_funcdef_body_binop*)st))
 			return FALSE;
 		break;
-	case arC_SYNTAX_TREE_IMPORT:
-		if (!arC_syntax_tree_resolve_import(s, rt, (arC_syntax_tree_import*)st))
+	default:
+		if (!arC_syntax_tree_resolve_children(s, rt, st)) {
 			return FALSE;
+		}
 		break;
 	}
 

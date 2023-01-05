@@ -50,11 +50,17 @@ arC_syntax_tree_typedef* arCompiler_root_add_type(const arC_state* s, arC_syntax
 	arC_syntax_tree_typedef* const node = arC_syntax_tree_typedef_new(s);
 	if (node == NULL)
 		return NULL;
+	if (of_type != NULL) {
+		node->of_type = arC_syntax_tree_typeref_known(s, name, BIT(arC_SYNTAX_TREE_TYPEDEF));
+		node->of_type->resolved.def = of_type;
+	}
+	if (inherits_from != NULL) {
+		node->inherits_from = arC_syntax_tree_typeref_known(s, name, BIT(arC_SYNTAX_TREE_TYPEDEF));
+		node->inherits_from->resolved.def = inherits_from;
+	}
 	node->name = *name;
 	node->flags = flags;
 	node->resolved.data_type = data_type;
-	node->resolved.of_type = of_type;
-	node->resolved.inherits_from = inherits_from;
 	node->resolved.stack_size = size;
 	node->package = root;
 	arC_syntax_tree_add_child(asC_syntax_tree(root), asC_syntax_tree(node));
@@ -223,32 +229,38 @@ arC_syntax_tree_typeref* arCompiler_parse_typeref(arC_token* t, const arC_state*
 
 	arC_syntax_tree_package* closet_package = s->package_node;
 	arC_syntax_tree_node parent = s->parent_node;
-	arC_syntax_tree_typeref* const result = arC_syntax_tree_typeref_new(s);
-	result->name = t->string;
-	result->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF) | BIT(arC_SYNTAX_TREE_PACKAGE);
-	arC_syntax_tree_typeref* prev = result;
+	arC_syntax_tree_typeref* const typeref = arC_syntax_tree_typeref_new(s);
+
+	// Add the first block (it might be a type or a package)
+	arC_syntax_tree_typeref_block* block = arC_syntax_tree_typeref_block_new(s);
+	block->name = t->string;
+	arC_syntax_tree_add_child(asC_syntax_tree(typeref), asC_syntax_tree(block));
 
 	arC_token_next(t);
+	// If the next token is not a "." then we know for sure that we are refering to a typedef
 	if (t->type != ARTOK_DOT) {
-		prev->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF);
-		return result;
+		block->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF);
+		return typeref;
+	}
+	else {
+		block->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF) | BIT(arC_SYNTAX_TREE_PACKAGE);
 	}
 
 	while (TRUE) {
-		arC_syntax_tree_typeref* const ref = arC_syntax_tree_typeref_new(s);
-		ref->name = t->string;
-		arC_syntax_tree_add_child(asC_syntax_tree(prev), asC_syntax_tree(ref));
+		block = arC_syntax_tree_typeref_block_new(s);
+		block->name = t->string;
+		arC_syntax_tree_add_child(asC_syntax_tree(typeref), asC_syntax_tree(block));
 
 		arC_token_next(t);
 		if (t->type != ARTOK_DOT) {
-			prev->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF);
-			return result;
+			block->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF);
+			break;
 		}
 		else {
-			ref->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF) | BIT(arC_SYNTAX_TREE_PACKAGE);
-			prev = ref;
+			block->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF) | BIT(arC_SYNTAX_TREE_PACKAGE);
 		}
 	}
+	return typeref;
 }
 
 // Create a function

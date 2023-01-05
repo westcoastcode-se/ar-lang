@@ -19,6 +19,7 @@ typedef enum arC_syntax_tree_type
 	arC_SYNTAX_TREE_TYPEDEF_MEMBERDEF,
 
 	arC_SYNTAX_TREE_TYPEREF,
+	arC_SYNTAX_TREE_TYPEREF_BLOCK,
 	arC_SYNTAX_TREE_TYPEREF_MEMBERREF,
 
 	arC_SYNTAX_TREE_FUNCDEF,
@@ -114,8 +115,6 @@ typedef struct arC_syntax_tree_import
 {
 	arC_syntax_tree header;
 
-	// An alias for the entire import
-	arString alias;
 	// Properties set during the resolve phase
 	struct import_resolved {
 		struct arC_syntax_tree_package* ref;
@@ -142,10 +141,6 @@ typedef struct arC_syntax_tree_typedef
 		arInt8 data_type;
 		// The underlying size that this object will take on the stack
 		arInt32 stack_size;
-		// The definition this type inheits from
-		struct arC_syntax_tree_typedef* inherits_from;
-		// The definition for the type this type is based on
-		struct arC_syntax_tree_typedef* of_type;
 		// Signature
 		arString signature;
 	} resolved;
@@ -162,21 +157,34 @@ typedef struct arC_syntax_tree_typedef_memberdef
 	arC_syntax_tree header;
 } arC_syntax_tree_typedef_memberdef;
 
-// A reference to a type statement
+// A reference to a type statement. It will always contain at least one block child
 typedef struct arC_syntax_tree_typeref
 {
 	arC_syntax_tree header;
 
-	// Name of the type
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_typeref_resolved {
+		// The type definition, if found
+		struct arC_syntax_tree_typedef* def;
+	} resolved;
+} arC_syntax_tree_typeref;
+
+// A reference to a type can contain multiple blocks pointing to different types of nodes. For example:
+// <Package>.<Function>.<Type>. The block specifies a specific type of node in that node chain
+typedef struct arC_syntax_tree_typeref_block
+{
+	arC_syntax_tree header;
+
+	// Name of the block in the typeref chain
 	arString name;
 	// What node types are valid for when resolving the underlying type
 	arInt32 valid_types;
 	// Properties set during the resolve phase
-	struct arC_syntax_tree_typeref_resolved {
-		// Node definition (package or type) this reference points to
+	struct arC_syntax_tree_typeref_block_resolved {
+		// Node this block points to.
 		arC_syntax_tree_node def;
 	} resolved;
-} arC_syntax_tree_typeref;
+} arC_syntax_tree_typeref_block;
 
 // A reference to a member inside a type
 typedef struct arC_syntax_tree_typeref_memberref
@@ -310,11 +318,6 @@ typedef struct arC_syntax_tree_funcdef_body_return
 	struct arC_syntax_tree_funcdef* closest_function_node;
 	// Reference to the type
 	struct arC_syntax_tree_typeref* type;
-	// Properties set during the resolve phase
-	struct funcdef_body_return_resolved {
-		// The type
-		struct arC_syntax_tree_typedef* def;
-	} resolved;
 } arC_syntax_tree_funcdef_body_return;
 
 // A constant value
@@ -327,11 +330,6 @@ typedef struct arC_syntax_tree_funcdef_body_const_value
 	struct arC_syntax_tree_funcdef* closest_function_node;
 	// Reference to the type (is also a child of the locals)
 	struct arC_syntax_tree_typeref* type;
-	// Properties set during the resolve phase
-	struct funcdef_body_const_value_resolved {
-		// The type
-		struct arC_syntax_tree_typedef* def;
-	} resolved;
 } arC_syntax_tree_funcdef_body_const_value;
 
 // Syntax tree for binary operators, such as + and -
@@ -428,6 +426,9 @@ ARLANG_API arC_syntax_tree_typedef* arC_syntax_tree_typedef_new(const arC_state*
 
 // Create a new type reference
 ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state* s);
+
+// Create a new type reference
+ARLANG_API arC_syntax_tree_typeref_block* arC_syntax_tree_typeref_block_new(const arC_state* s);
 
 // Create a new type reference
 ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, 

@@ -64,9 +64,9 @@ BOOL arC_syntax_tree_has_children(arC_syntax_tree_node st)
 
 void arC_syntax_tree_add_child(arC_syntax_tree* parent, arC_syntax_tree_node child)
 {
-	assert(parent != NULL);
-	assert(child != NULL);
-	assert(child->parent == NULL);
+	ASSERT_NOT_NULL(parent);
+	ASSERT_NOT_NULL(child);
+	assert(child->parent == NULL && "You are trying to add a node as a child while it already has a parent");
 
 	// Update parent-child relationship
 	if (parent->child_head == NULL)
@@ -88,18 +88,33 @@ void arC_syntax_tree_add_child(arC_syntax_tree* parent, arC_syntax_tree_node chi
 
 void arC_syntax_tree_detach(arC_syntax_tree_node node)
 {
-	assert(node->parent != NULL);
+	assert(node->parent != NULL && "You are trying to detach a node that's not attached to any parent");
 
 	// The node is at the end of the list
 	arC_syntax_tree* const parent = node->parent;
+
+	// If the node is the last child
 	if (parent->child_tail == node) {
 		parent->child_tail = node->head;
 		parent->child_tail->head = node->head;
-	} 
+		node->head = NULL;
+	}
+
+	// If the node is the first child
 	if (parent->child_head == node) {
 		parent->child_head = node->tail;
 		parent->child_head->tail = node->tail;
+		node->tail = NULL;
 	}
+
+	if (node->head) {
+		node->head->tail = node->tail;
+	}
+	if (node->tail) {
+		node->tail->head = node->head;
+	}
+
+	node->head = node->tail = node->parent = NULL;
 }
 
 void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_tree_node old_node, arC_syntax_tree_node new_node)
@@ -184,13 +199,26 @@ arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state* s)
 	return p;
 }
 
+arC_syntax_tree_typeref_block* arC_syntax_tree_typeref_block_new(const arC_state* s)
+{
+	arC_syntax_tree_typeref_block* const p = (arC_syntax_tree_typeref_block*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_typeref_block), arC_SYNTAX_TREE_TYPEREF_BLOCK);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
 arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, const arString* name, arInt32 valid_types)
 {
 	arC_syntax_tree_typeref* const ref = arC_syntax_tree_typeref_new(s);
 	if (ref == NULL)
 		return NULL;
-	ref->name = *name;
-	ref->valid_types = valid_types;
+	arC_syntax_tree_typeref_block* const block = arC_syntax_tree_typeref_block_new(s);
+	if (block == NULL)
+		return NULL;
+	block->name = *name;
+	block->valid_types = valid_types;
+	arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
 	return ref;
 }
 
@@ -252,9 +280,9 @@ arC_syntax_tree_typedef* arC_syntax_tree_get_stack_type(arC_syntax_tree_node st)
 {
 	switch (st->type) {
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE:
-		return ((arC_syntax_tree_funcdef_body_const_value*)st)->resolved.def;
+		return ((arC_syntax_tree_funcdef_body_const_value*)st)->type->resolved.def;
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN:
-		return ((arC_syntax_tree_funcdef_body_return*)st)->resolved.def;
+		return ((arC_syntax_tree_funcdef_body_return*)st)->type->resolved.def;
 	default:
 		return NULL;
 	}
@@ -438,6 +466,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 		val->value.type = ARLANG_PRIMITIVE_I32;
 		val->type = arC_syntax_tree_typeref_known(s, GET_CONST_VM_STRING(arC_syntax_tree, int32),
 			BIT(arC_SYNTAX_TREE_TYPEDEF));
+		arC_syntax_tree_add_child(asC_syntax_tree(val), asC_syntax_tree(val->type));
 		// TODO: We can resolve the types immediately because these are constants already defined by the root package
 		arC_token_next(t);
 		return asC_syntax_tree(val);
@@ -451,6 +480,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 		val->value.type = ARLANG_PRIMITIVE_F64;
 		val->type = arC_syntax_tree_typeref_known(s, GET_CONST_VM_STRING(arC_syntax_tree, float64),
 			BIT(arC_SYNTAX_TREE_TYPEDEF));
+		arC_syntax_tree_add_child(asC_syntax_tree(val), asC_syntax_tree(val->type));
 		// TODO: We can resolve the types immediately because these are constants already defined by the root package
 		arC_token_next(t);
 		return asC_syntax_tree(val);
@@ -574,7 +604,7 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	}
 	case arC_SYNTAX_TREE_IMPORT: {
 		arC_syntax_tree_import* ptr = (arC_syntax_tree_import*)st;
-		printf("import alias=%.*s", arString_length(&ptr->alias), ptr->alias.start);
+		printf("import");
 		break;
 	}
 	case arC_SYNTAX_TREE_IMPORT_BLOCK: {
@@ -589,7 +619,12 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	}
 	case arC_SYNTAX_TREE_TYPEREF: {
 		arC_syntax_tree_typeref* type = (arC_syntax_tree_typeref*)st;
-		printf("typeref name=%.*s valid_types=", arString_length(&type->name), type->name.start);
+		printf("typeref");
+		break;
+	}
+	case arC_SYNTAX_TREE_TYPEREF_BLOCK: {
+		arC_syntax_tree_typeref_block* type = (arC_syntax_tree_typeref_block*)st;
+		printf("typeref_block name=%.*s valid_types=", arString_length(&type->name), type->name.start);
 		printf("[");
 		for (int i = 0; i < 32; ++i) {
 			if (BIT_ISSET(type->valid_types, BIT(i))) {

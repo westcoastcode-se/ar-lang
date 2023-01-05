@@ -28,16 +28,18 @@ BOOL arC_syntax_tree_compile_typedef(const arC_state* s, arC_syntax_tree_typedef
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE))
 		return TRUE;
 
-	// Make sure that all inherited type are resolved
-	if (p->resolved.inherits_from != NULL) {
-		if (!arC_syntax_tree_compile_typedef(s, p->resolved.inherits_from)) {
+	if (p->inherits_from != NULL) {
+		arC_syntax_tree_typeref* const typeref = p->inherits_from;
+		arC_syntax_tree_typedef* const type = typeref->resolved.def;
+		if (!arC_syntax_tree_compile_typedef(s, type)) {
 			return FALSE;
 		}
 	}
 
-	// Make sure that all unrefed types are resolved
-	if (p->resolved.of_type != NULL) {
-		if (!arC_syntax_tree_compile_typedef(s, p->resolved.of_type)) {
+	if (p->of_type != NULL) {
+		arC_syntax_tree_typeref* const typeref = p->of_type;
+		arC_syntax_tree_typedef* const type = typeref->resolved.def;
+		if (!arC_syntax_tree_compile_typedef(s, type)) {
 			return FALSE;
 		}
 	}
@@ -61,10 +63,7 @@ BOOL arC_syntax_tree_compile_funcdef_ret(const arC_state* s, arC_syntax_tree_fun
 {
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE))
 		return TRUE;
-	arC_syntax_tree_typeref* const typeref = p->type;
-	if (typeref->resolved.def->type != arC_SYNTAX_TREE_TYPEDEF)
-		return FALSE;
-	arC_syntax_tree_typedef* const type = (arC_syntax_tree_typedef*)typeref->resolved.def;
+	arC_syntax_tree_typedef* const type = p->type->resolved.def;
 	p->compiled.symbol->type = type->compiled.symbol;
 	arB_func_add_return(p->func->compiled.symbol, p->compiled.symbol);
 	asC_syntax_tree_phase_set(p, arC_SYNTAX_TREE_PHASE_COMPILE);
@@ -88,10 +87,7 @@ BOOL arC_syntax_tree_compile_funcdef_arg(const arC_state* s, arC_syntax_tree_fun
 {
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE))
 		return TRUE;
-	arC_syntax_tree_typeref* const typeref = p->type;
-	if (typeref->resolved.def->type != arC_SYNTAX_TREE_TYPEDEF)
-		return FALSE;
-	arC_syntax_tree_typedef* const type = (arC_syntax_tree_typedef*)typeref->resolved.def;
+	arC_syntax_tree_typedef* const type = p->type->resolved.def;
 	p->compiled.symbol->type = type->compiled.symbol;
 	arB_arg_set_name(p->compiled.symbol, &p->name);
 	arB_func_add_arg(p->func->compiled.symbol, p->compiled.symbol);
@@ -271,7 +267,8 @@ BOOL arC_syntax_tree_compile_unaryop(const arC_state* s, arC_syntax_tree_funcdef
 BOOL arC_syntax_tree_compile_const_value(const arC_state* s, arC_syntax_tree_funcdef_body_const_value* val)
 {
 	arB_func* const func = val->closest_function_node->compiled.symbol;
-	arB_func_add_instr(func, arB_instr_ldc(val->resolved.def->compiled.symbol, val->value));
+	arB_type* const type = val->type->resolved.def->compiled.symbol;
+	arB_func_add_instr(func, arB_instr_ldc(type, val->value));
 	return TRUE;
 }
 
