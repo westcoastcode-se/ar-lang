@@ -139,6 +139,25 @@ void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_tree_node ol
 		tail->head = new_node;
 }
 
+arC_syntax_tree_ref* arC_syntax_tree_ref_new(const arC_state* s, arInt32 valid_types)
+{
+	arC_syntax_tree_ref* const p = (arC_syntax_tree_ref*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_ref), arC_SYNTAX_TREE_REF);
+	if (p == NULL)
+		return NULL;
+	p->valid_types = valid_types;
+	return p;
+}
+
+arC_syntax_tree_ref_block* arC_syntax_tree_ref_block_new(const arC_state* s)
+{
+	arC_syntax_tree_ref_block* const p = (arC_syntax_tree_ref_block*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_ref_block), arC_SYNTAX_TREE_REF_BLOCK);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
 arC_syntax_tree_package* arC_syntax_tree_package_new(const arC_state* s)
 {
 	arC_syntax_tree_package* const p = (arC_syntax_tree_package*)arC_syntax_tree_new(s,
@@ -161,15 +180,6 @@ void arC_syntax_tree_package_add_import(arC_syntax_tree_package* package, arC_sy
 void arC_syntax_tree_package_add_typedef(arC_syntax_tree_package* package, arC_syntax_tree_typedef* type)
 {
 	arC_syntax_tree_add_child(asC_syntax_tree(package), asC_syntax_tree(type));
-}
-
-arC_syntax_tree_import_block* arC_syntax_tree_import_block_new(const arC_state* s)
-{
-	arC_syntax_tree_import_block* const p = (arC_syntax_tree_import_block*)arC_syntax_tree_new(s,
-		sizeof(arC_syntax_tree_import_block), arC_SYNTAX_TREE_IMPORT_BLOCK);
-	if (p == NULL)
-		return NULL;
-	return p;
 }
 
 arC_syntax_tree_import* arC_syntax_tree_import_new(const arC_state* s)
@@ -199,27 +209,19 @@ arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state* s)
 	return p;
 }
 
-arC_syntax_tree_typeref_block* arC_syntax_tree_typeref_block_new(const arC_state* s)
-{
-	arC_syntax_tree_typeref_block* const p = (arC_syntax_tree_typeref_block*)arC_syntax_tree_new(s,
-		sizeof(arC_syntax_tree_typeref_block), arC_SYNTAX_TREE_TYPEREF_BLOCK);
-	if (p == NULL)
-		return NULL;
-	return p;
-}
-
 arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, const arString* name, arInt32 valid_types)
 {
-	arC_syntax_tree_typeref* const ref = arC_syntax_tree_typeref_new(s);
-	if (ref == NULL)
-		return NULL;
-	arC_syntax_tree_typeref_block* const block = arC_syntax_tree_typeref_block_new(s);
-	if (block == NULL)
-		return NULL;
-	block->name = *name;
+	arC_syntax_tree_typeref* const typeref = arC_syntax_tree_typeref_new(s);
+	if (typeref == NULL) return NULL;
+	arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s, valid_types);
+	if (ref == NULL) return NULL;
+	arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s);
+	if (block == NULL) return NULL;
+	block->query = *name;
 	block->valid_types = valid_types;
 	arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
-	return ref;
+	arC_syntax_tree_add_child(asC_syntax_tree(typeref), asC_syntax_tree(ref));
+	return typeref;
 }
 
 arC_syntax_tree_funcdef* arC_syntax_tree_funcdef_new(const arC_state* s)
@@ -597,37 +599,17 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 		printf("  - ");
 
 	switch (st->type) {
-	case arC_SYNTAX_TREE_PACKAGE: {
-		arC_syntax_tree_package* package = (arC_syntax_tree_package*)st;
-		printf("package name=%.*s", arString_length(&package->name), package->name.start);
+	case arC_SYNTAX_TREE_REF: {
+		arC_syntax_tree_ref* ref = (arC_syntax_tree_ref*)st;
+		printf("ref");
 		break;
 	}
-	case arC_SYNTAX_TREE_IMPORT: {
-		arC_syntax_tree_import* ptr = (arC_syntax_tree_import*)st;
-		printf("import");
-		break;
-	}
-	case arC_SYNTAX_TREE_IMPORT_BLOCK: {
-		arC_syntax_tree_import_block* ptr = (arC_syntax_tree_import_block*)st;
-		printf("block name=%.*s", arString_length(&ptr->name), ptr->name.start);
-		break;
-	}
-	case arC_SYNTAX_TREE_TYPEDEF: {
-		arC_syntax_tree_typedef* type = (arC_syntax_tree_typedef*)st;
-		printf("typedef name=%.*s", arString_length(&type->name), type->name.start);
-		break;
-	}
-	case arC_SYNTAX_TREE_TYPEREF: {
-		arC_syntax_tree_typeref* type = (arC_syntax_tree_typeref*)st;
-		printf("typeref");
-		break;
-	}
-	case arC_SYNTAX_TREE_TYPEREF_BLOCK: {
-		arC_syntax_tree_typeref_block* type = (arC_syntax_tree_typeref_block*)st;
-		printf("typeref_block name=%.*s valid_types=", arString_length(&type->name), type->name.start);
+	case arC_SYNTAX_TREE_REF_BLOCK: {
+		arC_syntax_tree_ref_block* ref = (arC_syntax_tree_ref_block*)st;
+		printf("ref_block query=%.*s", arString_length(&ref->query), ref->query.start); 
 		printf("[");
 		for (int i = 0; i < 32; ++i) {
-			if (BIT_ISSET(type->valid_types, BIT(i))) {
+			if (BIT_ISSET(ref->valid_types, BIT(i))) {
 				switch (i) {
 				case arC_SYNTAX_TREE_PACKAGE:
 					printf("package,");
@@ -642,6 +624,26 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 			}
 		}
 		printf("]");
+		break;
+	}
+	case arC_SYNTAX_TREE_PACKAGE: {
+		arC_syntax_tree_package* package = (arC_syntax_tree_package*)st;
+		printf("package name=%.*s", arString_length(&package->name), package->name.start);
+		break;
+	}
+	case arC_SYNTAX_TREE_IMPORT: {
+		arC_syntax_tree_import* ptr = (arC_syntax_tree_import*)st;
+		printf("import");
+		break;
+	}
+	case arC_SYNTAX_TREE_TYPEDEF: {
+		arC_syntax_tree_typedef* type = (arC_syntax_tree_typedef*)st;
+		printf("typedef name=%.*s", arString_length(&type->name), type->name.start);
+		break;
+	}
+	case arC_SYNTAX_TREE_TYPEREF: {
+		arC_syntax_tree_typeref* type = (arC_syntax_tree_typeref*)st;
+		printf("typeref");
 		break;
 	}
 	case arC_SYNTAX_TREE_FUNCDEF: {

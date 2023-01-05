@@ -11,16 +11,14 @@
 typedef enum arC_syntax_tree_type
 {
 	arC_SYNTAX_TREE_ERROR = 1,
+
+	arC_SYNTAX_TREE_REF,
+	arC_SYNTAX_TREE_REF_BLOCK,
+
 	arC_SYNTAX_TREE_PACKAGE,
 	arC_SYNTAX_TREE_IMPORT,
-	arC_SYNTAX_TREE_IMPORT_BLOCK,
-
 	arC_SYNTAX_TREE_TYPEDEF,
-	arC_SYNTAX_TREE_TYPEDEF_MEMBERDEF,
-
 	arC_SYNTAX_TREE_TYPEREF,
-	arC_SYNTAX_TREE_TYPEREF_BLOCK,
-	arC_SYNTAX_TREE_TYPEREF_MEMBERREF,
 
 	arC_SYNTAX_TREE_FUNCDEF,
 	arC_SYNTAX_TREE_FUNCDEF_ARGS,
@@ -76,6 +74,33 @@ typedef struct arC_syntax_tree
 #define asC_syntax_tree_phase_set(st, p) (st->header.phase |= p)
 #define asC_syntax_tree_phase_done(st, phase) ((asC_syntax_tree_phase(st) & phase) == phase)
 
+// A reference to a syntax tree node that's not resolved yet. A ref contains a number of blocks
+// where the last block contains the actual node we are searching for
+typedef struct arC_syntax_tree_ref
+{
+	arC_syntax_tree header;
+	// What node types are valid for when resolving the underlying type
+	arInt32 valid_types;
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_ref_resolved {
+		struct arC_syntax_tree* node;
+	} resolved;
+} arC_syntax_tree_ref;
+
+// A reference to a node from the previous block's point of view
+typedef struct arC_syntax_tree_ref_block
+{
+	arC_syntax_tree header;
+	// Search query used when searching in the syntax tree
+	arString query;
+	// What node types are valid for when resolving the underlying type
+	arInt32 valid_types;
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_ref_block_resolved {
+		struct arC_syntax_tree* node;
+	} resolved;
+} arC_syntax_tree_ref_block;
+
 // The package statement
 typedef struct arC_syntax_tree_package
 {
@@ -95,22 +120,8 @@ typedef struct arC_syntax_tree_package
 	} compiled;
 } arC_syntax_tree_package;
 
-// The import block. For example, "Company.Product" contains two blocks
-typedef struct arC_syntax_tree_import_block
-{
-	arC_syntax_tree header;
-
-	// The package name we are trying to import
-	arString name;
-	// The package this block is part of
-	struct arC_syntax_tree_package* package;
-	// Properties set during the resolve phase
-	struct import_block_resolved {
-		struct arC_syntax_tree_package* ref;
-	} resolved;
-} arC_syntax_tree_import_block;
-
-// The import statement
+// The import statement. Will contain child nodes which refer to the actual 
+// package we are trying to import
 typedef struct arC_syntax_tree_import
 {
 	arC_syntax_tree header;
@@ -151,13 +162,7 @@ typedef struct arC_syntax_tree_typedef
 	} compiled;
 } arC_syntax_tree_typedef;
 
-// A definition of a member inside a type
-typedef struct arC_syntax_tree_typedef_memberdef
-{
-	arC_syntax_tree header;
-} arC_syntax_tree_typedef_memberdef;
-
-// A reference to a type statement. It will always contain at least one block child
+// A reference to a type statement. It will have a child node which refers to the actual type
 typedef struct arC_syntax_tree_typeref
 {
 	arC_syntax_tree header;
@@ -168,29 +173,6 @@ typedef struct arC_syntax_tree_typeref
 		struct arC_syntax_tree_typedef* def;
 	} resolved;
 } arC_syntax_tree_typeref;
-
-// A reference to a type can contain multiple blocks pointing to different types of nodes. For example:
-// <Package>.<Function>.<Type>. The block specifies a specific type of node in that node chain
-typedef struct arC_syntax_tree_typeref_block
-{
-	arC_syntax_tree header;
-
-	// Name of the block in the typeref chain
-	arString name;
-	// What node types are valid for when resolving the underlying type
-	arInt32 valid_types;
-	// Properties set during the resolve phase
-	struct arC_syntax_tree_typeref_block_resolved {
-		// Node this block points to.
-		arC_syntax_tree_node def;
-	} resolved;
-} arC_syntax_tree_typeref_block;
-
-// A reference to a member inside a type
-typedef struct arC_syntax_tree_typeref_memberref
-{
-	arC_syntax_tree header;
-} arC_syntax_tree_typeref_memberref;
 
 // The func statement
 typedef struct arC_syntax_tree_funcdef
@@ -403,6 +385,12 @@ ARLANG_API void arC_syntax_tree_detach(arC_syntax_tree_node node);
 // Remove the old node and replace it with a new node at the same position
 ARLANG_API void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_tree_node old_node, arC_syntax_tree_node new_node);
 
+// Create a new reference node
+ARLANG_API arC_syntax_tree_ref* arC_syntax_tree_ref_new(const arC_state* s, arInt32 valid_types);
+
+// Create a new reference node
+ARLANG_API arC_syntax_tree_ref_block* arC_syntax_tree_ref_block_new(const arC_state* s);
+
 // Create a new package tree node
 ARLANG_API arC_syntax_tree_package* arC_syntax_tree_package_new(const arC_state* s);
 
@@ -416,9 +404,6 @@ ARLANG_API void arC_syntax_tree_package_add_import(arC_syntax_tree_package* pack
 ARLANG_API void arC_syntax_tree_package_add_typedef(arC_syntax_tree_package* package, arC_syntax_tree_typedef* type);
 
 // Create a new import tree node
-ARLANG_API arC_syntax_tree_import_block* arC_syntax_tree_import_block_new(const arC_state* s);
-
-// Create a new import tree node
 ARLANG_API arC_syntax_tree_import* arC_syntax_tree_import_new(const arC_state* s);
 
 // Create a new type definition
@@ -426,9 +411,6 @@ ARLANG_API arC_syntax_tree_typedef* arC_syntax_tree_typedef_new(const arC_state*
 
 // Create a new type reference
 ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state* s);
-
-// Create a new type reference
-ARLANG_API arC_syntax_tree_typeref_block* arC_syntax_tree_typeref_block_new(const arC_state* s);
 
 // Create a new type reference
 ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, 

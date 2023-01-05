@@ -68,6 +68,66 @@ BOOL arC_syntax_tree_resolve_package_signature(const arC_state* s, arC_syntax_tr
 	return TRUE;
 }
 
+BOOL arC_syntax_tree_resolve_ref(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_ref* ref)
+{
+	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref)))
+		return FALSE;
+
+	if (ref->resolved.node == NULL) {
+		const arC_syntax_tree_ref_block* block = (arC_syntax_tree_ref_block*)asC_syntax_tree_first_child(ref);
+		while (1) {
+			if (block->header.child_head != block->header.child_tail) {
+				// TODO: Take metadata into consideration, which should be
+				//       sibling nodes
+				return arC_message_feature_missing(s, "import syntax trees are not allowed to have siblings yet");
+			}
+			// Current block is the last last element in the parent-child relationship
+			if (block->header.child_head == NULL) {
+				break;
+			}
+			block = (const arC_syntax_tree_ref_block*)block->header.child_head;
+		}
+		if ((BIT(block->resolved.node->type) & ref->valid_types) == 0) {
+			return arC_message_feature_missing(s, "blocks was not a valid type");
+		}
+		ref->resolved.node = block->resolved.node;
+	}
+
+	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
+}
+
+BOOL arC_syntax_tree_resolve_ref_block(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_ref_block* ref)
+{
+	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (ref->resolved.node == NULL) {
+		arC_search_upwards_context ctx;
+		// Is the parents a reference then continue search the syntax tree from that node's point of view
+		if (ref->header.parent->type == arC_SYNTAX_TREE_REF_BLOCK) {
+			arC_search_upwards_begin(ref->resolved.node, &ref->query, ref->valid_types, 0, &ctx);
+		}
+		else {
+			arC_search_upwards_begin(asC_syntax_tree(ref), &ref->query, ref->valid_types, 
+				arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
+		}
+		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
+		if (hit == NULL) {
+			arC_message_symbol_unresolved(s, &ref->query);
+			return FALSE;
+		}
+		// TODO: What if multiple hits are found?
+		ref->resolved.node = hit;
+	}
+	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref));
+}
+
 BOOL arC_syntax_tree_resolve_package(const arC_state* s, const arC_recursion_tracker* rt,
 	arC_syntax_tree_package* ref)
 {
@@ -82,93 +142,21 @@ BOOL arC_syntax_tree_resolve_package(const arC_state* s, const arC_recursion_tra
 BOOL arC_syntax_tree_resolve_import(const arC_state* s, const arC_recursion_tracker* rt,
 	arC_syntax_tree_import* ref)
 {
-	// Resolve import block nodes before resolving import node
+	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
 	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref)))
 		return FALSE;
 
-	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
-		return TRUE;
-
 	if (ref->resolved.ref == NULL) {
-		// The last block in the "import block" tree should point to the actual package we are importing.
-		// If it's ref is NULL then the package is not found
-		const arC_syntax_tree_import_block* block = (const arC_syntax_tree_import_block*)ref->header.child_head;
-		while (1) {
-			// Check to see if the block failed to be resolved
-			if (block->resolved.ref == NULL) {
-				// TODO: The package name should be the signature and not the block name
-				return arC_message_symbol_unresolved(s, &block->name);
-			}
-			// Current block is the last last element in the parent-child relationship
-			if (block->header.child_head == NULL) {
-				break;
-			}
-			block = (const arC_syntax_tree_import_block*)ref->header.child_head;
-			ASSERT_NOT_NULL(block);
+		// Hierarchy should be import -> ref -> ref_block...
+		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(ref);
+		if (ref2->resolved.node->type != arC_SYNTAX_TREE_PACKAGE) {
+			return arC_message_feature_missing(s, "TODO: What is the package here?");
 		}
-		// TODO: What if multiple hits are found?
-		ref->resolved.ref = block->resolved.ref;
+		ref->resolved.ref = (arC_syntax_tree_package*)ref2->resolved.node;
 	}
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
-}
-
-BOOL arC_syntax_tree_resolve_import_block(const arC_state* s, const arC_recursion_tracker* rt, 
-	arC_syntax_tree_import_block* ref)
-{
-	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
-		return TRUE;
-
-	assert(ref->header.parent != NULL);
-	if (ref->resolved.ref == NULL) {
-		// Figure out where to start searching for the package
-		arC_search_upwards_context ctx;
-		if (ref->header.parent->type == arC_SYNTAX_TREE_IMPORT) {
-			// We are searching from the current package and the root node's perspective
-			arC_search_upwards_begin(asC_syntax_tree(ref->package), &ref->name,
-				BIT(arC_SYNTAX_TREE_PACKAGE), 0, &ctx);
-		}
-		else {
-			// A block must have a block node as a parent
-			assert(ref->header.parent->type == arC_SYNTAX_TREE_IMPORT_BLOCK);
-			arC_syntax_tree_import_block* parent_block = (arC_syntax_tree_import_block*)ref->header.parent;
-			// We are searching from the parent block's parent's point of view
-			arC_search_upwards_begin(asC_syntax_tree(parent_block->package), &ref->name,
-				BIT(arC_SYNTAX_TREE_PACKAGE), 0, &ctx);
-		}
-		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-		if (hit == NULL) {
-			arC_message_symbol_unresolved(s, &ref->name);
-			return FALSE;
-		}
-		// TODO: What if multiple hits are found?
-		ref->resolved.ref = (arC_syntax_tree_package*)hit;
-	}
-	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref));
-}
-
-BOOL arC_syntax_tree_resolve_typeref_block(const arC_state* s, const arC_recursion_tracker* rt, 
-	arC_syntax_tree_typeref_block* ref)
-{
-	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
-		return TRUE;
-
-	if (ref->resolved.def == NULL) {
-		arC_search_upwards_context ctx;
-		arC_search_upwards_begin(asC_syntax_tree(ref), &ref->name, ref->valid_types,
-			arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
-		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-		if (hit == NULL) {
-			arC_message_symbol_unresolved(s, &ref->name);
-			return FALSE;
-		}
-		// TODO: What if multiple hits are found?
-		ref->resolved.def = hit;
-	}
-
-	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref));
 }
 
 BOOL arC_syntax_tree_resolve_arg(const arC_state* s, const arC_recursion_tracker* rt, 
@@ -205,39 +193,20 @@ BOOL arC_syntax_tree_resolve_ret(const arC_state* s, const arC_recursion_tracker
 BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tracker* rt, 
 	arC_syntax_tree_typeref* ref)
 {
+	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
 	// Resolve type ref block nodes before resolving typeref node
 	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref)))
 		return FALSE;
 
-	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
-		return TRUE;
-
 	if (ref->resolved.def == NULL) {
-		// The last block in the "typeref block" tree should point to the actual type we are referring to.
-		// If it's ref is NULL then the type is not found
-		const arC_syntax_tree_typeref_block* block = (const arC_syntax_tree_typeref_block*)ref->header.child_head;
-		while (1) {
-			// Check to see if the block failed to be resolved
-			if (block->resolved.def == NULL) {
-				// TODO: The package name should be the signature and not the block name
-				return arC_message_symbol_unresolved(s, &block->name);
-			}
-			// Current block is the last last element in the parent-child relationship
-			if (block->header.child_head == NULL) {
-				break;
-			}
-			block = (const arC_syntax_tree_typeref_block*)ref->header.child_head;
-			ASSERT_NOT_NULL(block);
+		// Hierarchy should be import -> ref -> ref_block...
+		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(ref);
+		if (ref2->resolved.node->type != arC_SYNTAX_TREE_TYPEDEF) {
+			return arC_message_feature_missing(s, "TODO: What is the package here?");
 		}
-
-		// The last block must be a type
-		if (block->resolved.def->type != arC_SYNTAX_TREE_TYPEDEF) {
-			arC_message_type_unresolved(s, &block->name);
-			return FALSE;
-		}
-
-		// TODO: What if multiple hits are found?
-		ref->resolved.def = (arC_syntax_tree_typedef*)block->resolved.def;
+		ref->resolved.def = (arC_syntax_tree_typedef*)ref2->resolved.node;
 	}
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
@@ -427,6 +396,14 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 	// Resolve before
 	switch (st->type)
 	{
+	case arC_SYNTAX_TREE_REF:
+		if (!arC_syntax_tree_resolve_ref(s, rt, (arC_syntax_tree_ref*)st))
+			return FALSE;
+		break;
+	case arC_SYNTAX_TREE_REF_BLOCK:
+		if (!arC_syntax_tree_resolve_ref_block(s, rt, (arC_syntax_tree_ref_block*)st))
+			return FALSE;
+		break;
 	case arC_SYNTAX_TREE_PACKAGE:
 		if (!arC_syntax_tree_resolve_package(s, rt, (arC_syntax_tree_package*)st))
 			return FALSE;
@@ -435,20 +412,12 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		if (!arC_syntax_tree_resolve_import(s, rt, (arC_syntax_tree_import*)st))
 			return FALSE;
 		break;
-	case arC_SYNTAX_TREE_IMPORT_BLOCK:
-		if (!arC_syntax_tree_resolve_import_block(s, rt, (arC_syntax_tree_import_block*)st))
-			return FALSE;
-		break;
 	case arC_SYNTAX_TREE_TYPEDEF:
 		if (!arC_syntax_tree_resolve_typedef(s, rt, (arC_syntax_tree_typedef*)st))
 			return FALSE;
 		break;
 	case arC_SYNTAX_TREE_TYPEREF:
 		if (!arC_syntax_tree_resolve_typeref(s, rt, (arC_syntax_tree_typeref*)st))
-			return FALSE;
-		break;
-	case arC_SYNTAX_TREE_TYPEREF_BLOCK:
-		if (!arC_syntax_tree_resolve_typeref_block(s, rt, (arC_syntax_tree_typeref_block*)st))
 			return FALSE;
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF_ARG:

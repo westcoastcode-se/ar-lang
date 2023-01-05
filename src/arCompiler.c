@@ -233,11 +233,13 @@ arC_syntax_tree_typeref* arCompiler_parse_typeref(arC_token* t, const arC_state*
 	arC_syntax_tree_package* closet_package = s->package_node;
 	arC_syntax_tree_node parent = s->parent_node;
 	arC_syntax_tree_typeref* const typeref = arC_syntax_tree_typeref_new(s);
+	arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s, BIT(arC_SYNTAX_TREE_TYPEDEF));
+	arC_syntax_tree_add_child(asC_syntax_tree(typeref), asC_syntax_tree(ref));
 
 	// Add the first block (it might be a type or a package)
-	arC_syntax_tree_typeref_block* block = arC_syntax_tree_typeref_block_new(s);
-	block->name = t->string;
-	arC_syntax_tree_add_child(asC_syntax_tree(typeref), asC_syntax_tree(block));
+	arC_syntax_tree_ref_block* block = arC_syntax_tree_ref_block_new(s);
+	block->query = t->string;
+	arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
 
 	arC_token_next(t);
 	// If the next token is not a "." then we know for sure that we are refering to a typedef
@@ -250,9 +252,9 @@ arC_syntax_tree_typeref* arCompiler_parse_typeref(arC_token* t, const arC_state*
 	}
 
 	while (TRUE) {
-		block = arC_syntax_tree_typeref_block_new(s);
-		block->name = t->string;
-		arC_syntax_tree_add_child(asC_syntax_tree(typeref), asC_syntax_tree(block));
+		block = arC_syntax_tree_ref_block_new(s);
+		block->query = t->string;
+		arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
 
 		arC_token_next(t);
 		if (t->type != ARTOK_DOT) {
@@ -558,7 +560,7 @@ arByte* arCompiler_compile(arCompiler* c)
 	if (!arC_syntax_tree_resolve_references(&state, asC_syntax_tree(c->root_node)))
 		return NULL;
 
-	//arC_syntax_tree_stdout(asC_syntax_tree(c->root_node));
+	arC_syntax_tree_stdout(asC_syntax_tree(c->root_node));
 
 	// Optimize tree
 	if (!arC_syntax_tree_optimize(&state, c->root_node))

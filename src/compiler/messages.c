@@ -11,6 +11,7 @@
 #define arC_MESSAGE_NOT_DEFINED_STR "'%.*s' is not defined but used at %d:%d"
 #define arC_MESSAGE_SYMBOL_UNRESOLVED_STR "'%.*s' is unresolved"
 #define arC_MESSAGE_TYPE_UNRESOLVED_STR "'%.*s' is not a type"
+#define arC_MESSAGE_PACKAGE_UNRESOLVED_STR "'%.*s' is not a package"
 #define arC_MESSAGE_TYPE_RECURSIVE_DEPENDENCY_STR "recursive dependency chain detected %s"
 #define arC_MESSAGE_TYPE_FEATURE_MISSING_STR "%s"
 
@@ -160,6 +161,21 @@ BOOL arC_message_type_unresolved(const struct arC_state* s, const arString* name
 		arC_MESSAGE_PREFIX,
 		arC_MESSAGE_TYPE_UNRESOLVED,
 		arC_MESSAGE_TYPE_UNRESOLVED_STR,
+		arString_length(name), name->start);
+	message->line = 0;
+	message->line_offset = 0;
+	message->offset = 0;
+	return FALSE;
+}
+
+arC_message_package_unresolved(const arC_state* s, const arString* name)
+{
+	arMessages* const m = &s->compiler->messages;
+
+	arMessage* const message = arMessages_add(m,
+		arC_MESSAGE_PREFIX,
+		arC_MESSAGE_PACKAGE_UNRESOLVED,
+		arC_MESSAGE_PACKAGE_UNRESOLVED_STR,
 		arString_length(name), name->start);
 	message->line = 0;
 	message->line_offset = 0;

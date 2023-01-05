@@ -186,6 +186,9 @@ BOOL arC_syntax_tree_compile_return(const arC_state* s, arC_syntax_tree_funcdef_
 
 BOOL arC_syntax_tree_compile_binop(const arC_state* s, arC_syntax_tree_funcdef_body_binop* binop)
 {
+	ASSERT_NOT_NULL(binop);
+	assert(binop->header.child_count == 2 && "A binop node is only allowed to have two children");
+
 	if (asC_syntax_tree_phase_done(binop, arC_SYNTAX_TREE_PHASE_COMPILE)) {
 		return TRUE;
 	}
@@ -228,8 +231,7 @@ BOOL arC_syntax_tree_compile_binop(const arC_state* s, arC_syntax_tree_funcdef_b
 		arB_func_add_instr(func, arB_instr_cgt(type));
 		break;
 	default:
-		// TODO: Add support for alternate operators
-		return FALSE;
+		return arC_message_feature_missing(s, "binop operator not implemented");
 	}
 
 	asC_syntax_tree_phase_set(binop, arC_SYNTAX_TREE_PHASE_COMPILE);
@@ -238,6 +240,9 @@ BOOL arC_syntax_tree_compile_binop(const arC_state* s, arC_syntax_tree_funcdef_b
 
 BOOL arC_syntax_tree_compile_unaryop(const arC_state* s, arC_syntax_tree_funcdef_body_unaryop* unaryop)
 {
+	ASSERT_NOT_NULL(unaryop);
+	assert(unaryop->header.child_count == 1 && "A unaryop node is only allowed to have one child");
+
 	if (asC_syntax_tree_phase_done(unaryop, arC_SYNTAX_TREE_PHASE_COMPILE)) {
 		return TRUE;
 	}
@@ -264,8 +269,7 @@ BOOL arC_syntax_tree_compile_unaryop(const arC_state* s, arC_syntax_tree_funcdef
 		arB_func_add_instr(func, arB_instr_bit_not(type));
 		break;
 	default:
-		// TODO: Add support for alternate operators
-		return FALSE;
+		return arC_message_feature_missing(s, "unaryop operator not implemented");
 	}
 
 	asC_syntax_tree_phase_set(unaryop, arC_SYNTAX_TREE_PHASE_COMPILE);

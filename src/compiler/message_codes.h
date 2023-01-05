@@ -33,8 +33,11 @@ typedef enum arC_message_code
 	// A symbol is unresolved
 	arC_MESSAGE_SYMBOL_UNRESOLVED,
 
-	// Message raised when we expected a type, but was something else
+	// Message raised when we expected a type, but was some other type
 	arC_MESSAGE_TYPE_UNRESOLVED,
+
+	// Message raised when we expected a package, but was some other type
+	arC_MESSAGE_PACKAGE_UNRESOLVED,
 
 	// A type is part of a recursive dependency
 	arC_MESSAGE_TYPE_RECURSIVE_DEPENDENCY,
