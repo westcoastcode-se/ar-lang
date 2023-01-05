@@ -31,12 +31,31 @@ const arC_syntax_tree* arC_recursion_tracker_find(const arC_recursion_tracker* r
 	return NULL;
 }
 
+void arC_syntax_tree_resolve_package_signature(const arC_state* s, arC_syntax_tree_package* ref)
+{
+	// Calculate the package signature
+	arByte signature_data[1024];
+	arByte* sig = signature_data;
+	if (ref->header.parent != NULL) {
+		arC_syntax_tree_package* const parent = (arC_syntax_tree_package*)ref->header.parent;
+		sig = arString_cpy(sig, &parent->resolve.signature);
+		sig = arStrcpy(sig, ".", 1);
+	}
+	sig = arString_cpy(sig, &ref->name);
+	const arString* const result = arStringPool_stringsz(arC_state_get_string_pool(s), signature_data, (int)(sig - signature_data));
+	if (result == NULL)
+		arC_message_out_of_memory(s);
+	else
+		ref->resolve.signature = *result;
+}
+
 BOOL arC_syntax_tree_resolve_package(const arC_state* s, const arC_recursion_tracker* rt,
 	arC_syntax_tree_package* ref)
 {
 	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
-	ref->compiled.symbol = arB_package_new(&ref->signature.name);
+	arC_syntax_tree_resolve_package_signature(s, ref);
+	ref->compiled.symbol = arB_package_new(&ref->name);
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
@@ -115,21 +134,6 @@ BOOL arC_syntax_tree_resolve_arg(const arC_state* s, const arC_recursion_tracker
 		return arC_message_not_implemented(s, "no type defined for argument");
 	}
 
-	// Resolve the type if not done already
-	if (arg->resolved.def == NULL) {
-		const arString str = arg->type->name;
-		arC_search_upwards_context ctx;
-		arC_search_upwards_begin(asC_syntax_tree(arg), &str, arg->type->valid_types,
-			arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
-		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-		if (hit == NULL) {
-			arC_message_symbol_unresolved(s, &arg->type->name);
-			return FALSE;
-		}
-		// TODO: What if multiple hits are found?
-		arg->resolved.def = (arC_syntax_tree_typedef*)hit;
-	}
-
 	arg->compiled.symbol = arB_arg_new();
 	arB_arg_set_name(arg->compiled.symbol, &arg->name);
 	asC_syntax_tree_phase_set(arg, arC_SYNTAX_TREE_PHASE_RESOLVE);
@@ -175,7 +179,7 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, arC_syntax_tree_typeref
 BOOL arC_syntax_tree_resolve_funcdef(const arC_state* s, const arC_recursion_tracker* rt,
 	arC_syntax_tree_funcdef* def)
 {
-	def->compiled.symbol = arB_func_new(&def->signature.name);
+	def->compiled.symbol = arB_func_new(&def->name);
 	asC_syntax_tree_phase_set(def, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }

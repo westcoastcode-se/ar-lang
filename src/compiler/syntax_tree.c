@@ -569,8 +569,7 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	switch (st->type) {
 	case arC_SYNTAX_TREE_PACKAGE: {
 		arC_syntax_tree_package* package = (arC_syntax_tree_package*)st;
-		arC_signature sign = package->signature;
-		printf("package name=%.*s", arString_length(&sign.name), sign.name.start);
+		printf("package name=%.*s", arString_length(&package->name), package->name.start);
 		break;
 	}
 	case arC_SYNTAX_TREE_IMPORT: {
@@ -612,7 +611,7 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	}
 	case arC_SYNTAX_TREE_FUNCDEF: {
 		arC_syntax_tree_funcdef* def = (arC_syntax_tree_funcdef*)st;
-		printf("funcdef name=%.*s", arString_length(&def->signature.name), def->signature.name.start);
+		printf("funcdef name=%.*s", arString_length(&def->name), def->name.start);
 		break;
 	}
 	case arC_SYNTAX_TREE_FUNCDEF_ARGS: {

@@ -3,46 +3,46 @@
 #include "tokens.h"
 #include "../arCompiler.h"
 
-BOOL arC_syntax_tree_compile_package(arCompiler* c, arC_syntax_tree_package* p)
+BOOL arC_syntax_tree_compile_package(const arC_state* s, arC_syntax_tree_package* p)
 {
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE))
 		return TRUE;
 	
 	// Set compiled symbol's properties
-	arB_package_set_signature(p->compiled.symbol, &p->signature.signature);
-	arBuilder_add_package(c->pipeline, p->compiled.symbol);
+	arB_package_set_signature(p->compiled.symbol, &p->resolve.signature);
+	arBuilder_add_package(s->compiler->pipeline, p->compiled.symbol);
 	asC_syntax_tree_phase_set(p, arC_SYNTAX_TREE_PHASE_COMPILE);
 
 	// Iterate over all the children
 	arC_syntax_tree* child = asC_syntax_tree(p)->child_head;
 	while (child != NULL) {
-		if (!arC_syntax_tree_compile(c, child))
+		if (!arC_syntax_tree_compile(s, child))
 			return FALSE;
 		child = child->tail;
 	}
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_typedef(arCompiler* c, arC_syntax_tree_typedef* p)
+BOOL arC_syntax_tree_compile_typedef(const arC_state* s, arC_syntax_tree_typedef* p)
 {
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE))
 		return TRUE;
 
 	// Make sure that all inherited type are resolved
 	if (p->resolved.inherits_from != NULL) {
-		if (!arC_syntax_tree_compile_typedef(c, p->resolved.inherits_from)) {
+		if (!arC_syntax_tree_compile_typedef(s, p->resolved.inherits_from)) {
 			return FALSE;
 		}
 	}
 
 	// Make sure that all unrefed types are resolved
 	if (p->resolved.of_type != NULL) {
-		if (!arC_syntax_tree_compile_typedef(c, p->resolved.of_type)) {
+		if (!arC_syntax_tree_compile_typedef(s, p->resolved.of_type)) {
 			return FALSE;
 		}
 	}
 
-	arB_type_set_signature(p->compiled.symbol, &p->resolved.signature.signature);
+	arB_type_set_signature(p->compiled.symbol, &p->resolved.signature);
 	p->compiled.symbol->size = p->resolved.stack_size;
 	p->compiled.symbol->data_type = p->resolved.data_type;
 	p->compiled.symbol->flags = p->flags;
@@ -57,7 +57,7 @@ BOOL arC_syntax_tree_compile_typedef(arCompiler* c, arC_syntax_tree_typedef* p)
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_funcdef_ret(arCompiler* c, arC_syntax_tree_funcdef_ret* p)
+BOOL arC_syntax_tree_compile_funcdef_ret(const arC_state* s, arC_syntax_tree_funcdef_ret* p)
 {
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE))
 		return TRUE;
@@ -71,12 +71,12 @@ BOOL arC_syntax_tree_compile_funcdef_ret(arCompiler* c, arC_syntax_tree_funcdef_
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_funcdef_rets(arCompiler* c, arC_syntax_tree_funcdef_rets* p)
+BOOL arC_syntax_tree_compile_funcdef_rets(const arC_state* s, arC_syntax_tree_funcdef_rets* p)
 {
 	arC_syntax_tree* child = p->header.child_head;
 	while (child) {
 		if (child->type == arC_SYNTAX_TREE_FUNCDEF_RET) {
-			if (!arC_syntax_tree_compile_funcdef_ret(c, (arC_syntax_tree_funcdef_ret*)child))
+			if (!arC_syntax_tree_compile_funcdef_ret(s, (arC_syntax_tree_funcdef_ret*)child))
 				return FALSE;
 		}
 		child = child->tail;
@@ -84,23 +84,27 @@ BOOL arC_syntax_tree_compile_funcdef_rets(arCompiler* c, arC_syntax_tree_funcdef
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_funcdef_arg(arCompiler* c, arC_syntax_tree_funcdef_arg* p)
+BOOL arC_syntax_tree_compile_funcdef_arg(const arC_state* s, arC_syntax_tree_funcdef_arg* p)
 {
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE))
 		return TRUE;
-	p->compiled.symbol->type = p->resolved.def->compiled.symbol;
+	arC_syntax_tree_typeref* const typeref = p->type;
+	if (typeref->resolved.def->type != arC_SYNTAX_TREE_TYPEDEF)
+		return FALSE;
+	arC_syntax_tree_typedef* const type = (arC_syntax_tree_typedef*)typeref->resolved.def;
+	p->compiled.symbol->type = type->compiled.symbol;
 	arB_arg_set_name(p->compiled.symbol, &p->name);
 	arB_func_add_arg(p->func->compiled.symbol, p->compiled.symbol);
 	asC_syntax_tree_phase_set(p, arC_SYNTAX_TREE_PHASE_COMPILE);
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_funcdef_args(arCompiler* c, arC_syntax_tree_funcdef_args* p)
+BOOL arC_syntax_tree_compile_funcdef_args(const arC_state* s, arC_syntax_tree_funcdef_args* p)
 {
 	arC_syntax_tree* child = p->header.child_head;
 	while (child) {
 		if (child->type == arC_SYNTAX_TREE_FUNCDEF_ARG) {
-			if (!arC_syntax_tree_compile_funcdef_arg(c, (arC_syntax_tree_funcdef_arg*)child))
+			if (!arC_syntax_tree_compile_funcdef_arg(s, (arC_syntax_tree_funcdef_arg*)child))
 				return FALSE;
 		}
 		child = child->tail;
@@ -108,7 +112,7 @@ BOOL arC_syntax_tree_compile_funcdef_args(arCompiler* c, arC_syntax_tree_funcdef
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_funcdef(arCompiler* c, arC_syntax_tree_funcdef* p)
+BOOL arC_syntax_tree_compile_funcdef(const arC_state* s, arC_syntax_tree_funcdef* p)
 {
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE)) {
 		return TRUE;
@@ -119,18 +123,18 @@ BOOL arC_syntax_tree_compile_funcdef(arCompiler* c, arC_syntax_tree_funcdef* p)
 		return FALSE;
 	}
 
-	arB_func_set_signature(p->compiled.symbol, asC_syntax_tree_signature(p));
+	arB_func_set_signature(p->compiled.symbol, &p->resolve.signature);
 
 	// Add arguments
 	if (p->args != NULL) {
-		if (!arC_syntax_tree_compile_funcdef_args(c, p->args)) {
+		if (!arC_syntax_tree_compile_funcdef_args(s, p->args)) {
 			return FALSE;
 		}
 	}
 
 	// Add returns
 	if (p->rets != NULL) {
-		if (!arC_syntax_tree_compile_funcdef_rets(c, p->rets)) {
+		if (!arC_syntax_tree_compile_funcdef_rets(s, p->rets)) {
 			return FALSE;
 		}
 	}
@@ -149,7 +153,7 @@ BOOL arC_syntax_tree_compile_funcdef(arCompiler* c, arC_syntax_tree_funcdef* p)
 	arB_func_body_begin(p->compiled.symbol);
 	arC_syntax_tree* child = p->body->header.child_head;
 	while (child != NULL) {
-		if (!arC_syntax_tree_compile(c, child))
+		if (!arC_syntax_tree_compile(s, child))
 			return FALSE;
 		child = child->tail;
 	}
@@ -159,7 +163,7 @@ BOOL arC_syntax_tree_compile_funcdef(arCompiler* c, arC_syntax_tree_funcdef* p)
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_return(arCompiler* c, arC_syntax_tree_funcdef_body_return* ret)
+BOOL arC_syntax_tree_compile_return(const arC_state* s, arC_syntax_tree_funcdef_body_return* ret)
 {
 	if (asC_syntax_tree_phase_done(ret, arC_SYNTAX_TREE_PHASE_COMPILE)) {
 		return TRUE;
@@ -167,7 +171,7 @@ BOOL arC_syntax_tree_compile_return(arCompiler* c, arC_syntax_tree_funcdef_body_
 
 	arC_syntax_tree* node = asC_syntax_tree(ret)->child_head;
 	while (node != NULL) {
-		if (!arC_syntax_tree_compile(c, node))
+		if (!arC_syntax_tree_compile(s, node))
 			return FALSE;
 		node = node->tail;
 	}
@@ -176,7 +180,7 @@ BOOL arC_syntax_tree_compile_return(arCompiler* c, arC_syntax_tree_funcdef_body_
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_binop(arCompiler* c, arC_syntax_tree_funcdef_body_binop* binop)
+BOOL arC_syntax_tree_compile_binop(const arC_state* s, arC_syntax_tree_funcdef_body_binop* binop)
 {
 	if (asC_syntax_tree_phase_done(binop, arC_SYNTAX_TREE_PHASE_COMPILE)) {
 		return TRUE;
@@ -187,10 +191,10 @@ BOOL arC_syntax_tree_compile_binop(arCompiler* c, arC_syntax_tree_funcdef_body_b
 	// op
 
 	arC_syntax_tree* const left = asC_syntax_tree(binop)->child_head;
-	if (!arC_syntax_tree_compile(c, left))
+	if (!arC_syntax_tree_compile(s, left))
 		return FALSE;
 	arC_syntax_tree* const right = left->tail;
-	if (!arC_syntax_tree_compile(c, right))
+	if (!arC_syntax_tree_compile(s, right))
 		return FALSE;
 
 	arB_func* const func = binop->closest_function_node->compiled.symbol;
@@ -228,7 +232,7 @@ BOOL arC_syntax_tree_compile_binop(arCompiler* c, arC_syntax_tree_funcdef_body_b
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_unaryop(arCompiler* c, arC_syntax_tree_funcdef_body_unaryop* unaryop) 
+BOOL arC_syntax_tree_compile_unaryop(const arC_state* s, arC_syntax_tree_funcdef_body_unaryop* unaryop)
 {
 	if (asC_syntax_tree_phase_done(unaryop, arC_SYNTAX_TREE_PHASE_COMPILE)) {
 		return TRUE;
@@ -238,7 +242,7 @@ BOOL arC_syntax_tree_compile_unaryop(arCompiler* c, arC_syntax_tree_funcdef_body
 	// op
 
 	arC_syntax_tree* const node = asC_syntax_tree_first_child(unaryop);
-	if (!arC_syntax_tree_compile(c, node))
+	if (!arC_syntax_tree_compile(s, node))
 		return FALSE;
 
 	arB_func* const func = unaryop->closest_function_node->compiled.symbol;
@@ -264,36 +268,36 @@ BOOL arC_syntax_tree_compile_unaryop(arCompiler* c, arC_syntax_tree_funcdef_body
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile_const_value(arCompiler* c, arC_syntax_tree_funcdef_body_const_value* val)
+BOOL arC_syntax_tree_compile_const_value(const arC_state* s, arC_syntax_tree_funcdef_body_const_value* val)
 {
 	arB_func* const func = val->closest_function_node->compiled.symbol;
 	arB_func_add_instr(func, arB_instr_ldc(val->resolved.def->compiled.symbol, val->value));
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_compile(arCompiler* c, arC_syntax_tree* st)
+BOOL arC_syntax_tree_compile(const arC_state* s, arC_syntax_tree* st)
 {
 	switch (st->type) {
 	case arC_SYNTAX_TREE_PACKAGE:
-		return arC_syntax_tree_compile_package(c, (arC_syntax_tree_package*)st);
+		return arC_syntax_tree_compile_package(s, (arC_syntax_tree_package*)st);
 	case arC_SYNTAX_TREE_TYPEDEF:
-		return arC_syntax_tree_compile_typedef(c, (arC_syntax_tree_typedef*)st);
+		return arC_syntax_tree_compile_typedef(s, (arC_syntax_tree_typedef*)st);
 	case arC_SYNTAX_TREE_FUNCDEF:
-		return arC_syntax_tree_compile_funcdef(c, (arC_syntax_tree_funcdef*)st);
+		return arC_syntax_tree_compile_funcdef(s, (arC_syntax_tree_funcdef*)st);
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN:
-		return arC_syntax_tree_compile_return(c, (arC_syntax_tree_funcdef_body_return*)st);
+		return arC_syntax_tree_compile_return(s, (arC_syntax_tree_funcdef_body_return*)st);
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP:
-		return arC_syntax_tree_compile_binop(c, (arC_syntax_tree_funcdef_body_binop*)st);
+		return arC_syntax_tree_compile_binop(s, (arC_syntax_tree_funcdef_body_binop*)st);
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_UNARYOP:
-		return arC_syntax_tree_compile_unaryop(c, (arC_syntax_tree_funcdef_body_unaryop*)st);
+		return arC_syntax_tree_compile_unaryop(s, (arC_syntax_tree_funcdef_body_unaryop*)st);
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE:
-		return arC_syntax_tree_compile_const_value(c, (arC_syntax_tree_funcdef_body_const_value*)st);
+		return arC_syntax_tree_compile_const_value(s, (arC_syntax_tree_funcdef_body_const_value*)st);
 	default:
 	{
 		// Iterate over all the children
 		arC_syntax_tree* child = st->child_head;
 		while (child != NULL) {
-			if (!arC_syntax_tree_compile(c, child))
+			if (!arC_syntax_tree_compile(s, child))
 				return FALSE;
 			child = child->tail;
 		}

@@ -67,7 +67,7 @@ arC_syntax_tree_package* arCompiler_create_system_package(const arC_state* s)
 	arC_syntax_tree_package* const root = arC_syntax_tree_package_new(s);
 	if (root == NULL)
 		return NULL;
-	root->signature.name = root->signature.local_signature = root->signature.signature = *GET_CONST_VM_STRING(arCompiler, root);
+	root->resolve.signature = root->name = *GET_CONST_VM_STRING(arCompiler, root);
 	
 	// Add built-in types and functions
 	arC_syntax_tree_typedef* voidptr;
@@ -278,7 +278,7 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 	arC_syntax_tree_funcdef* const func = arC_syntax_tree_funcdef_new(s);
 	if (func == NULL)
 		return NULL;
-	func->signature.name = funcName;
+	func->name = funcName;
 
 	// Add tree node for arguments
 	arC_syntax_tree_funcdef_args* const args = arC_syntax_tree_funcdef_args_new(s);
@@ -401,24 +401,6 @@ BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
 	return TRUE;
 }
 
-void arCompiler_create_signature(const arC_state* s, arC_syntax_tree_package* ref)
-{
-	// Calculate the package signature
-	arByte signature_data[1024];
-	arByte* sig = signature_data;
-	if (ref->header.parent != NULL) {
-		arC_syntax_tree_package* const parent = (arC_syntax_tree_package*)ref->header.parent;
-		sig = arString_cpy(sig, &parent->signature.signature);
-		sig = arStrcpy(sig, ".", 1);
-	}
-	sig = arString_cpy(sig, &ref->signature.local_signature);
-	const arString* const result = arStringPool_stringsz(arC_state_get_string_pool(s), signature_data, (int)(sig - signature_data));
-	if (result == NULL)
-		arC_message_out_of_memory(s);
-	else
-		ref->signature.signature = *result;
-}
-
 BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 {
 	// Only packages and root are allowed to be parent to packages
@@ -439,15 +421,7 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 		package = arC_syntax_tree_package_new(s);
 		if (package == NULL)
 			return FALSE;
-		package->signature.name = package->signature.local_signature = t->string;
-
-		// If the parent package is the root then don't include that in the full signature
-		if (arC_syntax_tree_package_is_root(s->package_node)) {
-			package->signature.signature = package->signature.name;
-		}
-		else {
-			arCompiler_create_signature(s, package);
-		}
+		package->name = t->string;
 
 		// Automatically add the root import to the package
 		arC_syntax_tree_import* const root = arC_syntax_tree_import_new(s);
@@ -575,7 +549,7 @@ arByte* arCompiler_compile(arCompiler* c)
 		return NULL;
 
 	// Compile the syntax tree
-	if (!arC_syntax_tree_compile(c, asC_syntax_tree(c->root_node)))
+	if (!arC_syntax_tree_compile(&state, asC_syntax_tree(c->root_node)))
 		return NULL;
 
 	// Pre pipeline logic

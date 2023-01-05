@@ -79,10 +79,16 @@ typedef struct arC_syntax_tree
 typedef struct arC_syntax_tree_package
 {
 	arC_syntax_tree header;
-	// The signature of the package. It contains both the local and full signature
-	arC_signature signature;
+
+	// The name of the package
+	arString name;
 	// Properties set during the compile phase
-	struct package_compiled {
+	struct arC_syntax_tree_package_resolve {
+		// The full signature of the package
+		arString signature;
+	} resolve;
+	// Properties set during the compile phase
+	struct arC_syntax_tree_package_compiled {
 		// The type symbol
 		arB_package* symbol;
 	} compiled;
@@ -141,7 +147,7 @@ typedef struct arC_syntax_tree_typedef
 		// The definition for the type this type is based on
 		struct arC_syntax_tree_typedef* of_type;
 		// Signature
-		arC_signature signature;
+		arString signature;
 	} resolved;
 	// Properties set during the compile phase
 	struct arC_syntax_tree_typedef_compiled {
@@ -183,8 +189,8 @@ typedef struct arC_syntax_tree_funcdef
 {
 	arC_syntax_tree header;
 
-	// The signature of the function. It contains both the local and full signature
-	arC_signature signature;
+	// The name of the function
+	arString name;
 	// The arguments
 	struct arC_syntax_tree_funcdef_args* args;
 	// The returns
@@ -193,6 +199,11 @@ typedef struct arC_syntax_tree_funcdef
 	struct arC_syntax_tree_funcdef_locals* locals;
 	// The body
 	struct arC_syntax_tree_funcdef_body* body;
+	// Properties set during the compile phase
+	struct arC_syntax_tree_funcdef_resolve {
+		// The full signature of the function
+		arString signature;
+	} resolve;
 	// Properties set during the compile phase
 	struct arC_syntax_tree_funcdef_compiled {
 		// The type symbol
@@ -220,11 +231,6 @@ typedef struct arC_syntax_tree_funcdef_arg
 	struct arC_syntax_tree_funcdef* func;
 	// Reference to the type (is also a child of the argument)
 	struct arC_syntax_tree_typeref* type;
-	// Properties set during the resolve phase
-	struct funcdef_arg_resolved {
-		// The type
-		struct arC_syntax_tree_typedef* def;
-	} resolved;
 	// Properties set during the compile phase
 	struct funcdef_arg_compiled {
 		// Argument
@@ -348,10 +354,8 @@ typedef struct arC_syntax_tree_funcdef_body_unaryop
 	arC_syntax_tree_funcdef* closest_function_node;
 } arC_syntax_tree_funcdef_body_unaryop;
 
-// Get the signature of the syntax tree node
-#define asC_syntax_tree_signature(st) &st->signature.signature
 // Get the name of the syntax tree node
-#define asC_syntax_tree_name(st) &st->signature.name
+#define asC_syntax_tree_name(st) &st->name
 
 // The state
 typedef struct arC_state
