@@ -32,7 +32,7 @@ typedef enum arC_syntax_tree_type
 	arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN,
 	arC_SYNTAX_TREE_FUNCDEF_BODY_ASSIGN,
 	arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE,
-	arC_SYNTAX_TREE_FUNCDEF_BODY_IDENTITYREF,
+	arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF,
 	arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP,
 	arC_SYNTAX_TREE_FUNCDEF_BODY_UNARYOP,
 	arC_SYNTAX_TREE_FUNCDEF_BODY_CALLFUNC,
@@ -314,6 +314,17 @@ typedef struct arC_syntax_tree_funcdef_body_const_value
 	struct arC_syntax_tree_typeref* type;
 } arC_syntax_tree_funcdef_body_const_value;
 
+// A reference to a variable node
+typedef struct arC_syntax_tree_funcdef_body_varref
+{
+	arC_syntax_tree header;
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_funcdef_body_varref_resolved {
+		// The type
+		struct arC_syntax_tree* node;
+	} resolved;
+} arC_syntax_tree_funcdef_body_varref;
+
 // Syntax tree for binary operators, such as + and -
 typedef struct arC_syntax_tree_funcdef_body_binop
 {
@@ -442,6 +453,13 @@ ARLANG_API arC_syntax_tree_funcdef_body_return* arC_syntax_tree_funcdef_body_ret
 
 // Create a new constant statement for a body node
 ARLANG_API arC_syntax_tree_funcdef_body_const_value* arC_syntax_tree_funcdef_body_const_value_new(const arC_state* s);
+
+// Create a node which refers to a variable definition. Variable definitions might be:
+// 1. A local variable
+// 2. An argument
+// 3. Global variable
+// 3. Constant
+ARLANG_API arC_syntax_tree_funcdef_body_varref* arC_syntax_tree_funcdef_body_varref_new(const arC_state* s);
 
 // Create a new syntax tree node based on the supplied statement
 ARLANG_API arC_syntax_tree_node arC_syntax_tree_funcdef_body_parse(const arC_state* s);

@@ -308,6 +308,15 @@ arC_syntax_tree_funcdef_body_const_value* arC_syntax_tree_funcdef_body_const_val
 	return p;
 }
 
+arC_syntax_tree_funcdef_body_varref* arC_syntax_tree_funcdef_body_varref_new(const arC_state* s)
+{
+	arC_syntax_tree_funcdef_body_varref* const p = (arC_syntax_tree_funcdef_body_varref*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcdef_body_varref), arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
 arC_syntax_tree_funcdef_body_unaryop* arC_syntax_tree_funcdef_body_unaryop_new(const arC_state* s, arC_syntax_tree_node right, arC_tokens op)
 {
 	arC_syntax_tree_funcdef_body_unaryop* const p = (arC_syntax_tree_funcdef_body_unaryop*)arC_syntax_tree_new(s,
@@ -486,6 +495,59 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 		// TODO: We can resolve the types immediately because these are constants already defined by the root package
 		arC_token_next(t);
 		return asC_syntax_tree(val);
+	}
+	if (t->type == ARTOK_IDENTITY) {
+		// If the supplied node is an identity then it might be a number of things. It might be
+		// 1. A variable reference
+		// 2. A variable declaration
+		// 3. A reference to an argument
+		// 4. A reference to a function
+		// 5. ...
+
+		const arString identity = t->string;
+		arC_token_next(t);
+
+		if (t->type == ARTOK_DECL_ASSIGN) {
+			arC_message_not_implemented(s, "locals");
+			return arC_syntax_tree_error();
+		}
+		else if (t->type == ARTOK_ASSIGN) {
+			arC_message_not_implemented(s, "assign");
+			return arC_syntax_tree_error();
+		}
+		else if (t->type == ARTOK_PARAN_L) {
+			arC_message_not_implemented(s, "function call");
+			return arC_syntax_tree_error();
+		}
+		else if (t->type == ARTOK_DOT) {
+			arC_message_not_implemented(s, "member");
+			return arC_syntax_tree_error();
+		}
+		else {
+			// 
+			arC_syntax_tree_funcdef_body_varref* const varref = arC_syntax_tree_funcdef_body_varref_new(s);
+			if (varref == NULL) {
+				arC_message_out_of_memory(s);
+				return arC_syntax_tree_error();
+			}
+			arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s,
+				BIT(arC_SYNTAX_TREE_FUNCDEF_ARG));
+			if (ref == NULL) {
+				arC_message_out_of_memory(s);
+				return arC_syntax_tree_error();
+			}
+			arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
+
+			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s);
+			if (block == NULL) {
+				arC_message_out_of_memory(s);
+				return arC_syntax_tree_error();
+			}
+			arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
+			block->query = identity;
+			block->valid_types = BIT(arC_SYNTAX_TREE_FUNCDEF_ARG);
+			return asC_syntax_tree(varref);
+		}
 	}
 	else if (t->type == ARTOK_PARAN_L) {
 		arC_token_next(t);
@@ -703,6 +765,12 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 		}
 		break;
 	}
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF: {
+		printf("varref");
+		break;
+	}
+	default:
+		break;
 	}
 	printf("\n");
 

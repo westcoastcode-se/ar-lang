@@ -295,6 +295,26 @@ BOOL arC_syntax_tree_resolve_funcdef_body_const_value(const arC_state* s, const 
 	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
 }
 
+BOOL arC_syntax_tree_resolve_funcdef_body_varref(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_funcdef_body_varref* node)
+{
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node))) {
+		return FALSE;
+	}
+
+	if (node->resolved.node == NULL) {
+		// Hierarchy should be varref -> ref -> ref_block...
+		const arC_syntax_tree_ref* const ref = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(node);
+		node->resolved.node = ref->resolved.node;
+	}
+
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
+}
+
 BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tracker* rt, 
 	arC_syntax_tree_typedef* def)
 {
@@ -438,6 +458,10 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP:
 		if (!arC_syntax_tree_resolve_funcdef_body_binop(s, rt, (arC_syntax_tree_funcdef_body_binop*)st))
+			return FALSE;
+		break;
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF:
+		if (!arC_syntax_tree_resolve_funcdef_body_varref(s, rt, (arC_syntax_tree_funcdef_body_varref*)st))
 			return FALSE;
 		break;
 	default:

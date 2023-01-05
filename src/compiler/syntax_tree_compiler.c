@@ -284,6 +284,21 @@ BOOL arC_syntax_tree_compile_const_value(const arC_state* s, arC_syntax_tree_fun
 	return TRUE;
 }
 
+BOOL arC_syntax_tree_compile_varref(const arC_state* s, arC_syntax_tree_funcdef_body_varref* val)
+{
+	switch (val->resolved.node->type)
+	{
+	case arC_SYNTAX_TREE_FUNCDEF_ARG: {
+		arC_syntax_tree_funcdef_arg* arg = (arC_syntax_tree_funcdef_arg*)val->resolved.node;
+		arB_func_add_instr(arg->func->compiled.symbol, arB_instr_lda(arg->compiled.symbol));
+		break;
+	}
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
 BOOL arC_syntax_tree_compile(const arC_state* s, arC_syntax_tree* st)
 {
 	switch (st->type) {
@@ -301,6 +316,8 @@ BOOL arC_syntax_tree_compile(const arC_state* s, arC_syntax_tree* st)
 		return arC_syntax_tree_compile_unaryop(s, (arC_syntax_tree_funcdef_body_unaryop*)st);
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE:
 		return arC_syntax_tree_compile_const_value(s, (arC_syntax_tree_funcdef_body_const_value*)st);
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF:
+		return arC_syntax_tree_compile_varref(s, (arC_syntax_tree_funcdef_body_varref*)st);
 	default:
 	{
 		// Iterate over all the children
