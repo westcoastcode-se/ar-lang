@@ -66,7 +66,7 @@ add_library(arlang
 
     #"src/compiler/symbol.c"
     "src/compiler/source_code.c" 
-    "src/compiler/optimizations.c"    
+    "src/compiler/syntax_tree_optimize.c"    
     "src/compiler/syntax_tree_compiler.c"
     "src/compiler/syntax_tree_resolve.c"
 )

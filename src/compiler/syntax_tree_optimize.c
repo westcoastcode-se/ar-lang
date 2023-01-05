@@ -1,4 +1,4 @@
-#include "optimizations.h"
+#include "syntax_tree_optimize.h"
 #include "tokens.h"
 #include "../arCompiler.h"
 

@@ -1,10 +1,10 @@
 #include "arCompiler.h"
 #include "arMemory.h"
-#include "compiler/optimizations.h"
 #include "compiler/tokens.h"
 #include "compiler/messages.h"
 #include "compiler/search.h"
 #include "compiler/syntax_tree_compiler.h"
+#include "compiler/syntax_tree_optimize.h"
 #include "compiler/syntax_tree_resolve.h"
 #include "arUtils.h"
 

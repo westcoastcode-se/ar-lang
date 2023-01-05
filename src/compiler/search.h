@@ -21,8 +21,6 @@ typedef struct arC_search_children_context
 // Context used when searching for tree nodes upwards in a predefined pattern
 typedef struct arC_search_upwards_context
 {
-	// The parent we are search from at the moment
-	arC_syntax_tree_node parent;
 	// The most recent node we've found
 	arC_syntax_tree_node node;
 	// Search query

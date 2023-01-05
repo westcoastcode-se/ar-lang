@@ -34,6 +34,15 @@ arC_syntax_tree_node arC_search_forwards_import_get_package(arC_syntax_tree_impo
 	return asC_syntax_tree(node->resolved.ref);
 }
 
+arC_syntax_tree_node arC_search_get_first_sibling(arC_syntax_tree_node node)
+{
+	if (node->parent == NULL)
+		return NULL;
+	if (node->parent->parent == NULL)
+		return NULL;
+	return node->parent->parent->child_head;
+}
+
 arC_syntax_tree_node arC_search_forwards(arC_search_upwards_context* ctx)
 {
 	const arInt32 types = ctx->types;
@@ -54,10 +63,10 @@ arC_syntax_tree_node arC_search_forwards(arC_search_upwards_context* ctx)
 				if (inner_ctx.node != NULL) {
 					// Search from the first child in the package instead of the package itself
 					inner_ctx.node = inner_ctx.node->child_head;
-					inner_ctx.parent = node->parent;
 					inner_ctx.recursive = FALSE;
 					hit = arC_search_forwards(&inner_ctx);
 					if (hit != NULL) {
+						// TODO: What if the imported package contains more potential hits?
 						ctx->node = node->tail;
 						return hit;
 					}
@@ -71,9 +80,9 @@ arC_syntax_tree_node arC_search_forwards(arC_search_upwards_context* ctx)
 	if (ctx->recursive && node != NULL) {
 		// Search among parents
 		if (node->parent != NULL) {
-			ctx->parent = node->parent->parent;
-			ctx->node = ctx->parent->child_head; // Search from the first child in the parent
+			ctx->node = arC_search_get_first_sibling(node);
 			ctx->version = node->parent->version;
+			// TODO: search backwards until we've reached the "package" level
 			return arC_search_upwards_next(ctx);
 		}
 	}
@@ -97,10 +106,10 @@ arC_syntax_tree_node arC_search_backwards(arC_search_upwards_context* ctx)
 				arC_search_upwards_context inner_ctx = *ctx;
 				inner_ctx.flags &= ~arC_SEARCH_FLAG_INCLUDE_IMPORTS;
 				inner_ctx.node = arC_search_forwards_import_get_package((arC_syntax_tree_import*)node);
-				inner_ctx.parent = node->parent;
 				inner_ctx.recursive = FALSE;
 				hit = arC_search_forwards(&inner_ctx);
 				if (hit != NULL) {
+					// TODO: What if the imported package contains more potential hits?
 					ctx->node = node->head;
 					return hit;
 				}
@@ -113,10 +122,10 @@ arC_syntax_tree_node arC_search_backwards(arC_search_upwards_context* ctx)
 	if (ctx->recursive && node != NULL) {
 		// Search among parents
 		if (node->parent != NULL) {
-			ctx->parent = node->parent->parent;
-			ctx->node = ctx->parent->child_head; // Search from the first child in the parent
+			ctx->node = arC_search_get_first_sibling(node);
 			ctx->version = node->parent->version;
 			ctx->flags &= ~arC_SEARCH_FLAG_BACKWARDS;
+			// TODO: search backwards until we've reached the "package" level
 			return arC_search_upwards_next(ctx);
 		}
 	}
@@ -166,7 +175,6 @@ arC_syntax_tree_node arC_search_children_once(arC_syntax_tree_node node, const a
 void arC_search_upwards_begin(arC_syntax_tree_node node, const arString* query, arInt32 types,
 	arInt32 flags, arC_search_upwards_context* ctx)
 {
-	ctx->parent = node->parent;
 	ctx->node = node;
 	ctx->query = *query;
 	ctx->types = types;

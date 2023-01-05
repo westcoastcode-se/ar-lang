@@ -47,24 +47,26 @@ BOOL arC_syntax_tree_resolve_import(const arC_state* s, const arC_recursion_trac
 	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
-	// The last block in the "import block" tree should point to the actual package we are importing.
-	// If it's ref is NULL then the package is not found
-	const arC_syntax_tree_import_block* block = (const arC_syntax_tree_import_block*)ref->header.child_head;
-	while (1) {
-		// Check to see if the block failed to be resolved
-		if (block->resolved.ref == NULL) {
-			// TODO: The package name should be the signature and not the block name
-			return arC_message_symbol_unresolved(s, &block->name);
+	if (ref->resolved.ref == NULL) {
+		// The last block in the "import block" tree should point to the actual package we are importing.
+		// If it's ref is NULL then the package is not found
+		const arC_syntax_tree_import_block* block = (const arC_syntax_tree_import_block*)ref->header.child_head;
+		while (1) {
+			// Check to see if the block failed to be resolved
+			if (block->resolved.ref == NULL) {
+				// TODO: The package name should be the signature and not the block name
+				return arC_message_symbol_unresolved(s, &block->name);
+			}
+			// Current block is the last last element in the parent-child relationship
+			if (block->header.child_head == NULL) {
+				break;
+			}
+			block = (const arC_syntax_tree_import_block*)ref->header.child_head;
+			ASSERT_NOT_NULL(block);
 		}
-		// Current block is the last last element in the parent-child relationship
-		if (block->header.child_head == NULL) {
-			break;
-		}
-		block = (const arC_syntax_tree_import_block*)ref->header.child_head;
-		ASSERT_NOT_NULL(block);
+		// TODO: What if multiple hits are found?
+		ref->resolved.ref = block->resolved.ref;
 	}
-	// TODO: What if multiple hits are found?
-	ref->resolved.ref = block->resolved.ref;
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
@@ -75,29 +77,30 @@ BOOL arC_syntax_tree_resolve_import_block(const arC_state* s, arC_syntax_tree_im
 		return TRUE;
 
 	assert(ref->header.parent != NULL);
-
-	// Figure out where to start searching for the package
-	arC_search_upwards_context ctx;
-	if (ref->header.parent->type == arC_SYNTAX_TREE_IMPORT) {
-		// We are searching from the current package and the root node's perspective
-		arC_search_upwards_begin(asC_syntax_tree(ref->package), &ref->name, 
-			BIT(arC_SYNTAX_TREE_PACKAGE), 0, &ctx);
+	if (ref->resolved.ref == NULL) {
+		// Figure out where to start searching for the package
+		arC_search_upwards_context ctx;
+		if (ref->header.parent->type == arC_SYNTAX_TREE_IMPORT) {
+			// We are searching from the current package and the root node's perspective
+			arC_search_upwards_begin(asC_syntax_tree(ref->package), &ref->name,
+				BIT(arC_SYNTAX_TREE_PACKAGE), 0, &ctx);
+		}
+		else {
+			// A block must have a block node as a parent
+			assert(ref->header.parent->type == arC_SYNTAX_TREE_IMPORT_BLOCK);
+			arC_syntax_tree_import_block* parent_block = (arC_syntax_tree_import_block*)ref->header.parent;
+			// We are searching from the parent block's parent's point of view
+			arC_search_upwards_begin(asC_syntax_tree(parent_block->package), &ref->name,
+				BIT(arC_SYNTAX_TREE_PACKAGE), 0, &ctx);
+		}
+		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
+		if (hit == NULL) {
+			arC_message_symbol_unresolved(s, &ref->name);
+			return FALSE;
+		}
+		// TODO: What if multiple hits are found?
+		ref->resolved.ref = (arC_syntax_tree_package*)hit;
 	}
-	else {
-		// A block must have a block node as a parent
-		assert(ref->header.parent->type == arC_SYNTAX_TREE_IMPORT_BLOCK);
-		arC_syntax_tree_import_block* parent_block = (arC_syntax_tree_import_block*)ref->header.parent;
-		// We are searching from the parent block's parent's point of view
-		arC_search_upwards_begin(asC_syntax_tree(parent_block->package), &ref->name, 
-			BIT(arC_SYNTAX_TREE_PACKAGE), 0, &ctx);
-	}
-	arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-	if (hit == NULL) {
-		arC_message_symbol_unresolved(s, &ref->name);
-		return FALSE;
-	}
-	// TODO: What if multiple hits are found?
-	ref->resolved.ref = (arC_syntax_tree_package*)hit;
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
@@ -112,17 +115,21 @@ BOOL arC_syntax_tree_resolve_arg(const arC_state* s, const arC_recursion_tracker
 		return arC_message_not_implemented(s, "no type defined for argument");
 	}
 
-	const arString str = arg->type->name;
-	arC_search_upwards_context ctx;
-	arC_search_upwards_begin(asC_syntax_tree(arg), &str, arg->type->valid_types,
-		arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
-	arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-	if (hit == NULL) {
-		arC_message_symbol_unresolved(s, &arg->type->name);
-		return FALSE;
+	// Resolve the type if not done already
+	if (arg->resolved.def == NULL) {
+		const arString str = arg->type->name;
+		arC_search_upwards_context ctx;
+		arC_search_upwards_begin(asC_syntax_tree(arg), &str, arg->type->valid_types,
+			arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
+		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
+		if (hit == NULL) {
+			arC_message_symbol_unresolved(s, &arg->type->name);
+			return FALSE;
+		}
+		// TODO: What if multiple hits are found?
+		arg->resolved.def = (arC_syntax_tree_typedef*)hit;
 	}
-	// TODO: What if multiple hits are found?
-	arg->resolved.def = (arC_syntax_tree_typedef*)hit;
+
 	arg->compiled.symbol = arB_arg_new();
 	arB_arg_set_name(arg->compiled.symbol, &arg->name);
 	asC_syntax_tree_phase_set(arg, arC_SYNTAX_TREE_PHASE_RESOLVE);
@@ -139,17 +146,6 @@ BOOL arC_syntax_tree_resolve_ret(const arC_state* s, const arC_recursion_tracker
 		return arC_message_not_implemented(s, "no type defined for return");
 	}
 
-	const arString str = ret->type->name;
-	arC_search_upwards_context ctx;
-	arC_search_upwards_begin(asC_syntax_tree(ret), &str, ret->type->valid_types,
-		arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
-	arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-	if (hit == NULL) {
-		arC_message_symbol_unresolved(s, &ret->type->name);
-		return FALSE;
-	}
-	// TODO: What if multiple hits are found?
-	ret->resolved.def = (arC_syntax_tree_typedef*)hit;
 	ret->compiled.symbol = arB_return_new();
 	asC_syntax_tree_phase_set(ret, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
@@ -160,16 +156,18 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, arC_syntax_tree_typeref
 	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
-	arC_search_upwards_context ctx;
-	arC_search_upwards_begin(asC_syntax_tree(ref), &ref->name, ref->valid_types,
-		arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
-	arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-	if (hit == NULL) {
-		arC_message_symbol_unresolved(s, &ref->name);
-		return FALSE;
+	if (ref->resolved.def == NULL) {
+		arC_search_upwards_context ctx;
+		arC_search_upwards_begin(asC_syntax_tree(ref), &ref->name, ref->valid_types,
+			arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
+		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
+		if (hit == NULL) {
+			arC_message_symbol_unresolved(s, &ref->name);
+			return FALSE;
+		}
+		// TODO: What if multiple hits are found?
+		ref->resolved.def = hit;
 	}
-	// TODO: What if multiple hits are found?
-	ref->resolved.def = hit;
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
@@ -179,6 +177,41 @@ BOOL arC_syntax_tree_resolve_funcdef(const arC_state* s, const arC_recursion_tra
 {
 	def->compiled.symbol = arB_func_new(&def->signature.name);
 	asC_syntax_tree_phase_set(def, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
+}
+
+BOOL arC_syntax_tree_resolve_funcdef_body_binop(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_funcdef_body_binop* def)
+{
+	arC_syntax_tree_node left = def->header.child_head;
+	arC_syntax_tree_node right = left->tail;
+	
+	// TODO: ??
+	
+	asC_syntax_tree_phase_set(def, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
+}
+
+BOOL arC_syntax_tree_resolve_funcdef_body_const_value(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_funcdef_body_const_value* node)
+{
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (node->resolved.def == NULL) {
+		const arString str = node->type->name;
+		arC_search_upwards_context ctx;
+		arC_search_upwards_begin(asC_syntax_tree(node), &str, node->type->valid_types,
+			arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
+		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
+		if (hit == NULL) {
+			arC_message_symbol_unresolved(s, &node->type->name);
+			return FALSE;
+		}
+		// TODO: What if multiple hits are found?
+		node->resolved.def = (arC_syntax_tree_typedef*)hit;
+	}
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
 
@@ -193,7 +226,7 @@ BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tra
 
 	const arC_syntax_tree* found = arC_recursion_tracker_find(rt, asC_syntax_tree(def));
 	if (found != NULL) {
-		// TODO: Recursion detected in the direction of <def> -> <found>
+		// TODO: Recursion detected in the direction of arg:<def> -> local:<found>
 		arC_message_type_recursive_dependency(s, "insert type here");
 		return FALSE;
 	}
@@ -226,7 +259,6 @@ BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tra
 		if (!arC_syntax_tree_resolve_typedef(s, &child_rt, def->resolved.inherits_from)) {
 			return FALSE;
 		}
-		
 	}
 
 	// If this type is indirectly dependent of a specific type. This type of dependency does not always affect
@@ -289,6 +321,7 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 {
 	ASSERT_NOT_NULL(s);
 	ASSERT_NOT_NULL(st);
+
 	// Resolve before
 	switch (st->type)
 	{
@@ -324,6 +357,10 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		if (!arC_syntax_tree_resolve_funcdef(s, rt, (arC_syntax_tree_funcdef*)st))
 			return FALSE;
 		break;
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE:
+		if (!arC_syntax_tree_resolve_funcdef_body_const_value(s, rt, (arC_syntax_tree_funcdef_body_const_value*)st))
+			return FALSE;
+		break;
 	}
 
 	// Resolve children
@@ -338,6 +375,10 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 	// Resolve after
 	switch (st->type)
 	{
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP:
+		if (!arC_syntax_tree_resolve_funcdef_body_binop(s, rt, (arC_syntax_tree_funcdef_body_binop*)st))
+			return FALSE;
+		break;
 	case arC_SYNTAX_TREE_IMPORT:
 		if (!arC_syntax_tree_resolve_import(s, rt, (arC_syntax_tree_import*)st))
 			return FALSE;

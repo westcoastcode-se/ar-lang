@@ -69,6 +69,7 @@ typedef struct arC_syntax_tree
 } arC_syntax_tree, * arC_syntax_tree_node;
 
 #define asC_syntax_tree(st) (&st->header)
+#define asC_syntax_tree_first_child(st) (st->header.child_head)
 #define asC_syntax_tree_type(st) (st->header.type)
 #define asC_syntax_tree_phase(st) (st->header.phase)
 #define asC_syntax_tree_phase_set(st, p) (st->header.phase |= p)
@@ -130,7 +131,7 @@ typedef struct arC_syntax_tree_typedef
 	// The package this block is part of
 	struct arC_syntax_tree_package* package;
 	// Properties set during the resolve phase
-	struct typedef_resolved {
+	struct arC_syntax_tree_typedef_resolved {
 		// The virtual machine data type
 		arInt8 data_type;
 		// The underlying size that this object will take on the stack
@@ -143,7 +144,7 @@ typedef struct arC_syntax_tree_typedef
 		arC_signature signature;
 	} resolved;
 	// Properties set during the compile phase
-	struct typedef_compiled {
+	struct arC_syntax_tree_typedef_compiled {
 		// The type symbol
 		arB_type* symbol;
 	} compiled;
@@ -165,7 +166,7 @@ typedef struct arC_syntax_tree_typeref
 	// What node types are valid for when resolving the underlying type
 	arInt32 valid_types;
 	// Properties set during the resolve phase
-	struct typeref_resolved {
+	struct arC_syntax_tree_typeref_resolved {
 		// Node definition (package or type) this reference points to
 		arC_syntax_tree_node def;
 	} resolved;
@@ -193,7 +194,7 @@ typedef struct arC_syntax_tree_funcdef
 	// The body
 	struct arC_syntax_tree_funcdef_body* body;
 	// Properties set during the compile phase
-	struct funcdef_compiled {
+	struct arC_syntax_tree_funcdef_compiled {
 		// The type symbol
 		arB_func* symbol;
 	} compiled;
@@ -249,11 +250,6 @@ typedef struct arC_syntax_tree_funcdef_ret
 	// TODO: Add support for named returns?
 	// Reference to the type (is also a child of the argument)
 	struct arC_syntax_tree_typeref* type;
-	// Properties set during the resolve phase
-	struct funcdef_ret_resolved {
-		// The type
-		struct arC_syntax_tree_typedef* def;
-	} resolved;
 	// Properties set during the compile phase
 	struct funcdef_ret_compiled {
 		// Return
@@ -303,8 +299,16 @@ typedef struct arC_syntax_tree_funcdef_body
 typedef struct arC_syntax_tree_funcdef_body_return
 {
 	arC_syntax_tree header;
+
 	// The closest function node
 	struct arC_syntax_tree_funcdef* closest_function_node;
+	// Reference to the type
+	struct arC_syntax_tree_typeref* type;
+	// Properties set during the resolve phase
+	struct funcdef_body_return_resolved {
+		// The type
+		struct arC_syntax_tree_typedef* def;
+	} resolved;
 } arC_syntax_tree_funcdef_body_return;
 
 // A constant value
@@ -315,6 +319,13 @@ typedef struct arC_syntax_tree_funcdef_body_const_value
 	arPrimitiveValue value;
 	// The closest function node
 	struct arC_syntax_tree_funcdef* closest_function_node;
+	// Reference to the type (is also a child of the locals)
+	struct arC_syntax_tree_typeref* type;
+	// Properties set during the resolve phase
+	struct funcdef_body_const_value_resolved {
+		// The type
+		struct arC_syntax_tree_typedef* def;
+	} resolved;
 } arC_syntax_tree_funcdef_body_const_value;
 
 // Syntax tree for binary operators, such as + and -
@@ -414,6 +425,10 @@ ARLANG_API arC_syntax_tree_typedef* arC_syntax_tree_typedef_new(const arC_state*
 // Create a new type reference
 ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state* s);
 
+// Create a new type reference
+ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, 
+	const arString* name, arInt32 valid_types);
+
 // Create a new function definition
 ARLANG_API arC_syntax_tree_funcdef* arC_syntax_tree_funcdef_new(const arC_state* s);
 
@@ -431,6 +446,9 @@ ARLANG_API arC_syntax_tree_funcdef_ret* arC_syntax_tree_funcdef_ret_new(const ar
 
 // Create a new body definition
 ARLANG_API arC_syntax_tree_funcdef_body* arC_syntax_tree_funcdef_body_new(const arC_state* s);
+
+// Get the type which is pushed onto the stack after the supplied node is processed
+ARLANG_API arC_syntax_tree_typedef* arC_syntax_tree_get_stack_type(arC_syntax_tree_node st);
 
 // Create a new return statement for a body node
 ARLANG_API arC_syntax_tree_funcdef_body_return* arC_syntax_tree_funcdef_body_return_new(const arC_state* s);
