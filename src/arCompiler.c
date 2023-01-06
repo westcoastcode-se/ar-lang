@@ -2,7 +2,7 @@
 #include "arMemory.h"
 #include "compiler/tokens.h"
 #include "compiler/messages.h"
-#include "compiler/search.h"
+#include "compiler/syntax_tree_search.h"
 #include "compiler/syntax_tree_compiler.h"
 #include "compiler/syntax_tree_optimize.h"
 #include "compiler/syntax_tree_resolve.h"
@@ -51,11 +51,11 @@ arC_syntax_tree_typedef* arCompiler_root_add_type(const arC_state* s, arC_syntax
 	if (node == NULL)
 		return NULL;
 	if (of_type != NULL) {
-		node->of_type = arC_syntax_tree_typeref_known(s, name, BIT(arC_SYNTAX_TREE_TYPEDEF));
+		node->of_type = arC_syntax_tree_typeref_known(s, name, arC_SYNTAX_TREE_SEARCH_TYPE_TYPEDEF);
 		node->of_type->resolved.def = of_type;
 	}
 	if (inherits_from != NULL) {
-		node->inherits_from = arC_syntax_tree_typeref_known(s, name, BIT(arC_SYNTAX_TREE_TYPEDEF));
+		node->inherits_from = arC_syntax_tree_typeref_known(s, name, arC_SYNTAX_TREE_SEARCH_TYPE_TYPEDEF);
 		node->inherits_from->resolved.def = inherits_from;
 	}
 	node->name = *name;
@@ -114,8 +114,9 @@ BOOL arCompiler_init(arCompiler* c)
 {
 	if (!arMemoryPool_init(&c->memory_pool))
 		return FALSE;
+	arC_syntax_tree_search_memory_init(&c->search_memory);
 
-	const arC_state state = { c, &c->memory_pool, NULL, asC_syntax_tree(c->root_node),
+	const arC_state state = { c, &c->memory_pool, &c->search_memory, NULL, asC_syntax_tree(c->root_node),
 		c->root_node, NULL, NULL };
 	// Prepare a root node and associate types so that they are global
 	c->root_node = arCompiler_create_system_package(&state);
@@ -158,7 +159,8 @@ void arCompiler_destroy(arCompiler* ptr)
 		arC_source_code_destroy(source);
 		source = tail;
 	}
-
+	
+	arC_syntax_tree_search_memory_release(&ptr->search_memory);
 	arMemoryPool_release(&ptr->memory_pool);
 	arMessages_destroy(&ptr->messages);
 	arFree(ptr);
@@ -233,36 +235,34 @@ arC_syntax_tree_typeref* arCompiler_parse_typeref(arC_token* t, const arC_state*
 	arC_syntax_tree_package* closet_package = s->package_node;
 	arC_syntax_tree_node parent = s->parent_node;
 	arC_syntax_tree_typeref* const typeref = arC_syntax_tree_typeref_new(s);
-	arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s, BIT(arC_SYNTAX_TREE_TYPEDEF));
+	arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s);
 	arC_syntax_tree_add_child(asC_syntax_tree(typeref), asC_syntax_tree(ref));
 
 	// Add the first block (it might be a type or a package)
-	arC_syntax_tree_ref_block* block = arC_syntax_tree_ref_block_new(s);
+	arC_syntax_tree_ref_block* block = arC_syntax_tree_ref_block_new(s, arC_SYNTAX_TREE_SEARCH_TYPE_TYPEDEF);
 	block->query = t->string;
 	arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
 
 	arC_token_next(t);
-	// If the next token is not a "." then we know for sure that we are refering to a typedef
+	// If the next token is not a "." then we know for sure that we are refering to a typedef and nothing else
 	if (t->type != ARTOK_DOT) {
-		block->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF);
 		return typeref;
 	}
 	else {
-		block->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF) | BIT(arC_SYNTAX_TREE_PACKAGE);
+		block->types |= arC_SYNTAX_TREE_SEARCH_TYPE_PACKAGE;
 	}
 
 	while (TRUE) {
-		block = arC_syntax_tree_ref_block_new(s);
+		block = arC_syntax_tree_ref_block_new(s, arC_SYNTAX_TREE_SEARCH_TYPE_TYPEDEF);
 		block->query = t->string;
 		arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
 
 		arC_token_next(t);
 		if (t->type != ARTOK_DOT) {
-			block->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF);
 			break;
 		}
 		else {
-			block->valid_types = BIT(arC_SYNTAX_TREE_TYPEDEF) | BIT(arC_SYNTAX_TREE_PACKAGE);
+			block->types |= arC_SYNTAX_TREE_SEARCH_TYPE_PACKAGE;
 		}
 	}
 	return typeref;
@@ -432,8 +432,8 @@ BOOL arCompiler_parse_package(arCompiler* c, arC_token* t, const arC_state* s)
 	// Search for a package in the syntax tree. The package string is a little special because
 	// we know that a package definition's parent will be part of the same string, so you can figure out the
 	// full signature based on the parent's signatures
-	arC_syntax_tree_package* package = (arC_syntax_tree_package*)arC_search_children_once(s->parent_node,
-		&t->string, BIT(arC_SYNTAX_TREE_PACKAGE));
+	arC_syntax_tree_package* package = (arC_syntax_tree_package*)arC_syntax_tree_search_once(s, s->parent_node,
+		&t->string, arC_SYNTAX_TREE_SEARCH_TYPE_PACKAGE, 0);
 	if (package == NULL) {
 		// The package was not found? Create it
 		package = arC_syntax_tree_package_new(s);
@@ -506,7 +506,7 @@ BOOL arCompiler_parse_source_code(arCompiler* c, arC_token* t)
 	// Parse all tokens and build a syntax tree from it. Expected package to be at the top of the file
 	while (1) {
 		if (t->type == ARTOK_KEYWORD_PACKAGE) {
-			const arC_state state = { c, &c->memory_pool, t, asC_syntax_tree(c->root_node), 
+			const arC_state state = { c, &c->memory_pool, &c->search_memory, t, asC_syntax_tree(c->root_node),
 				c->root_node, NULL, NULL};
 			arC_token_next(t);
 			if (!arCompiler_parse_package(c, t, &state)) {
@@ -554,8 +554,11 @@ void arCompiler_raise_message(arCompiler* c, arMessage* msg)
 arByte* arCompiler_compile(arCompiler* c)
 {
 	const arC_state state = {
-		c, &c->memory_pool, NULL, NULL, NULL, NULL, NULL
+		c, &c->memory_pool, &c->search_memory, NULL, NULL, NULL, NULL, NULL
 	};
+
+	arC_syntax_tree_stdout(asC_syntax_tree(c->root_node));
+
 	// Resolve references
 	if (!arC_syntax_tree_resolve_references(&state, asC_syntax_tree(c->root_node)))
 		return NULL;

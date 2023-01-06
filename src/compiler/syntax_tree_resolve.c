@@ -1,6 +1,6 @@
 #include "syntax_tree_resolve.h"
 #include "messages.h"
-#include "search.h"
+#include "syntax_tree_search.h"
 #include "../arCompiler.h"
 #include "../arString.h"
 #include "../arStringPool.h"
@@ -76,7 +76,7 @@ BOOL arC_syntax_tree_resolve_ref(const arC_state* s, const arC_recursion_tracker
 	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref)))
 		return FALSE;
 
-	if (ref->resolved.node == NULL) {
+	if (ref->resolved.nodes[0] == NULL) {
 		const arC_syntax_tree_ref_block* block = (arC_syntax_tree_ref_block*)asC_syntax_tree_first_child(ref);
 		while (1) {
 			if (block->header.child_head != block->header.child_tail) {
@@ -90,10 +90,10 @@ BOOL arC_syntax_tree_resolve_ref(const arC_state* s, const arC_recursion_tracker
 			}
 			block = (const arC_syntax_tree_ref_block*)block->header.child_head;
 		}
-		if ((BIT(block->resolved.node->type) & ref->valid_types) == 0) {
-			return arC_message_feature_missing(s, "blocks was not a valid type");
-		}
-		ref->resolved.node = block->resolved.node;
+		
+		for (int i = 0; i < block->resolved.nodes_count; ++i)
+			ref->resolved.nodes[i] = block->resolved.nodes[i];
+		ref->resolved.nodes_count = block->resolved.nodes_count;
 	}
 
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
@@ -106,23 +106,47 @@ BOOL arC_syntax_tree_resolve_ref_block(const arC_state* s, const arC_recursion_t
 	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
-	if (ref->resolved.node == NULL) {
-		arC_search_upwards_context ctx;
+	if (ref->resolved.nodes[0] == NULL) {
+		arC_syntax_tree_search_items* items;
 		// Is the parents a reference then continue search the syntax tree from that node's point of view
 		if (ref->header.parent->type == arC_SYNTAX_TREE_REF_BLOCK) {
-			arC_search_upwards_begin(ref->resolved.node, &ref->query, ref->valid_types, 0, &ctx);
+			int found_index = 0;
+
+			// Make sure to search among all the parents results because we don't really know which result
+			// is the actual parent until we've iterated over all blocks
+			const arC_syntax_tree_ref_block* const parent_block = (arC_syntax_tree_ref_block*)ref->header.parent;
+			for (int i = 0; i < parent_block->resolved.nodes_count; ++i) {
+				arC_syntax_tree_node resolved = parent_block->resolved.nodes[i];
+				arC_syntax_tree_search_items* const items = arC_syntax_tree_search_visit(s, resolved, &ref->query, ref->types, arC_SEARCH_FLAG_INCLUDE_CHILDREN);
+				if (items->count > 0) {
+					arC_syntax_tree_search_item* item = items->first;
+					while (item) {
+						if (found_index >= arC_syntax_tree_ref_block_max_nodes)
+							break;
+						ref->resolved.nodes[found_index++] = item->node;
+						item = item->tail;
+					}
+				}
+				arC_syntax_tree_search_visit_destroy(items);
+			}
 		}
 		else {
-			arC_search_upwards_begin(asC_syntax_tree(ref), &ref->query, ref->valid_types, 
-				arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS, &ctx);
+			int found_index = 0;
+			arC_syntax_tree_search_items* const items = arC_syntax_tree_search_visit(s, asC_syntax_tree(ref), &ref->query, ref->types,
+				arC_SEARCH_FLAG_BACKWARDS | arC_SEARCH_FLAG_INCLUDE_IMPORTS | arC_SEARCH_FLAG_INCLUDE_CHILDREN |
+				arC_SEARCH_FLAG_INCLUDE_PARENTS);
+			if (items->count > 0) {
+				arC_syntax_tree_search_item* item = items->first;
+				while (item) {
+					if (found_index >= arC_syntax_tree_ref_block_max_nodes)
+						break;
+					ref->resolved.nodes[found_index++] = item->node;
+					ref->resolved.nodes_count++;
+					item = item->tail;
+				}
+			}
+			arC_syntax_tree_search_visit_destroy(items);
 		}
-		arC_syntax_tree_node hit = arC_search_upwards_next(&ctx);
-		if (hit == NULL) {
-			arC_message_symbol_unresolved(s, &ref->query);
-			return FALSE;
-		}
-		// TODO: What if multiple hits are found?
-		ref->resolved.node = hit;
 	}
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref));
@@ -150,10 +174,11 @@ BOOL arC_syntax_tree_resolve_import(const arC_state* s, const arC_recursion_trac
 	if (ref->resolved.ref == NULL) {
 		// Hierarchy should be import -> ref -> ref_block...
 		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(ref);
-		if (ref2->resolved.node->type != arC_SYNTAX_TREE_PACKAGE) {
-			return arC_message_feature_missing(s, "TODO: What is the package here?");
+		ref->resolved.ref = 
+			(arC_syntax_tree_package*)arC_syntax_tree_ref_find_first(ref2, arC_SYNTAX_TREE_PACKAGE);
+		if (ref->resolved.ref == NULL) {
+			return arC_message_feature_missing(s, "TODO: Could not find package (What is the package here?)");
 		}
-		ref->resolved.ref = (arC_syntax_tree_package*)ref2->resolved.node;
 	}
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
@@ -201,12 +226,13 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tra
 		return FALSE;
 
 	if (ref->resolved.def == NULL) {
-		// Hierarchy should be import -> ref -> ref_block...
+		// Hierarchy should be typeref -> ref -> ref_block...
 		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(ref);
-		if (ref2->resolved.node->type != arC_SYNTAX_TREE_TYPEDEF) {
-			return arC_message_feature_missing(s, "TODO: What is the package here?");
+		ref->resolved.def =
+			(arC_syntax_tree_typedef*)arC_syntax_tree_ref_find_first(ref2, arC_SYNTAX_TREE_TYPEDEF);
+		if (ref->resolved.def == NULL) {
+			return arC_message_feature_missing(s, "TODO: Could not find type (What is the type signature here?)");
 		}
-		ref->resolved.def = (arC_syntax_tree_typedef*)ref2->resolved.node;
 	}
 	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
@@ -307,8 +333,11 @@ BOOL arC_syntax_tree_resolve_funcdef_body_varref(const arC_state* s, const arC_r
 
 	if (node->resolved.node == NULL) {
 		// Hierarchy should be varref -> ref -> ref_block...
-		const arC_syntax_tree_ref* const ref = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(node);
-		node->resolved.node = ref->resolved.node;
+		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(node);
+		node->resolved.node = ref2->resolved.nodes[0];
+		if (node->resolved.node == NULL) {
+			return arC_message_feature_missing(s, "TODO: Could not variale here type (What is the type signature here?)");
+		}
 	}
 
 	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);

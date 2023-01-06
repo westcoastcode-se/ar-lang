@@ -4,7 +4,6 @@
 #include "arMessage.h"
 #include "arBuilder.h"
 #include "compiler/source_code.h"
-//#include "compiler/symbol.h"
 #include "compiler/syntax_tree.h"
 #include "compiler/message_codes.h"
 
@@ -20,6 +19,8 @@ typedef struct arCompiler
 	arC_source_code* sources_end;
 	// Memory Pool for allocating syntax tree and symbol objects
 	arMemoryPool memory_pool;
+	// Memory used when performing search queries
+	arC_syntax_tree_search_memory search_memory;
 	// The root node where everything originates from
 	arC_syntax_tree_package* root_node;
 	// Pipeline and builder for generating the machine code

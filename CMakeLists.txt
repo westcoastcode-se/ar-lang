@@ -60,15 +60,15 @@ add_library(arlang
 
     "src/compiler/syntax_tree.c" 
     "src/compiler/lexer.c" 
-    "src/compiler/search.c"
+    
     "src/compiler/signature.c"
     "src/compiler/messages.c"
 
-    #"src/compiler/symbol.c"
     "src/compiler/source_code.c" 
     "src/compiler/syntax_tree_optimize.c"    
     "src/compiler/syntax_tree_compiler.c"
     "src/compiler/syntax_tree_resolve.c"
+    "src/compiler/syntax_tree_search.c"
 )
 
 # Tests

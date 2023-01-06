@@ -6,11 +6,13 @@
 #include "../arPrimitiveValue.h"
 #include "../arMemoryPool.h"
 #include "../arBuilder.h"
+#include "syntax_tree_search.h"
 
 // The type of syntax tree node this is
 typedef enum arC_syntax_tree_type
 {
-	arC_SYNTAX_TREE_ERROR = 1,
+	arC_SYNTAX_TREE_UNKNOWN = 0,
+	arC_SYNTAX_TREE_ERROR,
 
 	arC_SYNTAX_TREE_REF,
 	arC_SYNTAX_TREE_REF_BLOCK,
@@ -39,10 +41,10 @@ typedef enum arC_syntax_tree_type
 } arC_syntax_tree_type;
 
 // Bits used to keep track of which phase a syntax_tree node has completed
-typedef enum arC_syntax_tree_phase_bits {
+typedef enum arC_syntax_tree_phase_bit {
 	arC_SYNTAX_TREE_PHASE_RESOLVE = (1 << 0),
 	arC_SYNTAX_TREE_PHASE_COMPILE = (1 << 1)
-} arC_syntax_tree_phase_bits;
+} arC_syntax_tree_phase_bit;
 typedef arInt32 arC_syntax_tree_phase;
 
 // Base type for all syntax tree nodes
@@ -62,9 +64,6 @@ typedef struct arC_syntax_tree
 	struct arC_syntax_tree* tail;
 	// Which phases this node is processed
 	arC_syntax_tree_phase phase;
-	// Version, used as a way to know if we are iterating over a tree while being updated
-	// at the same time
-	arInt32 version;
 } arC_syntax_tree, * arC_syntax_tree_node;
 
 #define asC_syntax_tree(st) (&st->header)
@@ -74,16 +73,19 @@ typedef struct arC_syntax_tree
 #define asC_syntax_tree_phase_set(st, p) (st->header.phase |= p)
 #define asC_syntax_tree_phase_done(st, phase) ((asC_syntax_tree_phase(st) & phase) == phase)
 
+#define arC_syntax_tree_ref_block_max_nodes 32
+
 // A reference to a syntax tree node that's not resolved yet. A ref contains a number of blocks
 // where the last block contains the actual node we are searching for
 typedef struct arC_syntax_tree_ref
 {
 	arC_syntax_tree header;
-	// What node types are valid for when resolving the underlying type
-	arInt32 valid_types;
 	// Properties set during the resolve phase
 	struct arC_syntax_tree_ref_resolved {
-		struct arC_syntax_tree* node;
+		// All nodes this block resolved into
+		arC_syntax_tree_node nodes[arC_syntax_tree_ref_block_max_nodes];
+		// The number of nodes resolved
+		arInt32 nodes_count;
 	} resolved;
 } arC_syntax_tree_ref;
 
@@ -93,11 +95,14 @@ typedef struct arC_syntax_tree_ref_block
 	arC_syntax_tree header;
 	// Search query used when searching in the syntax tree
 	arString query;
-	// What node types are valid for when resolving the underlying type
-	arInt32 valid_types;
+	// What node type is valid for when resolving the underlying type
+	arC_syntax_tree_search_type_bits types;
 	// Properties set during the resolve phase
 	struct arC_syntax_tree_ref_block_resolved {
-		struct arC_syntax_tree* node;
+		// All nodes this block resolved into
+		arC_syntax_tree_node nodes[arC_syntax_tree_ref_block_max_nodes];
+		// The number of nodes resolved
+		arInt32 nodes_count;
 	} resolved;
 } arC_syntax_tree_ref_block;
 
@@ -355,6 +360,8 @@ typedef struct arC_state
 	struct arCompiler* compiler;
 	// Memory pool
 	arMemoryPool* memory_pool;
+	// Memory used when performing search queries
+	arC_syntax_tree_search_memory* search_memory;
 	// The token 
 	arC_token* token;
 	// The parent node
@@ -368,7 +375,7 @@ typedef struct arC_state
 } arC_state;
 
 #define asC_state(state, parent_node, package_node, func_node, type_node) \
-	{ state->compiler, state->memory_pool, state->token, parent_node, package_node, func_node, type_node }
+	{ state->compiler, state->memory_pool, state->search_memory, state->token, parent_node, package_node, func_node, type_node }
 
 
 // Get a string pool associated with the supplied state
@@ -397,10 +404,13 @@ ARLANG_API void arC_syntax_tree_detach(arC_syntax_tree_node node);
 ARLANG_API void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_tree_node old_node, arC_syntax_tree_node new_node);
 
 // Create a new reference node
-ARLANG_API arC_syntax_tree_ref* arC_syntax_tree_ref_new(const arC_state* s, arInt32 valid_types);
+ARLANG_API arC_syntax_tree_ref* arC_syntax_tree_ref_new(const arC_state* s);
+
+// Get the first reference found of the supplied type
+ARLANG_API arC_syntax_tree_node arC_syntax_tree_ref_find_first(const arC_syntax_tree_ref* ref, arC_syntax_tree_type type);
 
 // Create a new reference node
-ARLANG_API arC_syntax_tree_ref_block* arC_syntax_tree_ref_block_new(const arC_state* s);
+ARLANG_API arC_syntax_tree_ref_block* arC_syntax_tree_ref_block_new(const arC_state* s, arC_syntax_tree_search_type_bits types);
 
 // Create a new package tree node
 ARLANG_API arC_syntax_tree_package* arC_syntax_tree_package_new(const arC_state* s);
@@ -425,7 +435,7 @@ ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state*
 
 // Create a new type reference
 ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, 
-	const arString* name, arInt32 valid_types);
+	const arString* name, arC_syntax_tree_search_type_bits valid_types);
 
 // Create a new function definition
 ARLANG_API arC_syntax_tree_funcdef* arC_syntax_tree_funcdef_new(const arC_state* s);

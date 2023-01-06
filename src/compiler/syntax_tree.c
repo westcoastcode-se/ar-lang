@@ -73,17 +73,12 @@ void arC_syntax_tree_add_child(arC_syntax_tree* parent, arC_syntax_tree_node chi
 		parent->child_head = parent->child_tail = child;
 	else {
 		ASSERT_NULL(parent->child_tail->tail);
-		parent->child_tail->version++;
 		parent->child_tail->tail = child;
 		child->head = parent->child_tail;
 		parent->child_tail = child;
 	}
 	child->parent = parent;
 	parent->child_count++;
-
-	// Increase the version so that we know that the nodes are updated
-	parent->version++;
-	child->version++;
 }
 
 void arC_syntax_tree_detach(arC_syntax_tree_node node)
@@ -139,22 +134,33 @@ void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_tree_node ol
 		tail->head = new_node;
 }
 
-arC_syntax_tree_ref* arC_syntax_tree_ref_new(const arC_state* s, arInt32 valid_types)
+arC_syntax_tree_ref* arC_syntax_tree_ref_new(const arC_state* s)
 {
 	arC_syntax_tree_ref* const p = (arC_syntax_tree_ref*)arC_syntax_tree_new(s,
 		sizeof(arC_syntax_tree_ref), arC_SYNTAX_TREE_REF);
 	if (p == NULL)
 		return NULL;
-	p->valid_types = valid_types;
 	return p;
 }
 
-arC_syntax_tree_ref_block* arC_syntax_tree_ref_block_new(const arC_state* s)
+arC_syntax_tree_node arC_syntax_tree_ref_find_first(const arC_syntax_tree_ref* ref, arC_syntax_tree_type type)
+{
+	ASSERT_NOT_NULL(ref);
+	for (int i = 0; i < ref->resolved.nodes_count; ++i) {
+		arC_syntax_tree_node node = ref->resolved.nodes[i];
+		if (node->type == type)
+			return node;
+	}
+	return NULL;
+}
+
+arC_syntax_tree_ref_block* arC_syntax_tree_ref_block_new(const arC_state* s, arC_syntax_tree_search_type_bits types)
 {
 	arC_syntax_tree_ref_block* const p = (arC_syntax_tree_ref_block*)arC_syntax_tree_new(s,
 		sizeof(arC_syntax_tree_ref_block), arC_SYNTAX_TREE_REF_BLOCK);
 	if (p == NULL)
 		return NULL;
+	p->types = types;
 	return p;
 }
 
@@ -209,16 +215,15 @@ arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state* s)
 	return p;
 }
 
-arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, const arString* name, arInt32 valid_types)
+arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, const arString* name, arC_syntax_tree_search_type_bits valid_types)
 {
 	arC_syntax_tree_typeref* const typeref = arC_syntax_tree_typeref_new(s);
 	if (typeref == NULL) return NULL;
-	arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s, valid_types);
+	arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s);
 	if (ref == NULL) return NULL;
-	arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s);
+	arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s, valid_types);
 	if (block == NULL) return NULL;
 	block->query = *name;
-	block->valid_types = valid_types;
 	arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
 	arC_syntax_tree_add_child(asC_syntax_tree(typeref), asC_syntax_tree(ref));
 	return typeref;
@@ -476,7 +481,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 		val->value.i64 = arC_token_i8(t);
 		val->value.type = ARLANG_PRIMITIVE_I32;
 		val->type = arC_syntax_tree_typeref_known(s, GET_CONST_VM_STRING(arC_syntax_tree, int32),
-			BIT(arC_SYNTAX_TREE_TYPEDEF));
+			arC_SYNTAX_TREE_SEARCH_TYPE_TYPEDEF);
 		arC_syntax_tree_add_child(asC_syntax_tree(val), asC_syntax_tree(val->type));
 		// TODO: We can resolve the types immediately because these are constants already defined by the root package
 		arC_token_next(t);
@@ -490,7 +495,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 		val->value.f64 = arC_token_f8(t);
 		val->value.type = ARLANG_PRIMITIVE_F64;
 		val->type = arC_syntax_tree_typeref_known(s, GET_CONST_VM_STRING(arC_syntax_tree, float64),
-			BIT(arC_SYNTAX_TREE_TYPEDEF));
+			arC_SYNTAX_TREE_SEARCH_TYPE_TYPEDEF);
 		arC_syntax_tree_add_child(asC_syntax_tree(val), asC_syntax_tree(val->type));
 		// TODO: We can resolve the types immediately because these are constants already defined by the root package
 		arC_token_next(t);
@@ -530,22 +535,20 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 				arC_message_out_of_memory(s);
 				return arC_syntax_tree_error();
 			}
-			arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s,
-				BIT(arC_SYNTAX_TREE_FUNCDEF_ARG));
+			arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s);
 			if (ref == NULL) {
 				arC_message_out_of_memory(s);
 				return arC_syntax_tree_error();
 			}
 			arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
 
-			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s);
+			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s, arC_SYNTAX_TREE_FUNCDEF_ARG);
 			if (block == NULL) {
 				arC_message_out_of_memory(s);
 				return arC_syntax_tree_error();
 			}
 			arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
 			block->query = identity;
-			block->valid_types = BIT(arC_SYNTAX_TREE_FUNCDEF_ARG);
 			return asC_syntax_tree(varref);
 		}
 	}
@@ -668,22 +671,12 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	}
 	case arC_SYNTAX_TREE_REF_BLOCK: {
 		arC_syntax_tree_ref_block* ref = (arC_syntax_tree_ref_block*)st;
-		printf("ref_block query=%.*s", arString_length(&ref->query), ref->query.start); 
-		printf("[");
-		for (int i = 0; i < 32; ++i) {
-			if (BIT_ISSET(ref->valid_types, BIT(i))) {
-				switch (i) {
-				case arC_SYNTAX_TREE_PACKAGE:
-					printf("package,");
-					break;
-				case arC_SYNTAX_TREE_TYPEDEF:
-					printf("typedef,");
-					break;
-				default:
-					printf("?%d,", i);
-					break;
-				}
-			}
+		printf("ref_block query=%.*s types=%d", arString_length(&ref->query), ref->query.start, ref->types);
+		printf(" resolved=[");
+		for (int i = 0; i < ref->resolved.nodes_count; ++i) {
+			if (i != 0)
+				printf(",");
+			printf("%p", ref->resolved.nodes[i]);				
 		}
 		printf("]");
 		break;
@@ -706,6 +699,9 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	case arC_SYNTAX_TREE_TYPEREF: {
 		arC_syntax_tree_typeref* type = (arC_syntax_tree_typeref*)st;
 		printf("typeref");
+		if (type->resolved.def != NULL) {
+			printf(" resolved=[%p]", type->resolved.def);
+		}
 		break;
 	}
 	case arC_SYNTAX_TREE_FUNCDEF: {
