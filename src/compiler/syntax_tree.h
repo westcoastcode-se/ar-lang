@@ -325,7 +325,7 @@ typedef struct arC_syntax_tree_funcdef_body_varref
 	arC_syntax_tree header;
 	// Properties set during the resolve phase
 	struct arC_syntax_tree_funcdef_body_varref_resolved {
-		// The type
+		// Node that we are referring to
 		struct arC_syntax_tree* node;
 	} resolved;
 } arC_syntax_tree_funcdef_body_varref;

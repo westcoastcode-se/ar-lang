@@ -290,6 +290,13 @@ arC_syntax_tree_typedef* arC_syntax_tree_get_stack_type(arC_syntax_tree_node st)
 		return ((arC_syntax_tree_funcdef_body_const_value*)st)->type->resolved.def;
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN:
 		return ((arC_syntax_tree_funcdef_body_return*)st)->type->resolved.def;
+	case arC_SYNTAX_TREE_FUNCDEF_ARG:
+		return ((arC_syntax_tree_funcdef_arg*)st)->type->resolved.def;
+	case arC_SYNTAX_TREE_FUNCDEF_RET:
+		return ((arC_syntax_tree_funcdef_ret*)st)->type->resolved.def;
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF: {
+		return arC_syntax_tree_get_stack_type(((arC_syntax_tree_funcdef_body_varref*)st)->resolved.node);
+	}
 	default:
 		return NULL;
 	}
@@ -760,6 +767,16 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 		default:
 			printf("?");
 		}
+		break;
+	}
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP: {
+		arC_syntax_tree_funcdef_body_binop* def = (arC_syntax_tree_funcdef_body_binop*)st;
+		printf("binop op=%d", def->op);
+		break;
+	}
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_UNARYOP: {
+		arC_syntax_tree_funcdef_body_unaryop* def = (arC_syntax_tree_funcdef_body_unaryop*)st;
+		printf("unaryop op=%d", def->op);
 		break;
 	}
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF: {

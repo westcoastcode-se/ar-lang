@@ -263,7 +263,7 @@ BOOL arC_syntax_tree_resolve_funcdef_signature(const arC_state* s, arC_syntax_tr
 	if (node->args != NULL) {
 		arC_syntax_tree* arg_node = node->args->header.child_head;
 		while (arg_node) {
-			if (arg_node != node->args->header.child_tail) {
+			if (arg_node != node->args->header.child_head) {
 				sig = arStrcpy_s(sig, &bytes_left, ",", 1);
 			}
 			arC_syntax_tree_funcdef_arg* const arg = (arC_syntax_tree_funcdef_arg*)arg_node;
