@@ -119,6 +119,8 @@ BOOL arC_syntax_tree_search_has_name(arC_syntax_tree* node, const arString* name
 		return arString_cmp(&((arC_syntax_tree_package*)node)->name, name);
 	case arC_SYNTAX_TREE_FUNCDEF:
 		return arString_cmp(&((arC_syntax_tree_funcdef*)node)->name, name);
+	case arC_SYNTAX_TREE_FUNCDEF_ARG:
+		return arString_cmp(&((arC_syntax_tree_funcdef_arg*)node)->name, name);
 	default:
 		return FALSE;
 	}
@@ -134,6 +136,8 @@ BOOL arC_syntax_tree_search_is_type(arC_syntax_tree* node, arC_syntax_tree_searc
 		return BIT_ISSET(types, arC_SYNTAX_TREE_SEARCH_TYPE_PACKAGE);
 	case arC_SYNTAX_TREE_FUNCDEF:
 		return BIT_ISSET(types, arC_SYNTAX_TREE_SEARCH_TYPE_FUNCDEF);
+	case arC_SYNTAX_TREE_FUNCDEF_ARG:
+		return BIT_ISSET(types, arC_SYNTAX_TREE_SEARCH_TYPE_ARG);
 	default:
 		return FALSE;
 	}
@@ -187,6 +191,11 @@ void arC_syntax_tree_search_backwards(arC_syntax_tree* node, const arString* que
 				arC_syntax_tree_node package_node = arC_syntax_tree_search_get_package((arC_syntax_tree_import*)n);
 				arC_syntax_tree_search_forwards(package_node->child_head, NULL, query, types, imports_flags, items, distance + 1);
 			}
+		}
+		else if (n->type == arC_SYNTAX_TREE_FUNCDEF_ARGS) {
+			// Special case to allow to search among the arguments as if they are siblings and not children
+			const arInt32 args_flags = flags & ~(arC_SEARCH_FLAG_INCLUDE_PARENTS) | arC_SEARCH_FLAG_INCLUDE_CHILDREN;
+			arC_syntax_tree_search_forwards(n->child_head, n, query, types, args_flags, items, distance + 1);
 		}
 
 		n = n->head;

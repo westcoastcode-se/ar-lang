@@ -336,7 +336,7 @@ BOOL arC_syntax_tree_resolve_funcdef_body_varref(const arC_state* s, const arC_r
 		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(node);
 		node->resolved.node = ref2->resolved.nodes[0];
 		if (node->resolved.node == NULL) {
-			return arC_message_feature_missing(s, "TODO: Could not variale here type (What is the type signature here?)");
+			return arC_message_feature_missing(s, "TODO: Could not find variable definition here (What is the type signature here?)");
 		}
 	}
 

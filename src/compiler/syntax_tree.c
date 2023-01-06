@@ -542,7 +542,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 			}
 			arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
 
-			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s, arC_SYNTAX_TREE_FUNCDEF_ARG);
+			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s, arC_SYNTAX_TREE_SEARCH_TYPE_ARG);
 			if (block == NULL) {
 				arC_message_out_of_memory(s);
 				return arC_syntax_tree_error();
@@ -657,6 +657,7 @@ void _indent_console(int indent)
 
 void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int child_idx)
 {
+	printf("[%p] ", st);
 	_indent_console(indent);
 	if (child_idx == 0)
 		printf("| - ");
