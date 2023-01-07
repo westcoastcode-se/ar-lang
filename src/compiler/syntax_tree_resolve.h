@@ -10,13 +10,13 @@ typedef struct arC_recursion_tracker {
 	// Parent
 	const struct arC_recursion_tracker* parent;
 	// Node we are resolving
-	const arC_syntax_tree* node;
+	arC_syntax_tree* node;
 } arC_recursion_tracker;
 
 #define arC_recursion_tracker_next(rt, next) \
 	{ rt->root, rt, next }
 
 // Resolve all references found in the supplied syntax tree
-ARLANG_API BOOL arC_syntax_tree_resolve_references(const arC_state* s, const arC_syntax_tree* st);
+ARLANG_API BOOL arC_syntax_tree_resolve_references(const arC_state* s, arC_syntax_tree* st);
 
 #endif

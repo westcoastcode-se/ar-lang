@@ -7,11 +7,11 @@
 #include "../arUtils.h"
 
 BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion_tracker* rt,
-	const arC_syntax_tree* st);
+	arC_syntax_tree* st);
 
 // Resolve all child nodes
 BOOL arC_syntax_tree_resolve_children(const arC_state* s, const arC_recursion_tracker* rt,
-	const arC_syntax_tree* st)
+	arC_syntax_tree* st)
 {
 	arC_syntax_tree_node child = st->child_head;
 	while (child) {
@@ -20,6 +20,19 @@ BOOL arC_syntax_tree_resolve_children(const arC_state* s, const arC_recursion_tr
 			return FALSE;
 		child = child->tail;
 	}
+	return TRUE;
+}
+
+// Resolve a node
+BOOL arC_syntax_tree_resolve_node(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree* node)
+{
+	if (BIT_ISSET(node->phase, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+	if (!arC_syntax_tree_resolve_children(s, rt, node)) {
+		return FALSE;
+	}
+	node->phase |= arC_SYNTAX_TREE_PHASE_RESOLVE;
 	return TRUE;
 }
 
@@ -559,7 +572,7 @@ BOOL arC_syntax_tree_resolve_typeref_implicit(const arC_state* s, const arC_recu
 }
 
 BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion_tracker* rt,
-	const arC_syntax_tree* st)
+	arC_syntax_tree* st)
 {
 	ASSERT_NOT_NULL(s);
 	ASSERT_NOT_NULL(st);
@@ -628,7 +641,7 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 			return FALSE;
 		break;
 	default:
-		if (!arC_syntax_tree_resolve_children(s, rt, st)) {
+		if (!arC_syntax_tree_resolve_node(s, rt, st)) {
 			return FALSE;
 		}
 		break;
@@ -637,7 +650,7 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_resolve_references(const arC_state* s, const arC_syntax_tree* st)
+BOOL arC_syntax_tree_resolve_references(const arC_state* s, arC_syntax_tree* st)
 {
 	arC_recursion_tracker rt = { NULL, NULL, st };
 	return arC_syntax_tree_resolve_references0(s, &rt, st);

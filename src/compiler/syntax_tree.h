@@ -19,6 +19,7 @@ typedef enum arC_syntax_tree_type
 
 	arC_SYNTAX_TREE_PACKAGE,
 	arC_SYNTAX_TREE_IMPORT,
+	
 	arC_SYNTAX_TREE_TYPEDEF,
 	arC_SYNTAX_TREE_TYPEREF,
 	arC_SYNTAX_TREE_TYPEREF_IMPLICIT,
@@ -30,8 +31,12 @@ typedef enum arC_syntax_tree_type
 	arC_SYNTAX_TREE_FUNCDEF_RET,
 	arC_SYNTAX_TREE_FUNCDEF_LOCALS,
 	arC_SYNTAX_TREE_FUNCDEF_LOCAL,
-	arC_SYNTAX_TREE_FUNCDEF_BODY,
 
+	arC_SYNTAX_TREE_FUNCREF,
+	arC_SYNTAX_TREE_FUNCREF_ARGS,
+	arC_SYNTAX_TREE_FUNCREF_ARG,
+
+	arC_SYNTAX_TREE_FUNCDEF_BODY,
 	arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN,
 	arC_SYNTAX_TREE_FUNCDEF_BODY_ASSIGN,
 	arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE,
@@ -304,6 +309,45 @@ typedef struct arC_syntax_tree_funcdef_local
 	} compiled;
 } arC_syntax_tree_funcdef_local;
 
+// The function arguments
+typedef struct arC_syntax_tree_funcref_args
+{
+	arC_syntax_tree header;
+
+	// Number of arguments
+	arInt32 count;
+} arC_syntax_tree_funcref_args;
+
+// The argument node
+typedef struct arC_syntax_tree_funcref_arg
+{
+	arC_syntax_tree header;
+	// The reference this argument node is part of
+	struct arC_syntax_tree_funcref* func;
+	// Reference to the type (is also a child of the argument)
+	struct arC_syntax_tree_typeref* type;
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_funcref_arg_resolved {
+		// Argument node
+		arC_syntax_tree_funcdef_arg* node;
+	} resolved;
+} arC_syntax_tree_funcref_arg;
+
+// A reference to a function
+typedef struct arC_syntax_tree_funcref
+{
+	arC_syntax_tree header;
+	// The name of the function
+	arString name;
+	// The arguments
+	arC_syntax_tree_funcref_args* args;
+	// Properties set during the compile phase
+	struct arC_syntax_tree_funcref_resolved {
+		// The function this referrs to
+		arC_syntax_tree_funcdef* funcdef;
+	} resolve;
+} arC_syntax_tree_funcref;
+
 // The body for the function
 typedef struct arC_syntax_tree_funcdef_body
 {
@@ -383,6 +427,21 @@ typedef struct arC_syntax_tree_funcdef_body_unaryop
 		arC_syntax_tree_typedef* type;
 	} resolved;
 } arC_syntax_tree_funcdef_body_unaryop;
+
+// Syntax tree node for calling a function
+typedef struct arC_syntax_tree_funcdef_body_callfunc
+{
+	arC_syntax_tree header;
+	// Function node this callfunc statement is part of
+	arC_syntax_tree_funcdef* closest_function_node;
+	// Reference to the function we are calling
+	arC_syntax_tree_funcref* funcref;
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_funcdef_body_callfunc_resolved {
+		// The function we are calling
+		arC_syntax_tree_funcdef* func;
+	} resolved;
+} arC_syntax_tree_funcdef_body_callfunc;
 
 // Get the name of the syntax tree node
 #define asC_syntax_tree_name(st) &st->name
@@ -494,6 +553,15 @@ ARLANG_API arC_syntax_tree_funcdef_locals* arC_syntax_tree_funcdef_locals_new(co
 
 // Create a new local type
 ARLANG_API arC_syntax_tree_funcdef_local* arC_syntax_tree_funcdef_local_new(const arC_state* s);
+
+// Create a new function definition
+ARLANG_API arC_syntax_tree_funcref* arC_syntax_tree_funcref_new(const arC_state* s);
+
+// Create a new arguments definition
+ARLANG_API arC_syntax_tree_funcref_args* arC_syntax_tree_funcref_args_new(const arC_state* s);
+
+// Create a new arguments definition
+ARLANG_API arC_syntax_tree_funcref_arg* arC_syntax_tree_funcref_arg_new(const arC_state* s);
 
 // Create a new body definition
 ARLANG_API arC_syntax_tree_funcdef_body* arC_syntax_tree_funcdef_body_new(const arC_state* s);

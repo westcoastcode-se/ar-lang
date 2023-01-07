@@ -303,6 +303,33 @@ arC_syntax_tree_funcdef_local* arC_syntax_tree_funcdef_local_new(const arC_state
 	return p;
 }
 
+arC_syntax_tree_funcref* arC_syntax_tree_funcref_new(const arC_state* s)
+{
+	arC_syntax_tree_funcref* const p = (arC_syntax_tree_funcref*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcref), arC_SYNTAX_TREE_FUNCREF);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
+arC_syntax_tree_funcref_args* arC_syntax_tree_funcref_args_new(const arC_state* s)
+{
+	arC_syntax_tree_funcref_args* const p = (arC_syntax_tree_funcref_args*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcref_args), arC_SYNTAX_TREE_FUNCREF_ARGS);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
+arC_syntax_tree_funcref_arg* arC_syntax_tree_funcref_arg_new(const arC_state* s)
+{
+	arC_syntax_tree_funcref_arg* const p = (arC_syntax_tree_funcref_arg*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcref_arg), arC_SYNTAX_TREE_FUNCREF_ARG);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
 arC_syntax_tree_funcdef_body* arC_syntax_tree_funcdef_body_new(const arC_state* s)
 {
 	arC_syntax_tree_funcdef_body* const p = (arC_syntax_tree_funcdef_body*)arC_syntax_tree_new(s,
@@ -769,7 +796,18 @@ void _indent_console(int indent)
 
 void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int child_idx)
 {
-	printf("[%p] ", st);
+	printf("[%p]", st);
+	printf("[");
+	if (BIT_ISSET(st->phase, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		printf("Y");
+	else
+		printf("N");
+	if (BIT_ISSET(st->phase, arC_SYNTAX_TREE_PHASE_COMPILE))
+		printf("Y");
+	else
+		printf("N");
+	printf("] ");
+
 	_indent_console(indent);
 	if (child_idx == 0)
 		printf("| - ");
