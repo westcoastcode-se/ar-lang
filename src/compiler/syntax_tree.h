@@ -191,6 +191,11 @@ typedef struct arC_syntax_tree_typeref_implicit
 	arC_syntax_tree header;
 	// The node which we are figuring out the underlying type
 	arC_syntax_tree_node implicit_from;
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_typeref_implicit_resolved {
+		// The type definition, if found
+		struct arC_syntax_tree_typedef* def;
+	} resolved;
 } arC_syntax_tree_typeref_implicit;
 
 // The func statement

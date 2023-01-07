@@ -328,7 +328,27 @@ BOOL arC_syntax_tree_compile_assign(const arC_state* s, arC_syntax_tree_funcdef_
 {
 	assert(assign->header.child_count == 2 &&
 		"assignment must contain two children, one for the value and the second one where to save the value");
-	return FALSE;
+	if (asC_syntax_tree_phase_done(assign, arC_SYNTAX_TREE_PHASE_COMPILE)) {
+		return TRUE;
+	}
+
+	// push expression
+	// assign
+
+	arC_syntax_tree* const expression = asC_syntax_tree_first_child(assign);
+	if (!arC_syntax_tree_compile(s, expression))
+		return FALSE;
+
+	const arC_syntax_tree_funcdef_body_varref* const varref = (arC_syntax_tree_funcdef_body_varref*)expression->tail;
+	const arC_syntax_tree_node dest = varref->resolved.node;
+	if (dest->type == arC_SYNTAX_TREE_FUNCDEF_LOCAL) {
+		const arC_syntax_tree_funcdef_local* const local = (arC_syntax_tree_funcdef_local*)dest;
+		arB_func_add_instr(assign->closest_function_node->compiled.symbol, 
+			arB_instr_stl(local->compiled.symbol));
+	}
+	
+	asC_syntax_tree_phase_set(assign, arC_SYNTAX_TREE_PHASE_COMPILE);
+	return TRUE;
 }
 
 BOOL arC_syntax_tree_compile(const arC_state* s, arC_syntax_tree* st)

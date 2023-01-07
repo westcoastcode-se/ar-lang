@@ -266,7 +266,8 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tra
 				(arC_syntax_tree_typedef*)arC_syntax_tree_ref_find_first(ref, arC_SYNTAX_TREE_TYPEDEF);
 		}
 		else if (first_child->type == arC_SYNTAX_TREE_TYPEREF_IMPLICIT) {
-			return arC_message_resolve_not_implemented(s, "implicit resolve");
+			const arC_syntax_tree_typeref_implicit* const ref = (arC_syntax_tree_typeref_implicit*)first_child;
+			typeref->resolved.def = ref->resolved.def;
 		}
 
 		if (typeref->resolved.def == NULL) {
@@ -274,6 +275,45 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tra
 		}
 	}
 	asC_syntax_tree_phase_set(typeref, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
+}
+
+arC_syntax_tree_typedef* arC_syntax_tree_resolve_typeref_implicit0(const arC_state* s, 
+	const arC_recursion_tracker* rt, arC_syntax_tree_node node)
+{
+	//
+	if (node->type == arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE) {
+		arC_syntax_tree_funcdef_body_const_value* constval = (arC_syntax_tree_funcdef_body_const_value*)node;
+		// constant values have a child reference
+		arC_syntax_tree_typeref* ref = (arC_syntax_tree_typeref*)asC_syntax_tree_first_child(constval);
+		if (!arC_syntax_tree_resolve_typeref(s, rt, asC_syntax_tree(ref))) {
+			return NULL;
+		}
+		return ref->resolved.def;
+	}
+	else {
+		// TODO: Add more implicit resolve features
+		return NULL;
+	}
+
+	return NULL;
+}
+
+BOOL arC_syntax_tree_resolve_typeref_implicit(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_typeref_implicit* implicit)
+{
+	if (asC_syntax_tree_phase_done(implicit, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (implicit->resolved.def == NULL) {
+		implicit->resolved.def = arC_syntax_tree_resolve_typeref_implicit0(s, rt, implicit->implicit_from);
+		// Could not implicitly resolve the type from statements
+		if (implicit->resolved.def == NULL) {
+			return arC_message_resolve_not_implemented(s, "TODO: Could not find type (What is the type signature here?)");
+		}
+	}
+
+	asC_syntax_tree_phase_set(implicit, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
 
@@ -506,6 +546,10 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		break;
 	case arC_SYNTAX_TREE_TYPEREF:
 		if (!arC_syntax_tree_resolve_typeref(s, rt, (arC_syntax_tree_typeref*)st))
+			return FALSE;
+		break;
+	case arC_SYNTAX_TREE_TYPEREF_IMPLICIT:
+		if (!arC_syntax_tree_resolve_typeref_implicit(s, rt, (arC_syntax_tree_typeref_implicit*)st))
 			return FALSE;
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF_ARG:

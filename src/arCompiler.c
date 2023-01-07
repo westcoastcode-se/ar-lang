@@ -304,6 +304,13 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 	arC_syntax_tree_add_child(asC_syntax_tree(func), asC_syntax_tree(args));
 	func->args = args;
 
+	// Add tree node for locals
+	arC_syntax_tree_funcdef_locals* const locals = arC_syntax_tree_funcdef_locals_new(s);
+	if (locals == NULL)
+		return NULL;
+	arC_syntax_tree_add_child(asC_syntax_tree(func), asC_syntax_tree(locals));
+	func->locals = locals;
+
 	// Parse argument information until we reach that end ')' token
 	arC_token_next(t);
 	while (t->type != ARTOK_PARAN_R) {

@@ -594,6 +594,7 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 			// Create an assignment statement that combines an expression with var reference to a variable
 			arC_syntax_tree_funcdef_body_assign* const assign = arC_syntax_tree_funcdef_body_assign_new(s);
 			if (assign == NULL) return arC_syntax_tree_error();
+			assign->closest_function_node = s->func_node;
 			arC_syntax_tree_add_child(asC_syntax_tree(assign), decl_expression);
 
 			// Create a reference to a variable. We already know the node so we can set the resolved
