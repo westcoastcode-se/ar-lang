@@ -606,8 +606,38 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 			return asC_syntax_tree(assign);
 		}
 		else if (t->type == ARTOK_ASSIGN) {
-			arC_message_not_implemented(s, "assign");
-			return arC_syntax_tree_error();
+			arC_token_next(t);
+
+			// Expression to be set in the variable
+			arC_syntax_tree_node decl_expression = arC_syntax_tree_parse_comp_expr(t, s);
+			if (arC_syntax_tree_is_error(decl_expression))
+				return decl_expression;
+
+			// Create an assignment statement that combines an expression with var reference to a variable
+			arC_syntax_tree_funcdef_body_assign* const assign = arC_syntax_tree_funcdef_body_assign_new(s);
+			if (assign == NULL) return arC_syntax_tree_error();
+			assign->closest_function_node = s->func_node;
+			arC_syntax_tree_add_child(asC_syntax_tree(assign), decl_expression);
+
+			// Create a reference to a variable. The variable might not be known yet, so lets
+			// refer to it using a reference instead of directly resolve it
+			arC_syntax_tree_funcdef_body_varref* varref = arC_syntax_tree_funcdef_body_varref_new(s);
+			if (varref == NULL) return arC_syntax_tree_error();
+			arC_syntax_tree_add_child(asC_syntax_tree(assign), asC_syntax_tree(varref));
+
+			arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s);
+			if (ref == NULL) return arC_syntax_tree_error();
+			arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
+
+			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s,
+				arC_SYNTAX_TREE_SEARCH_TYPE_ARG | arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL);
+			if (block == NULL) {
+				return arC_syntax_tree_error();
+			}
+			arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
+			block->query = identity;
+
+			return asC_syntax_tree(assign);
 		}
 		else if (t->type == ARTOK_PARAN_L) {
 			arC_message_not_implemented(s, "function call");
@@ -620,13 +650,10 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 		else {
 			// 
 			arC_syntax_tree_funcdef_body_varref* const varref = arC_syntax_tree_funcdef_body_varref_new(s);
-			if (varref == NULL) {
-				return arC_syntax_tree_error();
-			}
+			if (varref == NULL) return arC_syntax_tree_error();
+
 			arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s);
-			if (ref == NULL) {
-				return arC_syntax_tree_error();
-			}
+			if (ref == NULL) return arC_syntax_tree_error();
 			arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
 
 			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s, 
