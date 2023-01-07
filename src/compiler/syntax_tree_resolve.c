@@ -278,45 +278,6 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tra
 	return TRUE;
 }
 
-arC_syntax_tree_typedef* arC_syntax_tree_resolve_typeref_implicit0(const arC_state* s, 
-	const arC_recursion_tracker* rt, arC_syntax_tree_node node)
-{
-	//
-	if (node->type == arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE) {
-		arC_syntax_tree_funcdef_body_const_value* constval = (arC_syntax_tree_funcdef_body_const_value*)node;
-		// constant values have a child reference
-		arC_syntax_tree_typeref* ref = (arC_syntax_tree_typeref*)asC_syntax_tree_first_child(constval);
-		if (!arC_syntax_tree_resolve_typeref(s, rt, asC_syntax_tree(ref))) {
-			return NULL;
-		}
-		return ref->resolved.def;
-	}
-	else {
-		// TODO: Add more implicit resolve features
-		return NULL;
-	}
-
-	return NULL;
-}
-
-BOOL arC_syntax_tree_resolve_typeref_implicit(const arC_state* s, const arC_recursion_tracker* rt,
-	arC_syntax_tree_typeref_implicit* implicit)
-{
-	if (asC_syntax_tree_phase_done(implicit, arC_SYNTAX_TREE_PHASE_RESOLVE))
-		return TRUE;
-
-	if (implicit->resolved.def == NULL) {
-		implicit->resolved.def = arC_syntax_tree_resolve_typeref_implicit0(s, rt, implicit->implicit_from);
-		// Could not implicitly resolve the type from statements
-		if (implicit->resolved.def == NULL) {
-			return arC_message_resolve_not_implemented(s, "TODO: Could not find type (What is the type signature here?)");
-		}
-	}
-
-	asC_syntax_tree_phase_set(implicit, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return TRUE;
-}
-
 BOOL arC_syntax_tree_resolve_funcdef_signature(const arC_state* s, arC_syntax_tree_funcdef* node)
 {
 	// Calculate the package signature
@@ -381,13 +342,42 @@ BOOL arC_syntax_tree_resolve_funcdef_body_binop(const arC_state* s, const arC_re
 	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node)))
+		return FALSE;
+
 	arC_syntax_tree_node left = node->header.child_head;
+	arC_syntax_tree_typedef* const left_type = arC_syntax_tree_get_stack_type(left);
+	
 	arC_syntax_tree_node right = left->tail;
-	
-	// TODO: ??
-	
+	arC_syntax_tree_typedef* const right_type = arC_syntax_tree_get_stack_type(right);
+
+	// TODO: Verify that the resolved types of each node are compatible for the operator
+	// TODO: Type might be modified due to the operator
+	node->resolved.type = right_type;
+
 	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
+	return TRUE;
+}
+
+BOOL arC_syntax_tree_resolve_funcdef_body_unaryop(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_funcdef_body_unaryop* node)
+{
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node))) {
+		return FALSE;
+	}
+
+	arC_syntax_tree_node left = node->header.child_head;
+	arC_syntax_tree_typedef* const left_type = arC_syntax_tree_get_stack_type(left);
+	// TODO: The type might be modified due to the operator
+	node->resolved.type = left_type;
+
+	// TODO: ??
+
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
 }
 
 BOOL arC_syntax_tree_resolve_funcdef_body_const_value(const arC_state* s, const arC_recursion_tracker* rt,
@@ -515,6 +505,59 @@ BOOL arC_syntax_tree_resolve_typedef(const arC_state* s, const arC_recursion_tra
 	return TRUE;
 }
 
+arC_syntax_tree_typedef* arC_syntax_tree_resolve_typeref_implicit0(const arC_state* s,
+	const arC_recursion_tracker* rt, arC_syntax_tree_node node)
+{
+	//
+	if (node->type == arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE) {
+		arC_syntax_tree_funcdef_body_const_value* constval = (arC_syntax_tree_funcdef_body_const_value*)node;
+		// constant values have a child reference
+		arC_syntax_tree_typeref* ref = (arC_syntax_tree_typeref*)asC_syntax_tree_first_child(constval);
+		if (!arC_syntax_tree_resolve_typeref(s, rt, ref)) {
+			return NULL;
+		}
+		return ref->resolved.def;
+	}
+	else if (node->type == arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP) {
+		arC_syntax_tree_funcdef_body_binop* const binop = (arC_syntax_tree_funcdef_body_binop*)node;
+		if (!arC_syntax_tree_resolve_funcdef_body_binop(s, rt, binop)) {
+			return NULL;
+		}
+		return binop->resolved.type;
+	}
+	else if (node->type == arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP) {
+		arC_syntax_tree_funcdef_body_unaryop* const unaryop = (arC_syntax_tree_funcdef_body_unaryop*)node;
+		if (!arC_syntax_tree_resolve_funcdef_body_unaryop(s, rt, unaryop)) {
+			return NULL;
+		}
+		return unaryop->resolved.type;
+	}
+	else {
+		// TODO: Add more implicit resolve features
+		return NULL;
+	}
+
+	return NULL;
+}
+
+BOOL arC_syntax_tree_resolve_typeref_implicit(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_typeref_implicit* implicit)
+{
+	if (asC_syntax_tree_phase_done(implicit, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (implicit->resolved.def == NULL) {
+		implicit->resolved.def = arC_syntax_tree_resolve_typeref_implicit0(s, rt, implicit->implicit_from);
+		// Could not implicitly resolve the type from statements
+		if (implicit->resolved.def == NULL) {
+			return arC_message_resolve_not_implemented(s, "TODO: Could not find type (What is the type signature here?)");
+		}
+	}
+
+	asC_syntax_tree_phase_set(implicit, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
+}
+
 BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion_tracker* rt,
 	const arC_syntax_tree* st)
 {
@@ -574,6 +617,10 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP:
 		if (!arC_syntax_tree_resolve_funcdef_body_binop(s, rt, (arC_syntax_tree_funcdef_body_binop*)st))
+			return FALSE;
+		break;
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_UNARYOP:
+		if (!arC_syntax_tree_resolve_funcdef_body_unaryop(s, rt, (arC_syntax_tree_funcdef_body_unaryop*)st))
 			return FALSE;
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF:

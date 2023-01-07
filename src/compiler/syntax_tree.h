@@ -362,6 +362,11 @@ typedef struct arC_syntax_tree_funcdef_body_binop
 	arC_token_type op;
 	// The closest function node
 	struct arC_syntax_tree_funcdef* closest_function_node;
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_funcdef_body_binop_resolved {
+		// Type the two child-nodes results into after the operator has done it's thing
+		arC_syntax_tree_typedef* type;
+	} resolved;
 } arC_syntax_tree_funcdef_body_binop;
 
 // Syntax tree for unary operators, such as -
@@ -372,6 +377,11 @@ typedef struct arC_syntax_tree_funcdef_body_unaryop
 	arC_token_type op;
 	// Closest function node
 	arC_syntax_tree_funcdef* closest_function_node;
+	// Properties set during the resolve phase
+	struct arC_syntax_tree_funcdef_body_unaryop_resolved {
+		// Type the child-node results into after the operator has done it's thing
+		arC_syntax_tree_typedef* type;
+	} resolved;
 } arC_syntax_tree_funcdef_body_unaryop;
 
 // Get the name of the syntax tree node

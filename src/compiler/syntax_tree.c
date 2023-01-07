@@ -325,12 +325,10 @@ arC_syntax_tree_typedef* arC_syntax_tree_get_stack_type(arC_syntax_tree_node st)
 		return ((arC_syntax_tree_funcdef_local*)st)->type->resolved.def;
 	case arC_SYNTAX_TREE_FUNCDEF_RET:
 		return ((arC_syntax_tree_funcdef_ret*)st)->type->resolved.def;
-	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP: {
-		return arC_syntax_tree_get_stack_type(((arC_syntax_tree_funcdef_body_binop*)st)->header.child_tail);
-	}
-	case arC_SYNTAX_TREE_FUNCDEF_BODY_UNARYOP: {
-		return arC_syntax_tree_get_stack_type(((arC_syntax_tree_funcdef_body_unaryop*)st)->header.child_tail);
-	}
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP:
+		return ((arC_syntax_tree_funcdef_body_binop*)st)->resolved.type;
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_UNARYOP:
+		return ((arC_syntax_tree_funcdef_body_unaryop*)st)->resolved.type;
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF: {
 		return arC_syntax_tree_get_stack_type(((arC_syntax_tree_funcdef_body_varref*)st)->resolved.node);
 	}
