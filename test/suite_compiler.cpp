@@ -526,6 +526,26 @@ func Get() (int32, int32) {
 package main
 
 func Get() int32 {
+	ret := 10
+	return ret
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32));
+		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret, 10);
+	}
+
+	void local2()
+	{
+		static const auto source = R"(
+package main
+
+func Get() int32 {
 	ret := 10 + 20 + 30 - 40
 	return ret
 }
@@ -540,7 +560,7 @@ func Get() int32 {
 		verify_value(ret, 10 + 20 + 30 - 40);
 	}
 
-	void local2()
+	void local3()
 	{
 		static const auto source = R"(
 package main
@@ -561,7 +581,7 @@ func Get() int32 {
 		verify_value(ret, 10 + 20 + 30 - 40 + 10);
 	}
 
-	void local3()
+	void local4()
 	{
 		static const auto source = R"(
 package main
@@ -580,6 +600,54 @@ func Get() int32 {
 		verify_stack_size(thread, sizeof(arInt32));
 		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
 		verify_value(ret, 10 + 20 + 30 - 40 + 10);
+	}
+
+	void local5()
+	{
+		static const auto source = R"(
+package main
+
+func innerGet() int32 {
+	return 123
+}
+
+func Get() int32 {
+	ret := innerGet()
+	return ret
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32));
+		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret, 123);
+	}
+
+	void local6()
+	{
+		static const auto source = R"(
+package main
+
+func innerGet() int32 {
+	return 123
+}
+
+func Get() int32 {
+	ret := 100 + innerGet()
+	return ret
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32));
+		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret, 100 + 123);
 	}
 
 	void arg1()
@@ -1121,6 +1189,9 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST(local1());
 		TEST(local2());
 		TEST(local3());
+		TEST(local4());
+		TEST(local5());
+		TEST(local6());
 
 		TEST(arg1());
 		TEST(arg2());

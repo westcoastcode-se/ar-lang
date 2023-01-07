@@ -18,5 +18,6 @@ ARLANG_API BOOL arC_message_type_unresolved(const struct arC_state* s, const arS
 ARLANG_API BOOL arC_message_package_unresolved(const struct arC_state* s, const arString* name);
 ARLANG_API BOOL arC_message_type_recursive_dependency(const struct arC_state* s, const char* relationships);
 ARLANG_API BOOL arC_message_feature_missing(const struct arC_state* s, const char* extra);
+ARLANG_API BOOL arC_message_resolve_not_implemented(const struct arC_state* s, const char* str);
 
 #endif

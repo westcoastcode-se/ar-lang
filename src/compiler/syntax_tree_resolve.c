@@ -76,6 +76,7 @@ BOOL arC_syntax_tree_resolve_ref(const arC_state* s, const arC_recursion_tracker
 	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref)))
 		return FALSE;
 
+	// TODO: Take distance to the node into consideration
 	if (ref->resolved.nodes[0] == NULL) {
 		const arC_syntax_tree_ref_block* block = (arC_syntax_tree_ref_block*)asC_syntax_tree_first_child(ref);
 		while (1) {
@@ -90,7 +91,7 @@ BOOL arC_syntax_tree_resolve_ref(const arC_state* s, const arC_recursion_tracker
 			}
 			block = (const arC_syntax_tree_ref_block*)block->header.child_head;
 		}
-		
+
 		for (int i = 0; i < block->resolved.nodes_count; ++i)
 			ref->resolved.nodes[i] = block->resolved.nodes[i];
 		ref->resolved.nodes_count = block->resolved.nodes_count;
@@ -107,7 +108,6 @@ BOOL arC_syntax_tree_resolve_ref_block(const arC_state* s, const arC_recursion_t
 		return TRUE;
 
 	if (ref->resolved.nodes[0] == NULL) {
-		arC_syntax_tree_search_items* items;
 		// Is the parents a reference then continue search the syntax tree from that node's point of view
 		if (ref->header.parent->type == arC_SYNTAX_TREE_REF_BLOCK) {
 			int found_index = 0;
@@ -122,13 +122,20 @@ BOOL arC_syntax_tree_resolve_ref_block(const arC_state* s, const arC_recursion_t
 					arC_syntax_tree_search_item* item = items->first;
 					while (item) {
 						if (found_index >= arC_syntax_tree_ref_block_max_nodes)
-							break;
+							return arC_message_resolve_not_implemented(s, "arC_syntax_tree_ref_block_max_nodes is to small");
 						ref->resolved.nodes[found_index++] = item->node;
+						// TODO: Add support for sorting items. Although, theoretically, the 
+						//       "arC_syntax_tree_search_visit" function should automatically give us
+						//       the closest nodes first
+						if (ref->resolved.closest_distance > item->distance) {
+							ref->resolved.closest_distance = item->distance;
+						}
 						item = item->tail;
 					}
 				}
 				arC_syntax_tree_search_visit_destroy(items);
 			}
+			ref->resolved.nodes_count = found_index;
 		}
 		else {
 			int found_index = 0;
@@ -139,11 +146,17 @@ BOOL arC_syntax_tree_resolve_ref_block(const arC_state* s, const arC_recursion_t
 				arC_syntax_tree_search_item* item = items->first;
 				while (item) {
 					if (found_index >= arC_syntax_tree_ref_block_max_nodes)
-						break;
+						return arC_message_resolve_not_implemented(s, "arC_syntax_tree_ref_block_max_nodes is to small");
 					ref->resolved.nodes[found_index++] = item->node;
-					ref->resolved.nodes_count++;
+					// TODO: Add support for sorting items. Although, theoretically, the 
+					//       "arC_syntax_tree_search_visit" function should automatically give us
+					//       the closest nodes first
+					if (ref->resolved.closest_distance > item->distance) {
+						ref->resolved.closest_distance = item->distance;
+					}
 					item = item->tail;
 				}
+				ref->resolved.nodes_count = found_index;
 			}
 			arC_syntax_tree_search_visit_destroy(items);
 		}
@@ -172,7 +185,7 @@ BOOL arC_syntax_tree_resolve_import(const arC_state* s, const arC_recursion_trac
 		return FALSE;
 
 	if (ref->resolved.ref == NULL) {
-		// Hierarchy should be import -> ref -> ref_block...
+		// Hierarchy should be import -> typeref -> ref_block...
 		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(ref);
 		ref->resolved.ref = 
 			(arC_syntax_tree_package*)arC_syntax_tree_ref_find_first(ref2, arC_SYNTAX_TREE_PACKAGE);
@@ -215,26 +228,52 @@ BOOL arC_syntax_tree_resolve_ret(const arC_state* s, const arC_recursion_tracker
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tracker* rt, 
-	arC_syntax_tree_typeref* ref)
+BOOL arC_syntax_tree_resolve_local(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_funcdef_local* node)
 {
-	if (asC_syntax_tree_phase_done(ref, arC_SYNTAX_TREE_PHASE_RESOLVE))
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
 
-	// Resolve type ref block nodes before resolving typeref node
-	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(ref)))
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node))) {
+		return FALSE;
+	}
+
+	node->compiled.symbol = arB_local_new();
+	arB_local_set_name(node->compiled.symbol, &node->name);
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
+}
+
+BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tracker* rt, 
+	arC_syntax_tree_typeref* typeref)
+{
+	if (asC_syntax_tree_phase_done(typeref, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	// Resolve type typeref block nodes before resolving typeref node
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(typeref)))
 		return FALSE;
 
-	if (ref->resolved.def == NULL) {
-		// Hierarchy should be typeref -> ref -> ref_block...
-		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(ref);
-		ref->resolved.def =
-			(arC_syntax_tree_typedef*)arC_syntax_tree_ref_find_first(ref2, arC_SYNTAX_TREE_TYPEDEF);
-		if (ref->resolved.def == NULL) {
+	if (typeref->resolved.def == NULL) {
+		// Hierarchy could be typeref -> typeref -> ref_block...
+		arC_syntax_tree* const first_child = asC_syntax_tree_first_child(typeref);
+		if (first_child == NULL)
+			return arC_message_feature_missing(s, "TODO: Could not find type (What is the type signature here?)");
+
+		if (first_child->type == arC_SYNTAX_TREE_REF) {
+			const arC_syntax_tree_ref* const ref = (arC_syntax_tree_ref*)first_child;
+			typeref->resolved.def =
+				(arC_syntax_tree_typedef*)arC_syntax_tree_ref_find_first(ref, arC_SYNTAX_TREE_TYPEDEF);
+		}
+		else if (first_child->type == arC_SYNTAX_TREE_TYPEREF_IMPLICIT) {
+			return arC_message_resolve_not_implemented(s, "implicit resolve");
+		}
+
+		if (typeref->resolved.def == NULL) {
 			return arC_message_feature_missing(s, "TODO: Could not find type (What is the type signature here?)");
 		}
 	}
-	asC_syntax_tree_phase_set(ref, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	asC_syntax_tree_phase_set(typeref, arC_SYNTAX_TREE_PHASE_RESOLVE);
 	return TRUE;
 }
 
@@ -332,7 +371,7 @@ BOOL arC_syntax_tree_resolve_funcdef_body_varref(const arC_state* s, const arC_r
 	}
 
 	if (node->resolved.node == NULL) {
-		// Hierarchy should be varref -> ref -> ref_block...
+		// Hierarchy should be varref -> typeref -> ref_block...
 		const arC_syntax_tree_ref* const ref2 = (arC_syntax_tree_ref*)asC_syntax_tree_first_child(node);
 		node->resolved.node = ref2->resolved.nodes[0];
 		if (node->resolved.node == NULL) {
@@ -475,6 +514,10 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF_RET:
 		if (!arC_syntax_tree_resolve_ret(s, rt, (arC_syntax_tree_funcdef_ret*)st))
+			return FALSE;
+		break;
+	case arC_SYNTAX_TREE_FUNCDEF_LOCAL:
+		if (!arC_syntax_tree_resolve_local(s, rt, (arC_syntax_tree_funcdef_local*)st))
 			return FALSE;
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF:

@@ -21,6 +21,7 @@ typedef enum arC_syntax_tree_type
 	arC_SYNTAX_TREE_IMPORT,
 	arC_SYNTAX_TREE_TYPEDEF,
 	arC_SYNTAX_TREE_TYPEREF,
+	arC_SYNTAX_TREE_TYPEREF_IMPLICIT,
 
 	arC_SYNTAX_TREE_FUNCDEF,
 	arC_SYNTAX_TREE_FUNCDEF_ARGS,
@@ -73,6 +74,9 @@ typedef struct arC_syntax_tree
 #define asC_syntax_tree_phase_set(st, p) (st->header.phase |= p)
 #define asC_syntax_tree_phase_done(st, phase) ((asC_syntax_tree_phase(st) & phase) == phase)
 
+// TODO: Make it possible to increase the size of this array.
+//       1. Use a memory pool to add linked list items for found nodes
+//		 2. Artificially add more reference nodes as siblings when we've reached 32
 #define arC_syntax_tree_ref_block_max_nodes 32
 
 // A reference to a syntax tree node that's not resolved yet. A ref contains a number of blocks
@@ -103,6 +107,8 @@ typedef struct arC_syntax_tree_ref_block
 		arC_syntax_tree_node nodes[arC_syntax_tree_ref_block_max_nodes];
 		// The number of nodes resolved
 		arInt32 nodes_count;
+		// The distance to the closest node
+		arInt32 closest_distance;
 	} resolved;
 } arC_syntax_tree_ref_block;
 
@@ -178,6 +184,14 @@ typedef struct arC_syntax_tree_typeref
 		struct arC_syntax_tree_typedef* def;
 	} resolved;
 } arC_syntax_tree_typeref;
+
+// A reference to a type statement. It will have a child node which refers to the actual type
+typedef struct arC_syntax_tree_typeref_implicit
+{
+	arC_syntax_tree header;
+	// The node which we are figuring out the underlying type
+	arC_syntax_tree_node implicit_from;
+} arC_syntax_tree_typeref_implicit;
 
 // The func statement
 typedef struct arC_syntax_tree_funcdef
@@ -278,13 +292,8 @@ typedef struct arC_syntax_tree_funcdef_local
 	struct arC_syntax_tree_funcdef* func;
 	// Reference to the type (is also a child of the locals)
 	struct arC_syntax_tree_typeref* type;
-	// Properties set during the resolve phase
-	struct funcdef_local_resolved {
-		// The type
-		struct arC_syntax_tree_typedef* def;
-	} resolved;
 	// Properties set during the compile phase
-	struct funcdef_local_compiled {
+	struct arC_syntax_tree_funcdef_local_compiled {
 		// Local
 		arB_local* symbol;
 	} compiled;
@@ -307,6 +316,15 @@ typedef struct arC_syntax_tree_funcdef_body_return
 	struct arC_syntax_tree_typeref* type;
 } arC_syntax_tree_funcdef_body_return;
 
+// An assignment statement
+typedef struct arC_syntax_tree_funcdef_body_assign
+{
+	arC_syntax_tree header;
+
+	// The closest function node
+	struct arC_syntax_tree_funcdef* closest_function_node;
+} arC_syntax_tree_funcdef_body_assign;
+
 // A constant value
 typedef struct arC_syntax_tree_funcdef_body_const_value
 {
@@ -319,7 +337,8 @@ typedef struct arC_syntax_tree_funcdef_body_const_value
 	struct arC_syntax_tree_typeref* type;
 } arC_syntax_tree_funcdef_body_const_value;
 
-// A reference to a variable node
+// A reference to a variable node. It must contain at least one ref child if 
+// the reference can't be resolved during parsing time (for example: declarations of locals)
 typedef struct arC_syntax_tree_funcdef_body_varref
 {
 	arC_syntax_tree header;
@@ -406,7 +425,7 @@ ARLANG_API void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_t
 // Create a new reference node
 ARLANG_API arC_syntax_tree_ref* arC_syntax_tree_ref_new(const arC_state* s);
 
-// Get the first reference found of the supplied type
+// Get the closest node found of the supplied type referred by the syntax tree reference.
 ARLANG_API arC_syntax_tree_node arC_syntax_tree_ref_find_first(const arC_syntax_tree_ref* ref, arC_syntax_tree_type type);
 
 // Create a new reference node
@@ -437,6 +456,9 @@ ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state*
 ARLANG_API arC_syntax_tree_typeref* arC_syntax_tree_typeref_known(const arC_state* s, 
 	const arString* name, arC_syntax_tree_search_type_bits valid_types);
 
+// Create a new implicit type-reference
+ARLANG_API arC_syntax_tree_typeref_implicit* arC_syntax_tree_typeref_implicit_new(const arC_state* s);
+
 // Create a new function definition
 ARLANG_API arC_syntax_tree_funcdef* arC_syntax_tree_funcdef_new(const arC_state* s);
 
@@ -452,14 +474,25 @@ ARLANG_API arC_syntax_tree_funcdef_rets* arC_syntax_tree_funcdef_rets_new(const 
 // Create a new returns definition
 ARLANG_API arC_syntax_tree_funcdef_ret* arC_syntax_tree_funcdef_ret_new(const arC_state* s);
 
+// Create a new locals container
+ARLANG_API arC_syntax_tree_funcdef_locals* arC_syntax_tree_funcdef_locals_new(const arC_state* s);
+
+// Create a new local type
+ARLANG_API arC_syntax_tree_funcdef_local* arC_syntax_tree_funcdef_local_new(const arC_state* s);
+
 // Create a new body definition
 ARLANG_API arC_syntax_tree_funcdef_body* arC_syntax_tree_funcdef_body_new(const arC_state* s);
 
-// Get the type which is pushed onto the stack after the supplied node is processed
+// Get the type which is pushed onto the stack after the supplied node is processed. Depending on the supplied node then the
+// type is referred to the actual resolved type. If the node is a combiner node (f.ex. binop) then assume that the last child in the tree (on the right-hand side) is
+// the one enforcing the type
 ARLANG_API arC_syntax_tree_typedef* arC_syntax_tree_get_stack_type(arC_syntax_tree_node st);
 
 // Create a new return statement for a body node
 ARLANG_API arC_syntax_tree_funcdef_body_return* arC_syntax_tree_funcdef_body_return_new(const arC_state* s);
+
+// Create a new assignment node
+ARLANG_API arC_syntax_tree_funcdef_body_assign* arC_syntax_tree_funcdef_body_assign_new(const arC_state* s);
 
 // Create a new constant statement for a body node
 ARLANG_API arC_syntax_tree_funcdef_body_const_value* arC_syntax_tree_funcdef_body_const_value_new(const arC_state* s);

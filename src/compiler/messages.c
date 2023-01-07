@@ -14,6 +14,7 @@
 #define arC_MESSAGE_PACKAGE_UNRESOLVED_STR "'%.*s' is not a package"
 #define arC_MESSAGE_TYPE_RECURSIVE_DEPENDENCY_STR "recursive dependency chain detected %s"
 #define arC_MESSAGE_TYPE_FEATURE_MISSING_STR "%s"
+#define arC_MESSAGE_RESOLVE_NOT_IMPLEMENTED_STR "not implemented: '%s'"
 
 BOOL arC_message_panic(const arC_state* s, const char* str, arC_message_code code)
 {
@@ -207,6 +208,20 @@ BOOL arC_message_feature_missing(const struct arC_state* s, const char* relation
 		arC_MESSAGE_TYPE_FEATURE_MISSING,
 		arC_MESSAGE_TYPE_FEATURE_MISSING_STR,
 		relationships);
+	message->line = 0;
+	message->line_offset = 0;
+	message->offset = 0;
+	return FALSE;
+}
+
+BOOL arC_message_resolve_not_implemented(const arC_state* s, const char* str)
+{
+	arMessages* const m = &s->compiler->messages;
+	arMessage* const message = arMessages_add(m,
+		arC_MESSAGE_PREFIX,
+		arC_MESSAGE_RESOLVE_NOT_IMPLEMENTED,
+		arC_MESSAGE_RESOLVE_NOT_IMPLEMENTED_STR,
+		str);
 	message->line = 0;
 	message->line_offset = 0;
 	message->offset = 0;

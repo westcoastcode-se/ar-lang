@@ -108,6 +108,30 @@ BOOL arC_syntax_tree_compile_funcdef_args(const arC_state* s, arC_syntax_tree_fu
 	return TRUE;
 }
 
+BOOL arC_syntax_tree_compile_funcdef_local(const arC_state* s, arC_syntax_tree_funcdef_local* p)
+{
+	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE))
+		return TRUE;
+	arC_syntax_tree_typedef* const type = p->type->resolved.def;
+	p->compiled.symbol->type = type->compiled.symbol;
+	arB_func_add_local(p->func->compiled.symbol, p->compiled.symbol);
+	asC_syntax_tree_phase_set(p, arC_SYNTAX_TREE_PHASE_COMPILE);
+	return TRUE;
+}
+
+BOOL arC_syntax_tree_compile_funcdef_locals(const arC_state* s, arC_syntax_tree_funcdef_locals* p)
+{
+	arC_syntax_tree* child = p->header.child_head;
+	while (child) {
+		if (child->type == arC_SYNTAX_TREE_FUNCDEF_LOCAL) {
+			if (!arC_syntax_tree_compile_funcdef_local(s, (arC_syntax_tree_funcdef_local*)child))
+				return FALSE;
+		}
+		child = child->tail;
+	}
+	return TRUE;
+}
+
 BOOL arC_syntax_tree_compile_funcdef(const arC_state* s, arC_syntax_tree_funcdef* p)
 {
 	if (asC_syntax_tree_phase_done(p, arC_SYNTAX_TREE_PHASE_COMPILE)) {
@@ -135,15 +159,11 @@ BOOL arC_syntax_tree_compile_funcdef(const arC_state* s, arC_syntax_tree_funcdef
 		}
 	}
 
-	// add local values
-	/*arC_local* local = f->locals;
-	while (local != NULL) {
-		if (!arC_type_resolve(local->type, s))
+	if (p->locals != NULL) {
+		if (!arC_syntax_tree_compile_funcdef_locals(s, p->locals)) {
 			return FALSE;
-		local->local = arB_func_new_local(f->func, local->type->type);
-		arB_local_set_name(local->local, asC_symbol_name(local));
-		local = local->tail;
-	}*/
+		}
+	}
 
 	// Iterate over the body nodes
 	arB_func_body_begin(p->compiled.symbol);
@@ -293,10 +313,22 @@ BOOL arC_syntax_tree_compile_varref(const arC_state* s, arC_syntax_tree_funcdef_
 		arB_func_add_instr(arg->func->compiled.symbol, arB_instr_lda(arg->compiled.symbol));
 		break;
 	}
+	case arC_SYNTAX_TREE_FUNCDEF_LOCAL: {
+		arC_syntax_tree_funcdef_local* arg = (arC_syntax_tree_funcdef_local*)val->resolved.node;
+		arB_func_add_instr(arg->func->compiled.symbol, arB_instr_ldl(arg->compiled.symbol));
+		break;
+	}
 	default:
 		return FALSE;
 	}
 	return TRUE;
+}
+
+BOOL arC_syntax_tree_compile_assign(const arC_state* s, arC_syntax_tree_funcdef_body_assign* assign)
+{
+	assert(assign->header.child_count == 2 &&
+		"assignment must contain two children, one for the value and the second one where to save the value");
+	return FALSE;
 }
 
 BOOL arC_syntax_tree_compile(const arC_state* s, arC_syntax_tree* st)
@@ -318,6 +350,8 @@ BOOL arC_syntax_tree_compile(const arC_state* s, arC_syntax_tree* st)
 		return arC_syntax_tree_compile_const_value(s, (arC_syntax_tree_funcdef_body_const_value*)st);
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF:
 		return arC_syntax_tree_compile_varref(s, (arC_syntax_tree_funcdef_body_varref*)st);
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_ASSIGN:
+		return arC_syntax_tree_compile_assign(s, (arC_syntax_tree_funcdef_body_assign*)st);
 	default:
 	{
 		// Iterate over all the children

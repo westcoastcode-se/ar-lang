@@ -4,6 +4,7 @@
 #include "tokens.h"
 #include "syntax_tree_optimize.h"
 #include "../arCompiler.h"
+#include <inttypes.h>
 
 arC_syntax_tree_node arC_syntax_tree_new(const arC_state* s, arInt32 size, arC_syntax_tree_type type)
 {
@@ -161,6 +162,7 @@ arC_syntax_tree_ref_block* arC_syntax_tree_ref_block_new(const arC_state* s, arC
 	if (p == NULL)
 		return NULL;
 	p->types = types;
+	p->resolved.closest_distance = INT32_MAX;
 	return p;
 }
 
@@ -210,6 +212,15 @@ arC_syntax_tree_typeref* arC_syntax_tree_typeref_new(const arC_state* s)
 {
 	arC_syntax_tree_typeref* const p = (arC_syntax_tree_typeref*)arC_syntax_tree_new(s,
 		sizeof(arC_syntax_tree_typeref), arC_SYNTAX_TREE_TYPEREF);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
+arC_syntax_tree_typeref_implicit* arC_syntax_tree_typeref_implicit_new(const arC_state* s)
+{
+	arC_syntax_tree_typeref_implicit* const p = (arC_syntax_tree_typeref_implicit*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_typeref_implicit), arC_SYNTAX_TREE_TYPEREF_IMPLICIT);
 	if (p == NULL)
 		return NULL;
 	return p;
@@ -274,6 +285,24 @@ arC_syntax_tree_funcdef_ret* arC_syntax_tree_funcdef_ret_new(const arC_state* s)
 	return p;
 }
 
+arC_syntax_tree_funcdef_locals* arC_syntax_tree_funcdef_locals_new(const arC_state* s)
+{
+	arC_syntax_tree_funcdef_locals* const p = (arC_syntax_tree_funcdef_locals*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcdef_locals), arC_SYNTAX_TREE_FUNCDEF_LOCALS);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
+arC_syntax_tree_funcdef_local* arC_syntax_tree_funcdef_local_new(const arC_state* s)
+{
+	arC_syntax_tree_funcdef_local* const p = (arC_syntax_tree_funcdef_local*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcdef_local), arC_SYNTAX_TREE_FUNCDEF_LOCAL);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
 arC_syntax_tree_funcdef_body* arC_syntax_tree_funcdef_body_new(const arC_state* s)
 {
 	arC_syntax_tree_funcdef_body* const p = (arC_syntax_tree_funcdef_body*)arC_syntax_tree_new(s,
@@ -292,8 +321,16 @@ arC_syntax_tree_typedef* arC_syntax_tree_get_stack_type(arC_syntax_tree_node st)
 		return ((arC_syntax_tree_funcdef_body_return*)st)->type->resolved.def;
 	case arC_SYNTAX_TREE_FUNCDEF_ARG:
 		return ((arC_syntax_tree_funcdef_arg*)st)->type->resolved.def;
+	case arC_SYNTAX_TREE_FUNCDEF_LOCAL:
+		return ((arC_syntax_tree_funcdef_local*)st)->type->resolved.def;
 	case arC_SYNTAX_TREE_FUNCDEF_RET:
 		return ((arC_syntax_tree_funcdef_ret*)st)->type->resolved.def;
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP: {
+		return arC_syntax_tree_get_stack_type(((arC_syntax_tree_funcdef_body_binop*)st)->header.child_tail);
+	}
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_UNARYOP: {
+		return arC_syntax_tree_get_stack_type(((arC_syntax_tree_funcdef_body_unaryop*)st)->header.child_tail);
+	}
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF: {
 		return arC_syntax_tree_get_stack_type(((arC_syntax_tree_funcdef_body_varref*)st)->resolved.node);
 	}
@@ -306,6 +343,15 @@ arC_syntax_tree_funcdef_body_return* arC_syntax_tree_funcdef_body_return_new(con
 {
 	arC_syntax_tree_funcdef_body_return* const p = (arC_syntax_tree_funcdef_body_return*)arC_syntax_tree_new(s,
 		sizeof(arC_syntax_tree_funcdef_body_return), arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
+arC_syntax_tree_funcdef_body_assign* arC_syntax_tree_funcdef_body_assign_new(const arC_state* s)
+{
+	arC_syntax_tree_funcdef_body_assign* const p = (arC_syntax_tree_funcdef_body_assign*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcdef_body_assign), arC_SYNTAX_TREE_FUNCDEF_BODY_ASSIGN);
 	if (p == NULL)
 		return NULL;
 	return p;
@@ -520,8 +566,43 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 		arC_token_next(t);
 
 		if (t->type == ARTOK_DECL_ASSIGN) {
-			arC_message_not_implemented(s, "locals");
-			return arC_syntax_tree_error();
+			arC_token_next(t);
+
+			arC_syntax_tree_funcdef_local* const local = arC_syntax_tree_funcdef_local_new(s);
+			if (local == NULL) return arC_syntax_tree_error();
+			local->func = s->func_node;
+			local->name = identity;
+			local->type = arC_syntax_tree_typeref_new(s);
+			if (local->type == NULL) return arC_syntax_tree_error();
+			arC_syntax_tree_add_child(asC_syntax_tree(local), asC_syntax_tree(local->type));
+
+			// Add the local definition to the container locals object
+			arC_syntax_tree_add_child(asC_syntax_tree(s->func_node->locals), asC_syntax_tree(local));
+			s->func_node->locals->count++;
+
+			// Expression to be set in the local variable
+			arC_syntax_tree_node decl_expression = arC_syntax_tree_parse_comp_expr(t, s);
+			if (arC_syntax_tree_is_error(decl_expression))
+				return decl_expression;
+
+			// Add an implicit typeref
+			arC_syntax_tree_typeref_implicit* const implicit = arC_syntax_tree_typeref_implicit_new(s);
+			if (implicit == NULL) return arC_syntax_tree_error();
+			implicit->implicit_from = decl_expression;
+			arC_syntax_tree_add_child(asC_syntax_tree(local->type), asC_syntax_tree(implicit));
+
+			// Create an assignment statement that combines an expression with var reference to a variable
+			arC_syntax_tree_funcdef_body_assign* const assign = arC_syntax_tree_funcdef_body_assign_new(s);
+			if (assign == NULL) return arC_syntax_tree_error();
+			arC_syntax_tree_add_child(asC_syntax_tree(assign), decl_expression);
+
+			// Create a reference to a variable. We already know the node so we can set the resolved
+			// type immediately
+			arC_syntax_tree_funcdef_body_varref* varref = arC_syntax_tree_funcdef_body_varref_new(s);
+			if (varref == NULL) return arC_syntax_tree_error();
+			arC_syntax_tree_add_child(asC_syntax_tree(assign), asC_syntax_tree(varref)); 
+			varref->resolved.node = asC_syntax_tree(local);
+			return asC_syntax_tree(assign);
 		}
 		else if (t->type == ARTOK_ASSIGN) {
 			arC_message_not_implemented(s, "assign");
@@ -539,19 +620,17 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 			// 
 			arC_syntax_tree_funcdef_body_varref* const varref = arC_syntax_tree_funcdef_body_varref_new(s);
 			if (varref == NULL) {
-				arC_message_out_of_memory(s);
 				return arC_syntax_tree_error();
 			}
 			arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s);
 			if (ref == NULL) {
-				arC_message_out_of_memory(s);
 				return arC_syntax_tree_error();
 			}
 			arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
 
-			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s, arC_SYNTAX_TREE_SEARCH_TYPE_ARG);
+			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s, 
+				arC_SYNTAX_TREE_SEARCH_TYPE_ARG | arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL);
 			if (block == NULL) {
-				arC_message_out_of_memory(s);
 				return arC_syntax_tree_error();
 			}
 			arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
@@ -712,6 +791,11 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 		}
 		break;
 	}
+	case arC_SYNTAX_TREE_TYPEREF_IMPLICIT: {
+		arC_syntax_tree_typeref_implicit* t = (arC_syntax_tree_typeref_implicit*)st;
+		printf("typeref_implicit from=%p", t->implicit_from);
+		break;
+	}
 	case arC_SYNTAX_TREE_FUNCDEF: {
 		arC_syntax_tree_funcdef* def = (arC_syntax_tree_funcdef*)st;
 		printf("funcdef name=%.*s", arString_length(&def->name), def->name.start);
@@ -737,6 +821,16 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 		printf("ret");
 		break;
 	}
+	case arC_SYNTAX_TREE_FUNCDEF_LOCALS: {
+		arC_syntax_tree_funcdef_locals* def = (arC_syntax_tree_funcdef_locals*)st;
+		printf("locals count=%d", def->count);
+		break;
+	}
+	case arC_SYNTAX_TREE_FUNCDEF_LOCAL: {
+		arC_syntax_tree_funcdef_local* def = (arC_syntax_tree_funcdef_local*)st;
+		printf("local name=%.*s", arString_length(&def->name), def->name.start);
+		break;
+	}
 	case arC_SYNTAX_TREE_FUNCDEF_BODY: {
 		arC_syntax_tree_funcdef_body* def = (arC_syntax_tree_funcdef_body*)st;
 		printf("body");
@@ -745,6 +839,11 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN: {
 		arC_syntax_tree_funcdef_body_return* def = (arC_syntax_tree_funcdef_body_return*)st;
 		printf("return");
+		break;
+	}
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_ASSIGN: {
+		arC_syntax_tree_funcdef_body_assign* def = (arC_syntax_tree_funcdef_body_assign*)st;
+		printf("assign");
 		break;
 	}
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE: {
@@ -780,7 +879,11 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 		break;
 	}
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_VARREF: {
+		arC_syntax_tree_funcdef_body_varref* type = (arC_syntax_tree_funcdef_body_varref*)st;
 		printf("varref");
+		if (type->resolved.node != NULL) {
+			printf(" resolved=[%p]", type->resolved.node);
+		}
 		break;
 	}
 	default:

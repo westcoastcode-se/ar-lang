@@ -44,6 +44,9 @@ typedef enum arC_message_code
 
 	// A feature is not implemented yet
 	arC_MESSAGE_TYPE_FEATURE_MISSING,
+
+	// A message raised when a feature is not implemented yet
+	arC_MESSAGE_RESOLVE_NOT_IMPLEMENTED,
 } arC_message_code;
 
 #endif

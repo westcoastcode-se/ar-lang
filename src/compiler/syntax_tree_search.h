@@ -9,6 +9,7 @@ typedef enum arC_syntax_tree_search_type
 	arC_SYNTAX_TREE_SEARCH_TYPE_TYPEDEF = 1 << 1,
 	arC_SYNTAX_TREE_SEARCH_TYPE_FUNCDEF = 1 << 2,
 	arC_SYNTAX_TREE_SEARCH_TYPE_ARG = 1 << 3,
+	arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL = 1 << 4,
 	// .....
 } arC_syntax_tree_search_type;
 
