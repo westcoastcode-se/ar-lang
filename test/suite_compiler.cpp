@@ -650,6 +650,75 @@ func Get() int32 {
 		verify_value(ret, 100 + 123);
 	}
 
+	void local7()
+	{
+		static const auto source = R"(
+package main
+
+func Get() (int32, int32) {
+	ret1, ret2 := 100, 200
+	return ret1, ret2
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32) * 2);
+		const auto ret1 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret1, 100);
+		const auto ret2 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret2, 200);
+	}
+
+	void local8()
+	{
+		static const auto source = R"(
+package main
+
+func Get() (int32, int32) {
+	ret1, ret2 := 100, 200
+	ret1 = 300
+	ret2 = 400
+	return ret1, ret2
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32) * 2);
+		const auto ret1 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret1, 300);
+		const auto ret2 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret2, 400);
+	}
+
+	void local9()
+	{
+		static const auto source = R"(
+package main
+
+func Get() (int32, int32) {
+	ret1, ret2 := 100, 200
+	ret1, ret2 = 300, 400
+	return ret1, ret2
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32) * 2);
+		const auto ret1 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret1, 300);
+		const auto ret2 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret2, 400);
+	}
+
 	void arg1()
 	{
 		static const auto source = R"(
@@ -1026,6 +1095,68 @@ func BitNot(value int32) int32 {
 		verify_value(in, value);
 	}
 
+	void cast1()
+	{
+		static const auto source = R"(
+package main
+
+func Cast() float32 {
+	return (float32)1
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Cast()");
+
+		verify_stack_size(thread, sizeof(arFloat32));
+		const auto ret = *(arFloat32*)arThread_popStack(thread, sizeof(arFloat32));
+		verify_value(ret, (arFloat32)(1));
+	}
+
+	void cast2()
+	{
+		static const auto source = R"(
+package main
+
+func Cast() int32 {
+	local := 2.1
+	return (int32)(local + 1.2)
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Cast()");
+
+		verify_stack_size(thread, sizeof(arInt32));
+		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret, (arInt32)(1.2f + 1.2f));
+	}
+
+	void cast3()
+	{
+		static const auto source = R"(
+package main
+
+func Cast(value int32) int64 {
+	return (int64)value
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		const auto value = push_value<int>(123);
+
+		invoke("Cast(int32)");
+
+		verify_stack_size(thread, sizeof(arInt32) + sizeof(arInt64));
+		const auto ret = *(arInt64*)arThread_popStack(thread, sizeof(arInt64));
+		verify_value(ret, (arInt64)value);
+		const auto in = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(in, value);
+	}
+
 	static arInt32 c_complex1(arInt32 value) {
 		return (((++value * 10) + (value++)) - --value) * 2;
 	}
@@ -1192,12 +1323,19 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST(local4());
 		TEST(local5());
 		TEST(local6());
+		TEST(local7());
+		TEST(local8());
+		TEST(local9());
 
 		TEST(arg1());
 		TEST(arg2());
 		TEST(arg3());
 		TEST(arg4());
 		TEST(arg5());
+
+		TEST(cast1());
+		TEST(cast2());
+		TEST(cast3());
 
 		TEST(compare_lt1());
 		TEST(compare_lt2());
