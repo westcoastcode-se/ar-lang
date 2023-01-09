@@ -82,6 +82,8 @@ typedef struct arC_syntax_tree
 // TODO: Make it possible to increase the size of this array.
 //       1. Use a memory pool to add linked list items for found nodes
 //		 2. Artificially add more reference nodes as siblings when we've reached 32
+//		 3. Put "resolved" ref blocks as children of the ref node and 
+//			then detach the block nodes
 #define arC_syntax_tree_ref_block_max_nodes 32
 
 // A reference to a syntax tree node that's not resolved yet. A ref contains a number of blocks
@@ -435,7 +437,7 @@ typedef struct arC_syntax_tree_funcdef_body_callfunc
 	// Function node this callfunc statement is part of
 	arC_syntax_tree_funcdef* closest_function_node;
 	// Reference to the function we are calling
-	arC_syntax_tree_funcref* funcref;
+	arC_syntax_tree_ref* funcref;
 	// Properties set during the resolve phase
 	struct arC_syntax_tree_funcdef_body_callfunc_resolved {
 		// The function we are calling
@@ -586,6 +588,9 @@ ARLANG_API arC_syntax_tree_funcdef_body_const_value* arC_syntax_tree_funcdef_bod
 // 3. Global variable
 // 3. Constant
 ARLANG_API arC_syntax_tree_funcdef_body_varref* arC_syntax_tree_funcdef_body_varref_new(const arC_state* s);
+
+// Create a new callfunc syntax node
+ARLANG_API arC_syntax_tree_funcdef_body_callfunc* arC_syntax_tree_funcdef_body_callfunc_new(const arC_state* s);
 
 // Create a new syntax tree node based on the supplied statement
 ARLANG_API arC_syntax_tree_node arC_syntax_tree_funcdef_body_parse(const arC_state* s);

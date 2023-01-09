@@ -349,6 +349,22 @@ BOOL arC_syntax_tree_resolve_funcdef(const arC_state* s, const arC_recursion_tra
 	return arC_syntax_tree_resolve_funcdef_signature(s, node);
 }
 
+BOOL arC_syntax_tree_resolve_funcref(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_funcref* node)
+{
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+	
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node)))
+		return FALSE;
+
+
+	
+
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	return TRUE;
+}
+
 BOOL arC_syntax_tree_resolve_funcdef_body_binop(const arC_state* s, const arC_recursion_tracker* rt,
 	arC_syntax_tree_funcdef_body_binop* node)
 {
@@ -622,6 +638,10 @@ BOOL arC_syntax_tree_resolve_references0(const arC_state* s, const arC_recursion
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF:
 		if (!arC_syntax_tree_resolve_funcdef(s, rt, (arC_syntax_tree_funcdef*)st))
+			return FALSE;
+		break;
+	case arC_SYNTAX_TREE_FUNCREF:
+		if (!arC_syntax_tree_resolve_funcref(s, rt, (arC_syntax_tree_funcref*)st))
 			return FALSE;
 		break;
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_CONST_VALUE:

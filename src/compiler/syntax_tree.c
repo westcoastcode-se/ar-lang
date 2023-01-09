@@ -111,6 +111,7 @@ void arC_syntax_tree_detach(arC_syntax_tree_node node)
 	}
 
 	node->head = node->tail = node->parent = NULL;
+	parent->child_count--;
 }
 
 void arC_syntax_tree_remove_replace(arC_syntax_tree* st, arC_syntax_tree_node old_node, arC_syntax_tree_node new_node)
@@ -400,6 +401,15 @@ arC_syntax_tree_funcdef_body_varref* arC_syntax_tree_funcdef_body_varref_new(con
 	return p;
 }
 
+arC_syntax_tree_funcdef_body_callfunc* arC_syntax_tree_funcdef_body_callfunc_new(const arC_state* s)
+{
+	arC_syntax_tree_funcdef_body_callfunc* const p = (arC_syntax_tree_funcdef_body_callfunc*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcdef_body_callfunc), arC_SYNTAX_TREE_FUNCDEF_BODY_CALLFUNC);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
 arC_syntax_tree_funcdef_body_unaryop* arC_syntax_tree_funcdef_body_unaryop_new(const arC_state* s, arC_syntax_tree_node right, arC_tokens op)
 {
 	arC_syntax_tree_funcdef_body_unaryop* const p = (arC_syntax_tree_funcdef_body_unaryop*)arC_syntax_tree_new(s,
@@ -590,106 +600,161 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 		const arString identity = t->string;
 		arC_token_next(t);
 
-		if (t->type == ARTOK_DECL_ASSIGN) {
-			arC_token_next(t);
+		// A reference to the identity. We still don't know what type of node we are looking for,
+		// so the first block should include all possibilities
+		arC_syntax_tree_ref* ref = arC_syntax_tree_ref_new(s);
+		if (ref == NULL) return arC_syntax_tree_error();
+		arC_syntax_tree_ref_block* block = arC_syntax_tree_ref_block_new(s,
+			arC_SYNTAX_TREE_SEARCH_TYPE_ARG | arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL | arC_SYNTAX_TREE_SEARCH_TYPE_FUNCDEF |
+			arC_SYNTAX_TREE_SEARCH_TYPE_PACKAGE);
+		if (block == NULL)
+			return arC_syntax_tree_error();
+		block->query = identity;
+		arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
 
-			arC_syntax_tree_funcdef_local* const local = arC_syntax_tree_funcdef_local_new(s);
-			if (local == NULL) return arC_syntax_tree_error();
-			local->func = s->func_node;
-			local->name = identity;
-			local->type = arC_syntax_tree_typeref_new(s);
-			if (local->type == NULL) return arC_syntax_tree_error();
-			arC_syntax_tree_add_child(asC_syntax_tree(local), asC_syntax_tree(local->type));
-
-			// Add the local definition to the container locals object
-			arC_syntax_tree_add_child(asC_syntax_tree(s->func_node->locals), asC_syntax_tree(local));
-			s->func_node->locals->count++;
-
-			// Expression to be set in the local variable
-			arC_syntax_tree_node decl_expression = arC_syntax_tree_parse_comp_expr(t, s);
-			if (arC_syntax_tree_is_error(decl_expression))
-				return decl_expression;
-
-			// Add an implicit typeref
-			arC_syntax_tree_typeref_implicit* const implicit = arC_syntax_tree_typeref_implicit_new(s);
-			if (implicit == NULL) return arC_syntax_tree_error();
-			implicit->implicit_from = decl_expression;
-			arC_syntax_tree_add_child(asC_syntax_tree(local->type), asC_syntax_tree(implicit));
-
-			// Create an assignment statement that combines an expression with var reference to a variable
-			arC_syntax_tree_funcdef_body_assign* const assign = arC_syntax_tree_funcdef_body_assign_new(s);
-			if (assign == NULL) return arC_syntax_tree_error();
-			assign->closest_function_node = s->func_node;
-			arC_syntax_tree_add_child(asC_syntax_tree(assign), decl_expression);
-
-			// Create a reference to a variable. We already know the node so we can set the resolved
-			// type immediately
-			arC_syntax_tree_funcdef_body_varref* varref = arC_syntax_tree_funcdef_body_varref_new(s);
-			if (varref == NULL) return arC_syntax_tree_error();
-			arC_syntax_tree_add_child(asC_syntax_tree(assign), asC_syntax_tree(varref)); 
-			varref->resolved.node = asC_syntax_tree(local);
-			return asC_syntax_tree(assign);
-		}
-		else if (t->type == ARTOK_ASSIGN) {
-			arC_token_next(t);
-
-			// Expression to be set in the variable
-			arC_syntax_tree_node decl_expression = arC_syntax_tree_parse_comp_expr(t, s);
-			if (arC_syntax_tree_is_error(decl_expression))
-				return decl_expression;
-
-			// Create an assignment statement that combines an expression with var reference to a variable
-			arC_syntax_tree_funcdef_body_assign* const assign = arC_syntax_tree_funcdef_body_assign_new(s);
-			if (assign == NULL) return arC_syntax_tree_error();
-			assign->closest_function_node = s->func_node;
-			arC_syntax_tree_add_child(asC_syntax_tree(assign), decl_expression);
-
-			// Create a reference to a variable. The variable might not be known yet, so lets
-			// refer to it using a reference instead of directly resolve it
-			arC_syntax_tree_funcdef_body_varref* varref = arC_syntax_tree_funcdef_body_varref_new(s);
-			if (varref == NULL) return arC_syntax_tree_error();
-			arC_syntax_tree_add_child(asC_syntax_tree(assign), asC_syntax_tree(varref));
-
-			arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s);
-			if (ref == NULL) return arC_syntax_tree_error();
-			arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
-
-			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s,
-				arC_SYNTAX_TREE_SEARCH_TYPE_ARG | arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL);
-			if (block == NULL) {
+		arC_syntax_tree_node node = asC_syntax_tree(ref);
+		while (1) {
+			if (t->type == ARTOK_COMMA) {
+				arC_message_not_implemented(s, "comma (multiple)");
 				return arC_syntax_tree_error();
 			}
-			arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
-			block->query = identity;
+			else if (t->type == ARTOK_DOT) {
+				// dot is considered an identity delimiter
+				arC_token_next(t);
+			} else if (t->type == ARTOK_DECL_ASSIGN) {
+				// <ref> :=
+				arC_token_next(t);
 
-			return asC_syntax_tree(assign);
-		}
-		else if (t->type == ARTOK_PARAN_L) {
-			arC_message_not_implemented(s, "function call");
-			return arC_syntax_tree_error();
-		}
-		else if (t->type == ARTOK_DOT) {
-			arC_message_not_implemented(s, "member");
-			return arC_syntax_tree_error();
-		}
-		else {
-			// 
-			arC_syntax_tree_funcdef_body_varref* const varref = arC_syntax_tree_funcdef_body_varref_new(s);
-			if (varref == NULL) return arC_syntax_tree_error();
+				arC_syntax_tree_funcdef_local* const local = arC_syntax_tree_funcdef_local_new(s);
+				if (local == NULL) return arC_syntax_tree_error();
+				local->func = s->func_node;
+				local->name = identity;
+				local->type = arC_syntax_tree_typeref_new(s);
+				if (local->type == NULL) return arC_syntax_tree_error();
+				arC_syntax_tree_add_child(asC_syntax_tree(local), asC_syntax_tree(local->type));
 
-			arC_syntax_tree_ref* const ref = arC_syntax_tree_ref_new(s);
-			if (ref == NULL) return arC_syntax_tree_error();
-			arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
+				// Add the local definition to the container locals object
+				arC_syntax_tree_add_child(asC_syntax_tree(s->func_node->locals), asC_syntax_tree(local));
+				s->func_node->locals->count++;
 
-			arC_syntax_tree_ref_block* const block = arC_syntax_tree_ref_block_new(s, 
-				arC_SYNTAX_TREE_SEARCH_TYPE_ARG | arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL);
-			if (block == NULL) {
-				return arC_syntax_tree_error();
+				// Expression to be set in the local variable
+				// TODO: take ,(comma) into consideration
+				arC_syntax_tree_node decl_expression = arC_syntax_tree_parse_comp_expr(t, s);
+				if (arC_syntax_tree_is_error(decl_expression))
+					return decl_expression;
+
+				// Add an implicit typeref
+				arC_syntax_tree_typeref_implicit* const implicit = arC_syntax_tree_typeref_implicit_new(s);
+				if (implicit == NULL) return arC_syntax_tree_error();
+				implicit->implicit_from = decl_expression;
+				arC_syntax_tree_add_child(asC_syntax_tree(local->type), asC_syntax_tree(implicit));
+
+				// Create an assignment statement that combines an expression with var reference to a variable
+				arC_syntax_tree_funcdef_body_assign* const assign = arC_syntax_tree_funcdef_body_assign_new(s);
+				if (assign == NULL) return arC_syntax_tree_error();
+				assign->closest_function_node = s->func_node;
+				arC_syntax_tree_add_child(asC_syntax_tree(assign), decl_expression);
+
+				// Create a reference to a variable. We already know the node so we can set the resolved
+				// type immediately
+				arC_syntax_tree_funcdef_body_varref* varref = arC_syntax_tree_funcdef_body_varref_new(s);
+				if (varref == NULL) return arC_syntax_tree_error();
+				arC_syntax_tree_add_child(asC_syntax_tree(assign), asC_syntax_tree(varref));
+				varref->resolved.node = asC_syntax_tree(local);
+				block->types = arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL;
+				node = asC_syntax_tree(assign);
+
+			} else if (t->type == ARTOK_ASSIGN) {
+				// <left> = <right>
+				// <ref>.<block>... = <right>
+				arC_token_next(t);
+
+				// Expression to be set in the variable
+				arC_syntax_tree_node decl_expression = arC_syntax_tree_parse_comp_expr(t, s);
+				if (arC_syntax_tree_is_error(decl_expression))
+					return decl_expression;
+
+				// Create an assignment statement that combines an expression with var reference to a variable
+				arC_syntax_tree_funcdef_body_assign* const assign = arC_syntax_tree_funcdef_body_assign_new(s);
+				if (assign == NULL) return arC_syntax_tree_error();
+				assign->closest_function_node = s->func_node;
+				arC_syntax_tree_add_child(asC_syntax_tree(assign), decl_expression);
+
+				// Create a reference to a variable. The variable might not be known yet, so lets
+				// refer to it using a reference instead of directly resolve it
+				arC_syntax_tree_funcdef_body_varref* varref = arC_syntax_tree_funcdef_body_varref_new(s);
+				if (varref == NULL) return arC_syntax_tree_error();
+				arC_syntax_tree_add_child(asC_syntax_tree(varref), asC_syntax_tree(ref));
+				arC_syntax_tree_add_child(asC_syntax_tree(assign), asC_syntax_tree(varref));
+				block->types = arC_SYNTAX_TREE_SEARCH_TYPE_ARG | arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL;
+				node = asC_syntax_tree(assign);
 			}
-			arC_syntax_tree_add_child(asC_syntax_tree(ref), asC_syntax_tree(block));
-			block->query = identity;
-			return asC_syntax_tree(varref);
+			else if (t->type == ARTOK_PARAN_L) {
+				arC_token_next(t);
+
+				arC_syntax_tree_funcdef_body_callfunc* const callfunc = arC_syntax_tree_funcdef_body_callfunc_new(s);
+				if (callfunc == NULL) return arC_syntax_tree_error();
+				callfunc->closest_function_node = s->func_node;
+
+				arC_syntax_tree_funcref* const funcref = arC_syntax_tree_funcref_new(s);
+				if (funcref == NULL) return arC_syntax_tree_error();
+				funcref->name = identity;
+
+				arC_syntax_tree_funcref_args* const args = arC_syntax_tree_funcref_args_new(s);
+				if (args == NULL) return arC_syntax_tree_error();
+				funcref->args = args;
+				arC_syntax_tree_add_child(asC_syntax_tree(funcref), asC_syntax_tree(args));
+
+				// Parse each argument until we reach a )
+				int call_index = 0;
+				while (t->type != ARTOK_PARAN_R) {
+					// Expressions to be sent as arguments
+					arC_syntax_tree_node decl_expression = arC_syntax_tree_parse_comp_expr(t, s);
+					if (arC_syntax_tree_is_error(decl_expression))
+						return decl_expression;
+
+					arC_syntax_tree_funcref_arg* const arg = arC_syntax_tree_funcref_arg_new(s);
+					if (arg == NULL) return arC_syntax_tree_error();
+					arC_syntax_tree_add_child(asC_syntax_tree(args), asC_syntax_tree(arg));
+					arg->func = funcref;
+
+					arC_syntax_tree_typeref* const arg_typeref = arC_syntax_tree_typeref_new(s);
+					if (arg_typeref == NULL) return arC_syntax_tree_error();
+					arg->type = arg_typeref;
+					arC_syntax_tree_add_child(asC_syntax_tree(arg), asC_syntax_tree(arg_typeref));
+
+					arC_syntax_tree_typeref_implicit* const implicit = arC_syntax_tree_typeref_implicit_new(s);
+					if (implicit == NULL) return arC_syntax_tree_error();
+					arC_syntax_tree_add_child(asC_syntax_tree(arg_typeref), asC_syntax_tree(implicit));
+					implicit->implicit_from = decl_expression;
+
+					arC_syntax_tree_add_child(asC_syntax_tree(callfunc), decl_expression);
+				}
+				// Ignore the )
+				arC_token_next(t);
+
+				arC_syntax_tree_add_child(asC_syntax_tree(callfunc), asC_syntax_tree(funcref));
+				block->types = arC_SYNTAX_TREE_SEARCH_TYPE_FUNCDEF;
+				callfunc->funcref = ref;
+				node = asC_syntax_tree(callfunc);
+			}
+			else if (t->type == ARTOK_IDENTITY) {
+				// <ref>.<block>.<child_block>
+				arC_syntax_tree_ref_block* const child_block = arC_syntax_tree_ref_block_new(s,
+					arC_SYNTAX_TREE_SEARCH_TYPE_ARG | arC_SYNTAX_TREE_SEARCH_TYPE_LOCAL | arC_SYNTAX_TREE_SEARCH_TYPE_FUNCDEF |
+					arC_SYNTAX_TREE_SEARCH_TYPE_PACKAGE);
+				if (child_block == NULL) return arC_syntax_tree_error();
+				block->query = identity;
+				arC_syntax_tree_add_child(asC_syntax_tree(block), asC_syntax_tree(child_block));
+				block = child_block;
+
+				arC_token_next(t);
+			}
+			else {
+				break;
+			}
 		}
+		return node;
 	}
 	else if (t->type == ARTOK_PARAN_L) {
 		arC_token_next(t);
@@ -895,6 +960,21 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 		printf("local name=%.*s", arString_length(&def->name), def->name.start);
 		break;
 	}
+	case arC_SYNTAX_TREE_FUNCREF: {
+		arC_syntax_tree_funcref* def = (arC_syntax_tree_funcref*)st;
+		printf("funcref name=%.*s", arString_length(&def->name), def->name.start);
+		break;
+	}
+	case arC_SYNTAX_TREE_FUNCREF_ARGS: {
+		arC_syntax_tree_funcref_args* def = (arC_syntax_tree_funcref_args*)st;
+		printf("funcref_args");
+		break;
+	}
+	case arC_SYNTAX_TREE_FUNCREF_ARG: {
+		arC_syntax_tree_funcref_arg* def = (arC_syntax_tree_funcref_arg*)st;
+		printf("funcref_arg");
+		break;
+	}
 	case arC_SYNTAX_TREE_FUNCDEF_BODY: {
 		arC_syntax_tree_funcdef_body* def = (arC_syntax_tree_funcdef_body*)st;
 		printf("body");
@@ -948,6 +1028,11 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 		if (type->resolved.node != NULL) {
 			printf(" resolved=[%p]", type->resolved.node);
 		}
+		break;
+	}
+	case arC_SYNTAX_TREE_FUNCDEF_BODY_CALLFUNC: {
+		arC_syntax_tree_funcdef_body_callfunc* def = (arC_syntax_tree_funcdef_body_callfunc*)st;
+		printf("callfunc");
 		break;
 	}
 	default:
