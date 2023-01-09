@@ -10,6 +10,9 @@
 arIP _arThread_ret(arThread* t, arIP ip)
 {
 	const vmi_instr_ret* const instr = (const vmi_instr_ret*)ip;
+#ifdef ARLANG_INSTRUCTION_DEBUG
+	printf("RET to=");
+#endif
 	arIP next_ip;
 #if defined(VM_STACK_DEBUG)
 	const arByte* expected;
@@ -32,7 +35,7 @@ arIP _arThread_ret(arThread* t, arIP ip)
 	t->cf = *t->cf_pos;
 
 #ifdef ARLANG_INSTRUCTION_DEBUG
-	printf("RET to=%p", next_ip);
+	printf("%p", next_ip);
 #endif
 	return next_ip;
 }
@@ -75,9 +78,12 @@ arIP _arThread_callnative(arThread* t, arIP ip)
 arIP _arThread_calluref(arThread* t, arIP ip)
 {
 	const vmi_instr_calluref* instr = (const vmi_instr_calluref*)ip;
+#ifdef ARLANG_INSTRUCTION_DEBUG
+	printf("CALLUREF to=");
+#endif
 	arIP addr = *(const arByte**)arStack_pop(&t->stack, sizeof(arIP));
 #ifdef ARLANG_INSTRUCTION_DEBUG
-	printf("CALLUREF to=%p", addr);
+	printf("%p", addr);
 #endif
 	return arThread_beginCall(t, ip, addr, instr->expected_stack_size);
 }
@@ -85,6 +91,9 @@ arIP _arThread_calluref(arThread* t, arIP ip)
 arIP _arThread_lda(arThread* t, arIP ip)
 {
 	const arInstruction_lda* const instr = (const arInstruction_lda*)ip;
+#ifdef ARLANG_INSTRUCTION_DEBUG
+	printf("LDA offset=%d size=%d", instr->offset, instr->size);
+#endif
 	const arByte* src = t->ebp + instr->offset;
 	arByte* dest = arStack_push(&t->stack, instr->size);
 	if (dest == NULL)
@@ -133,16 +142,15 @@ arIP _arThread_lda(arThread* t, arIP ip)
 			arMemcpy(dest, t->ebp + instr->offset, instr->size);
 		break;
 	}
-
-#ifdef ARLANG_INSTRUCTION_DEBUG
-	printf("LDA offset=%d size=%d", instr->offset, instr->size);
-#endif
 	return ip + sizeof(arInstruction_lda);
 }
 
 arIP _arThread_lda_a(arThread* t, arIP ip)
 {
 	const arInstruction_lda_a* instr = (const arInstruction_lda_a*)ip;
+#ifdef ARLANG_INSTRUCTION_DEBUG
+	printf("LDL_A offset=%d", instr->offset);
+#endif
 	arByte* src = t->ebp + instr->offset;
 	arByte** dest = (arByte**)arStack_push(&t->stack, sizeof(arByte*));
 	if (dest == NULL)
@@ -155,10 +163,10 @@ arIP _arThread_lda_a(arThread* t, arIP ip)
 arIP _arThread_ldf(arThread* t, arIP ip)
 {
 	const vmi_instr_ldf* instr = (const vmi_instr_ldf*)ip;
-	const arByte** dest = (const arByte**)arStack_push(&t->stack, sizeof(const arByte*));
-	*dest = instr->addr;
 #ifdef ARLANG_INSTRUCTION_DEBUG
 	printf("LDF to=%p", instr->addr);
 #endif
+	const arByte** dest = (const arByte**)arStack_push(&t->stack, sizeof(const arByte*));
+	*dest = instr->addr;
 	return ip + sizeof(vmi_instr_ldf);
 }

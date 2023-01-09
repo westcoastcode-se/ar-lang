@@ -719,6 +719,59 @@ func Get() (int32, int32) {
 		verify_value(ret2, 400);
 	}
 
+	void local10()
+	{
+		static const auto source = R"(
+package main
+
+func innerGet() (int32, int32) {
+	return 100, 200
+}
+
+func Get() (int32, int32) {
+	ret1, ret2 := innerGet()
+	ret1, ret2 = ret1 + 1, ret2 + 2
+	return ret1, ret2
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32) * 2);
+		const auto ret1 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret1, 101);
+		const auto ret2 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret2, 202);
+	}
+
+	void local11()
+	{
+		static const auto source = R"(
+package main
+
+func innerGet() (int32, int32) {
+	return 100, 200
+}
+
+func Get() (int32, int32) {
+	ret1, ret2, ret3 := innerGet(), 100
+	return ret1, ret2 + ret3
+}
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32) * 2);
+		const auto ret1 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret1, 100);
+		const auto ret2 = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret2, 300);
+	}
+
 	void arg1()
 	{
 		static const auto source = R"(
@@ -1326,6 +1379,8 @@ func QuickSort(arr *int32, low int32, high int32) {
 		TEST(local7());
 		TEST(local8());
 		TEST(local9());
+		TEST(local10());
+		TEST(local11());
 
 		TEST(arg1());
 		TEST(arg2());
