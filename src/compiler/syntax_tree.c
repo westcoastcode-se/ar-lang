@@ -82,6 +82,18 @@ void arC_syntax_tree_add_child(arC_syntax_tree* parent, arC_syntax_tree_node chi
 	parent->child_count++;
 }
 
+arC_syntax_tree_node arC_syntax_tree_first_parent_of_type(const arC_syntax_tree_node node, arC_syntax_tree_type type)
+{
+	arC_syntax_tree_node parent = node->parent;
+	while (parent) {
+		if (parent->type == type) {
+			return parent;
+		}
+		parent = parent->parent;
+	}
+	return NULL;
+}
+
 void arC_syntax_tree_detach(arC_syntax_tree_node node)
 {
 	assert(node->parent != NULL && "You are trying to detach a node that's not attached to any parent");
@@ -245,6 +257,20 @@ arC_syntax_tree_funcdef* arC_syntax_tree_funcdef_new(const arC_state* s)
 {
 	arC_syntax_tree_funcdef* const p = (arC_syntax_tree_funcdef*)arC_syntax_tree_new(s,
 		sizeof(arC_syntax_tree_funcdef), arC_SYNTAX_TREE_FUNCDEF);
+	if (p == NULL)
+		return NULL;
+	return p;
+}
+
+const arString* arC_syntax_tree_funcdef_get_name(arC_syntax_tree_funcdef* funcdef)
+{
+	return &funcdef->head->name;
+}
+
+arC_syntax_tree_funcdef_head* arC_syntax_tree_funcdef_head_new(const arC_state* s)
+{
+	arC_syntax_tree_funcdef_head* const p = (arC_syntax_tree_funcdef_head*)arC_syntax_tree_new(s,
+		sizeof(arC_syntax_tree_funcdef_head), arC_SYNTAX_TREE_FUNCDEF_HEAD);
 	if (p == NULL)
 		return NULL;
 	return p;
@@ -634,8 +660,8 @@ arC_syntax_tree_node arC_syntax_tree_parse_atom(arC_token* t, const arC_state* s
 				arC_syntax_tree_add_child(asC_syntax_tree(local), asC_syntax_tree(local->type));
 
 				// Add the local definition to the container locals object
-				arC_syntax_tree_add_child(asC_syntax_tree(s->func_node->locals), asC_syntax_tree(local));
-				s->func_node->locals->count++;
+				arC_syntax_tree_add_child(asC_syntax_tree(s->func_node->body->locals), asC_syntax_tree(local));
+				s->func_node->body->locals->count++;
 
 				// Expression to be set in the local variable
 				// TODO: take ,(comma) into consideration
@@ -823,7 +849,7 @@ arC_syntax_tree_node arC_syntax_tree_funcdef_body_parse(const arC_state* s)
 			ret->closest_function_node = s->func_node;
 
 			// The number of expressions that are left
-			arInt32 return_expressions_left = s->func_node->rets->count;
+			arInt32 return_expressions_left = s->func_node->head->rets->count;
 
 			// Fetch all return statements 
 			// TODO: Allow for skipping return values and let the compiler return the default value for you. For example, "error" should be allowed to return nil by default
@@ -927,7 +953,12 @@ void arC_syntax_tree_stdout0(const arC_syntax_tree* st, arInt32 indent, int chil
 	}
 	case arC_SYNTAX_TREE_FUNCDEF: {
 		arC_syntax_tree_funcdef* def = (arC_syntax_tree_funcdef*)st;
-		printf("funcdef name=%.*s", arString_length(&def->name), def->name.start);
+		printf("funcdef");
+		break;
+	}
+	case arC_SYNTAX_TREE_FUNCDEF_HEAD: {
+		arC_syntax_tree_funcdef_head* def = (arC_syntax_tree_funcdef_head*)st;
+		printf("funcdef_head name=%.*s", arString_length(&def->name), def->name.start);
 		break;
 	}
 	case arC_SYNTAX_TREE_FUNCDEF_ARGS: {

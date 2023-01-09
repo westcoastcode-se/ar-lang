@@ -25,6 +25,7 @@ typedef enum arC_syntax_tree_type
 	arC_SYNTAX_TREE_TYPEREF_IMPLICIT,
 
 	arC_SYNTAX_TREE_FUNCDEF,
+	arC_SYNTAX_TREE_FUNCDEF_HEAD,
 	arC_SYNTAX_TREE_FUNCDEF_ARGS,
 	arC_SYNTAX_TREE_FUNCDEF_ARG,
 	arC_SYNTAX_TREE_FUNCDEF_RETS,
@@ -209,6 +210,21 @@ typedef struct arC_syntax_tree_typeref_implicit
 typedef struct arC_syntax_tree_funcdef
 {
 	arC_syntax_tree header;
+	// The function head, such as argument and returns information
+	struct arC_syntax_tree_funcdef_head* head;
+	// The body
+	struct arC_syntax_tree_funcdef_body* body;
+	// Properties set during the compile phase
+	struct arC_syntax_tree_funcdef_compiled {
+		// The type symbol
+		arB_func* symbol;
+	} compiled;
+} arC_syntax_tree_funcdef;
+
+// The func statement
+typedef struct arC_syntax_tree_funcdef_head
+{
+	arC_syntax_tree header;
 
 	// The name of the function
 	arString name;
@@ -216,21 +232,17 @@ typedef struct arC_syntax_tree_funcdef
 	struct arC_syntax_tree_funcdef_args* args;
 	// The returns
 	struct arC_syntax_tree_funcdef_rets* rets;
-	// Locals
-	struct arC_syntax_tree_funcdef_locals* locals;
-	// The body
-	struct arC_syntax_tree_funcdef_body* body;
 	// Properties set during the compile phase
 	struct arC_syntax_tree_funcdef_resolve {
 		// The full signature of the function
 		arString signature;
 	} resolve;
 	// Properties set during the compile phase
-	struct arC_syntax_tree_funcdef_compiled {
+	struct arC_syntax_tree_funcdef_head_compiled {
 		// The type symbol
 		arB_func* symbol;
 	} compiled;
-} arC_syntax_tree_funcdef;
+} arC_syntax_tree_funcdef_head;
 
 // The function arguments block
 typedef struct arC_syntax_tree_funcdef_args
@@ -354,6 +366,8 @@ typedef struct arC_syntax_tree_funcref
 typedef struct arC_syntax_tree_funcdef_body
 {
 	arC_syntax_tree header;
+	// Local variables
+	struct arC_syntax_tree_funcdef_locals* locals;
 } arC_syntax_tree_funcdef_body;
 
 // A return statement
@@ -492,6 +506,9 @@ ARLANG_API BOOL arC_syntax_tree_has_children(arC_syntax_tree_node st);
 // Add a new child node to the supplied node
 ARLANG_API void arC_syntax_tree_add_child(arC_syntax_tree* parent, arC_syntax_tree_node child);
 
+// Iterate upwards in the syntax tree until we find the a node of the supplied type
+ARLANG_API arC_syntax_tree_node arC_syntax_tree_first_parent_of_type(const arC_syntax_tree_node node, arC_syntax_tree_type type);
+
 // Detach the supplied node from it's parent
 ARLANG_API void arC_syntax_tree_detach(arC_syntax_tree_node node);
 
@@ -537,6 +554,12 @@ ARLANG_API arC_syntax_tree_typeref_implicit* arC_syntax_tree_typeref_implicit_ne
 
 // Create a new function definition
 ARLANG_API arC_syntax_tree_funcdef* arC_syntax_tree_funcdef_new(const arC_state* s);
+
+// Create a new function definition
+ARLANG_API const arString* arC_syntax_tree_funcdef_get_name(arC_syntax_tree_funcdef* funcdef);
+
+// Create a new head definition
+ARLANG_API arC_syntax_tree_funcdef_head* arC_syntax_tree_funcdef_head_new(const arC_state* s);
 
 // Create a new arguments definition
 ARLANG_API arC_syntax_tree_funcdef_args* arC_syntax_tree_funcdef_args_new(const arC_state* s);

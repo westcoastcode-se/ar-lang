@@ -291,19 +291,15 @@ BOOL arC_syntax_tree_resolve_typeref(const arC_state* s, const arC_recursion_tra
 	return TRUE;
 }
 
-BOOL arC_syntax_tree_resolve_funcdef_signature(const arC_state* s, arC_syntax_tree_funcdef* node)
+BOOL arC_syntax_tree_resolve_funcdef_signature(const arC_state* s, arC_syntax_tree_funcdef_head* node)
 {
 	// Calculate the package signature
 	int bytes_left = 1024;
 	arByte signature_data[1024];
 	arByte* sig = signature_data;
 
-	// TODO: Add support for functions in functions
-	if (node->header.parent->type != arC_SYNTAX_TREE_PACKAGE) {
-		return arC_message_not_implemented(s, "#7 add support for functions inside functions");
-	}
-
-	arC_syntax_tree_package* package = (arC_syntax_tree_package*)node->header.parent;
+	arC_syntax_tree_package* package = 
+		(arC_syntax_tree_package*)arC_syntax_tree_first_parent_of_type(asC_syntax_tree(node), arC_SYNTAX_TREE_PACKAGE);
 	sig = arString_cpy_s(sig, &bytes_left, &package->resolve.signature);
 	if (bytes_left == 0) return arC_message_not_implemented(s, "dynamic set memory size?");
 	sig = arStrcpy_s(sig, &bytes_left, "#", 1);
@@ -337,16 +333,34 @@ BOOL arC_syntax_tree_resolve_funcdef_signature(const arC_state* s, arC_syntax_tr
 	return TRUE;
 }
 
+BOOL arC_syntax_tree_resolve_funcdef_head(const arC_state* s, const arC_recursion_tracker* rt,
+	arC_syntax_tree_funcdef_head* node)
+{
+	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
+		return TRUE;
+
+	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node)))
+		return FALSE;
+	node->compiled.symbol = arB_func_new(&node->name);
+
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+
+	// Figure out the signature of the function
+	return arC_syntax_tree_resolve_funcdef_signature(s, node);
+}
+
 BOOL arC_syntax_tree_resolve_funcdef(const arC_state* s, const arC_recursion_tracker* rt,
 	arC_syntax_tree_funcdef* node)
 {
 	if (asC_syntax_tree_phase_done(node, arC_SYNTAX_TREE_PHASE_RESOLVE))
 		return TRUE;
-	node->compiled.symbol = arB_func_new(&node->name);
-	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
-	if (!arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node)))
+	// Resolving the header is always required before the definition head is considered done
+	if (!arC_syntax_tree_resolve_funcdef_head(s, rt, node->head))
 		return FALSE;
-	return arC_syntax_tree_resolve_funcdef_signature(s, node);
+	node->compiled.symbol = node->head->compiled.symbol;
+	asC_syntax_tree_phase_set(node, arC_SYNTAX_TREE_PHASE_RESOLVE);
+	// Resolve everything else
+	return arC_syntax_tree_resolve_children(s, rt, asC_syntax_tree(node));
 }
 
 BOOL arC_syntax_tree_resolve_funcref(const arC_state* s, const arC_recursion_tracker* rt,

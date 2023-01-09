@@ -142,25 +142,20 @@ BOOL arC_syntax_tree_compile_funcdef(const arC_state* s, arC_syntax_tree_funcdef
 		// No body present?
 		return FALSE;
 	}
-
-	arB_func_set_signature(p->compiled.symbol, &p->resolve.signature);
+	
+	arC_syntax_tree_funcdef_head* const head = p->head;
+	arB_func_set_signature(p->compiled.symbol, &head->resolve.signature);
 
 	// Add arguments
-	if (p->args != NULL) {
-		if (!arC_syntax_tree_compile_funcdef_args(s, p->args)) {
+	if (head->args != NULL) {
+		if (!arC_syntax_tree_compile_funcdef_args(s, head->args)) {
 			return FALSE;
 		}
 	}
 
 	// Add returns
-	if (p->rets != NULL) {
-		if (!arC_syntax_tree_compile_funcdef_rets(s, p->rets)) {
-			return FALSE;
-		}
-	}
-
-	if (p->locals != NULL) {
-		if (!arC_syntax_tree_compile_funcdef_locals(s, p->locals)) {
+	if (head->rets != NULL) {
+		if (!arC_syntax_tree_compile_funcdef_rets(s, head->rets)) {
 			return FALSE;
 		}
 	}
@@ -360,6 +355,8 @@ BOOL arC_syntax_tree_compile(const arC_state* s, arC_syntax_tree* st)
 		return arC_syntax_tree_compile_typedef(s, (arC_syntax_tree_typedef*)st);
 	case arC_SYNTAX_TREE_FUNCDEF:
 		return arC_syntax_tree_compile_funcdef(s, (arC_syntax_tree_funcdef*)st);
+	case arC_SYNTAX_TREE_FUNCDEF_LOCALS:
+		return arC_syntax_tree_compile_funcdef_locals(s, (arC_syntax_tree_funcdef_locals*)st);
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_RETURN:
 		return arC_syntax_tree_compile_return(s, (arC_syntax_tree_funcdef_body_return*)st);
 	case arC_SYNTAX_TREE_FUNCDEF_BODY_BINOP:

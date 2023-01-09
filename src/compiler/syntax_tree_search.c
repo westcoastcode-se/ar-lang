@@ -118,7 +118,7 @@ BOOL arC_syntax_tree_search_has_name(arC_syntax_tree* node, const arString* name
 	case arC_SYNTAX_TREE_PACKAGE:
 		return arString_cmp(&((arC_syntax_tree_package*)node)->name, name);
 	case arC_SYNTAX_TREE_FUNCDEF:
-		return arString_cmp(&((arC_syntax_tree_funcdef*)node)->name, name);
+		return arString_cmp(&((arC_syntax_tree_funcdef*)node)->head->name, name);
 	case arC_SYNTAX_TREE_FUNCDEF_ARG:
 		return arString_cmp(&((arC_syntax_tree_funcdef_arg*)node)->name, name);
 	case arC_SYNTAX_TREE_FUNCDEF_LOCAL:

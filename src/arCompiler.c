@@ -173,9 +173,19 @@ BOOL arCompiler_parse_type(arCompiler* c, arC_token* t, const arC_state* state)
 
 arC_syntax_tree_funcdef_body* arCompiler_create_funcdef_body(arC_token* t, const arC_state* s)
 {
+	ASSERT_NOT_NULL(s);
+	ASSERT_NOT_NULL(s->func_node);
+	ASSERT_NULL(s->func_node->body);
+
 	arC_syntax_tree_funcdef_body* const body = arC_syntax_tree_funcdef_body_new(s);
-	if (body == NULL)
-		return NULL;
+	if (body == NULL) return NULL;	
+	s->func_node->body = body;
+
+	// Add tree node for locals
+	arC_syntax_tree_funcdef_locals* const locals = arC_syntax_tree_funcdef_locals_new(s);
+	if (locals == NULL) return NULL;
+	arC_syntax_tree_add_child(asC_syntax_tree(body), asC_syntax_tree(locals));
+	body->locals = locals;
 
 	const arC_state child_scope = asC_state(s,
 		asC_syntax_tree(body),
@@ -293,23 +303,26 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 
 	// Create the node if it cant be found
 	arC_syntax_tree_funcdef* const func = arC_syntax_tree_funcdef_new(s);
-	if (func == NULL)
-		return NULL;
-	func->name = funcName;
+	if (func == NULL) return NULL;
+
+	// The function head
+	arC_syntax_tree_funcdef_head* head = arC_syntax_tree_funcdef_head_new(s);
+	if (head == NULL) return NULL;
+	head->name = funcName;
+	func->head = head;
+	arC_syntax_tree_add_child(asC_syntax_tree(func), asC_syntax_tree(head));
 
 	// Add tree node for arguments
 	arC_syntax_tree_funcdef_args* const args = arC_syntax_tree_funcdef_args_new(s);
-	if (func == NULL)
-		return NULL;
-	arC_syntax_tree_add_child(asC_syntax_tree(func), asC_syntax_tree(args));
-	func->args = args;
+	if (args == NULL) return NULL;
+	arC_syntax_tree_add_child(asC_syntax_tree(head), asC_syntax_tree(args));
+	head->args = args;
 
-	// Add tree node for locals
-	arC_syntax_tree_funcdef_locals* const locals = arC_syntax_tree_funcdef_locals_new(s);
-	if (locals == NULL)
-		return NULL;
-	arC_syntax_tree_add_child(asC_syntax_tree(func), asC_syntax_tree(locals));
-	func->locals = locals;
+	// Add tree node for returns
+	arC_syntax_tree_funcdef_rets* const rets = arC_syntax_tree_funcdef_rets_new(s);
+	if (rets == NULL) return NULL;
+	arC_syntax_tree_add_child(asC_syntax_tree(func), asC_syntax_tree(rets));
+	head->rets = rets;
 
 	// Parse argument information until we reach that end ')' token
 	arC_token_next(t);
@@ -322,46 +335,37 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 			}
 		}
 
-		// Identity first
+		// Name of the argument
 		arC_syntax_tree_funcdef_arg* const arg = arC_syntax_tree_funcdef_arg_new(s);
-		if (arg == NULL)
-			return NULL;
+		if (arg == NULL) return NULL;
 		arg->name = t->string;
 		arg->func = func;
 		arC_syntax_tree_add_child(asC_syntax_tree(args), asC_syntax_tree(arg));
 
-		// Type second
+		// Argument type
 		arC_token_next(t);
 		arC_syntax_tree_typeref* const type = arCompiler_parse_typeref(t, s);
-		if (type == NULL)
-			return NULL;
-		arC_syntax_tree_add_child(asC_syntax_tree(arg), asC_syntax_tree(type));
+		if (type == NULL) return NULL;
 		arg->type = type;
+		arC_syntax_tree_add_child(asC_syntax_tree(arg), asC_syntax_tree(type));
+
 		args->count++;
 	}
 	arC_token_next(t);
 
-	// Add tree node for returns
-	arC_syntax_tree_funcdef_rets* const rets = arC_syntax_tree_funcdef_rets_new(s);
-	if (func == NULL)
-		return NULL;
-	arC_syntax_tree_add_child(asC_syntax_tree(func), asC_syntax_tree(rets));
-	func->rets = rets;
-
 	// Parse return information
 	if (t->type == ARTOK_IDENTITY) {
 		arC_syntax_tree_funcdef_ret* const ret = arC_syntax_tree_funcdef_ret_new(s);
-		if (ret == NULL)
-			return NULL;
+		if (ret == NULL) return NULL;
 		ret->func = func;
 		arC_syntax_tree_add_child(asC_syntax_tree(rets), asC_syntax_tree(ret));
-		rets->count++;
 
 		arC_syntax_tree_typeref* const type = arCompiler_parse_typeref(t, s);
-		if (type == NULL)
-			return NULL;
+		if (type == NULL) return NULL;
 		ret->type = type;
 		arC_syntax_tree_add_child(asC_syntax_tree(ret), asC_syntax_tree(type));
+
+		rets->count++;
 	}
 	else if (t->type == ARTOK_PARAN_L) {
 		// Parse return information until we reach that end ')' token
@@ -373,17 +377,16 @@ arC_syntax_tree_funcdef* arCompiler_create_funcdef_head(arC_token* t, const arC_
 			}
 
 			arC_syntax_tree_funcdef_ret* const ret = arC_syntax_tree_funcdef_ret_new(s);
-			if (ret == NULL)
-				return NULL;
+			if (ret == NULL) return NULL;
 			ret->func = func;
 			arC_syntax_tree_add_child(asC_syntax_tree(rets), asC_syntax_tree(ret));
-			rets->count++;
 
 			arC_syntax_tree_typeref* const type = arCompiler_parse_typeref(t, s);
-			if (type == NULL)
-				return NULL;
+			if (type == NULL) return NULL;
 			ret->type = type;
 			arC_syntax_tree_add_child(asC_syntax_tree(ret), asC_syntax_tree(type));
+
+			rets->count++;
 		}
 		// Skip ')'
 		arC_token_next(t);
@@ -400,8 +403,7 @@ BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
 
 	// Search for a function with the supplied name
 	arC_syntax_tree_funcdef* func = arCompiler_create_funcdef_head(t, s);
-	if (func == NULL)
-		return FALSE;
+	if (func == NULL) return FALSE;
 	arC_syntax_tree_add_child(s->parent_node, asC_syntax_tree(func));
 
 	// Expected body for now. Perhaps re-use this function to parse a function pointer definition in the future
@@ -418,9 +420,7 @@ BOOL arCompiler_parse_func(arCompiler* c, arC_token* t, const arC_state* s)
 		s->type_node
 	);
 	arC_syntax_tree_funcdef_body* const body = arCompiler_create_funcdef_body(t, &child_scope);
-	if (body == NULL)
-		return FALSE;
-	func->body = body;
+	if (body == NULL) return FALSE;
 	arC_syntax_tree_add_child(asC_syntax_tree(func), asC_syntax_tree(body));
 	arC_token_next(t);
 	return TRUE;
