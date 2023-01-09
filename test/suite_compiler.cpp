@@ -292,17 +292,17 @@ func Get() %s {
 
 struct suite_compiler_functions : utils_compiler_success
 {
-	void calling_before()
+	void call1()
 	{
 		static const auto source = R"(
 package main
 
-func innerGet() int32 {
-	return -12345
-}
-
 func Get() int32 {
 	return innerGet()
+}
+
+func innerGet() int32 {
+	return -12345
 }
 )";
 		add_source_code(source, "/main.arl");
@@ -315,18 +315,74 @@ func Get() int32 {
 		verify_value(ret, -12345);
 	}
 
-	void calling_after()
+	void call2()
 	{
 		static const auto source = R"(
 package main
+
+func innerGet() int32 {
+	return -12345
+}
 
 func Get() int32 {
 	return innerGet()
 }
 
-func innerGet() int32 {
-	return -12345
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32));
+		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret, -12345);
+	}
+
+	void call3()
+	{
+		static const auto source = R"(
+package main
+
+func innerGet(i int32) int32 {
+	if i > 10 {
+		return i
+	}
+	return innerGet(i + 1)
 }
+
+func Get() int32 {
+	return innerGet()
+}
+
+)";
+		add_source_code(source, "/main.arl");
+		compile();
+
+		invoke("Get()");
+
+		verify_stack_size(thread, sizeof(arInt32));
+		const auto ret = *(arInt32*)arThread_popStack(thread, sizeof(arInt32));
+		verify_value(ret, -12345);
+	}
+
+	void call4()
+	{
+		static const auto source = R"(
+package main
+
+func innerGet(i int32) int32 {
+	if i > 10 {
+		return i
+	}
+	local := innerGet(i + 1)
+	return local
+}
+
+func Get() int32 {
+	return innerGet()
+}
+
 )";
 		add_source_code(source, "/main.arl");
 		compile();
@@ -340,8 +396,10 @@ func innerGet() int32 {
 
 	void operator()()
 	{
-		TEST(calling_before());
-		TEST(calling_after());
+		TEST(call1());
+		TEST(call2());
+		TEST(call3());
+		TEST(call4());
 	}
 };
 
