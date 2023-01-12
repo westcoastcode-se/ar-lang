@@ -50,12 +50,10 @@ struct UtilsBuilderWithInterpreter : UtilsBuilder
 {
 	Interpreter::Process* process = nullptr;
 	Interpreter::Thread* thread = nullptr;
-	Bytes bytecode;
 
 	void BeforeEach()
 	{
 		UtilsBuilder::BeforeEach();
-		bytecode = nullptr;
 		process = nullptr;
 		thread = nullptr;
 	}
@@ -74,23 +72,17 @@ struct UtilsBuilderWithInterpreter : UtilsBuilder
 			process = nullptr;
 		}
 
-		if (bytecode)
-		{
-			free(bytecode);
-			bytecode = nullptr;
-		}
-
 		UtilsBuilder::AfterEach();
 	}
 
 	void CompileAndInvoke(ReadOnlyString packageName, ReadOnlyString functionName)
 	{
 		// Generate the bytecode
-		bytecode = linker->Link();
+		Byte* bytecode = linker->Link();
 
 		// New process and load the bytecode
 		process = new Process();
-		process->Load(bytecode, false);
+		process->Load(bytecode);
 
 		// Search for the function
 		auto package = process->FindPackage(packageName);
@@ -218,13 +210,70 @@ struct Constants : UtilsBuilderWithInterpreter
 
 		// Constants (32bit)
 		TEST(Ldc_T<I32>(-12345));
-		TEST(Ldc_T<U32>(INT32_MAX + 100));
+		TEST(Ldc_T<U32>((U32)INT32_MAX + (U32)100));
 		TEST(Ldc_T<F32>(-123.45f));
 
 		// Constants (64bit)
-		TEST(Ldc_l_T<I64>(UINT32_MAX + 100));
-		TEST(Ldc_l_T<U64>(INT64_MAX + 100));
+		TEST(Ldc_l_T<I64>((I64)UINT32_MAX + (I64)100));
+		TEST(Ldc_l_T<U64>((U64)INT64_MAX + (U64)100));
 		TEST(Ldc_l_T<F64>(123.4315));
+	}
+};
+
+struct Errors : UtilsBuilderWithInterpreter
+{
+	void HaltOnPushingTooMuchBeforeReturn()
+	{
+		auto main = linker->AddPackage(new Builder::Package("Main"));
+		auto add = main->Add(new Builder::Function("Get"));
+
+		// ldc <T> $value
+		// ret
+
+		auto& instr = add->Begin();
+		instr.Ldc(GetPrimitiveType<I32>(), Const(100));
+		instr.Ret();
+		instr.End();
+
+		try {
+			CompileAndInvoke("Get()");
+			Throw(Error() << "expected an exception to be thrown");
+		}
+		catch (const ThreadErrorHaltedExecution& te) {
+		}
+	}
+
+	void HaltOnPushingTooLittleBeforeExec()
+	{
+		auto main = linker->AddPackage(new Builder::Package("Main"));
+		auto add = main->Add(new Builder::Function("Get"));
+		add->AddArgument(GetPrimitiveType<I32>());
+
+		// ldc <T> $value
+		// ret
+
+		auto& instr = add->Begin();
+		instr.Ldc(GetPrimitiveType<I32>(), Const(100));
+		instr.Ret();
+		instr.End();
+
+		try {
+			CompileAndInvoke("Get(int32)");
+			Throw(Error() << "expected an exception to be thrown");
+		}
+		catch (const ThreadErrorStackMismanaged& te) {
+			AssertEquals(te.expected, (I32)sizeof(I32));
+			AssertEquals(te.currentSize, 0);
+		}
+
+	}
+
+	void operator()()
+	{
+		TEST(HaltOnPushingTooMuchBeforeReturn());
+		TEST(HaltOnPushingTooLittleBeforeExec());
+		// TODO: HaltOnExecutingOutsideMemory
+		// TODO: HaltOnWritingInsideExecutionMemory
 	}
 };
 
@@ -232,4 +281,5 @@ struct Constants : UtilsBuilderWithInterpreter
 void SuiteBuilder()
 {
 	SUITE(Constants);
+	SUITE(Errors)
 }

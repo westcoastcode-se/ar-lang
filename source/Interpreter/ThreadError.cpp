@@ -4,7 +4,7 @@ using namespace WestCoastCode;
 using namespace WestCoastCode::Interpreter;
 
 ThreadErrorStackMismanaged::ThreadErrorStackMismanaged(I32 expected, I32 current_size)
-	: ThreadError(ThreadErrorType::StackMismanaged)
+	: ThreadError(ThreadErrorType::StackMismanaged), expected(expected), currentSize(current_size)
 {
 	StringStream s;
 	s << "the stack is mismanaged. expected " << expected << " bytes but was " << current_size;

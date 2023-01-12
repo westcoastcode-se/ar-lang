@@ -7,13 +7,13 @@ int _tests_failed = 0;
 // Verify that you can build bytecode using the builder interface
 extern void SuiteBuilder();
 // Verify that source code can be compiled
-// extern void SuiteCompiler();
+extern void SuiteCompilation();
 
 int main()
 {
 	// Suites
 	SuiteBuilder();
-	//SuiteCompiler();
+	SuiteCompilation();
 
 	// Verify result
 	if (!_tests_success)

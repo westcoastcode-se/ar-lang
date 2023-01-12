@@ -27,6 +27,12 @@ namespace WestCoastCode::Interpreter
 	{
 	public:
 		ThreadErrorStackMismanaged(I32 expected, I32 current_size);
+
+		// The expected size to exist on the stack
+		const I32 expected;
+
+		// The current stack size
+		const I32 currentSize;
 	};
 
 	// Error raised when the stack is mismanaged

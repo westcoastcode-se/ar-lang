@@ -79,23 +79,23 @@ add_library(ArlangBuilder
     "source/Builder/MemoryStream.cpp" 
     "source/Builder/Instructions.cpp"
 )
-add_library(ArlangCompiler 
-    "source/Compiler/SyntaxTreeNodePackage.cpp" 
-    "source/Compiler/SyntaxTreeNodeRef.cpp" 
-    "source/Compiler/SyntaxTreeNodeOpBinop.cpp"
-    "source/Compiler/SyntaxTreeNodeOpUnaryop.cpp" 
-    "source/Compiler/SyntaxTreeNodeFuncDef.cpp" 
-    "source/Compiler/Lexer.cpp" 
-    "source/Compiler/Compiler.cpp"
-    "source/Compiler/SyntaxTreeNodePrimitive.cpp" 
-    "source/Compiler/ParseError.cpp" 
-    "source/Compiler/SourceCodeParser.cpp" 
-    "source/Compiler/SyntaxTreeNodeImport.cpp"
-    "source/Compiler/SyntaxTreeNodeFuncBody.cpp" 
-    "source/Compiler/SyntaxTreeNodeFuncArg.cpp"
-    "source/Compiler/SyntaxTreeNodeFuncRet.cpp"
-    "source/Compiler/SyntaxTreeNodeTypeRef.cpp"
-    "source/Compiler/SyntaxTreeNodeOpReturn.cpp"
+add_library(ArlangCompilation
+    "source/Compilation/SyntaxTreeNodePackage.cpp" 
+    "source/Compilation/SyntaxTreeNodeRef.cpp" 
+    "source/Compilation/SyntaxTreeNodeOpBinop.cpp"
+    "source/Compilation/SyntaxTreeNodeOpUnaryop.cpp" 
+    "source/Compilation/SyntaxTreeNodeFuncDef.cpp" 
+    "source/Compilation/Lexer.cpp" 
+    "source/Compilation/Compiler.cpp"
+    "source/Compilation/SyntaxTreeNodePrimitive.cpp" 
+    "source/Compilation/ParseError.cpp" 
+    "source/Compilation/SourceCodeParser.cpp" 
+    "source/Compilation/SyntaxTreeNodeImport.cpp"
+    "source/Compilation/SyntaxTreeNodeFuncBody.cpp" 
+    "source/Compilation/SyntaxTreeNodeFuncArg.cpp"
+    "source/Compilation/SyntaxTreeNodeFuncRet.cpp"
+    "source/Compilation/SyntaxTreeNodeTypeRef.cpp"
+    "source/Compilation/SyntaxTreeNodeOpReturn.cpp"
 )
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 
@@ -109,8 +109,8 @@ add_library(ArlangInterpreter
 add_executable(ArlangTest 
     "source/Tests/SuiteBuilder.cpp"
     "source/Tests/main.cpp"
-)
-target_link_libraries(ArlangTest ArlangInterpreter ArlangCompiler ArlangBuilder)
+ "source/Tests/SuiteCompilation.cpp")
+target_link_libraries(ArlangTest ArlangInterpreter ArlangCompilation ArlangBuilder)
 
 # Tests
 include_directories("${VM_INCLUDE_DIRS}")
