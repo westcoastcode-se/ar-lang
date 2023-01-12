@@ -239,7 +239,7 @@ struct Errors : UtilsBuilderWithInterpreter
 			CompileAndInvoke("Get()");
 			Throw(Error() << "expected an exception to be thrown");
 		}
-		catch (const ThreadErrorHaltedExecution& te) {
+		catch (const ThreadErrorHaltedExecution&) {
 		}
 	}
 

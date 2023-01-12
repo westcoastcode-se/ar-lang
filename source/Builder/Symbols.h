@@ -3,6 +3,7 @@
 #include "MemoryStream.h"
 #include "Instructions.h"
 #include "../Common.h"
+#include "../Array.h"
 #include "../Interpreter/Primitive.h"
 
 namespace WestCoastCode::Builder
@@ -37,13 +38,13 @@ namespace WestCoastCode::Builder
 	{
 	public:
 		// Get all functions part of this package
-		virtual const Vector<IFunction*>& GetFunctions() const = 0;
+		virtual ReadOnlyArray<IFunction> GetFunctions() const = 0;
 
 		// Get all globals part of this package
-		virtual const Vector<IGlobal*>& GetGlobals() const = 0;
+		virtual ReadOnlyArray<IGlobal> GetGlobals() const = 0;
 
 		// Get all types part of this package
-		virtual const Vector<IType*>& GetTypes() const = 0;
+		virtual ReadOnlyArray<IType> GetTypes() const = 0;
 	};
 
 	class IFunction : public ISymbol
@@ -140,17 +141,17 @@ namespace WestCoastCode::Builder
 		void Serialize(MemoryStream& stream) final;
 		void SerializeReadOnly(MemoryStream& stream) final;
 		const ReadOnlyString GetSignature() const final { return _signature; }
-		const Vector<IFunction*>& GetFunctions() const final { return _functions; }
-		const Vector<IType*>& GetTypes() const final { return _types; }
-		const Vector<IGlobal*>& GetGlobals() const final { return _globals; }
+		ReadOnlyArray<IFunction> GetFunctions() const final { return _functions; }
+		ReadOnlyArray<IType> GetTypes() const final { return _types; }
+		ReadOnlyArray<IGlobal> GetGlobals() const final { return _globals; }
 
 	private:
 		ISymbol* _parent;
 		ReadOnlyString _name;
 		String _signature;
-		Vector<IFunction*> _functions;
-		Vector<IType*> _types;
-		Vector<IGlobal*> _globals;
+		Array<Function, IFunction> _functions;
+		Array<Type, IType> _types;
+		Array<Global, IGlobal> _globals;
 		I32 _offset;
 	};
 

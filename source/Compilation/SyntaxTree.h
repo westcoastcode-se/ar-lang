@@ -32,6 +32,23 @@ namespace WestCoastCode::Compilation
 	};
 	typedef int DefinitionQueryTypes;
 
+	enum class QuerySearchFlag : int
+	{
+		// Searching backwards from the current node. Useful for searching for variables
+		// declared before the current node in a function
+		Backwards = 1 << 0,
+
+		// Include imports when searching for nodes
+		TraverseImports = 1 << 1,
+
+		// Traverse child-nodes
+		TraverseChildren = 1 << 2,
+
+		// Traverse upwards to parent etc.
+		TraverseParent = 1 << 3
+	};
+	typedef int QuerySearchFlags;
+
 	// Visitor
 	template<class BaseClass>
 	class ISyntaxTreeNodeVisitor
