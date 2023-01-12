@@ -38,6 +38,7 @@ void Thread::ExecEntrypoint(const Function* entrypoint)
 }
 
 #include "Instructions/Ldc.c"
+#include "Instructions/Ldc_s.c"
 #include "Instructions/Ret.c"
 
 void Thread::Exec(const Byte* ip)
@@ -73,9 +74,6 @@ void Thread::Exec0(const Byte* ip) noexcept
 
 		// Perform special-case (most common instruction types)
 		switch (header->opcode) {
-		case (I32)Opcodes::Ldc_I8:
-			ip = Ldc_I8(&_stack, ip);
-			continue;
 		case (I32)Opcodes::Ldc_s_I8_0:
 			ip = Ldc_s_I8(&_stack, ip, 0);
 			continue;
@@ -107,6 +105,9 @@ void Thread::Exec0(const Byte* ip) noexcept
 		// Perform more "generic" instruction types
 		switch (header->incode)
 		{
+		case Incode::Ldc:
+			ip = Ldc(this, ip);
+			continue;
 		case Incode::Ldc_s:
 			ip = Ldc_s(this, ip);
 			continue;

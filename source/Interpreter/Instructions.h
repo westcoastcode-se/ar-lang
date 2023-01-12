@@ -164,8 +164,6 @@ union { \
 
 	enum class Opcodes : I32
 	{
-		Ldc_I8 = Props(Incode::Ldc, PrimitiveType::I8, 0, 0),
-
 		Ldc_s_I8_0 = Props(Incode::Ldc_s, PrimitiveType::I8, 0, 0),
 		Ldc_s_I8_1 = Props(Incode::Ldc_s, PrimitiveType::I8, 1, 0),
 		Ldc_s_U8_0 = Props(Incode::Ldc_s, PrimitiveType::U8, 0, 0),

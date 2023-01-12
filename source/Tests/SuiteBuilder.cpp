@@ -158,8 +158,6 @@ struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 	template<typename T>
 	void Ldc_T(T value)
 	{
-		auto primtiveType = GetPrimitiveType<T>();
-
 		auto main = linker->AddPackage(new Builder::Package("Main"));
 		auto add = main->Add(new Builder::Function("Get"));
 		add->AddReturn(GetPrimitiveType<T>());
@@ -168,7 +166,7 @@ struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 		// ret
 
 		auto& instr = add->Begin();
-		instr.Ldc(primtiveType, Const((T)value));
+		instr.Ldc(GetPrimitiveType<T>(), Const((T)value));
 		instr.Ret();		
 		instr.End();
 
@@ -197,8 +195,10 @@ struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 		TEST(Ldc_s_T<I16>(-1221));
 		TEST(Ldc_s_T<U16>(UINT16_MAX));
 
-
-		TEST(Ldc_T<I8>(123));
+		// Constants (32bit)
+		TEST(Ldc_T<I32>(-12345));
+		TEST(Ldc_T<U32>(INT32_MAX + 100));
+		TEST(Ldc_T<F32>(-123.45f));
 	}
 };
 
