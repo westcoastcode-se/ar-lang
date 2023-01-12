@@ -69,10 +69,46 @@ add_library(arlang
     "src/compiler/syntax_tree_compiler.c"
     "src/compiler/syntax_tree_resolve.c"
     "src/compiler/syntax_tree_search.c"
+ )
+  
+set(CMAKE_CXX_STANDARD 20)
+add_library(ArlangBuilder
+    "source/Builder/Symbols.cpp" 
+    "source/Builder/Linker.cpp"
+    "source/Builder/LinkError.cpp"
+    "source/Builder/MemoryStream.cpp" 
+    "source/Builder/Instructions.cpp"
 )
+add_library(ArlangCompiler 
+    "source/Compiler/SyntaxTreeNodePackage.cpp" 
+    "source/Compiler/SyntaxTreeNodeRef.cpp" 
+    "source/Compiler/SyntaxTreeNodeOpBinop.cpp"
+    "source/Compiler/SyntaxTreeNodeOpUnaryop.cpp" 
+    "source/Compiler/SyntaxTreeNodeFuncDef.cpp" 
+    "source/Compiler/Lexer.cpp" 
+    "source/Compiler/Compiler.cpp"
+    "source/Compiler/SyntaxTreeNodePrimitive.cpp" 
+    "source/Compiler/ParseError.cpp" 
+    "source/Compiler/SourceCodeParser.cpp" 
+    "source/Compiler/SyntaxTreeNodeImport.cpp"
+    "source/Compiler/SyntaxTreeNodeFuncBody.cpp" 
+    "source/Compiler/SyntaxTreeNodeFuncArg.cpp"
+    "source/Compiler/SyntaxTreeNodeFuncRet.cpp"
+    "source/Compiler/SyntaxTreeNodeTypeRef.cpp"
+    "source/Compiler/SyntaxTreeNodeOpReturn.cpp"
+)
+add_library(ArlangInterpreter
+    "source/Interpreter/Thread.cpp" 
+    "source/Interpreter/ThreadStack.cpp"
+ "source/Interpreter/Process.cpp" "source/Interpreter/ProcessError.cpp")
+# Tests
+add_executable(ArlangTest 
+    "source/Tests/SuiteBuilder.cpp"
+    "source/Tests/main.cpp"
+)
+target_link_libraries(ArlangTest ArlangInterpreter ArlangCompiler ArlangBuilder)
 
 # Tests
-set(CMAKE_CXX_STANDARD 17)
 include_directories("${VM_INCLUDE_DIRS}")
 add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_builder.cpp" "test/suite_compiler.cpp")
 target_link_libraries(test arlang)
