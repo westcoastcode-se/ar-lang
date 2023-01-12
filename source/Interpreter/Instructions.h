@@ -1,11 +1,20 @@
 #pragma once
 
 #include "../Common.h"
+#include "Primitive.h"
+
+#define VMI_PROPS1_OPCODE(P) ((P) << 8)
+#define VMI_PROPS2_OPCODE(P) ((P) << 16)
+#define VMI_PROPS3_OPCODE(P) ((P) << 24)
 
 namespace WestCoastCode::Interpreter
 {
 	typedef I32 Opcode;
 	typedef I8 IncodeProps;
+
+	static constexpr I32 Props1(I8 val) { return val << 8; }
+	static constexpr I32 Props2(I8 val) { return val << 16; }
+	static constexpr I32 Props3(I8 val) { return val << 24; }
 
 	enum class Incode : I8
 	{
@@ -21,6 +30,8 @@ namespace WestCoastCode::Interpreter
 		ScopeIn,
 		ScopeOut,
 		Ret,
+
+		Eoe
 	};
 
 	// Header for the operational code
@@ -62,6 +73,7 @@ union { \
 	typedef InstrSingle InstrSub;
 	typedef InstrSingle InstrMult;
 	typedef InstrSingle InstrDiv;
+	typedef InstrSingle InstrEoe;
 	static_assert(sizeof(InstrSingle) == sizeof(OpcodeHeader));
 
 	// Return statement
@@ -90,6 +102,13 @@ union { \
 				Incode icode;
 				IncodeProps props1;
 				I16 i16;
+			};
+			struct
+			{
+				Incode icode;
+				IncodeProps props1;
+				I8 i8;
+				I8 i8_0;
 			};
 		};
 	};
@@ -137,4 +156,10 @@ union { \
 	};
 #pragma pack(pop)
 	static_assert(sizeof(InstrLdc_l) == sizeof(OpcodeHeader) + sizeof(I64));
+
+	enum class Opcodes
+	{
+		Ldc_I8 = ((I32)Incode::Ldc | Props1((I8)PrimitiveType::I8)),
+		Ldc_s_I8 = ((I32)Incode::Ldc_s | Props1((I8)PrimitiveType::I8)),
+	};
 }

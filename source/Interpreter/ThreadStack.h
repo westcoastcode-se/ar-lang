@@ -19,6 +19,9 @@ namespace WestCoastCode::Interpreter
 		// the poped value from. Will return NULL if you've popped to much memory
 		Byte* Pop(I32 size);
 
+		// Get the memory
+		Byte* Top(I32 offset);
+
 		// Get the size of the stack
 		I32 GetSize() const { return 0; }
 

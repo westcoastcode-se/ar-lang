@@ -37,31 +37,37 @@ Global* Package::Add(Global* global)
 	return global;
 }
 
-I32 Package::ResolveWriteMemory(I32 offset)
-{
-	for (auto& g : _globals)
-		offset = static_cast<Global*>(g)->ResolveWriteMemory(offset);
-	for (auto& f : _functions)
-		offset = static_cast<Function*>(f)->ResolveWriteMemory(offset);
-	return offset;
-}
-
-I32 Package::ResolveReadOnlyMemory(I32 offset)
+I32 Package::ResolveHeaderMemory(I32 offset)
 {
 	if (_parent != nullptr) {
 		_signature = _parent->GetSignature();
 		if (!_signature.empty())
 			_signature += String(".");
-		
+		_signature += _name;
 	}
 	_signature += _name;
 
+	offset = offset + sizeof(Interpreter::ProcessPackageHeader) + (I32)_signature.size();
 	for (auto& t : _types)
-		offset = static_cast<Type*>(t)->ResolveReadOnlyMemory(offset);
+		offset = static_cast<Type*>(t)->ResolveHeaderMemory(offset);
 	for (auto& g : _globals)
-		offset = static_cast<Global*>(g)->ResolveReadOnlyMemory(offset);
+		offset = static_cast<Global*>(g)->ResolveHeaderMemory(offset);
 	for (auto& f : _functions)
-		offset = static_cast<Function*>(f)->ResolveReadOnlyMemory(offset);
+		offset = static_cast<Function*>(f)->ResolveHeaderMemory(offset);
+	return offset;
+}
+
+I32 Package::ResolveGlobalVariables(I32 offset)
+{
+	for (auto& g : _globals)
+		offset = static_cast<Global*>(g)->ResolveGlobalVariables(offset);
+	return offset;
+}
+
+I32 Package::ResolveFunctionBody(I32 offset)
+{
+	for (auto& f : _functions)
+		offset = static_cast<Function*>(f)->ResolveFunctionBody(offset);
 	return offset;
 }
 
@@ -130,13 +136,7 @@ void Global::Serialize(MemoryStream& stream)
 	//memset(ptr, init_value, _type->GetSize());
 }
 
-I32 Global::ResolveWriteMemory(I32 offset)
-{
-	_offset = offset;
-	return offset + _type->GetStackSize();
-}
-
-I32 Global::ResolveReadOnlyMemory(I32 offset)
+I32 Global::ResolveHeaderMemory(I32 offset)
 {
 	if (_parent != nullptr) {
 		_signature = _parent->GetSignature();
@@ -148,19 +148,21 @@ I32 Global::ResolveReadOnlyMemory(I32 offset)
 	return offset + sizeof(Interpreter::ProcessGlobalHeader) + (I32)_signature.size();
 }
 
-I32 Type::ResolveWriteMemory(I32 offset)
+I32 Global::ResolveGlobalVariables(I32 offset)
 {
-	return offset;
+	_offset = offset;
+	return offset + _type->GetStackSize();
 }
 
-I32 Type::ResolveReadOnlyMemory(I32 offset)
+I32 Type::ResolveHeaderMemory(I32 offset)
 {
 	if (_parent != nullptr) {
 		_signature = _parent->GetSignature();
 		if (!_signature.empty())
 			_signature += String(".");
-		_signature += _name;
+
 	}
+	_signature += _name;
 
 	return offset + sizeof(Interpreter::ProcessTypeHeader) + (I32)_signature.size();
 }
@@ -185,13 +187,7 @@ void Function::AddReturn(Type* t)
 	_returns.push_back(t);
 }
 
-I32 Function::ResolveWriteMemory(I32 offset)
-{
-	// TODO: Add static variables here later?
-	return offset;
-}
-
-I32 Function::ResolveReadOnlyMemory(I32 offset)
+I32 Function::ResolveHeaderMemory(I32 offset)
 {
 	if (_parent != nullptr) {
 		_signature = _parent->GetSignature();
@@ -206,8 +202,13 @@ I32 Function::ResolveReadOnlyMemory(I32 offset)
 		_signature += ")";
 	}
 
-	_offset = offset;
-	return _offset + _instructions.GetSize();
+	return offset + sizeof(Interpreter::ProcessFunctionHeader) + (I32)_signature.size();
+}
+
+I32 Function::ResolveFunctionBody(I32 offset)
+{
+	_entrypointOffset = offset;
+	return _entrypointOffset + _instructions.GetSize();
 }
 
 void Function::SerializeHeader(MemoryStream& stream)
@@ -215,8 +216,8 @@ void Function::SerializeHeader(MemoryStream& stream)
 	auto header = stream.Reserve<Interpreter::ProcessFunctionHeader>();
 	header->signatureLength = (I32)_signature.size();
 	header->signatureOffset = stream.GetOffset();
-	header->expectedStackSize = _stackSize;
-	header->entryOffset = _offset;
+	header->expectedStackSize = GetArgumentsSize();
+	header->entryOffset = _entrypointOffset;
 	stream.Write(_signature);
 	header->offset = stream.GetOffset();
 }

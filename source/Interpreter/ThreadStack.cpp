@@ -34,3 +34,8 @@ Byte* ThreadStack::Pop(I32 size)
 	}
 	return _top;
 }
+
+Byte* ThreadStack::Top(I32 offset)
+{
+	return _top + offset;
+}

@@ -1,11 +1,12 @@
 #include "MemoryStream.h"
+#include "LinkError.h"
 #include <memory>
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Builder;
 
 MemoryStream::MemoryStream(I32 size)
-	: _bytes((Bytes)malloc(size)), _ptr(_bytes)
+	: _bytes((Bytes)malloc(size)), _ptr(_bytes), _end(_bytes + size)
 {
 	assert(_bytes != nullptr);
 }
@@ -18,12 +19,18 @@ MemoryStream::~MemoryStream()
 
 void MemoryStream::Write(const void* ptr, I32 size)
 {
+	if (_ptr + size > _end)
+		throw LinkErrorInvalidBytecodeSize();
+
 	memcpy(_ptr, (const Byte*)ptr, size);
 	_ptr += size;
 }
 
 Bytes MemoryStream::Done()
 {
+	if (_ptr != _end)
+		throw LinkErrorInvalidBytecodeSize();
+
 	Bytes temp = _bytes;
 	_bytes = nullptr;
 	return temp;

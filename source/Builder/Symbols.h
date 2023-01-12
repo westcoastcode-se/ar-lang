@@ -122,13 +122,16 @@ namespace WestCoastCode::Builder
 		// Add the supplied global
 		Global* Add(Global* global);
 
+		// Resolve header memory size
+		I32 ResolveHeaderMemory(I32 offset);
+
 		// Resolve memory which is not read-only. This includes, for example,
 		// global variables. Returns the current offset
-		I32 ResolveWriteMemory(I32 offset);
+		I32 ResolveGlobalVariables(I32 offset);
 
 		// Resolve memory which is part of the read-only block. This includes, for example,
 		// the function byte-code instructions. Returns the current offset
-		I32 ResolveReadOnlyMemory(I32 offset);
+		I32 ResolveFunctionBody(I32 offset);
 
 	public:
 		// Inherited via ISymbolPackage
@@ -161,13 +164,12 @@ namespace WestCoastCode::Builder
 		// Set the parent symbol
 		void SetParent(ISymbol* parent) { _parent = parent; }
 
+		// Resolve header memory size
+		I32 ResolveHeaderMemory(I32 offset);
+
 		// Resolve memory which is not read-only. This includes, for example,
 		// global variables. Returns the current offset
-		I32 ResolveWriteMemory(I32 offset);
-
-		// Resolve memory which is part of the read-only block. This includes, for example,
-		// the function byte-code instructions. Returns the current offset
-		I32 ResolveReadOnlyMemory(I32 offset);
+		I32 ResolveGlobalVariables(I32 offset);
 
 	public:
 		// Inherited via ISymbolGlobal
@@ -199,13 +201,8 @@ namespace WestCoastCode::Builder
 		// Set the parent symbol
 		void SetParent(ISymbol* parent) { _parent = parent; }
 
-		// Resolve memory which is not read-only. This includes, for example,
-		// global variables. Returns the current offset
-		I32 ResolveWriteMemory(I32 offset);
-
-		// Resolve memory which is part of the read-only block. This includes, for example,
-		// the function byte-code instructions. Returns the current offset
-		I32 ResolveReadOnlyMemory(I32 offset);
+		// Resolve header memory size
+		I32 ResolveHeaderMemory(I32 offset);
 
 	public:
 		// Inherited via ISymbolType
@@ -273,7 +270,7 @@ namespace WestCoastCode::Builder
 	{
 	public:
 		Function(ReadOnlyString name)
-			: _parent(nullptr), _name(name), _stackSize(-1), _offset(-1), _instructions(this) {}
+			: _parent(nullptr), _name(name), _stackSize(-1), _entrypointOffset(-1), _instructions(this) {}
 
 		// Set an argument
 		void AddArgument(Type* t);
@@ -287,13 +284,12 @@ namespace WestCoastCode::Builder
 		// Begin creating instructions
 		Instructions& Begin() { return _instructions; }
 
-		// Resolve memory which is not read-only. This includes, for example,
-		// global variables. Returns the current offset
-		I32 ResolveWriteMemory(I32 offset);
+		// Resolve header memory size
+		I32 ResolveHeaderMemory(I32 offset);
 
 		// Resolve memory which is part of the read-only block. This includes, for example,
 		// the function byte-code instructions. Returns the current offset
-		I32 ResolveReadOnlyMemory(I32 offset);
+		I32 ResolveFunctionBody(I32 offset);
 
 	public:
 		// Inherited via ISymbolFunction
@@ -310,7 +306,7 @@ namespace WestCoastCode::Builder
 		ReadOnlyString _name;
 		String _signature;
 		I32 _stackSize;
-		I32 _offset;
+		I32 _entrypointOffset;
 		Instructions _instructions;
 		Vector<Type*> _arguments;
 		Vector<Type*> _returns;

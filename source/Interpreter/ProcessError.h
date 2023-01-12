@@ -1,7 +1,6 @@
 #pragma once
 
-#include <exception>
-#include "../Common.h"
+#include "Error.h"
 
 namespace WestCoastCode::Interpreter
 {
@@ -13,23 +12,13 @@ namespace WestCoastCode::Interpreter
 	};
 
 	// Base class for errors raised by a process
-	class ProcessError : public std::exception
+	class ProcessError : public InterpreterError
 	{
 	public:
 		ProcessError(ProcessErrorType type)
 			: _type(type){}
 
-		char const* what() const final { return _error.c_str(); }
-
-	protected:
-		// Set the error message
-		void SetErrorf(const char* fmt, ...);
-
-		// Set the error message
-		void SetError(const String& error);
-
 	private:
-		String _error;
 		const ProcessErrorType _type;
 	};
 

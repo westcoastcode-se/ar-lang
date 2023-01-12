@@ -100,7 +100,11 @@ add_library(ArlangCompiler
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 
     "source/Interpreter/ThreadStack.cpp"
- "source/Interpreter/Process.cpp" "source/Interpreter/ProcessError.cpp")
+    "source/Interpreter/Process.cpp" 
+    "source/Interpreter/ProcessError.cpp" 
+    "source/Interpreter/ThreadError.cpp" 
+    "source/Interpreter/Error.cpp"
+)
 # Tests
 add_executable(ArlangTest 
     "source/Tests/SuiteBuilder.cpp"

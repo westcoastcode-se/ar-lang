@@ -25,10 +25,10 @@ namespace WestCoastCode::Builder
 		I32 CalculateTotalHeaderSize() const;
 
 		// Resolve offsets of the write allowed area
-		I32 ResolveWrite(I32 offset);
+		I32 ResolveGlobalVariables(I32 offset);
 
 		// Resolve offsets of the read-only area
-		I32 ResolveInstructions(I32 offset);
+		I32 ResolveFunctionBody(I32 offset);
 
 		// Serialize the header information of all symbols
 		void SerializeHeaders(MemoryStream& stream);

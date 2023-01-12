@@ -16,9 +16,9 @@ Bytes Linker::Link()
 	// Figure out the header size
 	const I32 totalHeaderSize = CalculateTotalHeaderSize();
 	// Figure out where the read-only memory blocks are located
-	const I32 readOnlyOffset = ResolveWrite(totalHeaderSize);
+	const I32 readOnlyOffset = ResolveGlobalVariables(totalHeaderSize);
 	// Figure out the total instructions body size
-	const I32 totalSize = ResolveInstructions(readOnlyOffset);
+	const I32 totalSize = ResolveFunctionBody(readOnlyOffset);
 
 	// Header
 	MemoryStream stream(totalSize);
@@ -51,43 +51,22 @@ Package* Linker::AddPackage(Package* package)
 I32 Linker::CalculateTotalHeaderSize() const
 {
 	I32 size = sizeof(ProcessHeader);
-	// The size for each package
-	for (auto& p : _packages) {
-		size += sizeof(ProcessPackageHeader);
-		size += (I32)p->GetSignature().size();
-
-		// Calculate the size for each global
-		for (auto& t : p->GetTypes()) {
-			size += sizeof(ProcessGlobalHeader);
-			size += (I32)t->GetSignature().size();
-		}
-
-		// Calculate the size for each global
-		for (auto& g : p->GetGlobals()) {
-			size += sizeof(ProcessGlobalHeader);
-			size += (I32)g->GetSignature().size();
-		}
-
-		// Calculate the size for each function
-		for (auto& f : p->GetFunctions()) {
-			size += sizeof(ProcessFunctionHeader);
-			size += (I32)f->GetSignature().size();
-		}
-	}
+	for (auto& p : _packages)
+		size = p->ResolveHeaderMemory(size);
 	return size;
 }
 
-I32 Linker::ResolveWrite(I32 offset)
+I32 Linker::ResolveGlobalVariables(I32 offset)
 {
 	for (auto& p : _packages)
-		offset = p->ResolveWriteMemory(offset);
+		offset = p->ResolveGlobalVariables(offset);
 	return offset;
 }
 
-I32 Linker::ResolveInstructions(I32 offset)
+I32 Linker::ResolveFunctionBody(I32 offset)
 {
 	for (auto& p : _packages)
-		offset = p->ResolveReadOnlyMemory(offset);
+		offset = p->ResolveFunctionBody(offset);
 	return offset;
 }
 

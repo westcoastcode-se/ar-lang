@@ -3,16 +3,6 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Interpreter;
 
-void ProcessError::SetErrorf(const char* fmt, ...)
-{
-	_error = fmt;
-}
-
-void ProcessError::SetError(const String& error)
-{
-	_error = error;
-}
-
 ProcessErrorFailedToLoad::ProcessErrorFailedToLoad()
 	: ProcessError(ProcessErrorType::FailedToLoad)
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Common.h"
+#include "LinkError.h"
 
 namespace WestCoastCode::Builder
 {
@@ -46,12 +47,16 @@ namespace WestCoastCode::Builder
 		// Reserve memory
 		template<class T>
 		T* Reserve() {
+			if (_ptr + sizeof(T) > _end)
+				throw LinkErrorInvalidBytecodeSize();
 			Bytes temp = _ptr;
 			_ptr += sizeof(T);
 			return (T*)temp;
 		}
 
 		Bytes Reserve(I32 bytes) {
+			if (_ptr + bytes > _end)
+				throw LinkErrorInvalidBytecodeSize();
 			Bytes temp = _ptr;
 			_ptr += bytes;
 			return temp;
@@ -60,5 +65,6 @@ namespace WestCoastCode::Builder
 	private:
 		Bytes _bytes;
 		Bytes _ptr;
+		const Bytes _end;
 	};
 }

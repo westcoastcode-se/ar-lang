@@ -48,8 +48,9 @@ namespace WestCoastCode::Interpreter
 	class Function
 	{
 	public:
-		Function(ReadOnlyString name, ReadOnlyString signature, I32 id)
-			: _name(name), _signature(signature), _id(id) {}
+		Function(ReadOnlyString name, ReadOnlyString signature, I32 id, const Byte* address,
+			I32 stackSize)
+			: _name(name), _signature(signature), _id(id), _address(address), _stackSize(stackSize) {}
 
 		// Get the name for this function
 		ReadOnlyString GetName() const { return _name; }
@@ -57,10 +58,18 @@ namespace WestCoastCode::Interpreter
 		// Get the signature for this function
 		ReadOnlyString GetSignature() const { return _signature; }
 
+		// Get the entrypoint address
+		const Byte* GetAddress() const { return _address; }
+
+		// How many bytes are expected to be pushed on the stack for this function to work
+		I32 GetStackSize() const { return _stackSize; }
+
 	private:
 		const ReadOnlyString _name;
 		const ReadOnlyString _signature;
 		const I32 _id;
+		const Byte* _address;
+		const I32 _stackSize;
 	};
 
 	// Represents a type
@@ -137,6 +146,11 @@ namespace WestCoastCode::Interpreter
 		// Find a global with the supplied signature
 		const Global* FindGlobal(ReadOnlyString signature) const;
 
+		// Get the execution range
+		Range<const Byte*> GetExecutionRange() const {
+			return Range<const Byte*>(_bytecodeExecutionStart, _bytecodeExecutionEnd);
+		}
+
 	private:
 		friend class Thread;
 
@@ -146,6 +160,10 @@ namespace WestCoastCode::Interpreter
 	private:
 		Byte* _bytecode;
 		bool _bytecodeDelete;
+
+		// Range where execution is allowed
+		const Byte* _bytecodeExecutionStart;
+		const Byte* _bytecodeExecutionEnd;
 
 		Thread* _currentThread;
 		Stack<Thread*> _pausedThreads;

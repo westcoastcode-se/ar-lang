@@ -128,7 +128,8 @@ void Process::Load(Bytes bytecode, bool deleteOnExit)
 		{
 			const ReadOnlyString signature(bytecode + functionHeader->signatureOffset, functionHeader->signatureLength);
 			const ReadOnlyString name = NameFromFunctionSignature(signature);
-			auto function = new Function(name, signature, (I32)_functions.size());
+			auto function = new Function(name, signature, (I32)_functions.size(), bytecode + functionHeader->entryOffset,
+				functionHeader->expectedStackSize);
 			_functions.push_back(function);
 			_namedFunctions[signature] = function;
 			package->AddFunction(function);
@@ -138,6 +139,10 @@ void Process::Load(Bytes bytecode, bool deleteOnExit)
 
 		ptr = bytecode + packageHeader->offset;
 	}
+
+	// Figure out the range
+	_bytecodeExecutionStart = _bytecode + header->codeOffset;
+	_bytecodeExecutionEnd = _bytecodeExecutionStart + header->codeSize;
 }
 
 Thread* Process::NewThread() {
@@ -160,9 +165,9 @@ void Process::Exec(Thread* thread, const Function* entrypoint) {
 		_currentThread->ExecEntrypoint(entrypoint);
 		_currentThread = nullptr;
 	}
-	catch (std::exception& e) {
+	catch (const std::exception& e) {
 		_currentThread = nullptr;
-		throw e;
+		throw;
 	}
 }
 
