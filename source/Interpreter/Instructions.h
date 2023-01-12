@@ -12,9 +12,9 @@ namespace WestCoastCode::Interpreter
 	typedef I32 Opcode;
 	typedef I8 IncodeProps;
 
-	static constexpr I32 Props1(I8 val) { return val << 8; }
-	static constexpr I32 Props2(I8 val) { return val << 16; }
-	static constexpr I32 Props3(I8 val) { return val << 24; }
+	static constexpr I32 Props1(I32 val) { return val << 8; }
+	static constexpr I32 Props2(I32 val) { return val << 16; }
+	static constexpr I32 Props3(I32 val) { return val << 24; }
 
 	enum class Incode : I8
 	{
@@ -81,7 +81,7 @@ union { \
 	{
 		OPCODE_HEADER;
 #if defined(VM_STACK_DEBUG)
-		U32 expected_ebp_offset;
+		I32 expected_ebp_offset;
 #endif
 	};
 #if defined(VM_STACK_DEBUG)
@@ -157,9 +157,16 @@ union { \
 #pragma pack(pop)
 	static_assert(sizeof(InstrLdc_l) == sizeof(OpcodeHeader) + sizeof(I64));
 
-	enum class Opcodes
+	enum class Opcodes : I32
 	{
-		Ldc_I8 = ((I32)Incode::Ldc | Props1((I8)PrimitiveType::I8)),
-		Ldc_s_I8 = ((I32)Incode::Ldc_s | Props1((I8)PrimitiveType::I8)),
+		Ldc_I8 = ((I32)Incode::Ldc | Props1((I32)PrimitiveType::I8)),
+		Ldc_s_I8_0 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::I8) | Props2(0)),
+		Ldc_s_I8_1 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::I8) | Props2(1)),
+		Ldc_s_U8_0 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::U8) | Props2(0)),
+		Ldc_s_U8_1 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::U8) | Props2(1)),
+		Ldc_s_I16_0 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::I16) | Props2(0)),
+		Ldc_s_I16_1 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::I16) | Props2(1)),
+		Ldc_s_U16_0 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::U16) | Props2(0)),
+		Ldc_s_U16_1 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::U16) | Props2(1)),
 	};
 }

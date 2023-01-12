@@ -45,107 +45,95 @@ namespace WestCoastCode::Interpreter
 		// Create a primitive
 		static PrimitiveValue I8(I8 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::I8 };
 			p.i8 = val;
-			p.type = PrimitiveType::I8;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue U8(U8 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::U8 };
 			p.u8 = val;
-			p.type = PrimitiveType::U8;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue I16(I16 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::I16 };
 			p.i16 = val;
-			p.type = PrimitiveType::I16;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue U16(U16 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::U16 };
 			p.u16 = val;
-			p.type = PrimitiveType::U16;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue I32(I32 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::I32 };
 			p.i32 = val;
-			p.type = PrimitiveType::I32;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue U32(U32 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::U32 };
 			p.u32 = val;
-			p.type = PrimitiveType::U32;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue I64(I64 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::I64 };
 			p.i64 = val;
-			p.type = PrimitiveType::I64;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue U64(U64 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::U64 };
 			p.u64 = val;
-			p.type = PrimitiveType::U64;
 			return p;
 		}
 		// Create a primitive
 		static PrimitiveValue F32(F32 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::F32 };
 			p.f32 = val;
-			p.type = PrimitiveType::F32;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue F64(F64 val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::F64 };
 			p.f64 = val;
-			p.type = PrimitiveType::F64;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue Bool(IB val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::Bool };
 			p.bool4 = val;
-			p.type = PrimitiveType::Bool;
 			return p;
 		}
 
 		// Create a primitive
 		static PrimitiveValue Ptr(void* val)
 		{
-			PrimitiveValue p;
+			PrimitiveValue p = { 0, PrimitiveType::Ptr };
 			p.ptr = val;
-			p.type = PrimitiveType::Ptr;
 			return p;
 		}
 	};

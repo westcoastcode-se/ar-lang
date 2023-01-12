@@ -31,7 +31,7 @@ Bytes Linker::Link()
 	header->codeOffset = readOnlyOffset;
 	header->codeSize = totalSize - readOnlyOffset;
 	header->dataOffset = totalHeaderSize;
-	header->dataSize = totalSize - readOnlyOffset - totalHeaderSize;
+	header->dataSize = totalSize - (header->codeSize + totalHeaderSize);
 	header->packagesCount = (I32)_packages.size();
 	header->packageOffset = sizeof(ProcessHeader);
 

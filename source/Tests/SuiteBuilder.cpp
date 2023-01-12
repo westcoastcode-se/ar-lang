@@ -130,8 +130,31 @@ struct UtilsBuilderWithInterpreter : UtilsBuilder
 	}
 };
 
-struct SuiteBuilderPrimitives : UtilsBuilderWithInterpreter
+struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 {
+	template<typename T>
+	void Ldc_s_T(T value)
+	{
+		auto primtiveType = GetPrimitiveType<T>();
+
+		auto main = linker->AddPackage(new Builder::Package("Main"));
+		auto add = main->Add(new Builder::Function("Get"));
+		add->AddReturn(GetPrimitiveType<T>());
+
+		// ldc_<T> $value
+		// ret
+
+		auto& instr = add->Begin();
+		instr.Ldc(primtiveType, Const((T)value));
+		instr.Ret();
+		instr.End();
+
+		CompileAndInvoke("Get()");
+		VerifyStackSize(sizeof(T));
+		VerifyStackSize(sizeof(T));
+		AssertEquals(Pop<T>(), (T)value);
+	}
+
 	template<typename T>
 	void Ldc_T(T value)
 	{
@@ -156,6 +179,16 @@ struct SuiteBuilderPrimitives : UtilsBuilderWithInterpreter
 
 	void operator()()
 	{
+		// Test shorthand constants
+		TEST(Ldc_s_T<I8>(0));
+		TEST(Ldc_s_T<I8>(1));
+		TEST(Ldc_s_T<U8>(0));
+		TEST(Ldc_s_T<U8>(1));
+		TEST(Ldc_s_T<I16>(0));
+		TEST(Ldc_s_T<I16>(1));
+		TEST(Ldc_s_T<U16>(0));
+		TEST(Ldc_s_T<U16>(1));
+
 		TEST(Ldc_T<I8>(123));
 	}
 };
@@ -163,5 +196,5 @@ struct SuiteBuilderPrimitives : UtilsBuilderWithInterpreter
 // Run all builder tests
 void SuiteBuilder()
 {
-	SUITE(SuiteBuilderPrimitives);
+	SUITE(SuiteBuilderConstants);
 }

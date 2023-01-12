@@ -11,7 +11,8 @@ namespace
 }
 
 Thread::Thread(Process* process)
-	: _process(process), _bytecode(process->GetBytecode()), _executionRange(process->GetExecutionRange()), _ip(nullptr), _flags(0), _halt_message{0}
+	: _process(process), _bytecode(process->GetBytecode()), _executionRange(process->GetExecutionRange()), _ip(nullptr), 
+	_haltFlags(0), _haltMessage{0}, _haltAddress(nullptr)
 {
 }
 
@@ -41,8 +42,8 @@ void Thread::ExecEntrypoint(const Function* entrypoint)
 void Thread::Exec(const Byte* ip)
 {
 	Exec0(ip);
-	if (_flags != 0)
-		throw ThreadErrorHaltedExecution(_flags, _halt_message);
+	if (_haltFlags != 0)
+		throw ThreadErrorHaltedExecution(_haltFlags, _haltMessage);
 }
 
 void Thread::Exec0(const Byte* ip) noexcept
@@ -50,19 +51,15 @@ void Thread::Exec0(const Byte* ip) noexcept
 	while (true)
 	{
 		// Verify that we are inside execution memory
-		if (!_executionRange.Inside(_ip)) {
-			if (ip == (const Byte*)&eoe)
+		if (!_executionRange.Inside(ip)) {
+			if (ip != (const Byte*)&eoe) {
+				Halt(ip, (ThreadFlags)ThreadFlag::OutsideExecutionMemory, "outside execution memory");
 				return;
-			_flags |= (ThreadFlags)ThreadFlag::OutsideExecutionMemory;
-			sprintf(_halt_message, "outside execution memory");
-			return;
+			}
 		}
 
-#ifdef ARLANG_INSTRUCTION_DEBUG
-		printf("\n");
-#endif
 		// Stop executing of a flag is raised
-		if (_flags != 0) return;
+		if (_haltFlags != 0) return;
 
 #ifdef ARLANG_INSTRUCTION_DEBUG
 #	ifdef VM_STACK_DEBUG
@@ -78,8 +75,29 @@ void Thread::Exec0(const Byte* ip) noexcept
 		case (I32)Opcodes::Ldc_I8:
 			ip = Ldc_I8(&_stack, ip);
 			continue;
-		case (I32)Opcodes::Ldc_s_I8:
-			ip = Ldc_s_I8(&_stack, ip);
+		case (I32)Opcodes::Ldc_s_I8_0:
+			ip = Ldc_s_I8(&_stack, ip, 0);
+			continue;
+		case (I32)Opcodes::Ldc_s_I8_1:
+			ip = Ldc_s_I8(&_stack, ip, 1);
+			continue;
+		case (I32)Opcodes::Ldc_s_U8_0:
+			ip = Ldc_s_U8(&_stack, ip, 0);
+			continue;
+		case (I32)Opcodes::Ldc_s_U8_1:
+			ip = Ldc_s_U8(&_stack, ip, 1);
+			continue;
+		case (I32)Opcodes::Ldc_s_I16_0:
+			ip = Ldc_s_I16(&_stack, ip, 0);
+			continue;
+		case (I32)Opcodes::Ldc_s_I16_1:
+			ip = Ldc_s_I16(&_stack, ip, 1);
+			continue;
+		case (I32)Opcodes::Ldc_s_U16_0:
+			ip = Ldc_s_U16(&_stack, ip, 0);
+			continue;
+		case (I32)Opcodes::Ldc_s_U16_1:
+			ip = Ldc_s_U16(&_stack, ip, 1);
 			continue;
 		default:
 			break;
@@ -98,10 +116,33 @@ void Thread::Exec0(const Byte* ip) noexcept
 #endif
 			return;
 		default:
-			_flags |= (ThreadFlags)ThreadFlag::UnknownInstruction;
-			sprintf(_halt_message, "unknown instruction(opcode=%d, incode=%d, props=[%d,%d,%d])", header->opcode,
+			_haltAddress = ip;
+			_haltFlags |= (ThreadFlags)ThreadFlag::UnknownInstruction;
+			sprintf(_haltMessage, "unknown instruction(opcode=%d, incode=%d, props=[%d,%d,%d])", header->opcode,
 				(I32)header->incode, (I32)header->props1, (I32)header->props2, (I32)header->props3);
 			break;
 		}
 	}
+}
+
+const Byte* Thread::Halt(const Byte* address, ThreadFlags flags, const char* message) noexcept
+{
+	_haltAddress = address;
+	_haltFlags |= flags;
+	sprintf(_haltMessage, message);
+	return (const Byte*)&eoe;
+}
+
+
+const Byte* Thread::ReturnToCaller() noexcept
+{
+	const Byte* nextIP = _cf->ret;
+	_cf--;
+#ifdef ARLANG_INSTRUCTION_DEBUG
+	if (nextIP == (const Byte*)&eoe)
+		printf("EOE");
+	else
+		printf("%p", nextIP);
+#endif
+	return nextIP;
 }

@@ -147,8 +147,8 @@ namespace WestCoastCode::Interpreter
 		const Global* FindGlobal(ReadOnlyString signature) const;
 
 		// Get the execution range
-		Range<const Byte*> GetExecutionRange() const {
-			return Range<const Byte*>(_bytecodeExecutionStart, _bytecodeExecutionEnd);
+		Range GetExecutionRange() const noexcept {
+			return Range(_bytecodeExecutionStart, _bytecodeExecutionEnd);
 		}
 
 	private:

@@ -1,5 +1,6 @@
 #include "MemoryStream.h"
 #include "LinkError.h"
+#include "../Interpreter/Instructions.h"
 #include <memory>
 
 using namespace WestCoastCode;
@@ -34,4 +35,12 @@ Bytes MemoryStream::Done()
 	Bytes temp = _bytes;
 	_bytes = nullptr;
 	return temp;
+}
+
+void MemoryStream::Eoe()
+{
+	Interpreter::InstrEoe eoe;
+	eoe.opcode = 0;
+	eoe.icode = Interpreter::Incode::Eoe;
+	Write(&eoe);
 }

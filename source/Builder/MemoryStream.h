@@ -62,6 +62,9 @@ namespace WestCoastCode::Builder
 			return temp;
 		}
 
+		// Write an end of execution
+		void Eoe();
+
 	private:
 		Bytes _bytes;
 		Bytes _ptr;

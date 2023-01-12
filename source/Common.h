@@ -55,20 +55,6 @@ namespace WestCoastCode
 			return *this;
 		}
 	};
-
-	// Helper struct managing range validation
-	template<typename T>
-	struct Range
-	{
-		T start;
-		T end;
-
-		Range(T start, T end) : start(start), end(end) {}
-		Range(const Range<T>& rhs) : start(rhs.start), end(rhs.end) {}
-		
-		// Check to see if the supplied value is inside range
-		bool Inside(T val) const noexcept { return val >= start && val <= end; }
-	};
 }
 
 #define STRINGIFY(x) #x

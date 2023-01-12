@@ -208,7 +208,7 @@ I32 Function::ResolveHeaderMemory(I32 offset)
 I32 Function::ResolveFunctionBody(I32 offset)
 {
 	_entrypointOffset = offset;
-	return _entrypointOffset + _instructions.GetSize();
+	return _entrypointOffset + _instructions.GetSize() + sizeof(Interpreter::InstrEoe);
 }
 
 void Function::SerializeHeader(MemoryStream& stream)
@@ -229,6 +229,7 @@ void Function::Serialize(MemoryStream& stream)
 void Function::SerializeReadOnly(MemoryStream& stream)
 {
 	_instructions.Serialize(stream);
+	stream.Eoe();
 }
 
 I32 Function::GetArgumentsSize() const

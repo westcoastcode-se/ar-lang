@@ -23,7 +23,7 @@ namespace WestCoastCode::Interpreter
 		Byte* Top(I32 offset);
 
 		// Get the size of the stack
-		I32 GetSize() const { return 0; }
+		I32 GetSize() const { return (I32)(_top - _blocks); }
 
 	private:
 		Byte _blocks[VM_STACK_DEFAULT_SIZE];
