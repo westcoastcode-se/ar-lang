@@ -18,7 +18,7 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		ParseError(const SourceCode* sourceCode,
-			Token* token, ParseErrorType type);
+			const Token* token, ParseErrorType type);
 
 		// The source code that generated the actual error
 		const SourceCode* GetSourceCode() const {
@@ -59,20 +59,20 @@ namespace WestCoastCode::Compilation
 	class ParseErrorExpectedIdentity : public ParseError
 	{
 	public:
-		ParseErrorExpectedIdentity(ParserState* state);
+		ParseErrorExpectedIdentity(const ParserState* state);
 	};
 
 	// Error raised if we've reached functionality that's not implemented yet
 	class ParseErrorNotImplemented : public ParseError
 	{
 	public:
-		ParseErrorNotImplemented(ParserState* state);
+		ParseErrorNotImplemented(const ParserState* state);
 	};
 
 	// Error raised if we've reached functionality that's not implemented yet
 	class ParseErrorSyntaxError : public ParseError
 	{
 	public:
-		ParseErrorSyntaxError(ParserState* state, const char* prefix);
+		ParseErrorSyntaxError(const ParserState* state, const char* prefix);
 	};
 }

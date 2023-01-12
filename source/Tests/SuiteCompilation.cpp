@@ -2,11 +2,34 @@
 
 struct TestUtilsCompilation : TestUtils
 {
-	void BeforeEach()
-	{}
+	Compiler* compiler;
+	SyntaxTree* syntaxTree;
 
-	void AfterEach()
-	{}
+	void BeforeEach()
+	{
+		compiler = new Compiler();
+	}
+
+	void AfterEach(const std::exception* e)
+	{
+		if (e != nullptr) {
+			StringStream ss;
+			syntaxTree->ToString(ss);
+			std::cerr << ss.str() << std::endl;
+		}
+
+		if (compiler)
+		{
+			delete compiler;
+			compiler = nullptr;
+		}
+	}
+
+	void AddSourceCode(SourceCode* sourceCode)
+	{
+		syntaxTree = compiler->AddSourceCode(sourceCode);
+		AssertNotNull(syntaxTree);
+	}
 };
 
 struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
@@ -21,7 +44,7 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 		thread = nullptr;
 	}
 
-	void AfterEach()
+	void AfterEach(const std::exception* e)
 	{
 		if (thread)
 		{
@@ -35,7 +58,7 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 			process = nullptr;
 		}
 
-		TestUtilsCompilation::AfterEach();
+		TestUtilsCompilation::AfterEach(e);
 	}
 
 	void CompileAndInvoke(ReadOnlyString packageName, ReadOnlyString functionName)
@@ -85,7 +108,84 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 	}
 };
 
+struct SuiteSyntaxTree : TestUtilsCompilation
+{
+	template<class T>
+	class TypeVisitor : public ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>
+	{
+	public:
+		bool Visit(Node* node) {
+			if (dynamic_cast<const T*>(node)) {
+				nodes.push_back(static_cast<const T*>(node));
+			}
+			return true;
+		}
+
+		Vector<const T*> nodes;
+	};
+
+	void EmptySyntaxTree()
+	{
+		AddSourceCode(new SourceCode("", "main.arl"));
+
+		TypeVisitor<ISyntaxTreeNodePackage> visitor;
+		syntaxTree->Visit(&visitor);
+
+		AssertEquals((int)visitor.nodes.size(), 1);
+
+		auto package = visitor.nodes[0];
+		AssertEquals(package->GetName(), ReadOnlyString("<root>"));
+
+		auto primitives = package->GetChildren();
+		AssertEquals((int)primitives.size(), 23);
+	}
+
+	void EmptyPackage()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+)", "main.arl"));
+
+		TypeVisitor<ISyntaxTreeNodePackage> visitor;
+		syntaxTree->Visit(&visitor);
+
+		AssertEquals((int)visitor.nodes.size(), 2);
+
+		AssertEquals(visitor.nodes[0]->GetName(), ReadOnlyString("<root>"));
+		AssertEquals(visitor.nodes[1]->GetName(), ReadOnlyString("Main"));
+
+		// All packages have an import to the root package by default
+		auto children = visitor.nodes[1]->GetChildren();
+		AssertEquals((int)children.size(), 1);
+		AssertType<ISyntaxTreeNodeImport>(*children.begin());
+	}
+
+	void PackageInPackage()
+	{
+		AddSourceCode(new SourceCode(R"(
+package WestCoastCode.Game
+)", "main.arl"));
+
+		TypeVisitor<ISyntaxTreeNodePackage> visitor;
+		syntaxTree->Visit(&visitor);
+
+		AssertEquals((int)visitor.nodes.size(), 3);
+
+		AssertEquals(visitor.nodes[0]->GetName(), ReadOnlyString("<root>"));
+		AssertEquals(visitor.nodes[1]->GetName(), ReadOnlyString("WestCoastCode"));
+		AssertEquals(visitor.nodes[2]->GetName(), ReadOnlyString("Game"));
+	}
+
+	void operator()()
+	{
+		TEST(EmptySyntaxTree());
+		TEST(EmptyPackage());
+		TEST(PackageInPackage());
+	}
+};
+
 // Run all compilation tests
 void SuiteCompilation()
 {
+	SUITE(SuiteSyntaxTree);
 }

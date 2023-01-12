@@ -141,10 +141,10 @@ namespace WestCoastCode::Compilation
 		inline int GetLine() const { return _line; }
 
 		// Get the offset, in bytes, on the line we are parsing at the moment
-		inline int GetLineOffset() const;
+		int GetLineOffset() const;
 
 		// Get the offset, in bytes, in the source code we are parsing at the moment
-		inline int GetOffset() const;
+		int GetOffset() const;
 
 		// Get the next token
 		TokenType Next();

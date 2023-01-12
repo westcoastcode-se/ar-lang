@@ -47,6 +47,11 @@ bool SyntaxTreeNodePackage::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visit
 	return true;
 }
 
+bool SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
+{
+	return false;
+}
+
 void SyntaxTreeNodePackage::ToString(StringStream& s, int indent) const
 {
 	s << Indent(indent);
@@ -62,7 +67,7 @@ void SyntaxTreeNodePackage::AddNode(ISyntaxTreeNode* node)
 	node->SetParent(this);
 }
 
-SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(ParserState* state)
+SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 {
 	Token* const t = state->token;	
 	if (t->Next() != TokenType::Identity)
@@ -72,7 +77,7 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(ParserState* state)
 	class PackageVisitor : public ISyntaxTreeNodeVisitor<ISyntaxTreeNode>
 	{
 	public:
-		PackageVisitor(ReadOnlyString name) : name(name) {}
+		PackageVisitor(ReadOnlyString name) : name(name), package(nullptr) {}
 
 		bool Visit(Node* node) {
 			package = dynamic_cast<SyntaxTreeNodePackage*>(node);
@@ -96,6 +101,7 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(ParserState* state)
 		auto rootNode = state->parentNode->GetRootNode();
 		package->AddNode(new SyntaxTreeNodeImport(SourceCodeView(state->sourceCode, t), 
 			dynamic_cast<SyntaxTreeNodePackage*>(rootNode)));
+		state->package->AddNode(package);
 	}
 
 	// Package name delimiter
@@ -120,7 +126,7 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(ParserState* state)
 		case TokenType::Eof:
 			return package;
 		default:
-			throw ParseErrorNotImplemented(state);
+			t->Next();
 		}
 	}
 

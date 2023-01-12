@@ -38,7 +38,7 @@ struct ErrorStringStream : public std::stringstream
 	try {\
 		BeforeEach(); \
 		s; \
-		AfterEach(); \
+		AfterEach(nullptr); \
 		cout << " - OK" << endl; \
 	}\
 	catch (const std::exception& e) { \
@@ -46,7 +46,7 @@ struct ErrorStringStream : public std::stringstream
 		_tests_success = false; \
 		_tests_failed++;\
 		try { \
-			AfterEach(); \
+			AfterEach(&e); \
 		} catch (const std::exception& e) { \
 			cerr << " - ERROR: " << e.what() << endl; \
 		} \

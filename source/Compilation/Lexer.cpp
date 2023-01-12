@@ -143,12 +143,12 @@ namespace
 	}
 }
 
-inline int Token::GetLineOffset() const
+int Token::GetLineOffset() const
 {
 	return (int)(_pos - _lineOffset - GetString().length());
 }
 
-inline int Token::GetOffset() const
+int Token::GetOffset() const
 {
 	return (int)(_pos - _lexer->GetFirst() - GetString().length());
 }

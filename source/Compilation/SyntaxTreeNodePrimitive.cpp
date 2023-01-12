@@ -43,12 +43,12 @@ ISyntaxTreeNode* SyntaxTreeNodePrimitive::GetRootNode()
 
 bool SyntaxTreeNodePrimitive::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
 {
-	return false;
+	return visitor->Visit(this);
 }
 
 bool SyntaxTreeNodePrimitive::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
 {
-	return false;
+	return visitor->Visit(this);
 }
 
 bool SyntaxTreeNodePrimitive::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)

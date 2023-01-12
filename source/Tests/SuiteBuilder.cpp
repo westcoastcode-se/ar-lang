@@ -24,7 +24,7 @@ struct UtilsBuilder : TestUtils
 		types["bool"] = root->Add(new Builder::Type("bool", sizeof(IB), 0, PrimitiveType::Bool));
 	}
 
-	void AfterEach()
+	void AfterEach(const std::exception* e)
 	{
 		if (linker != NULL) {
 			delete linker;
@@ -58,7 +58,7 @@ struct UtilsBuilderWithInterpreter : UtilsBuilder
 		thread = nullptr;
 	}
 
-	void AfterEach()
+	void AfterEach(const std::exception* e)
 	{
 		if (thread)
 		{
@@ -72,7 +72,7 @@ struct UtilsBuilderWithInterpreter : UtilsBuilder
 			process = nullptr;
 		}
 
-		UtilsBuilder::AfterEach();
+		UtilsBuilder::AfterEach(e);
 	}
 
 	void CompileAndInvoke(ReadOnlyString packageName, ReadOnlyString functionName)

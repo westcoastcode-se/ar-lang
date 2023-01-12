@@ -16,17 +16,16 @@ namespace WestCoastCode::Compilation
 		~SyntaxTree() final;
 
 
-		const Vector<ISyntaxTreeNodePackage*>& GetPackages() const final { return _children; }
 		void ToString(StringStream& s) const final;
 		void Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
 		void Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
 		ISyntaxTreeNodePackage* GetRootNode() final;
 
 		// Add the supplied package
-		void AddPackage(SyntaxTreeNodePackage* package);
+		void SetRootPackage(SyntaxTreeNodePackage* package);
 
 	private:
-		Vector<ISyntaxTreeNodePackage*> _children;
+		ISyntaxTreeNodePackage* _root;
 	};
 
 	// The compiler used
@@ -37,16 +36,16 @@ namespace WestCoastCode::Compilation
 
 		~Compiler();
 
-		// Add a source code block to the compiler. Returns true if the source code
-		// could be parsed into a valid syntax tree block
-		bool AddSourceCode(SourceCode* sourceCode);
+		// Add a source code block to the compiler. Returns what the syntax tree looks like
+		// after the source code is added to it
+		SyntaxTree* AddSourceCode(SourceCode* sourceCode);
 
 		// Get the syntax tree
 		SyntaxTree* GetSyntaxTree() const { return _syntaxTree; }
 
 	private:
 		// Start parsing tokens and convert them into syntax tree nodes
-		bool ParseTokens(SourceCode* sourceCode, Token* t);
+		void ParseTokens(SourceCode* sourceCode, Token* t);
 
 	private:
 		Vector<SourceCode*> _sourceCodes;

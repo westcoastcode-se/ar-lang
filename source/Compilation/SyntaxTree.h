@@ -50,9 +50,6 @@ namespace WestCoastCode::Compilation
 	public:
 		virtual ~ISyntaxTree() {}
 
-		// Get all package in the syntax tree
-		virtual const Vector<ISyntaxTreeNodePackage*>& GetPackages() const = 0;
-
 		// Stringify this syntax tree node
 		virtual void ToString(StringStream& s) const = 0;
 
@@ -79,7 +76,7 @@ namespace WestCoastCode::Compilation
 		static String Indent(int indent) {
 			String s;
 			for (int i = 0; i < indent; ++i)
-				s += "\t";
+				s += "  ";
 			return s;
 		}
 	};

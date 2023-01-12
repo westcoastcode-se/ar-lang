@@ -4,7 +4,7 @@ using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
 ParseError::ParseError(const SourceCode* sourceCode,
-	Token* token, ParseErrorType type)
+	const Token* token, ParseErrorType type)
 	: exception(), _sourceCode(sourceCode), _type(type), _line(token->GetLine()),
 	_lineOffset(token->GetLineOffset()), _offset(token->GetOffset())
 {
@@ -25,7 +25,7 @@ void ParseError::SetError(const String& error)
 	_error = error;
 }
 
-ParseErrorExpectedIdentity::ParseErrorExpectedIdentity(ParserState* state)
+ParseErrorExpectedIdentity::ParseErrorExpectedIdentity(const ParserState* state)
 	: ParseError(state->sourceCode, state->token, ParseErrorType::ExpectedIdentity)
 {
 	StringStream s;
@@ -33,7 +33,7 @@ ParseErrorExpectedIdentity::ParseErrorExpectedIdentity(ParserState* state)
 	SetError(s.str());
 }
 
-ParseErrorNotImplemented::ParseErrorNotImplemented(ParserState* state)
+ParseErrorNotImplemented::ParseErrorNotImplemented(const ParserState* state)
 	: ParseError(state->sourceCode, state->token, ParseErrorType::NotImplemented)
 {
 	StringStream s;
@@ -41,7 +41,7 @@ ParseErrorNotImplemented::ParseErrorNotImplemented(ParserState* state)
 	SetError(s.str());
 }
 
-ParseErrorSyntaxError::ParseErrorSyntaxError(ParserState* state, const char* prefix)
+ParseErrorSyntaxError::ParseErrorSyntaxError(const ParserState* state, const char* prefix)
 	: ParseError(state->sourceCode, state->token, ParseErrorType::SyntaxError)
 {
 	StringStream s;

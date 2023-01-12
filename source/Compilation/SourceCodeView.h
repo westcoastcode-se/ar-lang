@@ -10,6 +10,10 @@ namespace WestCoastCode::Compilation
 	class SourceCodeView
 	{
 	public:
+		SourceCodeView()
+			: _sourceCode(nullptr), _line(0), _lineOffset(0),
+			_offset(-1) {}
+
 		SourceCodeView(const SourceCode* sourceCode, const Token* t)
 			: _sourceCode(sourceCode), _line(t->GetLine()), _lineOffset(t->GetLineOffset()),
 			_offset(t->GetOffset()) {}

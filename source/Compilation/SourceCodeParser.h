@@ -35,14 +35,12 @@ namespace WestCoastCode::Compilation
 		// The closest class definition
 		SyntaxTreeNodeClassDef* clazz;
 
-		ParserState(Compiler* c, Token* t, SourceCode* sc)
-			: compiler(c), token(t), sourceCode(sc), parentNode(nullptr), 
-			package(nullptr), function(nullptr), clazz(nullptr) {}
+		ParserState(Compiler* c, Token* t, SourceCode* sc, SyntaxTreeNodePackage* root);
 
-		ParserState(ParserState* state, SyntaxTreeNodePackage* package);
+		ParserState(const ParserState* state, SyntaxTreeNodePackage* package);
 
-		ParserState(ParserState* state, SyntaxTreeNodeFuncDef* function);
+		ParserState(const ParserState* state, SyntaxTreeNodeFuncDef* function);
 
-		ParserState(ParserState* state, SyntaxTreeNodeClassDef* clazz);
+		ParserState(const ParserState* state, SyntaxTreeNodeClassDef* clazz);
 	};
 }

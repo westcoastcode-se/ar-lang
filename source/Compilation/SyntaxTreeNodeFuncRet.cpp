@@ -34,6 +34,13 @@ ISyntaxTree* SyntaxTreeNodeFuncRet::GetSyntaxTree() const
 	return _parent->GetSyntaxTree();
 }
 
+ISyntaxTreeNode* SyntaxTreeNodeFuncRet::GetRootNode()
+{
+	if (_parent)
+		return _parent->GetRootNode();
+	return this;
+}
+
 void SyntaxTreeNodeFuncRet::SetParent(ISyntaxTreeNode* parent)
 {
 	_parent = parent;

@@ -28,7 +28,7 @@ namespace WestCoastCode::Compilation
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 
 	private:
-		SyntaxTreeNodePackage* _parent;
+		ISyntaxTreeNodePackage* _parent;
 		List<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;
 	};

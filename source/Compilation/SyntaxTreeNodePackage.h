@@ -35,7 +35,7 @@ namespace WestCoastCode::Compilation
 
 		// Parse source code into a package node. Will throw ParseError if parsing of the 
 		// source code failed
-		static SyntaxTreeNodePackage* Parse(ParserState* state);
+		static SyntaxTreeNodePackage* Parse(const ParserState* state);
 
 	private:
 		ISyntaxTree* _syntaxTree;

@@ -404,6 +404,13 @@ struct TestUtils
 			Throw(Error() << "expected true");
 	}
 
+	template<class H, class T>
+	void AssertType(T* in) {
+		if (dynamic_cast<H*>(in) == nullptr) {
+			Throw(Error() << typeid(T).name() << " is not " << typeid(H).name());
+		}
+	}
+
 	template<typename T>
 	const char* Name()
 	{

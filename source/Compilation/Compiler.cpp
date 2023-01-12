@@ -11,41 +11,34 @@ SyntaxTree::SyntaxTree()
 
 SyntaxTree::~SyntaxTree()
 {
-	for (auto&& n : _children)
-		delete n;
+	delete _root;
 }
 
 void SyntaxTree::ToString(StringStream& s) const
 {
-	for (auto&& n : _children) {
-		n->ToString(s, 0);
-	}
+	_root->ToString(s, 0);
 }
 
 void SyntaxTree::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
 {
-	for (auto&& n : _children)
-		if (!n->Visit(visitor))
-			break;
+	_root->Visit(visitor);
 }
 
 void SyntaxTree::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
 {
-	for (auto&& n : _children)
-		if (!n->Visit(visitor))
-			break;
+	_root->Visit(visitor);
 }
 
 ISyntaxTreeNodePackage* SyntaxTree::GetRootNode()
 {
-	assert(dynamic_cast<SyntaxTreeNodePackage*>(_children[0]) &&
+	assert(dynamic_cast<SyntaxTreeNodePackage*>(_root) &&
 		"The root node should not be anything else than a package");
-	return _children[0];
+	return _root;
 }
 
-void SyntaxTree::AddPackage(SyntaxTreeNodePackage* node)
+void SyntaxTree::SetRootPackage(SyntaxTreeNodePackage* node)
 {
-	_children.push_back(node);
+	_root = node;
 	node->SetSyntaxTree(this);
 }
 
@@ -53,7 +46,7 @@ Compiler::Compiler()
 	: _syntaxTree(new SyntaxTree())
 {
 	// Add root package
-	auto root = new SyntaxTreeNodePackage(SourceCodeView(nullptr, nullptr), ReadOnlyString("<root>"));
+	auto root = new SyntaxTreeNodePackage(SourceCodeView(), ReadOnlyString("<root>"));
 
 	auto voidPtr = new SyntaxTreeNodePrimitive(root, sizeof(void*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*void"));
 	root->AddNode(voidPtr);
@@ -113,41 +106,42 @@ Compiler::Compiler()
 	ip = new SyntaxTreeNodePrimitive(root, sizeof(F64*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*float64"), voidPtr, i);
 	root->AddNode(ip);
 
-	_syntaxTree->AddPackage(root);
+	_syntaxTree->SetRootPackage(root);
 }
 
 Compiler::~Compiler()
 {
 	delete _syntaxTree;
+	for (auto& s : _sourceCodes)
+		delete s;
 }
 
-bool Compiler::AddSourceCode(SourceCode* sourceCode)
+SyntaxTree* Compiler::AddSourceCode(SourceCode* sourceCode)
 {
 	_sourceCodes.push_back(sourceCode);
 
 	const Lexer lexer(sourceCode->GetText());
 	Token token(&lexer);
-	return ParseTokens(sourceCode, &token);
+	ParseTokens(sourceCode, &token);
+	return _syntaxTree;
 }
 
-bool Compiler::ParseTokens(SourceCode* sourceCode, Token* t)
+void Compiler::ParseTokens(SourceCode* sourceCode, Token* t)
 {
-	ParserState state(this, t, sourceCode);
+	const ParserState state(this, t, sourceCode, (SyntaxTreeNodePackage*)_syntaxTree->GetRootNode());
 
 	while (true)
 	{
 		switch(t->GetType())
 		{
-		case TokenType::Package:
-			SyntaxTreeNodePackage* const package = SyntaxTreeNodePackage::Parse(&state);
-			_syntaxTree->AddPackage(package);
+		case TokenType::Package: {
+			SyntaxTreeNodePackage::Parse(&state);
 			break;
-		
 		}
-		if (t->Is(TokenType::Package)) {
-
+		case TokenType::Eof:
+			return;
+		default:
+			t->Next();
 		}
 	}
-
-	return false;
 }
