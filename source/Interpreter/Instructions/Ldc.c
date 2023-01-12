@@ -63,6 +63,16 @@ const Byte* Ldc(Thread* const thread, const Byte* ip)
 		*dest = (F32)instr->f32;
 		break;
 	}
+#ifdef ARLANG_32BIT
+	case (I8)PrimitiveType::Ptr: {
+#ifdef ARLANG_INSTRUCTION_DEBUG
+		printf("LDC <PTR> %p", instr->ptr);
+#endif
+		void** dest = (void**)stack.Push(sizeof(void*));
+		*dest = (void*)instr->ptr;
+		break;
+	}
+#endif
 	default:
 		return thread->Haltf(ip, ThreadFlag::UnknownInstruction,
 			"unknown Ldc_s props (props=[%d,%d,%d])", (I32)instr->header.props1, (I32)instr->header.props2, (I32)instr->header.props3);

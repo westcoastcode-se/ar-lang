@@ -39,6 +39,7 @@ void Thread::ExecEntrypoint(const Function* entrypoint)
 
 #include "Instructions/Ldc.c"
 #include "Instructions/Ldc_s.c"
+#include "Instructions/Ldc_l.c"
 #include "Instructions/Ret.c"
 
 void Thread::Exec(const Byte* ip)
@@ -110,6 +111,9 @@ void Thread::Exec0(const Byte* ip) noexcept
 			continue;
 		case Incode::Ldc_s:
 			ip = Ldc_s(this, ip);
+			continue;
+		case Incode::Ldc_l:
+			ip = Ldc_l(this, ip);
 			continue;
 		case Incode::Ret:
 			ip = Ret(this, ip);

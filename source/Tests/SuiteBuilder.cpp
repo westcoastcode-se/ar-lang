@@ -130,7 +130,7 @@ struct UtilsBuilderWithInterpreter : UtilsBuilder
 	}
 };
 
-struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
+struct Constants : UtilsBuilderWithInterpreter
 {
 	template<typename T>
 	void Ldc_s_T(T value)
@@ -141,7 +141,7 @@ struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 		auto add = main->Add(new Builder::Function("Get"));
 		add->AddReturn(GetPrimitiveType<T>());
 
-		// ldc_<T> $value
+		// ldc_s <T> $value
 		// ret
 
 		auto& instr = add->Begin();
@@ -162,12 +162,33 @@ struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 		auto add = main->Add(new Builder::Function("Get"));
 		add->AddReturn(GetPrimitiveType<T>());
 
-		// ldc_<T> $value
+		// ldc <T> $value
 		// ret
 
 		auto& instr = add->Begin();
 		instr.Ldc(GetPrimitiveType<T>(), Const((T)value));
 		instr.Ret();		
+		instr.End();
+
+		CompileAndInvoke("Get()");
+		VerifyStackSize(sizeof(T));
+		VerifyStackSize(sizeof(T));
+		AssertEquals(Pop<T>(), (T)value);
+	}
+
+	template<typename T>
+	void Ldc_l_T(T value)
+	{
+		auto main = linker->AddPackage(new Builder::Package("Main"));
+		auto add = main->Add(new Builder::Function("Get"));
+		add->AddReturn(GetPrimitiveType<T>());
+
+		// ldc_l <T> $value
+		// ret
+
+		auto& instr = add->Begin();
+		instr.Ldc(GetPrimitiveType<T>(), Const((T)value));
+		instr.Ret();
 		instr.End();
 
 		CompileAndInvoke("Get()");
@@ -199,11 +220,16 @@ struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 		TEST(Ldc_T<I32>(-12345));
 		TEST(Ldc_T<U32>(INT32_MAX + 100));
 		TEST(Ldc_T<F32>(-123.45f));
+
+		// Constants (64bit)
+		TEST(Ldc_l_T<I64>(UINT32_MAX + 100));
+		TEST(Ldc_l_T<U64>(INT64_MAX + 100));
+		TEST(Ldc_l_T<F64>(123.4315));
 	}
 };
 
 // Run all builder tests
 void SuiteBuilder()
 {
-	SUITE(SuiteBuilderConstants);
+	SUITE(Constants);
 }
