@@ -34,6 +34,11 @@ namespace WestCoastCode::Interpreter
 		Eoe
 	};
 
+	template<typename P1, typename P2, typename P3>
+	static constexpr I32 Props(Incode incode, P1 p1, P2 p2, P3 p3) {
+		return ((I32)incode | Props1((I32)p1) | Props2((I32)p2) | Props3((I32)p3));
+	}
+
 	// Header for the operational code
 	struct OpcodeHeader
 	{
@@ -159,14 +164,15 @@ union { \
 
 	enum class Opcodes : I32
 	{
-		Ldc_I8 = ((I32)Incode::Ldc | Props1((I32)PrimitiveType::I8)),
-		Ldc_s_I8_0 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::I8) | Props2(0)),
-		Ldc_s_I8_1 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::I8) | Props2(1)),
-		Ldc_s_U8_0 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::U8) | Props2(0)),
-		Ldc_s_U8_1 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::U8) | Props2(1)),
-		Ldc_s_I16_0 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::I16) | Props2(0)),
-		Ldc_s_I16_1 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::I16) | Props2(1)),
-		Ldc_s_U16_0 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::U16) | Props2(0)),
-		Ldc_s_U16_1 = ((I32)Incode::Ldc_s | Props1((I32)PrimitiveType::U16) | Props2(1)),
+		Ldc_I8 = Props(Incode::Ldc, PrimitiveType::I8, 0, 0),
+
+		Ldc_s_I8_0 = Props(Incode::Ldc_s, PrimitiveType::I8, 0, 0),
+		Ldc_s_I8_1 = Props(Incode::Ldc_s, PrimitiveType::I8, 1, 0),
+		Ldc_s_U8_0 = Props(Incode::Ldc_s, PrimitiveType::U8, 0, 0),
+		Ldc_s_U8_1 = Props(Incode::Ldc_s, PrimitiveType::U8, 1, 0),
+		Ldc_s_I16_0 = Props(Incode::Ldc_s, PrimitiveType::I16, 0, 0),
+		Ldc_s_I16_1 = Props(Incode::Ldc_s, PrimitiveType::I16, 1, 0),
+		Ldc_s_U16_0 = Props(Incode::Ldc_s, PrimitiveType::U16, 0, 0),
+		Ldc_s_U16_1 = Props(Incode::Ldc_s, PrimitiveType::U16, 1, 0),
 	};
 }

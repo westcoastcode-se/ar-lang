@@ -162,6 +162,7 @@ struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 
 		auto main = linker->AddPackage(new Builder::Package("Main"));
 		auto add = main->Add(new Builder::Function("Get"));
+		add->AddReturn(GetPrimitiveType<T>());
 
 		// ldc_<T> $value
 		// ret
@@ -188,6 +189,14 @@ struct SuiteBuilderConstants : UtilsBuilderWithInterpreter
 		TEST(Ldc_s_T<I16>(1));
 		TEST(Ldc_s_T<U16>(0));
 		TEST(Ldc_s_T<U16>(1));
+
+		// Test shorthand non-specialized constants
+		TEST(Ldc_s_T<I8>(-122));
+		TEST(Ldc_s_T<I8>(57));
+		TEST(Ldc_s_T<U8>(255));
+		TEST(Ldc_s_T<I16>(-1221));
+		TEST(Ldc_s_T<U16>(UINT16_MAX));
+
 
 		TEST(Ldc_T<I8>(123));
 	}

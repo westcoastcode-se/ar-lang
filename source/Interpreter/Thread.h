@@ -83,6 +83,15 @@ namespace WestCoastCode::Interpreter
 		// Halt using the supplied message
 		const Byte* Halt(const Byte* address, ThreadFlags flags, const char* message) noexcept;
 
+		// Halt using the supplied message
+		const Byte* Halt(const Byte* address, ThreadFlag flag, const char* message) noexcept;
+
+		// Halt using the supplied message
+		const Byte* Haltf(const Byte* address, ThreadFlags flags, const char* format, ...) noexcept;
+
+		// Halt using the supplied message
+		const Byte* Haltf(const Byte* address, ThreadFlag flag, const char* format, ...) noexcept;
+
 		// Return to the one calling a function
 		const Byte* ReturnToCaller() noexcept;
 

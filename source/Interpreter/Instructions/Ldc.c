@@ -29,43 +29,47 @@ const Byte* Ldc_s_I8(ThreadStack* const stack, const Byte* ip)
 	return ip + sizeof(InstrLdc_s);
 }
 
-const Byte* Ldc_s(ThreadStack* const stack, const Byte* ip)
+const Byte* Ldc_s(Thread* const thread, const Byte* ip)
 {
+	ThreadStack& stack = thread->GetStack();
 	const InstrLdc_s* const instr = (const InstrLdc_s*)ip;
 	switch (instr->props1)
 	{
-	case Props1((I8)PrimitiveType::I8): {
+	case (I8)PrimitiveType::I8: {
 #ifdef ARLANG_INSTRUCTION_DEBUG
 		printf("LDC_S <I8> %d", (I32)(instr->i8));
 #endif
-		I8* dest = (I8*)stack->Push(sizeof(I8));
+		I8* dest = (I8*)stack.Push(sizeof(I8));
 		*dest = instr->i8;
 		break;
 	}
-	case Props1((I8)PrimitiveType::U8): {
+	case (I8)PrimitiveType::U8: {
 #ifdef ARLANG_INSTRUCTION_DEBUG
 		printf("LDC_S <U8> %d", (I32)((U8)instr->i8));
 #endif
-		U8* dest = (U8*)stack->Push(sizeof(U8));
+		U8* dest = (U8*)stack.Push(sizeof(U8));
 		*dest = (U8)instr->i8;
 		break;
 	}
-	case Props1((I8)PrimitiveType::I16): {
+	case (I8)PrimitiveType::I16: {
 #ifdef ARLANG_INSTRUCTION_DEBUG
 		printf("LDC_S <I16> %d", (I32)((I16)instr->i16));
 #endif
-		I16* dest = (I16*)stack->Push(sizeof(I16));
+		I16* dest = (I16*)stack.Push(sizeof(I16));
 		*dest = (I16)instr->i16;
 		break;
 	}
-	case Props1((I8)PrimitiveType::U16): {
+	case (I8)PrimitiveType::U16: {
 #ifdef ARLANG_INSTRUCTION_DEBUG
 		printf("LDC_S <U16> %d", (I32)((U16)instr->i16));
 #endif
-		U16* dest = (U16*)stack->Push(sizeof(U16));
+		U16* dest = (U16*)stack.Push(sizeof(U16));
 		*dest = (U16)instr->i16;
 		break;
 	}
+	default:
+		return thread->Haltf(ip, ThreadFlag::UnknownInstruction,
+			"unknown Ldc_s props (props=[%d,%d,%d])", (I32)instr->header.props1, (I32)instr->header.props2, (I32)instr->header.props3);
 	}
 	return ip + sizeof(InstrLdc_s);
 }

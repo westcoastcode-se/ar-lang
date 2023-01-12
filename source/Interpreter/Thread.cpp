@@ -1,6 +1,7 @@
 #include "Thread.h"
 #include "Process.h"
 #include "Instructions.h"
+#include <cstdarg>
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Interpreter;
@@ -106,9 +107,12 @@ void Thread::Exec0(const Byte* ip) noexcept
 		// Perform more "generic" instruction types
 		switch (header->incode)
 		{
+		case Incode::Ldc_s:
+			ip = Ldc_s(this, ip);
+			continue;
 		case Incode::Ret:
 			ip = Ret(this, ip);
-			break;
+			continue;
 		case Incode::Eoe:
 			ip = (const Byte*)&eoe;
 #ifdef ARLANG_INSTRUCTION_DEBUG
@@ -116,9 +120,8 @@ void Thread::Exec0(const Byte* ip) noexcept
 #endif
 			return;
 		default:
-			_haltAddress = ip;
-			_haltFlags |= (ThreadFlags)ThreadFlag::UnknownInstruction;
-			sprintf(_haltMessage, "unknown instruction(opcode=%d, incode=%d, props=[%d,%d,%d])", header->opcode,
+			ip = Haltf(ip, ThreadFlag::UnknownInstruction, 
+				"unknown instruction(opcode=%d, incode=%d, props=[%d,%d,%d])", header->opcode,
 				(I32)header->incode, (I32)header->props1, (I32)header->props2, (I32)header->props3);
 			break;
 		}
@@ -133,6 +136,38 @@ const Byte* Thread::Halt(const Byte* address, ThreadFlags flags, const char* mes
 	return (const Byte*)&eoe;
 }
 
+const Byte* Thread::Halt(const Byte* address, ThreadFlag flags, const char* message) noexcept
+{
+	return Halt(address, (ThreadFlags)flags, message);
+}
+
+const Byte* Thread::Haltf(const Byte* address, ThreadFlags flags, const char* format, ...) noexcept
+{
+	va_list argptr;
+
+	_haltAddress = address;
+	_haltFlags |= flags;
+
+	va_start(argptr, format);
+	vsprintf(_haltMessage, format, argptr);
+	va_end(argptr);
+
+	return (const Byte*)&eoe;
+}
+
+const Byte* Thread::Haltf(const Byte* address, ThreadFlag flags, const char* format, ...) noexcept
+{
+	va_list argptr;
+
+	_haltAddress = address;
+	_haltFlags |= (ThreadFlags)flags;
+
+	va_start(argptr, format);
+	vsprintf(_haltMessage, format, argptr);
+	va_end(argptr);
+
+	return (const Byte*)&eoe;
+}
 
 const Byte* Thread::ReturnToCaller() noexcept
 {

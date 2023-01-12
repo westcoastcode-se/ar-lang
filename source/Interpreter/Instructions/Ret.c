@@ -17,7 +17,7 @@ const Byte* Ret(Thread* t, const Byte* ip)
 	// Make sure that we haven't manipulated the stack in a way that caused it to become malformed
 	const Byte* const expected = t->GetStack().Top(-instr->expected_ebp_offset);
 	if (expected != t->GetCallFrame()->ebp)
-		return t->Halt(ip, (I32)ThreadFlag::StackMismanaged, "invalid stack when returning from");
+		return t->Halt(ip, (I32)ThreadFlag::StackMismanaged, "invalid stack when returning");
 #endif
 	return t->ReturnToCaller();
 }
