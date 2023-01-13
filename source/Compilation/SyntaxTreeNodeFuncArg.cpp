@@ -71,7 +71,7 @@ void SyntaxTreeNodeFuncArg::SetVariableType(ISyntaxTreeNodeTypeRef* type)
 
 void SyntaxTreeNodeFuncArg::AddNode(ISyntaxTreeNode* node)
 {
-	_children.push_back(node);
+	_children.Add(node);
 	node->SetParent(this);
 }
 

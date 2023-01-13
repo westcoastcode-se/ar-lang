@@ -19,10 +19,9 @@ void SyntaxTreeNodePrimitive::SetParent(ISyntaxTreeNode* parent)
 	// Don't do anything since this is done during construction of this type
 }
 
-const List<ISyntaxTreeNode*>& SyntaxTreeNodePrimitive::GetChildren() const
+ReadOnlyArray<ISyntaxTreeNode*> SyntaxTreeNodePrimitive::GetChildren() const
 {
-	static const List<ISyntaxTreeNode*> empty;
-	return empty;
+	return ReadOnlyArray<ISyntaxTreeNode*>();
 }
 
 void SyntaxTreeNodePrimitive::ToString(StringStream& s, int indent) const

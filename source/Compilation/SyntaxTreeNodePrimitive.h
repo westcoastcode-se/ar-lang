@@ -26,7 +26,7 @@ namespace WestCoastCode::Compilation
 		ISyntaxTree* GetSyntaxTree() const final;
 		ISyntaxTreeNode* GetParent() const final;
 		void SetParent(ISyntaxTreeNode* parent) final;
-		const List<ISyntaxTreeNode*>& GetChildren() const final;
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final;
 		const SourceCodeView* GetSourceCode() const final { return nullptr; }
 		void ToString(StringStream& s, int indent) const final;
 		size_t GetSize() const final { return _stackSize; }

@@ -40,7 +40,7 @@ void SyntaxTreeNodeRef::ToString(StringStream& s, int indent) const
 	s << "Ref(";
 	s << "queryTypes=" << _queryTypes << ", ";
 	s << "definitions=[";
-	for (int i = 0; i < _definitions.size(); ++i) {
+	for (int i = 0; i < _definitions.Size(); ++i) {
 		if (i != 0)
 			s << ",";
 		char tmp[32];
@@ -63,7 +63,7 @@ ISyntaxTreeNode* SyntaxTreeNodeRef::GetRootNode()
 
 void SyntaxTreeNodeRef::AddNode(SyntaxTreeNodeRefSection* section)
 {
-	_children.push_back(section);
+	_children.Add(section);
 	section->SetParent(this);
 }
 
@@ -117,7 +117,7 @@ void SyntaxTreeNodeRefSection::ToString(StringStream& s, int indent) const
 	s << "RefSection(";
 	s << "queryTypes=" << _queryTypes << ", ";
 	s << "definitions=[";
-	for (int i = 0; i < _definitions.size(); ++i) {
+	for (int i = 0; i < _definitions.Size(); ++i) {
 		if (i != 0)
 			s << ",";
 		char tmp[32];
@@ -165,7 +165,7 @@ bool SyntaxTreeNodeRefSection::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* vi
 
 void SyntaxTreeNodeRefSection::AddNode(SyntaxTreeNodeRefSection* section)
 {
-	_children.push_back(section);
+	_children.Add(section);
 	section->SetParent(this);
 }
 

@@ -7,17 +7,16 @@ using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeOpUnaryop::~SyntaxTreeNodeOpUnaryop()
 {
-	for (auto&& i : _children)
-		delete i;
+	for(int i = 0; i < _children.Size(); ++i)
+		delete _children[i];
 }
 
 void SyntaxTreeNodeOpUnaryop::ToString(StringStream& s, int indent) const
 {
 	s << Indent(indent);
 	s << "Unaryop(op=" << ToString(_op) << ")" << std::endl;
-	for (auto&& i : _children) {
-		i->ToString(s, indent + 1);
-	}
+	for (int i = 0; i < _children.Size(); ++i)
+		_children[i]->ToString(s, indent + 1);
 }
 
 ISyntaxTree* SyntaxTreeNodeOpUnaryop::GetSyntaxTree() const

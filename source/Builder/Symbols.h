@@ -152,9 +152,9 @@ namespace WestCoastCode::Builder
 		ISymbol* _parent;
 		ReadOnlyString _name;
 		String _signature;
-		Array<IFunction*> _functions;
-		Array<IType*> _types;
-		Array<IGlobal*> _globals;
+		Vector<IFunction*> _functions;
+		Vector<IType*> _types;
+		Vector<IGlobal*> _globals;
 		I32 _offset;
 	};
 

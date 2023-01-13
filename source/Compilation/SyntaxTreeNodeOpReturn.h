@@ -20,7 +20,7 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		virtual ISyntaxTreeNode* GetParent() const override { return _parent; }
 		virtual void SetParent(ISyntaxTreeNode* parent) override;
-		virtual const List<ISyntaxTreeNode*>& GetChildren() const override { return _children; }
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const override { return _children; }
 		virtual bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const override;
 		virtual bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
 		virtual bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
@@ -33,7 +33,7 @@ namespace WestCoastCode::Compilation
 	private:
 		ISyntaxTreeNode* _parent;
 		ISyntaxTreeNodeFuncDef* _function;
-		List<ISyntaxTreeNode*> _children;
+		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;
 	};
 }

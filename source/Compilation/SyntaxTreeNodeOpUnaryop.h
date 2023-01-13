@@ -25,10 +25,10 @@ namespace WestCoastCode::Compilation
 		}
 
 		// Inherited via ISyntaxTreeNodeOpUnaryop
-		ISyntaxTreeNode* GetRight() const final { return *_children.begin(); }
+		ISyntaxTreeNode* GetRight() const final { return _children[0]; }
 		Op GetOperator() const final { return _op; }
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		const List<ISyntaxTreeNode*>& GetChildren() const final { return _children; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		void ToString(StringStream& s, int indent) const final;
 		virtual ISyntaxTree* GetSyntaxTree() const override;
@@ -42,7 +42,7 @@ namespace WestCoastCode::Compilation
 
 	private:
 		ISyntaxTreeNode* _parent;
-		List<ISyntaxTreeNode*> _children;
+		Array<ISyntaxTreeNode*, 1> _children;
 		SourceCodeView _sourceCode;
 		Op _op;
 		ISyntaxTreeNodeFuncDef* _function;

@@ -18,13 +18,13 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* GetRootNode() final;
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		void SetParent(ISyntaxTreeNode* parent) final;
-		const List<ISyntaxTreeNode*>& GetChildren() const final { return _children; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
 		bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
 		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		ReadOnlyString GetName() const final { return _fullName; }
-		const Vector<ISyntaxTreeNode*>& GetDefinitions() const final { return _definitions; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }
 
 	public:
 		// Add a node to this type reference
@@ -36,7 +36,7 @@ namespace WestCoastCode::Compilation
 	private:
 		ISyntaxTreeNode* _parent;
 		SourceCodeView _sourceCode;
-		List<ISyntaxTreeNode*> _children;
+		Vector<ISyntaxTreeNode*> _children;
 		ReadOnlyString _fullName;
 		Vector<ISyntaxTreeNode*> _definitions;
 	};

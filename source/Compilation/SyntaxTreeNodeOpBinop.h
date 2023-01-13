@@ -33,10 +33,10 @@ namespace WestCoastCode::Compilation
 
 		// ISyntaxTreeNode
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		const List<ISyntaxTreeNode*>& GetChildren() const final { return _children; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		ISyntaxTreeNode* GetLeft() const final { return *_children.begin(); }
-		ISyntaxTreeNode* GetRight() const final { return *(++_children.begin()); }
+		ISyntaxTreeNode* GetLeft() const final { return _children[0]; }
+		ISyntaxTreeNode* GetRight() const final { return _children[1]; }
 		Op GetOperator() const final { return _op; }
 		void ToString(StringStream& s, int indent) const final;
 		ISyntaxTree* GetSyntaxTree() const override;
@@ -51,7 +51,7 @@ namespace WestCoastCode::Compilation
 	private:
 		ISyntaxTreeNode* _parent;
 		ISyntaxTreeNodeFuncDef* _function;
-		List<ISyntaxTreeNode*> _children;
+		Array<ISyntaxTreeNode*, 2> _children;
 		SourceCodeView _sourceCode;
 		Op _op;
 	};

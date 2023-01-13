@@ -62,7 +62,7 @@ bool SyntaxTreeNodeFuncBody::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visi
 
 void SyntaxTreeNodeFuncBody::AddNode(ISyntaxTreeNode* node)
 {
-	_children.push_back(node);
+	_children.Add(node);
 	node->SetParent(this);
 }
 
@@ -117,7 +117,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 
 	const SyntaxTreeNodeFuncDef* const function = state->function;
 	const auto& returns = function->GetReturns();
-	auto numReturnsLeft = returns.size();
+	auto numReturnsLeft = returns.Size();
 	while (numReturnsLeft > 0) {
 		if (numReturnsLeft > 0) {
 			if (t->GetType() != TokenType::Comma)
@@ -213,7 +213,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Ve
 	//guard = MemoryGuard(left);
 
 	while (true) {
-		const auto size = types.size();
+		const auto size = types.Size();
 		const auto tokenType = t->GetType();
 		for (auto i = 0; i < size; ++i) {
 			if (types[i] != tokenType)
@@ -235,7 +235,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Ve
 			//guard = MemoryGuard(left);
 		}
 
-		if (size == types.size())
+		if (size == types.Size())
 			break;
 	}
 	return guard.Done();
@@ -243,7 +243,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Ve
 
 bool SyntaxTreeNodeFuncBody::Contains(const Vector<TokenType>& tokens, TokenType type)
 {
-	const auto size = tokens.size();
+	const auto size = tokens.Size();
 	for (auto i = 0; i < size; ++i) {
 		if (tokens[i] == type)
 			return true;

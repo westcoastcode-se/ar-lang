@@ -95,8 +95,8 @@ void Process::Load(Bytes bytecode, bool deleteOnExit)
 		auto packageHeader = (const ProcessPackageHeader*)ptr;
 		const ReadOnlyString packageSignature(bytecode + packageHeader->signatureOffset, packageHeader->signatureLength);
 		const ReadOnlyString packageName = NameFromPackageSignature(packageSignature);
-		auto package = new Package(packageName, packageSignature, (I32)_packages.size());
-		_packages.push_back(package);
+		auto package = new Package(packageName, packageSignature, (I32)_packages.Size());
+		_packages.Add(package);
 		_namedPackages[package->GetSignature()] = package;
 
 		auto typeHeader = (const ProcessTypeHeader*)(bytecode + packageHeader->typesOffset);
@@ -104,8 +104,8 @@ void Process::Load(Bytes bytecode, bool deleteOnExit)
 		{
 			const ReadOnlyString signature(bytecode + typeHeader->signatureOffset, typeHeader->signatureLength);
 			const ReadOnlyString name = NameFromPackageSignature(signature);
-			auto type = new Type(name, signature, (I32)_types.size());
-			_types.push_back(type);
+			auto type = new Type(name, signature, (I32)_types.Size());
+			_types.Add(type);
 			_namedTypes[signature] = type;
 			
 			typeHeader = (const ProcessTypeHeader*)(bytecode + typeHeader->offset);
@@ -116,8 +116,8 @@ void Process::Load(Bytes bytecode, bool deleteOnExit)
 		{
 			const ReadOnlyString signature(bytecode + typeHeader->signatureOffset, typeHeader->signatureLength);
 			const ReadOnlyString name = NameFromPackageSignature(signature);
-			auto type = new Global(name, signature, (I32)_globals.size(), bytecode + globalHeader->ptr);
-			_globals.push_back(type);
+			auto type = new Global(name, signature, (I32)_globals.Size(), bytecode + globalHeader->ptr);
+			_globals.Add(type);
 			_namedGlobals[signature] = type;
 
 			globalHeader = (const ProcessGlobalHeader*)(bytecode + globalHeader->offset);
@@ -128,9 +128,9 @@ void Process::Load(Bytes bytecode, bool deleteOnExit)
 		{
 			const ReadOnlyString signature(bytecode + functionHeader->signatureOffset, functionHeader->signatureLength);
 			const ReadOnlyString name = NameFromFunctionSignature(signature);
-			auto function = new Function(name, signature, (I32)_functions.size(), bytecode + functionHeader->entryOffset,
+			auto function = new Function(name, signature, (I32)_functions.Size(), bytecode + functionHeader->entryOffset,
 				functionHeader->expectedStackSize);
-			_functions.push_back(function);
+			_functions.Add(function);
 			_namedFunctions[signature] = function;
 			package->AddFunction(function);
 

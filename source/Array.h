@@ -4,23 +4,32 @@
 
 namespace WestCoastCode
 {
-	template<class T, int Resize> class Array;
-	template<class T> class ReadOnlyArray;
-
-	// Class which holds arrays of classes togehter in the same manner as the std::vector. 
-	// It has, however, support for exposing itself as a ReadOnly view of their interface
+	// Class which holds an unknown number of items in an array-like structure.
+	// This type is compatible with the ReadOnlyArray interface
 	template<class T, int Resize = 4>
-	class Array
+	class Vector
 	{
-		friend class ReadOnlyArray<T>;
-
 	public:
-		Array()
-			: _capacity(Resize), _memory((T*)malloc(sizeof(T) * _capacity)), _size(0) {
+		Vector()
+			: _capacity(Resize), _memory((T*)malloc(sizeof(T)* _capacity)), _size(0) {
 			assert(_memory != nullptr);
 		}
 
-		~Array()
+		Vector(int initialSize)
+			: _capacity(initialSize), _memory((T*)malloc(sizeof(T)* _capacity)), _size(initialSize) {
+			assert(_memory != nullptr);
+		}
+
+		Vector(std::initializer_list<T> l)
+			: Vector()		
+		{
+			auto it = l.begin();
+			const auto end = l.end();
+			for (; it != end; ++it)
+				Add(*it);
+		}
+
+		~Vector()
 		{
 			free(_memory);
 		}
@@ -28,8 +37,11 @@ namespace WestCoastCode
 		// Get the size of the array
 		I32 Size() const { return _size; }
 
+		// Is this container empty
+		bool IsEmpty() const { return _size == 0; }
+
 		// Add a new item to the array
-		void Insert(T value)
+		void Add(T value)
 		{
 			// Resize if neccessary
 			if (_size == _capacity) {
@@ -38,7 +50,7 @@ namespace WestCoastCode
 			}
 			_memory[_size++] = value;
 		}
-		
+
 		// Put the supplied pointer at the index
 		void PutAt(T value, I32 idx)
 		{
@@ -81,10 +93,63 @@ namespace WestCoastCode
 		T& operator[](I32 idx) { return _memory[idx]; }
 		const T& operator[](I32 idx) const { return _memory[idx]; }
 
+	public:
+		typedef T* iterator;
+		typedef const T* const_iterator;
+		iterator begin() { return _memory; }
+		const_iterator begin() const { return _memory; }
+		iterator end() { return &_memory[_size]; }
+		const_iterator end() const { return &_memory[_size]; }
+
 	private:
 		int _capacity;
 		T* _memory;
 		int _size;
+	};
+
+	// Class which holds an array of a known size. Is compatible with the ReadOnlyArray interface
+	template<class T, int Count>
+	class Array
+	{
+	public:
+		Array() {}
+
+		Array(std::initializer_list<T> l) {
+			auto it = l.begin();
+			auto end = l.end();
+			for (int i = 0; it != end; ++i, ++it) {
+				_memory[i] = *it;
+			}
+		}
+
+		// Get the size of the array
+		I32 Size() const { return Count; }
+
+		// Set the supplied value at the supplied index
+		void Set(T value, I32 idx)
+		{
+			assert(idx < Size && idx > 0);
+			_memory[idx] = value;
+		}
+
+		T* Ptr() { return _memory; }
+
+		const T* Ptr() const { return _memory; }
+
+	public:
+		T& operator[](I32 idx) { return _memory[idx]; }
+		const T& operator[](I32 idx) const { return _memory[idx]; }
+
+	public:
+		typedef T* iterator;
+		typedef const T* const_iterator;
+		iterator begin() { return _memory; }
+		const_iterator begin() const { return _memory; }
+		iterator end() { return &_memory[Count]; }
+		const_iterator end() const { return &_memory[Count]; }
+
+	private:
+		T _memory[Count];
 	};
 
 	// A view of the Array object but exposes the implementations as interfaces
@@ -100,20 +165,26 @@ namespace WestCoastCode
 			: _memory(nullptr), _size(0) {}
 
 		template<class Class>
-		ReadOnlyArray(const Array<Class>& v)
-			: _memory(GetMemory<Class>(v)), _size(GetSize<Class>(v))
+		ReadOnlyArray(const Vector<Class>& v)
+			: _memory(GetMemory(v)), _size(GetSize(v))
 		{
 		}
 
-		ReadOnlyArray(const Array<T>& rhs)
-			: _memory(rhs._memory), _size(rhs._size) {}
+		template<class Class, int Size>
+		ReadOnlyArray(const Array<Class, Size>& v)
+			: _memory(GetMemory(v)), _size(GetSize(v))
+		{
+		}
+
+		ReadOnlyArray(const Vector<T>& rhs)
+			: _memory(GetMemory(rhs)), _size(GetSize(rhs)) {}
 
 		// Get the size of the vector
 		I32 Size() const { return _size; }
 
 	private:
 		template<class Class>
-		static I32 GetSize(const Array<Class>& v)
+		static I32 GetSize(const Vector<Class>& v)
 		{
 			using namespace std;
 			if constexpr (is_pointer<Class>()) {
@@ -127,12 +198,12 @@ namespace WestCoastCode
 		}
 
 		template<class Class>
-		static T* GetMemory(const Array<Class>& v)
+		static T* GetMemory(const Vector<Class>& v)
 		{
 			using namespace std;
 			if constexpr (is_pointer<Class>()) {
 				if constexpr (is_base_of<remove_pointer<T>::type, remove_pointer<Class>::type>()) {
-					Class* memory = const_cast<Array<Class>&>(v).Ptr();
+					Class* memory = const_cast<Vector<Class>&>(v).Ptr();
 					return reinterpret_cast<T*>(memory);
 				}
 			}
@@ -141,9 +212,38 @@ namespace WestCoastCode
 			}
 		}
 
+		template<class Class, int Size>
+		static I32 GetSize(const Array<Class, Size>& v)
+		{
+			using namespace std;
+			if constexpr (is_pointer<Class>()) {
+				if constexpr (is_base_of<remove_pointer<T>::type, remove_pointer<Class>::type>()) {
+					return v.Size();
+				}
+			}
+			else {
+				return 0;
+			}
+		}
+
+		template<class Class, int Size>
+		static T* GetMemory(const Array<Class, Size>& v)
+		{
+			using namespace std;
+			if constexpr (is_pointer<Class>()) {
+				if constexpr (is_base_of<remove_pointer<T>::type, remove_pointer<Class>::type>()) {
+					Class* memory = const_cast<Array<Class, Size>&>(v).Ptr();
+					return reinterpret_cast<T*>(memory);
+				}
+			}
+			else {
+				return 0;
+			}
+		}
 	public:
 		T operator[](I32 idx) { return _memory[idx]; }
 		const T operator[](I32 idx) const { return _memory[idx]; }
 	};
+
 
 }

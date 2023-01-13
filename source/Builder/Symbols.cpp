@@ -16,21 +16,21 @@ Package::~Package()
 
 Function* Package::Add(Function* function)
 {
-	_functions.Insert(function);
+	_functions.Add(function);
 	function->SetParent(this);
 	return function;
 }
 
 Type* Package::Add(Type* type)
 {
-	_types.Insert(type);
+	_types.Add(type);
 	type->SetParent(this);
 	return type;
 }
 
 Global* Package::Add(Global* global)
 {
-	_globals.Insert(global);
+	_globals.Add(global);
 	global->SetParent(this);
 	return global;
 }
@@ -175,12 +175,12 @@ void Type::SerializeHeader(MemoryStream& stream)
 
 void Function::AddArgument(Type* t)
 {
-	_arguments.push_back(t);
+	_arguments.Add(t);
 }
 
 void Function::AddReturn(Type* t)
 {
-	_returns.push_back(t);
+	_returns.Add(t);
 }
 
 I32 Function::ResolveHeaderMemory(I32 offset)
@@ -190,7 +190,7 @@ I32 Function::ResolveHeaderMemory(I32 offset)
 		_signature += String("#");
 		_signature += _name;
 		_signature += "(";
-		for (int i = 0; i < _arguments.size(); ++i) {
+		for (int i = 0; i < _arguments.Size(); ++i) {
 			if (i > 0)
 				_signature += ",";
 			_signature += _arguments[i]->GetSignature();
@@ -254,7 +254,7 @@ Instructions::~Instructions()
 
 Instr* Instructions::Add(Instr* instr)
 {
-	_instructions.push_back(instr);
+	_instructions.Add(instr);
 	instr->SetOffset(_stackSize);
 	_stackSize += instr->GetSize();
 	return instr;
@@ -303,6 +303,6 @@ InstrRet* Instructions::Ret()
 InstrMarker* Instructions::Marker()
 {
 	auto marker = new InstrMarker();
-	_markers.push_back(marker);
+	_markers.Add(marker);
 	return marker;
 }

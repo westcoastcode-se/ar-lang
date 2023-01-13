@@ -20,9 +20,9 @@ namespace WestCoastCode::Compilation
 
 		// Inherited via ISyntaxTreeNodeRef
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		const List<ISyntaxTreeNode*>& GetChildren() const final { return _children; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		const Vector<ISyntaxTreeNode*>& GetDefinitions() const final { return _definitions; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }
 		ISyntaxTree* GetSyntaxTree() const final;
 		void SetParent(ISyntaxTreeNode* parent) final;
 		bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
@@ -46,7 +46,7 @@ namespace WestCoastCode::Compilation
 
 	private:
 		ISyntaxTreeNode* _parent;
-		List<ISyntaxTreeNode*> _children;
+		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;
 		ReadOnlyString _name;
 		DefinitionQueryTypes _queryTypes;
@@ -68,9 +68,9 @@ namespace WestCoastCode::Compilation
 		~SyntaxTreeNodeRefSection() final;
 
 		// Inherited via ISyntaxTreeNodeRef
-		const Vector<ISyntaxTreeNode*>& GetDefinitions() const final { return _definitions; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		const List<ISyntaxTreeNode*>& GetChildren() const final { return _children; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		void ToString(StringStream& s, int indent) const final;
 		virtual ISyntaxTree* GetSyntaxTree() const final;
@@ -95,7 +95,7 @@ namespace WestCoastCode::Compilation
 
 	private:
 		ISyntaxTreeNode* _parent;
-		List<ISyntaxTreeNode*> _children;
+		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;
 		ReadOnlyString _name;
 		DefinitionQueryTypes _queryTypes;

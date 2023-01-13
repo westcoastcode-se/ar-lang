@@ -3,6 +3,7 @@
 #include "ProcessError.h"
 #include "Primitive.h"
 #include "Thread.h"
+#include "../Array.h"
 #include <unordered_map>
 
 namespace WestCoastCode::Interpreter
@@ -30,7 +31,7 @@ namespace WestCoastCode::Interpreter
 
 		// Add the supplied function
 		void AddFunction(Function* function) {
-			_functions.push_back(function);
+			_functions.Add(function);
 		}
 
 	private:

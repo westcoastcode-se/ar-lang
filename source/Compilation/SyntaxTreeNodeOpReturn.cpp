@@ -51,6 +51,6 @@ const SourceCodeView* SyntaxTreeNodeOpReturn::GetSourceCode() const
 
 void SyntaxTreeNodeOpReturn::AddNode(ISyntaxTreeNode* node)
 {
-	_children.push_back(node);
+	_children.Add(node);
 	node->SetParent(this);
 }

@@ -35,7 +35,7 @@ struct SuiteCommonArray : TestUtils
 
 	void EmptyArray()
 	{
-		Array<MyInterface*> arr;
+		Vector<MyInterface*> arr;
 		ReadOnlyArray<MyInterface*> readOnly = arr;
 		AssertEquals(arr.Size(), 0);
 		AssertEquals(readOnly.Size(), 0);
@@ -43,7 +43,7 @@ struct SuiteCommonArray : TestUtils
 
 	void EmptyArrayWithInheritence()
 	{
-		Array<MyClass1*> arr;
+		Vector<MyClass1*> arr;
 		ReadOnlyArray<MyInterface*> readOnly = arr;
 		AssertEquals(arr.Size(), 0);
 		AssertEquals(readOnly.Size(), 0);
@@ -51,9 +51,9 @@ struct SuiteCommonArray : TestUtils
 
 	void ArrayWithInheritence()
 	{
-		Array<MyClass1*> arr;
-		arr.Insert(new MyClass1());
-		arr.Insert(new MyClass2());
+		Vector<MyClass1*> arr;
+		arr.Add(new MyClass1());
+		arr.Add(new MyClass2());
 		ReadOnlyArray<MyInterface*> readOnly = arr;
 		AssertEquals(arr.Size(), 2);
 		AssertEquals(readOnly.Size(), 2);

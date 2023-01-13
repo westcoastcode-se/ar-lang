@@ -32,7 +32,7 @@ Bytes Linker::Link()
 	header->codeSize = totalSize - readOnlyOffset;
 	header->dataOffset = totalHeaderSize;
 	header->dataSize = totalSize - (header->codeSize + totalHeaderSize);
-	header->packagesCount = (I32)_packages.size();
+	header->packagesCount = (I32)_packages.Size();
 	header->packageOffset = sizeof(ProcessHeader);
 
 	// Serialize all content
@@ -44,7 +44,7 @@ Bytes Linker::Link()
 
 Package* Linker::AddPackage(Package* package)
 {
-	_packages.push_back(package);
+	_packages.Add(package);
 	return package;
 }
 

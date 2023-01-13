@@ -11,15 +11,15 @@ SyntaxTreeNodeTypeRef::SyntaxTreeNodeTypeRef(SourceCodeView sourceCode)
 
 SyntaxTreeNodeTypeRef::~SyntaxTreeNodeTypeRef()
 {
-	for (auto&& c : _children)
-		delete c;
+	for (int i = 0; i < _children.Size(); ++i)
+		delete _children[i];
 }
 
 void SyntaxTreeNodeTypeRef::ToString(StringStream& s, int indent) const
 {
 	s << Indent(indent);
 	s << "Ref(name=" << _fullName << ", definitions=[";
-	for (int i = 0; i < _definitions.size(); ++i) {
+	for (int i = 0; i < _definitions.Size(); ++i) {
 		if (i != 0)
 			s << ",";
 		char tmp[32];
@@ -27,8 +27,8 @@ void SyntaxTreeNodeTypeRef::ToString(StringStream& s, int indent) const
 		s << tmp;
 	}
 	s << "])" << std::endl;
-	for (auto&& c : _children)
-		c->ToString(s, indent + 1);
+	for (int i = 0; i < _children.Size(); ++i)
+		_children[i]->ToString(s, indent + 1);
 }
 
 ISyntaxTree* SyntaxTreeNodeTypeRef::GetSyntaxTree() const
@@ -65,7 +65,7 @@ bool SyntaxTreeNodeTypeRef::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visit
 
 void SyntaxTreeNodeTypeRef::AddNode(ISyntaxTreeNode* node)
 {
-	_children.push_back(node);
+	_children.Add(node);
 	node->SetParent(this);
 }
 

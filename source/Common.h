@@ -13,12 +13,6 @@
 namespace WestCoastCode
 {
 	template<typename T>
-	using List = std::list<T>;
-
-	template<typename T>
-	using Vector = std::vector<T>;
-
-	template<typename T>
 	using Stack = std::stack<T>;
 
 	typedef std::string String;

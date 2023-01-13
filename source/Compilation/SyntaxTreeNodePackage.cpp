@@ -65,7 +65,7 @@ void SyntaxTreeNodePackage::ToString(StringStream& s, int indent) const
 
 void SyntaxTreeNodePackage::AddNode(ISyntaxTreeNode* node)
 {
-	_children.push_back(node);
+	_children.Add(node);
 	node->SetParent(this);
 }
 

@@ -68,7 +68,7 @@ void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
 
 void SyntaxTreeNodeFuncDef::AddNode(ISyntaxTreeNode* node)
 {
-	_children.push_back(node);
+	_children.Add(node);
 	node->SetParent(this);
 }
 
@@ -83,13 +83,13 @@ void SyntaxTreeNodeFuncDef::SetBody(SyntaxTreeNodeFuncBody* body)
 void SyntaxTreeNodeFuncDef::AddArgument(ISyntaxTreeNodeFuncArg* arg)
 {
 	AddNode(arg);
-	_arguments.push_back(arg);
+	_arguments.Add(arg);
 }
 
 void SyntaxTreeNodeFuncDef::AddReturn(ISyntaxTreeNodeFuncRet* ret)
 {
 	AddNode(ret);
-	_returns.push_back(ret);
+	_returns.Add(ret);
 }
 
 SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)

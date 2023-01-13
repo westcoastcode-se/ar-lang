@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Common.h"
+#include "../Array.h"
 #include "SourceCodeView.h"
 #include "SourceCodeParser.h"
 #include "ParseError.h"
@@ -116,7 +117,7 @@ namespace WestCoastCode::Compilation
 		virtual void SetParent(ISyntaxTreeNode* parent) = 0;
 
 		// Get all root nodes in the syntax tree
-		virtual const List<ISyntaxTreeNode*>& GetChildren() const = 0;
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const = 0;
 
 		// Visit all children in the entire tree and returns true if one or more
 		// results are found
@@ -271,7 +272,7 @@ namespace WestCoastCode::Compilation
 		// Get all definitions that this reference referres to. This
 		// is normally resolved during the Resolve phase but can, in specific cases,
 		// be resolved when the tree is being parsed (for example, if it points to a primitive)
-		virtual const Vector<ISyntaxTreeNode*>& GetDefinitions() const = 0;
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
 
 		// Get which types this reference is searching for
 		virtual DefinitionQueryTypes GetQueryTypes() const = 0;
@@ -281,10 +282,10 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		// Get all arguments 
-		virtual const Vector<ISyntaxTreeNodeFuncArg*>& GetArguments() const = 0;
+		virtual ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const = 0;
 
 		// Get all return types
-		virtual const Vector<ISyntaxTreeNodeFuncRet*>& GetReturns() const = 0;
+		virtual ReadOnlyArray<ISyntaxTreeNodeFuncRet*> GetReturns() const = 0;
 
 		// Is this function a void function
 		virtual bool IsVoidReturn() const = 0;
@@ -313,7 +314,7 @@ namespace WestCoastCode::Compilation
 	public:
 		// All types that this reference resolved into. The item at the top of the vector
 		// is the one closest to the reference
-		virtual const Vector<ISyntaxTreeNode*>& GetDefinitions() const = 0;
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
 	};
 
 	//
@@ -332,7 +333,7 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTreeNodeFuncDef* GetFunction() const = 0;
 
 		// Get all local variables inside this body
-		virtual const Vector<ISyntaxTreeNodeFuncLocal*>& GetLocals() const = 0;
+		virtual ReadOnlyArray<ISyntaxTreeNodeFuncLocal*> GetLocals() const = 0;
 	};
 
 	class ISyntaxTreeNodeOpReturn : public ISyntaxTreeNode

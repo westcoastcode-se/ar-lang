@@ -71,7 +71,7 @@ bool SyntaxTreeNodeFuncRet::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visit
 
 void SyntaxTreeNodeFuncRet::AddNode(ISyntaxTreeNode* node)
 {
-	_children.push_back(node);
+	_children.Add(node);
 	node->SetParent(this);
 }
 

@@ -116,7 +116,7 @@ struct SuiteSyntaxTree : TestUtilsCompilation
 	public:
 		bool Visit(Node* node) {
 			if (dynamic_cast<const T*>(node)) {
-				nodes.push_back(static_cast<const T*>(node));
+				nodes.Add(static_cast<const T*>(node));
 			}
 			return true;
 		}
@@ -131,13 +131,13 @@ struct SuiteSyntaxTree : TestUtilsCompilation
 		TypeVisitor<ISyntaxTreeNodePackage> visitor;
 		syntaxTree->Visit(&visitor);
 
-		AssertEquals((int)visitor.nodes.size(), 1);
+		AssertEquals(visitor.nodes.Size(), 1);
 
 		auto package = visitor.nodes[0];
 		AssertEquals(package->GetName(), ReadOnlyString("<root>"));
 
 		auto primitives = package->GetChildren();
-		AssertEquals((int)primitives.size(), 23);
+		AssertEquals(primitives.Size(), 23);
 	}
 
 	void EmptyPackage()
@@ -149,15 +149,15 @@ package Main
 		TypeVisitor<ISyntaxTreeNodePackage> visitor;
 		syntaxTree->Visit(&visitor);
 
-		AssertEquals((int)visitor.nodes.size(), 2);
+		AssertEquals(visitor.nodes.Size(), 2);
 
 		AssertEquals(visitor.nodes[0]->GetName(), ReadOnlyString("<root>"));
 		AssertEquals(visitor.nodes[1]->GetName(), ReadOnlyString("Main"));
 
 		// All packages have an import to the root package by default
 		auto children = visitor.nodes[1]->GetChildren();
-		AssertEquals((int)children.size(), 1);
-		AssertType<ISyntaxTreeNodeImport>(*children.begin());
+		AssertEquals(children.Size(), 1);
+		AssertType<ISyntaxTreeNodeImport>(children[0]);
 	}
 
 	void PackageInPackage()
@@ -170,7 +170,7 @@ package WestCoastCode.Game.Stuff
 		TypeVisitor<ISyntaxTreeNodePackage> visitor;
 		syntaxTree->Visit(&visitor);
 
-		AssertEquals((int)visitor.nodes.size(), 4);
+		AssertEquals(visitor.nodes.Size(), 4);
 
 		AssertEquals(visitor.nodes[0]->GetName(), ReadOnlyString("<root>"));
 		AssertEquals(visitor.nodes[1]->GetName(), ReadOnlyString("WestCoastCode"));

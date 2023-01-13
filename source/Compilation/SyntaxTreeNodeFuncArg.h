@@ -20,7 +20,7 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* GetRootNode() final;
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		void SetParent(ISyntaxTreeNode* parent) final;
-		const List<ISyntaxTreeNode*>& GetChildren() const final { return _children; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
 		bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
 		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
@@ -42,7 +42,7 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* _parent;
 		ReadOnlyString _name;
 		SourceCodeView _sourceCode;
-		List<ISyntaxTreeNode*> _children;
+		Vector<ISyntaxTreeNode*> _children;
 		ISyntaxTreeNodeTypeRef* _variableType;
 
 	};

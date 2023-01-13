@@ -18,14 +18,14 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		virtual void SetParent(ISyntaxTreeNode* parent) override;
-		const List<ISyntaxTreeNode*>& GetChildren() const final { return _children; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		virtual bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const override;
 		virtual bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
 		virtual bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		ReadOnlyString GetText() const final { return _text; }
 		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
-		const Vector<ISyntaxTreeNodeFuncLocal*>& GetLocals() const { return _locals; }
+		ReadOnlyArray<ISyntaxTreeNodeFuncLocal*> GetLocals() const { return _locals; }
 
 	public:
 		typedef ISyntaxTreeNode* (*ParseFn)(ParserState*);
@@ -75,7 +75,7 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* _parent;
 		SourceCodeView _sourceCode;
 		ReadOnlyString _text;
-		List<ISyntaxTreeNode*> _children;
+		Vector<ISyntaxTreeNode*> _children;
 		Vector<ISyntaxTreeNodeFuncLocal*> _locals;
 	};
 }

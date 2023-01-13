@@ -22,14 +22,14 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* GetRootNode() final;
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		void SetParent(ISyntaxTreeNode* parent) final;
-		const List<ISyntaxTreeNode*>& GetChildren() const final { return _children; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
 		bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
 		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
-		const Vector<ISyntaxTreeNodeFuncArg*>& GetArguments() const final { return _arguments; }
-		const Vector<ISyntaxTreeNodeFuncRet*>& GetReturns() const final { return _returns; }
-		bool IsVoidReturn() const final { return _returns.empty(); }
+		ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const final { return _arguments; }
+		ReadOnlyArray<ISyntaxTreeNodeFuncRet*> GetReturns() const final { return _returns; }
+		bool IsVoidReturn() const final { return _returns.IsEmpty(); }
 		ISyntaxTreeNodeFuncBody* GetBody() const final;
 		void ToString(StringStream& s, int indent) const final;
 
@@ -52,7 +52,7 @@ namespace WestCoastCode::Compilation
 
 	private:
 		ISyntaxTreeNode* _parent;
-		List<ISyntaxTreeNode*> _children;
+		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;
 		ReadOnlyString _name;
 

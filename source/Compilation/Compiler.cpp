@@ -118,7 +118,7 @@ Compiler::~Compiler()
 
 SyntaxTree* Compiler::AddSourceCode(SourceCode* sourceCode)
 {
-	_sourceCodes.push_back(sourceCode);
+	_sourceCodes.Add(sourceCode);
 
 	const Lexer lexer(sourceCode->GetText());
 	Token token(&lexer);
