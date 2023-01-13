@@ -253,6 +253,14 @@ namespace WestCoastCode
 	public:
 		T operator[](I32 idx) { return _memory[idx]; }
 		const T operator[](I32 idx) const { return _memory[idx]; }
+
+	public:
+		typedef T* iterator;
+		typedef const T* const_iterator;
+		iterator begin() { return _memory; }
+		const_iterator begin() const { return _memory; }
+		iterator end() { return &_memory[_size]; }
+		const_iterator end() const { return &_memory[_size]; }
 	};
 
 
