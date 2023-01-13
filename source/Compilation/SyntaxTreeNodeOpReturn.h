@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SyntaxTree.h"
+#include "SyntaxTreeNode.h"
 #include "SourceCodeParser.h"
 
 namespace WestCoastCode::Compilation
@@ -21,11 +21,8 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTreeNode* GetParent() const override { return _parent; }
 		virtual void SetParent(ISyntaxTreeNode* parent) override;
 		virtual ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const override { return _children; }
-		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
 			return VisitResult::Continue;
-		}
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return false;
 		}
 		virtual const SourceCodeView* GetSourceCode() const override;
 

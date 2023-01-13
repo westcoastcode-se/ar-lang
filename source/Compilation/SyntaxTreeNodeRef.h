@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SyntaxTree.h"
+#include "SyntaxTreeNode.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -28,8 +28,8 @@ namespace WestCoastCode::Compilation
 		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
 			return VisitResult::Continue;
 		}
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return false;
+		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
+			return VisitResult::Continue;
 		}
 		void ToString(StringStream& s, int indent) const final;
 		ISyntaxTreeNode* GetRootNode() final;
@@ -79,11 +79,8 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTree* GetSyntaxTree() const final;
 		virtual ISyntaxTreeNode* GetRootNode() final;
 		void SetParent(ISyntaxTreeNode* parent) final;
-		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
 			return VisitResult::Continue;
-		}
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return false;
 		}
 		ReadOnlyString GetName() const final { return _name; }
 		DefinitionQueryTypes GetQueryTypes() const final { return _queryTypes; }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SyntaxTree.h"
+#include "SyntaxTreeNode.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -42,11 +42,8 @@ namespace WestCoastCode::Compilation
 		ISyntaxTree* GetSyntaxTree() const override;
 		ISyntaxTreeNode* GetRootNode() override;
 		void SetParent(ISyntaxTreeNode* parent) override;
-		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
 			return VisitResult::Continue;
-		}
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return false;
 		}
 		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() const final;

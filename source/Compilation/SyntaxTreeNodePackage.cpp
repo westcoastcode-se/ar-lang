@@ -27,34 +27,35 @@ void SyntaxTreeNodePackage::SetParent(ISyntaxTreeNode* parent)
 	_parent = dynamic_cast<SyntaxTreeNodePackage*>(parent);
 }
 
-VisitResult SyntaxTreeNodePackage::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags)
+VisitResult SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags)
 {
-	// Visit this object
-	auto result = visitor->Visit(this);
-	if (result == VisitorResult::Stop)
-		return VisitResult::Stop;
-
-	// Continue search among children if allowed
-	if (result != VisitorResult::ContinueExcludeChildren && 
-		(flags & (I32)VisitFlag::IncludeChildren))
+	// Visit this node
+	switch (visitor->Visit(this))
 	{
-		for (auto child : _children)
+	case VisitorResult::Stop:
+		return VisitResult::Stop;
+	case VisitorResult::ContinueExcludeChildren:
+		flags &= ~(I32)QuerySearchFlag::TraverseChildren;
+		break;
+	default:
+		break;
+	}
+
+	// Search among children
+	if (flags & (I32)QuerySearchFlag::TraverseChildren)
+	{
+		// Stop query more child nodes
+		flags &= ~(I32)QuerySearchFlag::TraverseChildren;
+		for (auto c : _children)
 		{
-			switch (child->Visit(visitor, flags))
-			{
-			case VisitResult::Stop:
+			const auto result = c->Query(visitor, flags);
+			if (result == VisitResult::Stop) {
 				return VisitResult::Stop;
-			default:
-				break;
-			}
+			}	
 		}
 	}
-	return VisitResult::Continue;
-}
 
-bool SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags)
-{
-	return false;
+	return VisitResult::Continue;
 }
 
 void SyntaxTreeNodePackage::ToString(StringStream& s, int indent) const
@@ -89,6 +90,7 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 			if (package && package->GetName() == name) {
 				return VisitorResult::Stop;
 			}
+			package = nullptr;
 			return VisitorResult::Continue;
 		}
 
@@ -100,8 +102,8 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 	// Search for a package in the syntax tree. The package string is a little special because
 	// we know that a package definition's parent will be part of the same string, so you can figure out the
 	// full signature based on the parent's signatures
+	state->parentNode->Query(&visitor, (I32)QuerySearchFlag::TraverseChildren);
 	SyntaxTreeNodePackage* package = visitor.package;
-	state->parentNode->Query(&visitor, 0);
 	if (package == NULL) {
 		package = new SyntaxTreeNodePackage(SourceCodeView(state->sourceCode, t), t->GetString());
 		auto rootNode = state->parentNode->GetRootNode();

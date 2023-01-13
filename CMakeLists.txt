@@ -103,7 +103,7 @@ add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNodeFuncRet.cpp"
     "source/Compilation/SyntaxTreeNodeTypeRef.cpp"
     "source/Compilation/SyntaxTreeNodeOpReturn.cpp"
-)
+ "source/Compilation/SyntaxTree.cpp" "source/Compilation/SyntaxTreeNode.cpp")
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 
     "source/Interpreter/ThreadStack.cpp"

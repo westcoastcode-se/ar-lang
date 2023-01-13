@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SyntaxTree.h"
+#include "SyntaxTreeNode.h"
 #include "../Interpreter/Primitive.h"
 
 namespace WestCoastCode::Compilation
@@ -31,11 +31,8 @@ namespace WestCoastCode::Compilation
 		void ToString(StringStream& s, int indent) const final;
 		size_t GetSize() const final { return _stackSize; }
 		virtual ISyntaxTreeNode* GetRootNode() override;
-		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
 			return VisitResult::Continue;
-		}
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return false;
 		}
 
 	private:
