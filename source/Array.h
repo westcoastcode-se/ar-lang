@@ -15,6 +15,15 @@ namespace WestCoastCode
 			assert(_memory != nullptr);
 		}
 
+		// Move Constructor
+		Vector(Vector<T, Resize>&& source)
+			: _capacity{source._capacity}, _memory{source._memory}, _size{source._size}
+		{
+			source._capacity = 0;
+			source._memory = nullptr;
+			source._size = 0;
+		}
+
 		Vector(int initialSize)
 			: _capacity(initialSize), _memory((T*)malloc(sizeof(T)* _capacity)), _size(initialSize) {
 			assert(_memory != nullptr);
@@ -31,7 +40,8 @@ namespace WestCoastCode
 
 		~Vector()
 		{
-			free(_memory);
+			if (_memory)
+				free(_memory);
 		}
 
 		// Get the size of the array

@@ -320,9 +320,18 @@ namespace WestCoastCode::Compilation
 	//
 	class ISyntaxTreeNodeFuncLocal : public INamedSyntaxTreeNode
 	{
+	public:
 	};
 
-	// 
+	// A scope
+	class ISyntaxTreeNodeFuncScope : public INamedSyntaxTreeNode
+	{
+	public:
+		// Get all locals part of this scope
+		virtual ReadOnlyArray<ISyntaxTreeNodeFuncScope*> GetLocals() const = 0;
+	};
+
+	// A node containing the function body logic
 	class ISyntaxTreeNodeFuncBody : public ISyntaxTreeNode
 	{
 	public:
@@ -331,9 +340,6 @@ namespace WestCoastCode::Compilation
 
 		// Get the function body
 		virtual ISyntaxTreeNodeFuncDef* GetFunction() const = 0;
-
-		// Get all local variables inside this body
-		virtual ReadOnlyArray<ISyntaxTreeNodeFuncLocal*> GetLocals() const = 0;
 	};
 
 	class ISyntaxTreeNodeOpReturn : public ISyntaxTreeNode
