@@ -71,6 +71,13 @@ add_library(arlang
     "src/compiler/syntax_tree_search.c"
  )
   
+set(CMAKE_CXX_STANDARD 17)
+# Tests
+include_directories("${VM_INCLUDE_DIRS}")
+add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_builder.cpp" "test/suite_compiler.cpp")
+target_link_libraries(test arlang)
+
+
 set(CMAKE_CXX_STANDARD 20)
 add_library(ArlangBuilder
     "source/Builder/Symbols.cpp" 
@@ -109,10 +116,5 @@ add_library(ArlangInterpreter
 add_executable(ArlangTest 
     "source/Tests/SuiteBuilder.cpp"
     "source/Tests/main.cpp"
- "source/Tests/SuiteCompilation.cpp")
+ "source/Tests/SuiteCompilation.cpp" "source/Tests/SuiteCommon.cpp")
 target_link_libraries(ArlangTest ArlangInterpreter ArlangCompilation ArlangBuilder)
-
-# Tests
-include_directories("${VM_INCLUDE_DIRS}")
-add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_builder.cpp" "test/suite_compiler.cpp")
-target_link_libraries(test arlang)

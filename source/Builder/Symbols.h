@@ -37,14 +37,17 @@ namespace WestCoastCode::Builder
 	class IPackage : public ISymbol
 	{
 	public:
+		// Get the signature of this symbol
+		virtual const ReadOnlyString GetSignature() const = 0;
+
 		// Get all functions part of this package
-		virtual ReadOnlyArray<IFunction> GetFunctions() const = 0;
+		virtual ReadOnlyArray<IFunction*> GetFunctions() const = 0;
 
 		// Get all globals part of this package
-		virtual ReadOnlyArray<IGlobal> GetGlobals() const = 0;
+		virtual ReadOnlyArray<IGlobal*> GetGlobals() const = 0;
 
 		// Get all types part of this package
-		virtual ReadOnlyArray<IType> GetTypes() const = 0;
+		virtual ReadOnlyArray<IType*> GetTypes() const = 0;
 	};
 
 	class IFunction : public ISymbol
@@ -141,17 +144,17 @@ namespace WestCoastCode::Builder
 		void Serialize(MemoryStream& stream) final;
 		void SerializeReadOnly(MemoryStream& stream) final;
 		const ReadOnlyString GetSignature() const final { return _signature; }
-		ReadOnlyArray<IFunction> GetFunctions() const final { return _functions; }
-		ReadOnlyArray<IType> GetTypes() const final { return _types; }
-		ReadOnlyArray<IGlobal> GetGlobals() const final { return _globals; }
+		ReadOnlyArray<IFunction*> GetFunctions() const final { return _functions; }
+		ReadOnlyArray<IType*> GetTypes() const final { return _types; }
+		ReadOnlyArray<IGlobal*> GetGlobals() const final { return _globals; }
 
 	private:
 		ISymbol* _parent;
 		ReadOnlyString _name;
 		String _signature;
-		Array<Function, IFunction> _functions;
-		Array<Type, IType> _types;
-		Array<Global, IGlobal> _globals;
+		Array<IFunction*> _functions;
+		Array<IType*> _types;
+		Array<IGlobal*> _globals;
 		I32 _offset;
 	};
 

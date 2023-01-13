@@ -6,11 +6,11 @@ using namespace WestCoastCode::Builder;
 
 Package::~Package()
 {
-	for (auto i = 0; i < _types.GetSize(); ++i)
+	for (auto i = 0; i < _types.Size(); ++i)
 		delete _types[i];
-	for (auto i = 0; i < _globals.GetSize(); ++i)
+	for (auto i = 0; i < _globals.Size(); ++i)
 		delete _globals[i];
-	for (auto i = 0; i < _functions.GetSize(); ++i)
+	for (auto i = 0; i < _functions.Size(); ++i)
 		delete _functions[i];
 }
 
@@ -46,26 +46,26 @@ I32 Package::ResolveHeaderMemory(I32 offset)
 	_signature += _name;
 
 	offset = offset + sizeof(Interpreter::ProcessPackageHeader) + (I32)_signature.size();
-	for (auto i = 0; i < _types.GetSize(); ++i)
-		offset = _types[i]->ResolveHeaderMemory(offset);
-	for (auto i = 0; i < _globals.GetSize(); ++i)
-		offset = _globals[i]->ResolveHeaderMemory(offset);
-	for (auto i = 0; i < _functions.GetSize(); ++i)
-		offset = _functions[i]->ResolveHeaderMemory(offset);
+	for (auto i = 0; i < _types.Size(); ++i)
+		offset = ((Type*)_types[i])->ResolveHeaderMemory(offset);
+	for (auto i = 0; i < _globals.Size(); ++i)
+		offset = ((Global*)_globals[i])->ResolveHeaderMemory(offset);
+	for (auto i = 0; i < _functions.Size(); ++i)
+		offset = ((Function*)_functions[i])->ResolveHeaderMemory(offset);
 	return offset;
 }
 
 I32 Package::ResolveGlobalVariables(I32 offset)
 {
-	for (auto i = 0; i < _globals.GetSize(); ++i)
-		offset = _globals[i]->ResolveGlobalVariables(offset);
+	for (auto i = 0; i < _globals.Size(); ++i)
+		offset = ((Global*)_globals[i])->ResolveGlobalVariables(offset);
 	return offset;
 }
 
 I32 Package::ResolveFunctionBody(I32 offset)
 {
-	for (auto i = 0; i < _functions.GetSize(); ++i)
-		offset = _functions[i]->ResolveFunctionBody(offset);
+	for (auto i = 0; i < _functions.Size(); ++i)
+		offset = ((Function*)_functions[i])->ResolveFunctionBody(offset);
 	return offset;
 }
 
@@ -74,21 +74,21 @@ void Package::SerializeHeader(MemoryStream& stream)
 	auto header = stream.Reserve<Interpreter::ProcessPackageHeader>();
 	header->signatureLength = (I32)_signature.size();
 	header->signatureOffset = stream.GetOffset();
-	header->typesCount = _types.GetSize();
-	header->globalsCount = _globals.GetSize();
-	header->functionsCount = _functions.GetSize();
+	header->typesCount = _types.Size();
+	header->globalsCount = _globals.Size();
+	header->functionsCount = _functions.Size();
 	stream.Write(_signature);
 
 	header->typesOffset = stream.GetOffset();
-	for (auto i = 0; i < _types.GetSize(); ++i)
+	for (auto i = 0; i < _types.Size(); ++i)
 		_types[i]->SerializeHeader(stream);
 
 	header->globalsOffset = stream.GetOffset();
-	for (auto i = 0; i < _globals.GetSize(); ++i)
+	for (auto i = 0; i < _globals.Size(); ++i)
 		_globals[i]->SerializeHeader(stream);
 
 	header->functionsOffset = stream.GetOffset();
-	for (auto i = 0; i < _functions.GetSize(); ++i)
+	for (auto i = 0; i < _functions.Size(); ++i)
 		_functions[i]->SerializeHeader(stream);
 
 	header->offset = stream.GetOffset();
@@ -96,17 +96,17 @@ void Package::SerializeHeader(MemoryStream& stream)
 
 void Package::Serialize(MemoryStream& stream)
 {
-	for (auto i = 0; i < _types.GetSize(); ++i)
+	for (auto i = 0; i < _types.Size(); ++i)
 		_types[i]->Serialize(stream);
-	for (auto i = 0; i < _globals.GetSize(); ++i)
+	for (auto i = 0; i < _globals.Size(); ++i)
 		_globals[i]->Serialize(stream);
-	for (auto i = 0; i < _functions.GetSize(); ++i)
+	for (auto i = 0; i < _functions.Size(); ++i)
 		_functions[i]->Serialize(stream);
 }
 
 void Package::SerializeReadOnly(MemoryStream& stream)
 {
-	for (auto i = 0; i < _functions.GetSize(); ++i)
+	for (auto i = 0; i < _functions.Size(); ++i)
 		_functions[i]->SerializeReadOnly(stream);
 }
 

@@ -164,16 +164,18 @@ package Main
 	{
 		AddSourceCode(new SourceCode(R"(
 package WestCoastCode.Game
+package WestCoastCode.Game.Stuff
 )", "main.arl"));
 
 		TypeVisitor<ISyntaxTreeNodePackage> visitor;
 		syntaxTree->Visit(&visitor);
 
-		AssertEquals((int)visitor.nodes.size(), 3);
+		AssertEquals((int)visitor.nodes.size(), 4);
 
 		AssertEquals(visitor.nodes[0]->GetName(), ReadOnlyString("<root>"));
 		AssertEquals(visitor.nodes[1]->GetName(), ReadOnlyString("WestCoastCode"));
 		AssertEquals(visitor.nodes[2]->GetName(), ReadOnlyString("Game"));
+		AssertEquals(visitor.nodes[3]->GetName(), ReadOnlyString("Stuff"));
 	}
 
 	void operator()()
