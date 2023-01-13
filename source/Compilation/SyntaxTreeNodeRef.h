@@ -25,9 +25,12 @@ namespace WestCoastCode::Compilation
 		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }
 		ISyntaxTree* GetSyntaxTree() const final;
 		void SetParent(ISyntaxTreeNode* parent) final;
-		bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
-		bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
+		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+			return VisitResult::Continue;
+		}
+		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
+			return false;
+		}
 		void ToString(StringStream& s, int indent) const final;
 		ISyntaxTreeNode* GetRootNode() final;
 		ReadOnlyString GetName() const final { return _name; }
@@ -76,9 +79,12 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTree* GetSyntaxTree() const final;
 		virtual ISyntaxTreeNode* GetRootNode() final;
 		void SetParent(ISyntaxTreeNode* parent) final;
-		bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
-		bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
+		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+			return VisitResult::Continue;
+		}
+		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
+			return false;
+		}
 		ReadOnlyString GetName() const final { return _name; }
 		DefinitionQueryTypes GetQueryTypes() const final { return _queryTypes; }
 	

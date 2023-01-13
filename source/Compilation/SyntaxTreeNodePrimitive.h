@@ -31,9 +31,12 @@ namespace WestCoastCode::Compilation
 		void ToString(StringStream& s, int indent) const final;
 		size_t GetSize() const final { return _stackSize; }
 		virtual ISyntaxTreeNode* GetRootNode() override;
-		virtual bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const override;
-		virtual bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
-		virtual bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
+		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+			return VisitResult::Continue;
+		}
+		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
+			return false;
+		}
 
 	private:
 		SyntaxTreeNodePackage* const _package;

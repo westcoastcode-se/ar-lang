@@ -19,9 +19,12 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		void SetParent(ISyntaxTreeNode* parent) final;
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
-		bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
+		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+			return VisitResult::Continue;
+		}
+		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
+			return false;
+		}
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		ReadOnlyString GetName() const final { return _fullName; }
 		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }

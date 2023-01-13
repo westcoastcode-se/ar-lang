@@ -46,29 +46,6 @@ void SyntaxTreeNodeFuncRet::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-bool SyntaxTreeNodeFuncRet::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	if (!visitor->Visit(this))
-		return false;
-	for (auto&& n : _children)
-		n->Visit(visitor);
-	return true;
-}
-
-bool SyntaxTreeNodeFuncRet::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	if (!visitor->Visit(this))
-		return false;
-	for (auto&& n : _children)
-		n->Visit(visitor);
-	return true;
-}
-
-bool SyntaxTreeNodeFuncRet::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 void SyntaxTreeNodeFuncRet::AddNode(ISyntaxTreeNode* node)
 {
 	_children.Add(node);

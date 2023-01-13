@@ -29,13 +29,10 @@ namespace WestCoastCode
 			assert(_memory != nullptr);
 		}
 
-		Vector(std::initializer_list<T> l)
-			: Vector()		
-		{
-			auto it = l.begin();
-			const auto end = l.end();
-			for (; it != end; ++it)
-				Add(*it);
+		template<typename ...Args>
+		Vector(Args... args)
+			: _capacity(sizeof...(Args)), _memory((T*)malloc(sizeof(T)* _capacity)), _size(_capacity) {
+			_VarSet(0, args...);
 		}
 
 		~Vector()
@@ -112,6 +109,17 @@ namespace WestCoastCode
 		const_iterator end() const { return &_memory[_size]; }
 
 	private:
+		void _VarSet(I32 index, T first) {
+			_memory[index] = first;
+		}
+
+		template<typename ...Args>
+		void _VarSet(I32 index, T first, Args... args) {
+			_memory[index] = first;
+			_VarSet(index + 1, args...);
+		}
+
+	private:
 		int _capacity;
 		T* _memory;
 		int _size;
@@ -124,12 +132,9 @@ namespace WestCoastCode
 	public:
 		Array() {}
 
-		Array(std::initializer_list<T> l) {
-			auto it = l.begin();
-			auto end = l.end();
-			for (int i = 0; it != end; ++i, ++it) {
-				_memory[i] = *it;
-			}
+		template<typename ...Args>
+		Array(Args... args) {
+			_VarSet(0, args...);
 		}
 
 		// Get the size of the array
@@ -143,7 +148,6 @@ namespace WestCoastCode
 		}
 
 		T* Ptr() { return _memory; }
-
 		const T* Ptr() const { return _memory; }
 
 	public:
@@ -157,6 +161,17 @@ namespace WestCoastCode
 		const_iterator begin() const { return _memory; }
 		iterator end() { return &_memory[Count]; }
 		const_iterator end() const { return &_memory[Count]; }
+
+	private:
+		void _VarSet(I32 index, T first) {
+			_memory[index] = first;
+		}
+
+		template<typename ...Args>
+		void _VarSet(I32 index, T first, Args... args) {
+			_memory[index] = first;
+			_VarSet(index + 1, args...);
+		}
 
 	private:
 		T _memory[Count];

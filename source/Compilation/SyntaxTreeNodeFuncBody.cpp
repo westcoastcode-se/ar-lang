@@ -45,21 +45,6 @@ void SyntaxTreeNodeFuncBody::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-bool SyntaxTreeNodeFuncBody::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return false;
-}
-
-bool SyntaxTreeNodeFuncBody::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
-bool SyntaxTreeNodeFuncBody::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 void SyntaxTreeNodeFuncBody::AddNode(ISyntaxTreeNode* node)
 {
 	_children.Add(node);
@@ -137,27 +122,27 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
 		return ParseUnaryop(state, t->GetType(), ParseCompare);
 	}
 	else {
-		static const Vector<TokenType> types{
+		static const Vector<TokenType> types(
 			TokenType::TestEquals, TokenType::TestNotEquals,
 			TokenType::TestLt, TokenType::TestLte, TokenType::TestGt, TokenType::TestGte
-		};
+		);
 		return ParseBinop(state, types, ParseExpr, ParseExpr);
 	}
 }
 
 ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseExpr(ParserState* state)
 {
-	static const Vector<TokenType> types{
+	static const Vector<TokenType> types(
 			   TokenType::OpPlus, TokenType::OpMinus
-	};
+	);
 	return ParseBinop(state, types, ParseTerm, ParseTerm);
 }
 
 ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseTerm(ParserState* state)
 {
-	static const Vector<TokenType> types{
+	static const Vector<TokenType> types(
 			   TokenType::OpMult, TokenType::OpDiv
-	};
+	);
 	return ParseBinop(state, types, ParseFactor, ParseFactor);
 }
 

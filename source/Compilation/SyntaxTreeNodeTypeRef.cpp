@@ -48,21 +48,6 @@ void SyntaxTreeNodeTypeRef::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-bool SyntaxTreeNodeTypeRef::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return false;
-}
-
-bool SyntaxTreeNodeTypeRef::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
-bool SyntaxTreeNodeTypeRef::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 void SyntaxTreeNodeTypeRef::AddNode(ISyntaxTreeNode* node)
 {
 	_children.Add(node);

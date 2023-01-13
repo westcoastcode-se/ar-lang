@@ -15,10 +15,9 @@ namespace WestCoastCode::Compilation
 
 		~SyntaxTree() final;
 
-
+		// Inherited via ISyntaxTree
 		void ToString(StringStream& s) const final;
-		void Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const final;
-		void Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) final;
+		void Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final;
 		ISyntaxTreeNodePackage* GetRootNode() final;
 
 		// Add the supplied package

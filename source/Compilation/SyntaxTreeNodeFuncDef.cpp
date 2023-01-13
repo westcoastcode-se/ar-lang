@@ -29,29 +29,6 @@ void SyntaxTreeNodeFuncDef::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-bool SyntaxTreeNodeFuncDef::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	if (!visitor->Visit(this))
-		return false;
-	for (auto&& n : _children)
-		n->Visit(visitor);
-	return true;
-}
-
-bool SyntaxTreeNodeFuncDef::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	if (!visitor->Visit(this))
-		return false;
-	for (auto&& n : _children)
-		n->Visit(visitor);
-	return true;
-}
-
-bool SyntaxTreeNodeFuncDef::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 ISyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncDef::GetBody() const
 {
 	return _body;

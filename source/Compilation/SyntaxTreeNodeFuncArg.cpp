@@ -46,21 +46,6 @@ void SyntaxTreeNodeFuncArg::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-bool SyntaxTreeNodeFuncArg::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return false;
-}
-
-bool SyntaxTreeNodeFuncArg::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
-bool SyntaxTreeNodeFuncArg::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 void SyntaxTreeNodeFuncArg::SetVariableType(ISyntaxTreeNodeTypeRef* type)
 {
 	assert(_variableType == nullptr &&

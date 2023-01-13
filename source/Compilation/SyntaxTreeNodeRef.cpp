@@ -19,21 +19,6 @@ void SyntaxTreeNodeRef::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-bool SyntaxTreeNodeRef::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return false;
-}
-
-bool SyntaxTreeNodeRef::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
-bool SyntaxTreeNodeRef::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 void SyntaxTreeNodeRef::ToString(StringStream& s, int indent) const
 {
 	s << Indent(indent);
@@ -146,21 +131,6 @@ ISyntaxTreeNode* SyntaxTreeNodeRefSection::GetRootNode()
 void SyntaxTreeNodeRefSection::SetParent(ISyntaxTreeNode* parent)
 {
 	_parent = parent;
-}
-
-bool SyntaxTreeNodeRefSection::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return false;
-}
-
-bool SyntaxTreeNodeRefSection::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
-bool SyntaxTreeNodeRefSection::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
 }
 
 void SyntaxTreeNodeRefSection::AddNode(SyntaxTreeNodeRefSection* section)

@@ -63,11 +63,42 @@ struct SuiteCommonArray : TestUtils
 		AssertEquals(readOnly[1]->Id(), MyClass2::Value);
 	}
 
+	void ArrayWithVarargs()
+	{
+		Array<I32, 3> items(1, 2, 3);
+		AssertEquals(items.Size(), 3);
+		AssertEquals(items[0], 1);
+		AssertEquals(items[1], 2);
+		AssertEquals(items[2], 3);
+	}
+
+	void VectorWithVarargs()
+	{
+		Vector<I32> items(1, 2, 3);
+		AssertEquals(items.Size(), 3);
+		AssertEquals(items[0], 1);
+		AssertEquals(items[1], 2);
+		AssertEquals(items[2], 3);
+	}
+
+	void RangeFrom()
+	{
+		Vector<MyClass1*> arr;
+		ReadOnlyArray<MyInterface*> readOnly = arr;
+		AssertEquals(arr.Size(), 0);
+		AssertEquals(readOnly.Size(), 0);
+	}
+
 	void operator()()
 	{
 		TEST(EmptyArray());
 		TEST(EmptyArrayWithInheritence());
 		TEST(ArrayWithInheritence());
+		TEST(ArrayWithVarargs());
+		TEST(VectorWithVarargs());
+		//TEST(RangeFrom());
+		//TEST(RangeTo());
+		//TEST(Range());
 	}
 };
 

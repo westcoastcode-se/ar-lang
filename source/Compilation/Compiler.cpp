@@ -19,14 +19,9 @@ void SyntaxTree::ToString(StringStream& s) const
 	_root->ToString(s, 0);
 }
 
-void SyntaxTree::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
+void SyntaxTree::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags)
 {
-	_root->Visit(visitor);
-}
-
-void SyntaxTree::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	_root->Visit(visitor);
+	_root->Visit(visitor, flags);
 }
 
 ISyntaxTreeNodePackage* SyntaxTree::GetRootNode()

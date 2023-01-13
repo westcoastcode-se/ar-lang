@@ -29,21 +29,6 @@ void SyntaxTreeNodeOpReturn::SetParent(ISyntaxTreeNode* parent)
 {
 }
 
-bool SyntaxTreeNodeOpReturn::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return false;
-}
-
-bool SyntaxTreeNodeOpReturn::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
-bool SyntaxTreeNodeOpReturn::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 const SourceCodeView* SyntaxTreeNodeOpReturn::GetSourceCode() const
 {
 	return nullptr;

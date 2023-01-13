@@ -37,21 +37,6 @@ void SyntaxTreeNodeOpBinop::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-bool SyntaxTreeNodeOpBinop::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return false;
-}
-
-bool SyntaxTreeNodeOpBinop::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
-bool SyntaxTreeNodeOpBinop::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 ISyntaxTreeNodePackage* SyntaxTreeNodeOpBinop::GetPackage() const
 {
 	if (dynamic_cast<SyntaxTreeNodePackage*>(_function->GetParent()))

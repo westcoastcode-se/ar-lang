@@ -11,7 +11,7 @@ namespace WestCoastCode::Compilation
 		SyntaxTreeNodeOpUnaryop(SourceCodeView sourceCode,
 			ISyntaxTreeNodeFuncDef* function,
 			ISyntaxTreeNode* right, Op op)
-			: _parent(nullptr), _children{ {right} }, _sourceCode(sourceCode), _op(op), _function(function) {}
+			: _parent(nullptr), _children(right), _sourceCode(sourceCode), _op(op), _function(function) {}
 
 		~SyntaxTreeNodeOpUnaryop() final;
 
@@ -34,9 +34,12 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTree* GetSyntaxTree() const override;
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		virtual void SetParent(ISyntaxTreeNode* parent) override;
-		virtual bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const override;
-		virtual bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
-		virtual bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
+		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+			return VisitResult::Continue;
+		}
+		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
+			return false;
+		}
 		virtual ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
 		virtual ISyntaxTreeNodePackage* GetPackage() const final;
 

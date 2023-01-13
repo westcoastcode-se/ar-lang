@@ -47,18 +47,3 @@ void SyntaxTreeNodeImport::SetParent(ISyntaxTreeNode* parent)
 		"imports should only be done on package level");
 	_parent = dynamic_cast<ISyntaxTreeNodePackage*>(parent);
 }
-
-bool SyntaxTreeNodeImport::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return visitor->Visit(this);
-}
-
-bool SyntaxTreeNodeImport::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return visitor->Visit(this);
-}
-
-bool SyntaxTreeNodeImport::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}

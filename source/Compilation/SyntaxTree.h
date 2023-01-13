@@ -33,6 +33,7 @@ namespace WestCoastCode::Compilation
 	};
 	typedef int DefinitionQueryTypes;
 
+	// Flags used to help configure the search algorithm when using the Query functionality
 	enum class QuerySearchFlag : int
 	{
 		// Searching backwards from the current node. Useful for searching for variables
@@ -50,16 +51,46 @@ namespace WestCoastCode::Compilation
 	};
 	typedef int QuerySearchFlags;
 
+	// Flags used to help configure the search algorithm when using the Visit functionality
+	enum class VisitFlag : int
+	{
+		// Include more children
+		IncludeChildren = 1 << 0
+	};
+	typedef int VisitFlags;
+
+	enum class VisitorResult
+	{
+		// Stop querying for any more nodes
+		Stop,
+
+		// Continue querying for more nodes
+		Continue,
+
+		// Continue query but also exclude children
+		ContinueExcludeChildren,
+	};
+
+	enum class VisitResult
+	{
+		// Stop querying for any more nodes
+		Stop,
+
+		// Continue querying for more nodes but do not include children
+		Continue,
+	};
+
 	// Visitor
 	template<class BaseClass>
 	class ISyntaxTreeNodeVisitor
 	{
 	public:
 		typedef BaseClass Node;
+
 		virtual ~ISyntaxTreeNodeVisitor() {}
 
 		// Visit the supplied node. Return true if we want to continue search for more nodes
-		virtual bool Visit(Node* node) = 0;
+		virtual VisitorResult Visit(Node* node) = 0;
 	};
 
 	// Interface for the syntax tree
@@ -71,12 +102,8 @@ namespace WestCoastCode::Compilation
 		// Stringify this syntax tree node
 		virtual void ToString(StringStream& s) const = 0;
 
-		// Visit all children in the entire tree and returns true if one or more
-		// results are found
-		virtual void Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const = 0;
-
 		// Visit all children in the entire tree
-		virtual void Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) = 0;
+		virtual void Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) = 0;
 
 		// Get the root package where primitives and built-in functions are located
 		virtual ISyntaxTreeNodePackage* GetRootNode() = 0;
@@ -119,15 +146,11 @@ namespace WestCoastCode::Compilation
 		// Get all root nodes in the syntax tree
 		virtual ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const = 0;
 
-		// Visit all children in the entire tree and returns true if one or more
-		// results are found
-		virtual bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const = 0;
-
 		// Visit all children in the entire tree
-		virtual bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) = 0;
+		virtual VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) = 0;
 
 		// Query for nodes in an upwards/revsersed manner, from this node's point of view
-		virtual bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) = 0;
+		virtual bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) = 0;
 
 		// Get the source code which this node is created from
 		virtual const SourceCodeView* GetSourceCode() const = 0;

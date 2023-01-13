@@ -10,7 +10,7 @@ namespace WestCoastCode::Compilation
 	public:
 		SyntaxTreeNodeOpBinop(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* function,
 			ISyntaxTreeNode* left, ISyntaxTreeNode* right, Op op)
-			: _parent(nullptr), _function(function), _children{ { left, right } }, _sourceCode(sourceCode), _op(op) {}
+			: _parent(nullptr), _function(function), _children(left, right), _sourceCode(sourceCode), _op(op) {}
 
 		~SyntaxTreeNodeOpBinop() final;
 
@@ -42,9 +42,12 @@ namespace WestCoastCode::Compilation
 		ISyntaxTree* GetSyntaxTree() const override;
 		ISyntaxTreeNode* GetRootNode() override;
 		void SetParent(ISyntaxTreeNode* parent) override;
-		bool Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const override;
-		bool Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override;
-		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor) override; 
+		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
+			return VisitResult::Continue;
+		}
+		bool Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
+			return false;
+		}
 		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() const final;
 

@@ -111,17 +111,17 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 struct SuiteSyntaxTree : TestUtilsCompilation
 {
 	template<class T>
-	class TypeVisitor : public ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>
+	class TypeVisitor : public ISyntaxTreeNodeVisitor<ISyntaxTreeNode>
 	{
 	public:
-		bool Visit(Node* node) {
-			if (dynamic_cast<const T*>(node)) {
-				nodes.Add(static_cast<const T*>(node));
+		VisitorResult Visit(Node* node) {
+			if (dynamic_cast<T*>(node)) {
+				nodes.Add(static_cast<T*>(node));
 			}
-			return true;
+			return VisitorResult::Continue;
 		}
 
-		Vector<const T*> nodes;
+		Vector<T*> nodes;
 	};
 
 	void EmptySyntaxTree()
@@ -129,7 +129,7 @@ struct SuiteSyntaxTree : TestUtilsCompilation
 		AddSourceCode(new SourceCode("", "main.arl"));
 
 		TypeVisitor<ISyntaxTreeNodePackage> visitor;
-		syntaxTree->Visit(&visitor);
+		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);
 
@@ -147,7 +147,7 @@ package Main
 )", "main.arl"));
 
 		TypeVisitor<ISyntaxTreeNodePackage> visitor;
-		syntaxTree->Visit(&visitor);
+		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 2);
 
@@ -168,7 +168,7 @@ package WestCoastCode.Game.Stuff
 )", "main.arl"));
 
 		TypeVisitor<ISyntaxTreeNodePackage> visitor;
-		syntaxTree->Visit(&visitor);
+		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 4);
 

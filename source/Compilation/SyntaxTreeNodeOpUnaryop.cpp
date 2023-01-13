@@ -36,21 +36,6 @@ void SyntaxTreeNodeOpUnaryop::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-bool SyntaxTreeNodeOpUnaryop::Visit(ISyntaxTreeNodeVisitor<const ISyntaxTreeNode>* visitor) const
-{
-	return false;
-}
-
-bool SyntaxTreeNodeOpUnaryop::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
-bool SyntaxTreeNodeOpUnaryop::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor)
-{
-	return false;
-}
-
 ISyntaxTreeNodePackage* SyntaxTreeNodeOpUnaryop::GetPackage() const
 {
 	if (dynamic_cast<SyntaxTreeNodePackage*>(_function->GetParent()))
