@@ -69,7 +69,7 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 	void CompileAndInvoke(ReadOnlyString packageName, ReadOnlyString functionName)
 	{
 		// Generate the bytecode
-		Byte* bytecode = nullptr;
+		Byte* bytecode = compiler->Compile();
 
 		// New process and load the bytecode
 		process = new Process();
@@ -356,11 +356,7 @@ func Get() int32 {
 )", "main.arl"));
 
 		// Compile the source code
-		compiler->Compile();
-
-		// Run the source code
-
-		DebugSyntaxTree();
+		CompileAndInvoke("Get()");
 	}
 
 	void operator()()

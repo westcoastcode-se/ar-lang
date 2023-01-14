@@ -39,3 +39,12 @@ ISyntaxTreeNode* SyntaxTreeNodePrimitive::GetRootNode()
 {
 	return _package;
 }
+
+void SyntaxTreeNodePrimitive::Compile(Builder::Linker* linker)
+{
+	Builder::TypeFlags flags = (Builder::TypeFlags)Builder::TypeFlag::Primitive;
+	if (_primitiveType == Interpreter::PrimitiveType::Ptr)
+		flags |= (Builder::TypeFlags)Builder::TypeFlag::Ptr;
+	_symbol = new Builder::Type(_name, _stackSize, flags, _primitiveType);
+	_package->GetSymbol()->Add(_symbol);
+}

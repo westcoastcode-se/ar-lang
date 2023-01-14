@@ -16,3 +16,11 @@ CompileErrorUnresolvedReference::CompileErrorUnresolvedReference(const ISyntaxTr
 	s << "reference '" << reference->GetName() << "' could not be resolved";
 	SetError(s.str());
 }
+
+CompileErrorNotImplemented::CompileErrorNotImplemented(const ISyntaxTreeNode* node, const Char* feature)
+	: CompileError(*node->GetSourceCode(), CompileErrorType::NotImplemented)
+{
+	StringStream s;
+	s << "feature '" << feature << "' is not implemented yet";
+	SetError(s.str());
+}

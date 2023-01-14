@@ -78,6 +78,9 @@ Process::~Process()
 
 void Process::Load(Bytes bytecode, bool deleteOnExit)
 {
+	if (bytecode == nullptr)
+		throw ProcessErrorFailedToLoad();
+
 	_bytecode = bytecode;
 	_bytecodeDelete = deleteOnExit;
 

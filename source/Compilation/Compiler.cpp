@@ -38,6 +38,11 @@ void SyntaxTree::ResolveReferences()
 	_root->ResolveReferences();
 }
 
+void SyntaxTree::Compile(Builder::Linker* linker)
+{
+	_root->Compile(linker);
+}
+
 void SyntaxTree::SetRootPackage(SyntaxTreeNodePackage* node)
 {
 	_root = node;
@@ -133,6 +138,20 @@ Byte* Compiler::Compile()
 	// Start by resolving all references
 	_syntaxTree->ResolveReferences();
 
+	// Link the bytecode together and return the bytecode
+	auto linker = new Builder::Linker();
+	try {
+		_syntaxTree->Compile(linker);
+		auto bytecode = linker->Link();
+		delete linker;
+		return bytecode;
+	}
+	catch (const std::exception&)
+	{
+		delete linker;
+		throw;
+	}
+	
 	return nullptr;
 }
 

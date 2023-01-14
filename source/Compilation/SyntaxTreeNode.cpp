@@ -98,3 +98,9 @@ void ISyntaxTreeNode::Default::ResolveReferences(ISyntaxTreeNode* node)
 	for (auto child : node->GetChildren())
 		child->ResolveReferences();
 }
+
+void ISyntaxTreeNode::Default::Compile(ISyntaxTreeNode* node, Builder::Linker* linker)
+{
+	for (auto child : node->GetChildren())
+		child->Compile(linker);
+}

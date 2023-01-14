@@ -24,5 +24,8 @@ namespace WestCoastCode::Compilation
 
 		// Resolve references
 		virtual void ResolveReferences() = 0;
+
+		// Compile the syntaxtree and link it together into bytecode
+		virtual void Compile(Builder::Linker* linker) = 0;
 	};
 }

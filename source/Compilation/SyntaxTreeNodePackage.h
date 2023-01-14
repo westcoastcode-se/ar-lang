@@ -9,7 +9,7 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		SyntaxTreeNodePackage(SourceCodeView sourceCode, ReadOnlyString name)
-			: _syntaxTree(nullptr), _parent(nullptr), _sourceCode(sourceCode), _name(name) {}
+			: _syntaxTree(nullptr), _parent(nullptr), _sourceCode(sourceCode), _name(name), _symbol(nullptr) {}
 
 		~SyntaxTreeNodePackage() final;
 
@@ -24,6 +24,7 @@ namespace WestCoastCode::Compilation
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags) final;
 		void ToString(StringStream& s, int indent) const final;
+		void Compile(Builder::Linker* linker) final;
 
 	public:
 		// set which syntax tree this node is part of
@@ -31,6 +32,9 @@ namespace WestCoastCode::Compilation
 		
 		// add the supplied node
 		void AddNode(ISyntaxTreeNode* node);
+
+		// Get the builder symbol for this package
+		Builder::Package* GetSymbol() const { return _symbol; }
 
 		// Parse source code into a package node. Will throw ParseError if parsing of the 
 		// source code failed
@@ -43,5 +47,7 @@ namespace WestCoastCode::Compilation
 		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;
 		ReadOnlyString _name;
+
+		Builder::Package* _symbol;
 	};
 }

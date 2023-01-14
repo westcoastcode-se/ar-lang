@@ -13,13 +13,13 @@ namespace WestCoastCode::Compilation
 		SyntaxTreeNodePrimitive(SyntaxTreeNodePackage* package, 
 			size_t size, Interpreter::PrimitiveType primitiveType, ReadOnlyString name)
 			: _package(package), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(nullptr),
-			_unrefInto(nullptr) {}
+			_unrefInto(nullptr), _symbol(nullptr) {}
 
 		SyntaxTreeNodePrimitive(SyntaxTreeNodePackage* package,
 			size_t size, Interpreter::PrimitiveType primitiveType, ReadOnlyString name,
 			SyntaxTreeNodePrimitive* inheritsFrom, SyntaxTreeNodePrimitive* unrefInto)
 			: _package(package), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(inheritsFrom),
-			_unrefInto(unrefInto) {}
+			_unrefInto(unrefInto), _symbol(nullptr) {}
 
 		// Inherited via ISyntaxTreeNodePrimitive
 		const ID& GetID() const final { return _id; }
@@ -32,6 +32,10 @@ namespace WestCoastCode::Compilation
 		void ToString(StringStream& s, int indent) const final;
 		size_t GetSize() const final { return _stackSize; }
 		virtual ISyntaxTreeNode* GetRootNode() override;
+		void Compile(Builder::Linker* linker) final;
+
+		// Get the builder symbol for this primitive
+		Builder::Type* GetSymbol() const { return _symbol; }
 
 	private:
 		const ID _id;
@@ -42,7 +46,7 @@ namespace WestCoastCode::Compilation
 		SyntaxTreeNodePrimitive* const _inheritsFrom;
 		SyntaxTreeNodePrimitive* const _unrefInto;
 
-
+		Builder::Type* _symbol;
 
 	};
 }

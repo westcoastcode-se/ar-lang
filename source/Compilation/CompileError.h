@@ -47,4 +47,14 @@ namespace WestCoastCode::Compilation
 	public:
 		CompileErrorUnresolvedReference(const ISyntaxTreeNodeRef* reference);
 	};
+
+	class ISyntaxTreeNode;
+
+	// Error raised if we've reached functionality that's not implemented yet
+	class CompileErrorNotImplemented : public CompileError
+	{
+	public:
+		CompileErrorNotImplemented(const ISyntaxTreeNode* node, const Char* feature);
+	};
+
 }

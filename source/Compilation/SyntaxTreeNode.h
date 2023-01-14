@@ -7,6 +7,7 @@
 #include "ParseError.h"
 #include "CompileError.h"
 #include "../Interpreter/Primitive.h"
+#include "../Builder/Linker.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -154,6 +155,11 @@ namespace WestCoastCode::Compilation
 			Default::ResolveReferences(this);
 		}
 
+		// Link the nodes
+		virtual void Compile(Builder::Linker* linker) {
+			Default::Compile(this, linker);
+		}
+
 	public:
 		// Default implementations
 		struct Default
@@ -162,6 +168,7 @@ namespace WestCoastCode::Compilation
 			static VisitResult Visit(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, VisitFlags flags);
 			static VisitResult Query(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
 			static void ResolveReferences(ISyntaxTreeNode* node);
+			static void Compile(ISyntaxTreeNode* node, Builder::Linker* linker);
 		};
 	};
 

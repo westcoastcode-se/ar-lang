@@ -7,7 +7,7 @@ using namespace WestCoastCode::Interpreter;
 
 Linker::~Linker()
 {
-	for (auto& p : _packages)
+	for (auto p : _packages)
 		delete p;
 }
 
@@ -51,39 +51,39 @@ Package* Linker::AddPackage(Package* package)
 I32 Linker::CalculateTotalHeaderSize() const
 {
 	I32 size = sizeof(ProcessHeader);
-	for (auto& p : _packages)
+	for (auto p : _packages)
 		size = p->ResolveHeaderMemory(size);
 	return size;
 }
 
 I32 Linker::ResolveGlobalVariables(I32 offset)
 {
-	for (auto& p : _packages)
+	for (auto p : _packages)
 		offset = p->ResolveGlobalVariables(offset);
 	return offset;
 }
 
 I32 Linker::ResolveFunctionBody(I32 offset)
 {
-	for (auto& p : _packages)
+	for (auto p : _packages)
 		offset = p->ResolveFunctionBody(offset);
 	return offset;
 }
 
 void Linker::SerializeHeaders(MemoryStream& stream)
 {
-	for (auto& p : _packages)
+	for (auto p : _packages)
 		p->SerializeHeader(stream);
 }
 
 void Linker::SerializeWrite(MemoryStream& stream)
 {
-	for (auto& p : _packages)
+	for (auto p : _packages)
 		p->Serialize(stream);
 }
 
 void Linker::SerializeReadOnly(MemoryStream& stream)
 {
-	for (auto& p : _packages)
+	for (auto p : _packages)
 		p->SerializeReadOnly(stream);
 }

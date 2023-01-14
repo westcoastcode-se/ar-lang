@@ -20,6 +20,7 @@ namespace WestCoastCode::Compilation
 		void Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) final;
 		ISyntaxTreeNodePackage* GetRootNode() final;
 		void ResolveReferences() final;
+		void Compile(Builder::Linker* linker) final;
 
 		// Add the supplied package
 		void SetRootPackage(SyntaxTreeNodePackage* package);
@@ -43,7 +44,9 @@ namespace WestCoastCode::Compilation
 		// Get the syntax tree
 		SyntaxTree* GetSyntaxTree() const { return _syntaxTree; }
 
-		// Compile the added source codes and return the byte code for the interpreter
+		// Compile the added source codes and return the byte code that the interpreter
+		// can use. Please note that this moves the ownership of the bytecode the the one calling
+		// this method
 		Byte* Compile();
 
 	private:

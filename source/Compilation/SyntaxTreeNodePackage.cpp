@@ -70,6 +70,12 @@ void SyntaxTreeNodePackage::ToString(StringStream& s, int indent) const
 	}
 }
 
+void SyntaxTreeNodePackage::Compile(Builder::Linker* linker)
+{
+	_symbol = linker->AddPackage(new Builder::Package(_name));
+	Default::Compile(this, linker);
+}
+
 void SyntaxTreeNodePackage::AddNode(ISyntaxTreeNode* node)
 {
 	_children.Add(node);
