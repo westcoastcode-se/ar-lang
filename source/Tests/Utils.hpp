@@ -354,6 +354,12 @@ namespace WestCoastCode::Compilation
 		out << (I32)t;
 		return out;
 	}
+
+	static inline std::ostream& operator<< (std::ostream& out, TokenModifier const& t)
+	{
+		out << (I32)t;
+		return out;
+	}
 }
 
 struct TestUtils

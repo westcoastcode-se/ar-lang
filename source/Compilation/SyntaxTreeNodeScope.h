@@ -6,13 +6,13 @@
 namespace WestCoastCode::Compilation
 {
 	// Represents a return statement
-	class SyntaxTreeNodeOpReturn : public ISyntaxTreeNodeOpReturn
+	class SyntaxTreeNodeScope : public ISyntaxTreeNodeScope
 	{
 	public:
-		SyntaxTreeNodeOpReturn(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* function)
+		SyntaxTreeNodeScope(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* function)
 			: _parent(nullptr), _sourceCode(sourceCode), _function(function) {}
 
-		~SyntaxTreeNodeOpReturn() final;
+		~SyntaxTreeNodeScope() final;
 
 		// Inherited via ISyntaxTreeNodeOpReturn
 		virtual void ToString(StringStream& s, int indent) const override;

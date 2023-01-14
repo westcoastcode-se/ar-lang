@@ -4,6 +4,8 @@
 #include "SyntaxTreeNodeOpUnaryop.h"
 #include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodeConstant.h"
+#include "SyntaxTreeNodeScope.h"
+
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
@@ -14,7 +16,7 @@ SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView sourceCode)
 
 SyntaxTreeNodeFuncBody::~SyntaxTreeNodeFuncBody()
 {
-	for (auto&& c : _children)
+	for (auto c : _children)
 		delete c;
 }
 
@@ -22,7 +24,7 @@ void SyntaxTreeNodeFuncBody::ToString(StringStream& s, int indent) const
 {
 	s << Indent(indent);
 	s << "FuncBody()" << std::endl;
-	for (auto&& c : _children)
+	for (auto c : _children)
 		c->ToString(s, indent + 1);
 }
 
@@ -66,11 +68,13 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 
 	auto body = new SyntaxTreeNodeFuncBody(SourceCodeView(state->sourceCode, t));
 	auto mem = MemoryGuard(body);
+	auto scope = new SyntaxTreeNodeScope(SourceCodeView(state->sourceCode, t), state->function);
+	body->AddNode(scope);
 
 	// Parse each body statement
 	while (t->Next() != TokenType::BracketRight) {
 		auto node = ParseBody(state);
-		body->AddNode(node);
+		scope->AddNode(node);
 	}
 
 

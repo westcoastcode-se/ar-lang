@@ -13,7 +13,7 @@ SyntaxTreeNodeFuncDef::SyntaxTreeNodeFuncDef(SourceCodeView sourceCode, ReadOnly
 
 SyntaxTreeNodeFuncDef::~SyntaxTreeNodeFuncDef()
 {
-	for (auto&& n : _children)
+	for (auto n : _children)
 		delete n;
 }
 
@@ -38,7 +38,7 @@ void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
 {
 	s << Indent(indent);
 	s << "FuncDef(name=" << _name << ")" << std::endl;
-	for (auto&& i : _children) {
+	for (auto i : _children) {
 		i->ToString(s, indent + 1);
 	}
 }

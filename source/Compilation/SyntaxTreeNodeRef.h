@@ -10,11 +10,8 @@ namespace WestCoastCode::Compilation
 	class SyntaxTreeNodeRef : public ISyntaxTreeNodeRef
 	{
 	public:
-		SyntaxTreeNodeRef(SourceCodeView sourceCode, DefinitionQueryType queryType)
-			:_parent(nullptr), _sourceCode(sourceCode), _queryTypes((DefinitionQueryTypes)queryType) {}
-
-		SyntaxTreeNodeRef(SourceCodeView sourceCode, DefinitionQueryTypes queryTypes)
-			:_parent(nullptr), _sourceCode(sourceCode), _queryTypes(queryTypes) {}
+		SyntaxTreeNodeRef(SourceCodeView sourceCode, DefinitionQueryTypes queryType)
+			:_parent(nullptr), _sourceCode(sourceCode), _queryTypes(queryType) {}
 
 		~SyntaxTreeNodeRef() final;
 
@@ -41,7 +38,7 @@ namespace WestCoastCode::Compilation
 		void AddNode(SyntaxTreeNodeRefSection* section);
 
 		// Parse
-		static SyntaxTreeNodeRef* Parse(ParserState* state, DefinitionQueryType queryType,
+		static SyntaxTreeNodeRef* Parse(ParserState* state, DefinitionQueryTypes queryType,
 			DefinitionQueryTypes sectionTypes);
 
 		// Parse
@@ -60,10 +57,6 @@ namespace WestCoastCode::Compilation
 	class SyntaxTreeNodeRefSection : public ISyntaxTreeNodeRef
 	{
 	public:
-		SyntaxTreeNodeRefSection(SourceCodeView sourceCode, ReadOnlyString name,
-			DefinitionQueryType queryType)
-			:_parent(nullptr), _sourceCode(sourceCode), _name(name), _queryTypes((DefinitionQueryTypes)queryType) {}
-
 		SyntaxTreeNodeRefSection(SourceCodeView sourceCode, ReadOnlyString name, 
 			DefinitionQueryTypes queryTypes)
 			:_parent(nullptr), _sourceCode(sourceCode), _name(name), _queryTypes(queryTypes) {}

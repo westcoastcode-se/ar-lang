@@ -165,7 +165,7 @@ void Process::Exec(Thread* thread, const Function* entrypoint) {
 		_currentThread->ExecEntrypoint(entrypoint);
 		_currentThread = nullptr;
 	}
-	catch (const std::exception& e) {
+	catch (const std::exception&) {
 		_currentThread = nullptr;
 		throw;
 	}

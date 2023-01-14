@@ -7,7 +7,32 @@ using namespace WestCoastCode::Compilation;
 void SyntaxTreeNodeConstant::ToString(StringStream& s, int indent) const
 {
     s << Indent(indent);
-    s << "Constant()" << std::endl;
+    s << "Constant(value=";
+    switch (_value.type)
+    {
+    case Interpreter::PrimitiveType::I32:
+        s << _value.i32;
+        break;
+    case Interpreter::PrimitiveType::U32:
+        s << _value.u32;
+        break;
+    case Interpreter::PrimitiveType::I64:
+        s << _value.i64;
+        break;
+    case Interpreter::PrimitiveType::U64:
+        s << _value.u64;
+        break;
+    case Interpreter::PrimitiveType::F32:
+        s << _value.f32;
+        break;
+    case Interpreter::PrimitiveType::F64:
+        s << _value.f64;
+        break;
+    default:
+        s << "?";
+        break;
+    }
+    s << ")" << std::endl;
 }
 
 ISyntaxTree* WestCoastCode::Compilation::SyntaxTreeNodeConstant::GetSyntaxTree() const

@@ -5,6 +5,7 @@
 #include "SourceCodeView.h"
 #include "SourceCodeParser.h"
 #include "ParseError.h"
+#include "../Interpreter/Primitive.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -15,22 +16,6 @@ namespace WestCoastCode::Compilation
 	class ISyntaxTreeNodeFuncDef;
 	class ISyntaxTreeNodeTypeRef;
 	class ISyntaxTreeNodeFuncBody;
-
-	// Various query types that can be used when searching for specific definitions
-	enum class DefinitionQueryType : int
-	{
-		Package = 1 << 0,
-		Class = 1 << 1,
-		Func = 1 << 2,
-		Arg = 1 << 3,
-		Local = 1 << 4,
-		Global = 1 << 5,
-		Member = 1 << 6,
-		Primitive = 1 << 7,
-		Type = Class | Primitive,
-		All = Package | Type | Func | Arg | Local | Global | Member,
-	};
-	typedef int DefinitionQueryTypes;
 
 	// Flags used to help configure the search algorithm when using the Query functionality
 	enum class QuerySearchFlag : int
@@ -284,6 +269,27 @@ namespace WestCoastCode::Compilation
 	class ISyntaxTreeNodeRef : public INamedSyntaxTreeNode
 	{
 	public:
+		// Various query types that can be used when searching for specific definitions
+		enum class DefinitionQueryType : I32
+		{
+			Package = 1 << 0,
+			Class = 1 << 1,
+			Func = 1 << 2,
+			Arg = 1 << 3,
+			Local = 1 << 4,
+			Global = 1 << 5,
+			Member = 1 << 6,
+			Primitive = 1 << 7,
+		};
+		typedef int DefinitionQueryTypes;
+
+		// Represents all types
+		static constexpr DefinitionQueryTypes Type = (I32)DefinitionQueryType::Class | 
+			(I32)DefinitionQueryType::Primitive;
+
+		// Represents all nodes
+		static constexpr DefinitionQueryTypes All = INT32_MAX;
+
 		// Get all definitions that this reference referres to. This
 		// is normally resolved during the Resolve phase but can, in specific cases,
 		// be resolved when the tree is being parsed (for example, if it points to a primitive)
@@ -357,9 +363,19 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTreeNodeFuncDef* GetFunction() const = 0;
 	};
 
+	class ISyntaxTreeNodeScope : public ISyntaxTreeNode
+	{
+	};
+
 	class ISyntaxTreeNodeOpReturn : public ISyntaxTreeNode
 	{
+	};
 
+	class ISyntaxTreeNodeConstant : public ISyntaxTreeNode
+	{
+	public:
+		// Get the constant value
+		virtual const Interpreter::PrimitiveValue& GetValue() const = 0;
 	};
 }
 

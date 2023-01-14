@@ -207,6 +207,9 @@ namespace WestCoastCode
 		// Get the size of the vector
 		I32 Size() const { return _size; }
 
+		// Is this array empty?
+		bool IsEmpty() const { return _size == 0; }
+
 	private:
 		template<class Class>
 		static I32 GetSize(const Vector<Class>& v)

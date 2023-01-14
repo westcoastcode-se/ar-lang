@@ -13,9 +13,7 @@ struct TestUtilsCompilation : TestUtils
 	void AfterEach(const std::exception* e)
 	{
 		if (e != nullptr) {
-			StringStream ss;
-			compiler->GetSyntaxTree()->ToString(ss);
-			std::cerr << ss.str() << std::endl;
+			DebugSyntaxTree();
 		}
 
 		if (compiler)
@@ -23,6 +21,13 @@ struct TestUtilsCompilation : TestUtils
 			delete compiler;
 			compiler = nullptr;
 		}
+	}
+
+	void DebugSyntaxTree()
+	{
+		StringStream ss;
+		compiler->GetSyntaxTree()->ToString(ss);
+		std::cerr << ss.str() << std::endl;
 	}
 
 	void AddSourceCode(SourceCode* sourceCode)
@@ -175,10 +180,31 @@ func Calc(lhs int32, rhs int32) (int32) {
 		VerifyUntilEoe(t);
 	}
 
+	void NegativeValue()
+	{
+		Lexer l("-10");
+		Token t(&l);
+
+		VerifyToken(t, TokenType::Int);
+		AssertEquals(t.GetModifier(), TokenModifier::Negative);
+	}
+
+	void DecreaseNegativeValue()
+	{
+		Lexer l("---10");
+		Token t(&l);
+
+		VerifyToken(t, TokenType::OpDecrement);
+		VerifyToken(t, TokenType::Int);
+		AssertEquals(t.GetModifier(), TokenModifier::Negative);
+	}
+
 	void operator()()
 	{
 		TEST(TestEof());
 		TEST(SimpleFunction());
+		TEST(NegativeValue());
+		TEST(DecreaseNegativeValue());
 	}
 };
 
@@ -266,9 +292,47 @@ func Main() int32 {
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);
+		auto func = visitor.nodes[0];
 
-		AssertEquals(visitor.nodes[0]->GetName(), ReadOnlyString("Main"));
-		AssertType<ISyntaxTreeNodePackage>(visitor.nodes[0]->GetParent());
+		AssertType<ISyntaxTreeNodePackage>(func->GetParent());
+		AssertEquals(func->GetName(), ReadOnlyString("Main"));
+		AssertTrue(func->GetArguments().IsEmpty());
+
+		auto returns = func->GetReturns();
+		AssertEquals(returns.Size(), 1);
+		AssertNotNull(returns[0]->GetReturnType());
+
+		auto body = func->GetBody();
+		AssertNotNull(body);
+
+		AssertType<ISyntaxTreeNodeScope>(func->GetBody()->GetChildren()[0]);
+	}
+
+	void FunctionWithSpecializedReturn()
+	{
+		AddSourceCode(new SourceCode(R"(
+package WestCoastCode
+
+func Main() Engine.Graphics.Value {
+	return 123
+}
+)", "main.arl"));
+
+		TypeVisitor<ISyntaxTreeNodeFuncDef> visitor;
+		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
+
+		AssertEquals(visitor.nodes.Size(), 1);
+		auto func = visitor.nodes[0];
+
+		AssertType<ISyntaxTreeNodePackage>(func->GetParent());
+		AssertEquals(func->GetName(), ReadOnlyString("Main"));
+		AssertTrue(func->GetArguments().IsEmpty());
+
+		auto returns = func->GetReturns();
+		AssertEquals(returns.Size(), 1);
+		AssertNotNull(returns[0]->GetReturnType());
+
+		DebugSyntaxTree();
 	}
 
 	void operator()()
@@ -277,6 +341,7 @@ func Main() int32 {
 		TEST(EmptyPackage());
 		TEST(PackageInPackage());
 		TEST(FunctionInPackage());
+		TEST(FunctionWithSpecializedReturn());
 	}
 };
 

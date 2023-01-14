@@ -1,9 +1,8 @@
 #include "SyntaxTreeNode.h"
-#include "../Interpreter/Primitive.h"
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeConstant : public ISyntaxTreeNode
+	class SyntaxTreeNodeConstant : public ISyntaxTreeNodeConstant
 	{
 	public:
 		SyntaxTreeNodeConstant(ISyntaxTreeNodeFuncDef* func, SourceCodeView sourceCode, 
@@ -23,6 +22,7 @@ namespace WestCoastCode::Compilation
 		}
 		virtual VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) override;
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
+		const Interpreter::PrimitiveValue& GetValue() const final { return _value; }
 	
 	public:
 		// Parse the supplied state and return a constant
@@ -34,5 +34,4 @@ namespace WestCoastCode::Compilation
 		const SourceCodeView _sourceCode;
 		const Interpreter::PrimitiveValue _value;
 	};
-
 }

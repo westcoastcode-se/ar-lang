@@ -11,7 +11,7 @@ SyntaxTreeNodeFuncArg::SyntaxTreeNodeFuncArg(SourceCodeView sourceCode, ReadOnly
 
 SyntaxTreeNodeFuncArg::~SyntaxTreeNodeFuncArg()
 {
-	for (auto&& c : _children)
+	for (auto c : _children)
 		delete c;
 }
 
@@ -25,7 +25,7 @@ void SyntaxTreeNodeFuncArg::ToString(StringStream& s, int indent) const
 		s << tmp;
 	}
 	s << ")" << std::endl;
-	for (auto&& c : _children)
+	for (auto c : _children)
 		c->ToString(s, indent + 1);
 }
 

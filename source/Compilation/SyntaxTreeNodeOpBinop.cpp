@@ -7,7 +7,7 @@ using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeOpBinop::~SyntaxTreeNodeOpBinop()
 {
-	for (auto&& i : _children)
+	for (auto i : _children)
 		delete i;
 }
 
@@ -15,7 +15,7 @@ void SyntaxTreeNodeOpBinop::ToString(StringStream& s, int indent) const
 {
 	s << Indent(indent);
 	s << "Binop(op=" << ToString(_op) << ")" << std::endl;
-	for (auto&& i : _children) {
+	for (auto i : _children) {
 		i->ToString(s, indent + 1);
 	}
 }

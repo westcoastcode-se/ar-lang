@@ -5,12 +5,16 @@ using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeOpReturn::~SyntaxTreeNodeOpReturn()
 {
-	for (auto& n : _children)
+	for (auto n : _children)
 		delete n;
 }
 
 void SyntaxTreeNodeOpReturn::ToString(StringStream& s, int indent) const
 {
+	s << Indent(indent);
+	s << "OpReturn()" << std::endl;
+	for (auto i : _children)
+		i->ToString(s, indent + 1);
 }
 
 ISyntaxTree* SyntaxTreeNodeOpReturn::GetSyntaxTree() const
@@ -27,11 +31,7 @@ ISyntaxTreeNode* SyntaxTreeNodeOpReturn::GetRootNode()
 
 void SyntaxTreeNodeOpReturn::SetParent(ISyntaxTreeNode* parent)
 {
-}
-
-const SourceCodeView* SyntaxTreeNodeOpReturn::GetSourceCode() const
-{
-	return nullptr;
+	_parent = parent;
 }
 
 void SyntaxTreeNodeOpReturn::AddNode(ISyntaxTreeNode* node)

@@ -62,8 +62,7 @@ SyntaxTreeNodeTypeRef* SyntaxTreeNodeTypeRef::Parse(ParserState* state)
 
 	auto typeref = new SyntaxTreeNodeTypeRef(SourceCodeView(state->sourceCode, t));
 	auto mem = MemoryGuard(typeref);
-	auto ref = SyntaxTreeNodeRef::Parse(state, DefinitionQueryType::Type, 
-		(DefinitionQueryTypes)DefinitionQueryType::All);
+	auto ref = SyntaxTreeNodeRef::Parse(state, ISyntaxTreeNodeRef::Type, ISyntaxTreeNodeRef::All);
 	typeref->AddNode(ref);
 	typeref->_fullName = ref->GetName();
 	return mem.Done();

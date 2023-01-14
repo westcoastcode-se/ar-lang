@@ -9,7 +9,7 @@ using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodePackage::~SyntaxTreeNodePackage()
 {
-	for (auto&& i : _children)
+	for (auto i : _children)
 		delete i;
 }
 
