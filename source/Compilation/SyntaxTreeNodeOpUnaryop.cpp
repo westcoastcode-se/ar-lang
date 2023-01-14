@@ -13,7 +13,7 @@ SyntaxTreeNodeOpUnaryop::~SyntaxTreeNodeOpUnaryop()
 
 void SyntaxTreeNodeOpUnaryop::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "Unaryop(op=" << ToString(_op) << ")" << std::endl;
 	for (int i = 0; i < _children.Size(); ++i)
 		_children[i]->ToString(s, indent + 1);

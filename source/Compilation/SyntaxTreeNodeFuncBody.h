@@ -13,15 +13,13 @@ namespace WestCoastCode::Compilation
 		~SyntaxTreeNodeFuncBody() final;
 
 		// Inherited via ISyntaxTreeNodeFuncBody
+		const ID& GetID() const final { return _id; }
 		virtual void ToString(StringStream& s, int indent) const override;
 		virtual ISyntaxTree* GetSyntaxTree() const override;
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		virtual void SetParent(ISyntaxTreeNode* parent) override;
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return VisitResult::Continue;
-		}
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		ReadOnlyString GetText() const final { return _text; }
 		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
@@ -71,6 +69,7 @@ namespace WestCoastCode::Compilation
 		static bool Contains(const Vector<TokenType>& tokens, TokenType type);
 
 	private:
+		const ID _id;
 		ISyntaxTreeNodeFuncDef* _function;
 		ISyntaxTreeNode* _parent;
 		SourceCodeView _sourceCode;

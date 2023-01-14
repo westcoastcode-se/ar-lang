@@ -22,6 +22,7 @@ namespace WestCoastCode::Compilation
 			_unrefInto(unrefInto) {}
 
 		// Inherited via ISyntaxTreeNodePrimitive
+		const ID& GetID() const final { return _id; }
 		ReadOnlyString GetName() const final { return _name; }
 		ISyntaxTree* GetSyntaxTree() const final;
 		ISyntaxTreeNode* GetParent() const final;
@@ -31,11 +32,9 @@ namespace WestCoastCode::Compilation
 		void ToString(StringStream& s, int indent) const final;
 		size_t GetSize() const final { return _stackSize; }
 		virtual ISyntaxTreeNode* GetRootNode() override;
-		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return VisitResult::Continue;
-		}
 
 	private:
+		const ID _id;
 		SyntaxTreeNodePackage* const _package;
 		const size_t _stackSize;
 		const Interpreter::PrimitiveType _primitiveType;

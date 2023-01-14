@@ -5,11 +5,28 @@
 #include "SourceCodeView.h"
 #include "SourceCodeParser.h"
 #include "ParseError.h"
+#include "CompileError.h"
 #include "../Interpreter/Primitive.h"
 
 namespace WestCoastCode::Compilation
 {
+	struct ID
+	{
+		// The ID
+		const I32 value;
+
+		ID();
+
+		ID(const ID& rhs) : value(rhs.value) {}
+	};
+
+	static inline std::ostream& operator<< (std::ostream& out, ID const& t)
+	{
+		return out << "ID(" << t.value << ")";
+	}
+
 	class ISyntaxTree;
+	class ISyntaxTreeNode;
 	class ISyntaxTreeNodePackage;
 	class ISyntaxTreeNodeFuncArg;
 	class ISyntaxTreeNodeFuncRet;
@@ -65,16 +82,13 @@ namespace WestCoastCode::Compilation
 	};
 
 	// Visitor
-	template<class BaseClass>
 	class ISyntaxTreeNodeVisitor
 	{
 	public:
-		typedef BaseClass Node;
-
 		virtual ~ISyntaxTreeNodeVisitor() {}
 
 		// Visit the supplied node. Return true if we want to continue search for more nodes
-		virtual VisitorResult Visit(Node* node) = 0;
+		virtual VisitorResult Visit(ISyntaxTreeNode* node) = 0;
 	};
 
 	class IStringify
@@ -99,6 +113,9 @@ namespace WestCoastCode::Compilation
 	public:
 		virtual ~ISyntaxTreeNode() {}
 
+		// Get the unique id for this node
+		virtual const ID& GetID() const = 0;
+
 		// Get the tree that this node is part of
 		virtual ISyntaxTree* GetSyntaxTree() const = 0;
 
@@ -114,22 +131,37 @@ namespace WestCoastCode::Compilation
 		// Get all root nodes in the syntax tree
 		virtual ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const = 0;
 
+		// Get all sibling nodes before this node
+		virtual Vector<ISyntaxTreeNode*> GetSiblingsBefore() const {
+			return Default::GetSiblingsBefore(this);
+		}
+
 		// Visit all children in the entire tree
-		virtual VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) {
+		virtual VisitResult Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) {
 			return Default::Visit(this, visitor, flags);
 		}
 
 		// Query for nodes in an upwards/revsersed manner, from this node's point of view
-		virtual VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) = 0;
+		virtual VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags) {
+			return Default::Query(this, visitor, flags);
+		}
 
 		// Get the source code which this node is created from
 		virtual const SourceCodeView* GetSourceCode() const = 0;
+
+		// Resolve references
+		virtual void ResolveReferences() {
+			Default::ResolveReferences(this);
+		}
 
 	public:
 		// Default implementations
 		struct Default
 		{
-			static VisitResult Visit(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags);
+			static Vector<ISyntaxTreeNode*> GetSiblingsBefore(const ISyntaxTreeNode* node);
+			static VisitResult Visit(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, VisitFlags flags);
+			static VisitResult Query(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
+			static void ResolveReferences(ISyntaxTreeNode* node);
 		};
 	};
 

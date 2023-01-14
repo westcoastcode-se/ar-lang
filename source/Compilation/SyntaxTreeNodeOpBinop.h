@@ -32,6 +32,7 @@ namespace WestCoastCode::Compilation
 		}
 
 		// ISyntaxTreeNode
+		const ID& GetID() const final { return _id; }
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
@@ -42,13 +43,11 @@ namespace WestCoastCode::Compilation
 		ISyntaxTree* GetSyntaxTree() const override;
 		ISyntaxTreeNode* GetRootNode() override;
 		void SetParent(ISyntaxTreeNode* parent) override;
-		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return VisitResult::Continue;
-		}
 		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() const final;
 
 	private:
+		const ID _id;
 		ISyntaxTreeNode* _parent;
 		ISyntaxTreeNodeFuncDef* _function;
 		Array<ISyntaxTreeNode*, 2> _children;

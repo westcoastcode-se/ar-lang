@@ -116,14 +116,6 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 
 struct SuiteLexer : TestUtilsCompilation
 {
-	void BeforeEach()
-	{
-	}
-
-	void AfterEach(const std::exception* e)
-	{
-	}
-
 	void VerifyToken(Token& t, TokenType type)
 	{
 		AssertEquals(t.Next(), type);
@@ -211,10 +203,10 @@ func Calc(lhs int32, rhs int32) (int32) {
 struct SuiteSyntaxTree : TestUtilsCompilation
 {
 	template<class T>
-	class TypeVisitor : public ISyntaxTreeNodeVisitor<ISyntaxTreeNode>
+	class TypeVisitor : public ISyntaxTreeNodeVisitor
 	{
 	public:
-		VisitorResult Visit(Node* node) {
+		VisitorResult Visit(ISyntaxTreeNode* node) {
 			if (dynamic_cast<T*>(node)) {
 				nodes.Add(static_cast<T*>(node));
 			}
@@ -331,8 +323,6 @@ func Main() Engine.Graphics.Value {
 		auto returns = func->GetReturns();
 		AssertEquals(returns.Size(), 1);
 		AssertNotNull(returns[0]->GetReturnType());
-
-		DebugSyntaxTree();
 	}
 
 	void operator()()
@@ -345,9 +335,45 @@ func Main() Engine.Graphics.Value {
 	}
 };
 
+struct SuiteCompilationError
+{
+	void operator()()
+	{
+		// TODO: Verify errors raised when parsing source code
+	}
+};
+
+struct SuiteCompileAndThenInterpret : TestUtilsCompilationWithInterpreter
+{
+	void Constant()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Get() int32 {
+	return 123
+}
+)", "main.arl"));
+
+		// Compile the source code
+		compiler->Compile();
+
+		// Run the source code
+
+		DebugSyntaxTree();
+	}
+
+	void operator()()
+	{
+		TEST(Constant());
+	}
+};
+
 // Run all compilation tests
 void SuiteCompilation()
 {
 	SUITE(SuiteLexer);
 	SUITE(SuiteSyntaxTree);
+	SUITE(SuiteCompilationError);
+	SUITE(SuiteCompileAndThenInterpret);
 }

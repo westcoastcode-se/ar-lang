@@ -1,7 +1,6 @@
 #pragma once
 
-#include <exception>
-#include <cstdarg>
+#include "Error.h"
 #include "SourceCodeParser.h"
 
 namespace WestCoastCode::Compilation
@@ -15,7 +14,7 @@ namespace WestCoastCode::Compilation
 	};
 
 	// Error raised if parsing of a specific source code failed
-	class ParseError : public std::exception
+	class ParseError : public CompilationError
 	{
 	public:
 		ParseError(const SourceCode* sourceCode,
@@ -38,18 +37,8 @@ namespace WestCoastCode::Compilation
 		// Where in the source code the error originated from
 		const int GetOffset() const { return _offset; }
 
-		char const* what() const final { return _error.c_str(); }
-
-	protected:
-		// Set the error message
-		void SetErrorf(const char* fmt, ...);
-
-		// Set the error message
-		void SetError(const String& error);
-
 	private:
 		const SourceCode* const _sourceCode;
-		String _error;
 		const ParseErrorType _type;
 		const int _line;
 		const int _lineOffset;

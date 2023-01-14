@@ -17,8 +17,9 @@ namespace WestCoastCode::Compilation
 
 		// Inherited via ISyntaxTree
 		void ToString(StringStream& s) const final;
-		void Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final;
+		void Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) final;
 		ISyntaxTreeNodePackage* GetRootNode() final;
+		void ResolveReferences() final;
 
 		// Add the supplied package
 		void SetRootPackage(SyntaxTreeNodePackage* package);
@@ -41,6 +42,9 @@ namespace WestCoastCode::Compilation
 
 		// Get the syntax tree
 		SyntaxTree* GetSyntaxTree() const { return _syntaxTree; }
+
+		// Compile the added source codes and return the byte code for the interpreter
+		Byte* Compile();
 
 	private:
 		// Start parsing tokens and convert them into syntax tree nodes

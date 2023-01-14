@@ -4,8 +4,8 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeImport::SyntaxTreeNodeImport(SourceCodeView sourceCode, SyntaxTreeNodePackage* package)
-	: _sourceCode(sourceCode), _parent(nullptr)
+SyntaxTreeNodeImport::SyntaxTreeNodeImport(SourceCodeView sourceCode, SyntaxTreeNodePackage* import)
+	: _sourceCode(sourceCode), _parent(nullptr), _import(import)
 {
 }
 
@@ -17,8 +17,11 @@ SyntaxTreeNodeImport::~SyntaxTreeNodeImport()
 
 void SyntaxTreeNodeImport::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
-	s << "Import()" << std::endl;
+	s << _id << Indent(indent);
+	s << "Import(package=";
+	if (_import)
+		s << _import->GetID();
+	s << ")" << std::endl;
 	for (auto&& i : _children) {
 		i->ToString(s, indent + 1);
 	}
@@ -46,4 +49,12 @@ void SyntaxTreeNodeImport::SetParent(ISyntaxTreeNode* parent)
 	assert(dynamic_cast<ISyntaxTreeNodePackage*>(parent) &&
 		"imports should only be done on package level");
 	_parent = dynamic_cast<ISyntaxTreeNodePackage*>(parent);
+}
+
+VisitResult SyntaxTreeNodeImport::Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags)
+{
+	if (_import)
+		return _import->Query(visitor, flags | (I32)QuerySearchFlag::TraverseChildren);
+	else
+		return VisitResult::Continue;
 }

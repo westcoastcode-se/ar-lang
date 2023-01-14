@@ -13,7 +13,7 @@ SyntaxTreeNodeOpBinop::~SyntaxTreeNodeOpBinop()
 
 void SyntaxTreeNodeOpBinop::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "Binop(op=" << ToString(_op) << ")" << std::endl;
 	for (auto i : _children) {
 		i->ToString(s, indent + 1);

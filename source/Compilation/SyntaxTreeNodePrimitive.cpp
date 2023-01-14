@@ -26,7 +26,7 @@ ReadOnlyArray<ISyntaxTreeNode*> SyntaxTreeNodePrimitive::GetChildren() const
 
 void SyntaxTreeNodePrimitive::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "Primitive(name=" << _name << ", size=" << _stackSize << "";
 	if (_inheritsFrom)
 		s << ", inheritsFrom=" << _inheritsFrom->GetName();

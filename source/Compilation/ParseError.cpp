@@ -5,7 +5,7 @@ using namespace WestCoastCode::Compilation;
 
 ParseError::ParseError(const SourceCode* sourceCode,
 	const Token* token, ParseErrorType type)
-	: exception(), _sourceCode(sourceCode), _type(type), _line(token->GetLine()),
+	: CompilationError(), _sourceCode(sourceCode), _type(type), _line(token->GetLine()),
 	_lineOffset(token->GetLineOffset()), _offset(token->GetOffset())
 {
 }
@@ -13,16 +13,6 @@ ParseError::ParseError(const SourceCode* sourceCode,
 const ReadOnlyString ParseError::GetFilename() const
 {
 	return _sourceCode->GetFilename();
-}
-
-void ParseError::SetErrorf(const char* fmt, ...)
-{
-	_error = fmt;
-}
-
-void ParseError::SetError(const String& error)
-{
-	_error = error;
 }
 
 ParseErrorExpectedIdentity::ParseErrorExpectedIdentity(const ParserState* state)

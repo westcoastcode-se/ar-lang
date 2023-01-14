@@ -67,7 +67,7 @@ void SyntaxTreeNodeRef::SetParent(ISyntaxTreeNode* parent)
 
 void SyntaxTreeNodeRef::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "Ref(";
 	s << "name=" << _name << ", ";
 	s << "queryTypes=[" << ToStringQT(_queryTypes) << "], ";
@@ -75,9 +75,7 @@ void SyntaxTreeNodeRef::ToString(StringStream& s, int indent) const
 	for (int i = 0; i < _definitions.Size(); ++i) {
 		if (i != 0)
 			s << ",";
-		char tmp[32];
-		sprintf(tmp, "%p", _definitions[i]);
-		s << tmp;
+		s << _definitions[i]->GetID();
 	}
 	s << "])";
 	s << std::endl;
@@ -93,7 +91,35 @@ ISyntaxTreeNode* SyntaxTreeNodeRef::GetRootNode()
 	return this;
 }
 
-void SyntaxTreeNodeRef::AddNode(SyntaxTreeNodeRefSection* section)
+void SyntaxTreeNodeRef::ResolveReferences()
+{
+	if (!_definitions.IsEmpty())
+		return;
+
+	if (_children[0] == nullptr)
+		throw CompileErrorUnresolvedReference(this);
+
+	// Start resolving sections
+	static_cast<SyntaxTreeNodeRefSection*>(_children[0])->ResolveFromParent(_parent);
+
+	// Verify that we've found at least one defintiion
+	if (static_cast<SyntaxTreeNodeRefSection*>(_children[0])->GetDefinitions().IsEmpty())
+		throw CompileErrorUnresolvedReference(this);
+
+	// Fetch the leaf node
+	auto leaf = _children[0];
+	while (true) {
+		if (leaf->GetChildren().IsEmpty())
+			break;
+		leaf = leaf->GetChildren()[0];
+	}
+
+	_definitions = static_cast<SyntaxTreeNodeRefSection*>(leaf)->GetDefinitions();
+	if (_definitions.IsEmpty())
+		throw CompileErrorUnresolvedReference(this);
+}
+
+void SyntaxTreeNodeRef::SetSectionNode(SyntaxTreeNodeRefSection* section)
 {
 	_children.Add(section);
 	section->SetParent(this);
@@ -113,14 +139,14 @@ SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(ParserState* state, DefinitionQueryT
 	auto mem = MemoryGuard(ref);
 	
 	auto section = SyntaxTreeNodeRefSection::Parse(state, sectionTypes);
-	ref->AddNode(section);
+	ref->SetSectionNode(section);
 	
 	t->Next();
 
 	while (t->GetType() == TokenType::Dot) {
 		t->Next();
 		auto newSection = SyntaxTreeNodeRefSection::Parse(state, sectionTypes);
-		section->AddNode(newSection);
+		section->SetSubSection(newSection);
 		section = newSection;
 		t->Next();
 	}
@@ -137,13 +163,13 @@ SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(ParserState* state)
 
 SyntaxTreeNodeRefSection::~SyntaxTreeNodeRefSection()
 {
-	for (auto&& i : _children)
+	for (auto i : _children)
 		delete i;
 }
 
 void SyntaxTreeNodeRefSection::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "RefSection(";
 	s << "name=" << _name << ", ";
 	s << "queryTypes=[" << ToStringQT(_queryTypes) << "], ";
@@ -179,10 +205,71 @@ void SyntaxTreeNodeRefSection::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-void SyntaxTreeNodeRefSection::AddNode(SyntaxTreeNodeRefSection* section)
+void SyntaxTreeNodeRefSection::SetSubSection(SyntaxTreeNodeRefSection* section)
 {
 	_children.Add(section);
 	section->SetParent(this);
+}
+
+void SyntaxTreeNodeRefSection::ResolveFromParent(ISyntaxTreeNode* parent)
+{
+	class QueryTypeVisitor : public ISyntaxTreeNodeVisitor
+	{
+		SyntaxTreeNodeRefSection* section;
+		const DefinitionQueryTypes queryTypes;
+		const ReadOnlyString name;
+
+	public:
+		QueryTypeVisitor(SyntaxTreeNodeRefSection* section, DefinitionQueryTypes queryTypes,
+			ReadOnlyString name)
+			: section(section), queryTypes(queryTypes), name(name) {}
+
+		VisitorResult Visit(ISyntaxTreeNode* node) final {
+			if (BIT_ISSET(queryTypes, DefinitionQueryType::Package)) {
+				auto impl = dynamic_cast<ISyntaxTreeNodePackage*>(node);
+				if (impl && impl->GetName() == name) {
+					section->_definitions.Add(node);
+					return VisitorResult::Continue;
+				}
+			}
+			if (BIT_ISSET(queryTypes, DefinitionQueryType::Func)) {
+				auto impl = dynamic_cast<ISyntaxTreeNodeFuncDef*>(node);
+				if (impl && impl->GetName() == name) {
+					section->_definitions.Add(node);
+					return VisitorResult::Continue;
+				}
+			}
+			if (BIT_ISSET(queryTypes, DefinitionQueryType::Primitive)) {
+				auto impl = dynamic_cast<ISyntaxTreeNodePrimitive*>(node);
+				if (impl && impl->GetName() == name) {
+					section->_definitions.Add(node);
+					return VisitorResult::Continue;
+				}
+			}
+			if (BIT_ISSET(queryTypes, DefinitionQueryType::Arg)) {
+				auto impl = dynamic_cast<ISyntaxTreeNodeFuncArg*>(node);
+				if (impl && impl->GetName() == name) {
+					section->_definitions.Add(node);
+					return VisitorResult::Continue;
+				}
+			}
+			return VisitorResult::Continue;
+		}
+
+	} visitor(this, _queryTypes, _name);
+
+	if (dynamic_cast<SyntaxTreeNodeRef*>(_parent)) {
+		const QuerySearchFlags flags = (QuerySearchFlags)QuerySearchFlag::TraverseChildren
+			| (QuerySearchFlags)QuerySearchFlag::TraverseParent
+			| (QuerySearchFlags)QuerySearchFlag::Backwards
+			| (QuerySearchFlags)QuerySearchFlag::TraverseImports;
+		parent->Query(&visitor, flags);
+	}
+	else {
+		const QuerySearchFlags flags = (QuerySearchFlags)QuerySearchFlag::TraverseChildren;
+		parent->Query(&visitor, flags);
+	}
+
 }
 
 SyntaxTreeNodeRefSection* SyntaxTreeNodeRefSection::Parse(ParserState* state,

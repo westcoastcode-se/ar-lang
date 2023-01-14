@@ -16,26 +16,22 @@ namespace WestCoastCode::Compilation
 		~SyntaxTreeNodeRef() final;
 
 		// Inherited via ISyntaxTreeNodeRef
+		const ID& GetID() const final { return _id; }
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }
 		ISyntaxTree* GetSyntaxTree() const final;
 		void SetParent(ISyntaxTreeNode* parent) final;
-		VisitResult Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags) final {
-			return VisitResult::Continue;
-		}
-		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return VisitResult::Continue;
-		}
 		void ToString(StringStream& s, int indent) const final;
 		ISyntaxTreeNode* GetRootNode() final;
 		ReadOnlyString GetName() const final { return _name; }
 		DefinitionQueryTypes GetQueryTypes() const final { return _queryTypes; }
+		void ResolveReferences() final;
 
 	public:
 		// Add a new section node
-		void AddNode(SyntaxTreeNodeRefSection* section);
+		void SetSectionNode(SyntaxTreeNodeRefSection* section);
 
 		// Parse
 		static SyntaxTreeNodeRef* Parse(ParserState* state, DefinitionQueryTypes queryType,
@@ -45,6 +41,7 @@ namespace WestCoastCode::Compilation
 		static SyntaxTreeNodeRef* Parse(ParserState* state);
 
 	private:
+		const ID _id;
 		ISyntaxTreeNode* _parent;
 		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;
@@ -64,6 +61,7 @@ namespace WestCoastCode::Compilation
 		~SyntaxTreeNodeRefSection() final;
 
 		// Inherited via ISyntaxTreeNodeRef
+		const ID& GetID() const final { return _id; }
 		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
@@ -72,9 +70,6 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTree* GetSyntaxTree() const final;
 		virtual ISyntaxTreeNode* GetRootNode() final;
 		void SetParent(ISyntaxTreeNode* parent) final;
-		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return VisitResult::Continue;
-		}
 		ReadOnlyString GetName() const final { return _name; }
 		DefinitionQueryTypes GetQueryTypes() const final { return _queryTypes; }
 	
@@ -83,13 +78,17 @@ namespace WestCoastCode::Compilation
 		void SetQueryTypes(DefinitionQueryTypes queryTypes) { _queryTypes = queryTypes; }
 
 		// Add a new section node
-		void AddNode(SyntaxTreeNodeRefSection* section);
+		void SetSubSection(SyntaxTreeNodeRefSection* section);
+
+		// Resolve this section from the supplied parent's point of view
+		void ResolveFromParent(ISyntaxTreeNode* parent);
 
 		// Parse
 		static SyntaxTreeNodeRefSection* Parse(ParserState* state,
 			DefinitionQueryTypes queryTypes);
 
 	private:
+		const ID _id;
 		ISyntaxTreeNode* _parent;
 		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;

@@ -25,6 +25,7 @@ namespace WestCoastCode::Compilation
 		}
 
 		// Inherited via ISyntaxTreeNodeOpUnaryop
+		const ID& GetID() const final { return _id; }
 		ISyntaxTreeNode* GetRight() const final { return _children[0]; }
 		Op GetOperator() const final { return _op; }
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
@@ -34,13 +35,11 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTree* GetSyntaxTree() const override;
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		virtual void SetParent(ISyntaxTreeNode* parent) override;
-		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return VisitResult::Continue;
-		}
 		virtual ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
 		virtual ISyntaxTreeNodePackage* GetPackage() const final;
 
 	private:
+		const ID _id;
 		ISyntaxTreeNode* _parent;
 		Array<ISyntaxTreeNode*, 1> _children;
 		SourceCodeView _sourceCode;

@@ -17,7 +17,7 @@ SyntaxTreeNodeFuncRet::~SyntaxTreeNodeFuncRet()
 
 void SyntaxTreeNodeFuncRet::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "FuncRet(type=";
 	if (_returnType) {
 		char tmp[32];

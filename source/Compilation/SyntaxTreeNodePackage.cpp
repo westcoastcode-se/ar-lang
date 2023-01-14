@@ -27,8 +27,11 @@ void SyntaxTreeNodePackage::SetParent(ISyntaxTreeNode* parent)
 	_parent = dynamic_cast<SyntaxTreeNodePackage*>(parent);
 }
 
-VisitResult SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags)
+VisitResult SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags)
 {
+	// You don't search backwards from the package and beyond
+	flags &= ~(I32)QuerySearchFlag::Backwards;
+
 	// Visit this node
 	switch (visitor->Visit(this))
 	{
@@ -60,7 +63,7 @@ VisitResult SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>
 
 void SyntaxTreeNodePackage::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "Package(name=" << _name << ")" << std::endl;
 	for (auto&& i : _children) {
 		i->ToString(s, indent + 1);
@@ -80,12 +83,12 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 		throw ParseErrorExpectedIdentity(state);
 
 	// Helper class used for searching for packages
-	class PackageVisitor : public ISyntaxTreeNodeVisitor<ISyntaxTreeNode>
+	class PackageVisitor : public ISyntaxTreeNodeVisitor
 	{
 	public:
 		PackageVisitor(ReadOnlyString name) : name(name), package(nullptr) {}
 
-		VisitorResult Visit(Node* node) {
+		VisitorResult Visit(ISyntaxTreeNode* node) {
 			package = dynamic_cast<SyntaxTreeNodePackage*>(node);
 			if (package && package->GetName() == name) {
 				return VisitorResult::Stop;

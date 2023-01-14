@@ -36,7 +36,7 @@ ISyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncDef::GetBody() const
 
 void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "FuncDef(name=" << _name << ")" << std::endl;
 	for (auto i : _children) {
 		i->ToString(s, indent + 1);

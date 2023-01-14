@@ -51,6 +51,8 @@ namespace WestCoastCode
 	};
 }
 
+#define BIT_ISSET(val, bit) ((val & ((I32)bit)) == ((I32)bit))
+#define BIT(B) (1 << B)
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 #define ENUM_STRING_START(op) switch(op) {

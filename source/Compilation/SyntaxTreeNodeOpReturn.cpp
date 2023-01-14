@@ -11,7 +11,7 @@ SyntaxTreeNodeOpReturn::~SyntaxTreeNodeOpReturn()
 
 void SyntaxTreeNodeOpReturn::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "OpReturn()" << std::endl;
 	for (auto i : _children)
 		i->ToString(s, indent + 1);

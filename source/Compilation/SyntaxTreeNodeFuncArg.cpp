@@ -17,7 +17,7 @@ SyntaxTreeNodeFuncArg::~SyntaxTreeNodeFuncArg()
 
 void SyntaxTreeNodeFuncArg::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "FuncArg(name=" << _name << ", type=";
 	if (_variableType) {
 		char tmp[32];

@@ -4,15 +4,17 @@
 
 namespace WestCoastCode
 {
+	template<typename T>
+	class ReadOnlyArray;
+
 	// Class which holds an unknown number of items in an array-like structure.
 	// This type is compatible with the ReadOnlyArray interface
-	template<class T, int Resize = 4>
+	template<typename T, int Resize = 4>
 	class Vector
 	{
 	public:
 		Vector()
-			: _capacity(Resize), _memory((T*)malloc(sizeof(T)* _capacity)), _size(0) {
-			assert(_memory != nullptr);
+			: _capacity(0), _memory(nullptr), _size(0) {
 		}
 
 		// Move Constructor
@@ -53,7 +55,13 @@ namespace WestCoastCode
 			// Resize if neccessary
 			if (_size == _capacity) {
 				_capacity += Resize;
-				_memory = (T*)realloc(_memory, sizeof(T) * _capacity);
+				if (_memory == nullptr)
+					_memory = (T*)malloc(sizeof(T) * _capacity);
+				else {
+					auto newMemory = (T*)realloc(_memory, sizeof(T) * _capacity);
+					assert(newMemory);
+					_memory = newMemory;
+				}
 			}
 			_memory[_size++] = value;
 		}
@@ -100,6 +108,19 @@ namespace WestCoastCode
 		T& operator[](I32 idx) { return _memory[idx]; }
 		const T& operator[](I32 idx) const { return _memory[idx]; }
 
+		// Copy operator
+		Vector<T, Resize>& operator=(const Vector<T, Resize>& rhs) {
+			_size = rhs._size;
+			_capacity = _size;
+			_memory = (T*)malloc(sizeof(T) * _capacity);
+			for (I32 i = 0; i < _size; ++i)
+				_memory[i] = rhs._memory[i];
+			return *this;
+		}
+
+		// Copy operator from an array or a read-only array
+		Vector<T, Resize>& operator=(const ReadOnlyArray<T>& rhs);
+
 	public:
 		typedef T* iterator;
 		typedef const T* const_iterator;
@@ -126,7 +147,7 @@ namespace WestCoastCode
 	};
 
 	// Class which holds an array of a known size. Is compatible with the ReadOnlyArray interface
-	template<class T, int Count>
+	template<typename T, int Count>
 	class Array
 	{
 	public:
@@ -178,7 +199,7 @@ namespace WestCoastCode
 	};
 
 	// A view of the Array object but exposes the implementations as interfaces
-	template<class T>
+	template<typename T>
 	class ReadOnlyArray
 	{
 	private:
@@ -209,6 +230,12 @@ namespace WestCoastCode
 
 		// Is this array empty?
 		bool IsEmpty() const { return _size == 0; }
+
+		// Get a pointer to the memory
+		T* Ptr() { return _memory; }
+
+		// Get a pointer to the memory
+		const T* Ptr() const { return _memory; }
 
 	private:
 		template<class Class>
@@ -281,5 +308,15 @@ namespace WestCoastCode
 		const_iterator end() const { return &_memory[_size]; }
 	};
 
-
+	template<typename T, int Resize>
+	Vector<T, Resize>& Vector<T, Resize>::operator=(const ReadOnlyArray<T>& rhs)
+	{
+		_size = rhs.Size();
+		_capacity = _size;
+		_memory = (T*)malloc(sizeof(T) * _capacity);
+		auto memory = rhs.Ptr();
+		for (I32 i = 0; i < _size; ++i)
+			_memory[i] = memory[i];
+		return *this;
+	}
 }

@@ -17,6 +17,7 @@ namespace WestCoastCode::Compilation
 		~SyntaxTreeNodeFuncDef() final;
 
 		// ISyntaxTreeNodeFuncDef
+		const ID& GetID() const final { return _id; }
 		ReadOnlyString GetName() const final { return _name; }
 		ISyntaxTree* GetSyntaxTree() const final { return _parent->GetSyntaxTree(); }
 		ISyntaxTreeNode* GetRootNode() final;
@@ -24,9 +25,6 @@ namespace WestCoastCode::Compilation
 		void SetParent(ISyntaxTreeNode* parent) final;
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		VisitResult Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags) final {
-			return VisitResult::Continue;
-		}
 		ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const final { return _arguments; }
 		ReadOnlyArray<ISyntaxTreeNodeFuncRet*> GetReturns() const final { return _returns; }
 		bool IsVoidReturn() const final { return _returns.IsEmpty(); }
@@ -51,6 +49,7 @@ namespace WestCoastCode::Compilation
 		static SyntaxTreeNodeFuncDef* Parse(ParserState* state);
 
 	private:
+		const ID _id;
 		ISyntaxTreeNode* _parent;
 		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;

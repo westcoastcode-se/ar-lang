@@ -88,6 +88,7 @@ add_library(ArlangBuilder
 )
 
 add_library(ArlangCompilation
+    "source/Compilation/Error.cpp"
     "source/Compilation/SyntaxTreeNodePackage.cpp" 
     "source/Compilation/SyntaxTreeNodeRef.cpp" 
     "source/Compilation/SyntaxTreeNodeOpBinop.cpp"
@@ -108,7 +109,7 @@ add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNode.cpp"
     "source/Compilation/SyntaxTreeNodeConstant.cpp"
     "source/Compilation/SyntaxTreeNodeScope.cpp"
-)
+    "source/Compilation/CompileError.cpp")
 
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 
@@ -122,5 +123,6 @@ add_library(ArlangInterpreter
 add_executable(ArlangTest 
     "source/Tests/SuiteBuilder.cpp"
     "source/Tests/main.cpp"
- "source/Tests/SuiteCompilation.cpp" "source/Tests/SuiteCommon.cpp")
+    "source/Tests/SuiteCompilation.cpp" 
+    "source/Tests/SuiteCommon.cpp")
 target_link_libraries(ArlangTest ArlangInterpreter ArlangCompilation ArlangBuilder)

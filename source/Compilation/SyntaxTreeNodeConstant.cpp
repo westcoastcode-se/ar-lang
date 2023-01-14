@@ -6,7 +6,7 @@ using namespace WestCoastCode::Compilation;
 
 void SyntaxTreeNodeConstant::ToString(StringStream& s, int indent) const
 {
-    s << Indent(indent);
+    s << _id << Indent(indent);
     s << "Constant(value=";
     switch (_value.type)
     {
@@ -50,11 +50,6 @@ ISyntaxTreeNode* WestCoastCode::Compilation::SyntaxTreeNodeConstant::GetRootNode
 void SyntaxTreeNodeConstant::SetParent(ISyntaxTreeNode* parent)
 {
     _parent = parent;
-}
-
-VisitResult WestCoastCode::Compilation::SyntaxTreeNodeConstant::Query(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, QuerySearchFlags flags)
-{
-    return VisitResult();
 }
 
 SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)

@@ -22,7 +22,7 @@ SyntaxTreeNodeFuncBody::~SyntaxTreeNodeFuncBody()
 
 void SyntaxTreeNodeFuncBody::ToString(StringStream& s, int indent) const
 {
-	s << Indent(indent);
+	s << _id << Indent(indent);
 	s << "FuncBody()" << std::endl;
 	for (auto c : _children)
 		c->ToString(s, indent + 1);

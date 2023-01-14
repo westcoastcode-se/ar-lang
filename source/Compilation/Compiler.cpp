@@ -21,7 +21,7 @@ void SyntaxTree::ToString(StringStream& s) const
 		_root->ToString(s, 0);
 }
 
-void SyntaxTree::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags)
+void SyntaxTree::Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags)
 {
 	_root->Visit(visitor, flags);
 }
@@ -31,6 +31,11 @@ ISyntaxTreeNodePackage* SyntaxTree::GetRootNode()
 	assert(dynamic_cast<SyntaxTreeNodePackage*>(_root) &&
 		"The root node should not be anything else than a package");
 	return _root;
+}
+
+void SyntaxTree::ResolveReferences()
+{
+	_root->ResolveReferences();
 }
 
 void SyntaxTree::SetRootPackage(SyntaxTreeNodePackage* node)
@@ -121,6 +126,14 @@ SyntaxTree* Compiler::AddSourceCode(SourceCode* sourceCode)
 	Token token(&lexer);
 	ParseTokens(sourceCode, &token);
 	return _syntaxTree;
+}
+
+Byte* Compiler::Compile()
+{
+	// Start by resolving all references
+	_syntaxTree->ResolveReferences();
+
+	return nullptr;
 }
 
 void Compiler::ParseTokens(SourceCode* sourceCode, Token* t)
