@@ -1,4 +1,5 @@
 #include "Lexer.h"
+#include "../Utils.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -176,6 +177,51 @@ bool Token::IsKeyword(TokenType type)
 {
 	return (int)type > (int)TokenType::Keyword_Start &&
 		(int)type < (int)TokenType::Keyword_End;
+}
+
+bool Token::IsValue(TokenType type)
+{
+	return (int)type > (int)TokenType::Value_Start &&
+		(int)type < (int)TokenType::Value_End;
+}
+
+IB Token::ToBool() const
+{
+	return Strcmp(_stringStart, (int)(_stringEnd - _stringStart), "true", 4);
+}
+
+I64 Token::ToI64() const
+{
+	return Strtoi64(_stringStart, (int)(_stringEnd - _stringStart));
+}
+
+U64 Token::ToU64() const
+{
+	return Strtou64(_stringStart, (int)(_stringEnd - _stringStart));
+}
+
+F64 Token::ToF32() const
+{
+	char temp[64];
+	temp[sprintf(temp, "%.*s", (int)(_stringEnd - _stringStart), _stringStart)] = 0;
+
+	const F32 v = strtof(temp, NULL);
+	if (v < (FLT_MAX - FLT_EPSILON) && v >(FLT_MIN + FLT_EPSILON))
+		return v;
+	else
+		return 0.0f;
+}
+
+F64 Token::ToF64() const
+{
+	char temp[64];
+	temp[sprintf(temp, "%.*s", (int)(_stringEnd - _stringStart), _stringStart)] = 0;
+
+	const F64 v = strtod(temp, NULL);
+	if (v < (DBL_MAX - DBL_EPSILON) && v >(DBL_MIN + DBL_EPSILON))
+		return v;
+	else
+		return 0.0;
 }
 
 void Token::Next0()
@@ -438,6 +484,13 @@ void Token::NextMinusOrDecrement()
 	if (*peek == '-') {
 		_pos++;
 		Atom(TokenType::OpDecrement);
+		return;
+	}
+	else if (IsDigit(*peek))
+	{
+		_pos++;
+		_modifier = TokenModifier::Negative;
+		NextNumber();
 		return;
 	}
 

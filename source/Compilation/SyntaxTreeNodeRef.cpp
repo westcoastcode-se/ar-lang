@@ -81,7 +81,7 @@ SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(ParserState* state, DefinitionQueryT
 			t->Next();
 		}
 	}
-	ref->_name = ReadOnlyString(first.data(), t->GetString().data());
+	ref->_name = ReadOnlyString(first.data(), section->GetName().data() + section->GetName().length());
 	return mem.Done();
 }
 

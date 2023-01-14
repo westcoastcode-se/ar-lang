@@ -3,6 +3,7 @@
 #include "SyntaxTreeNodeOpBinop.h"
 #include "SyntaxTreeNodeOpUnaryop.h"
 #include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodeConstant.h"
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
@@ -56,7 +57,7 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 	Token* const t = state->token;
 
 	// Expect a function body
-	if (t->Next() != TokenType::BracketLeft)
+	if (t->GetType() != TokenType::BracketLeft)
 		throw ParseErrorSyntaxError(state, "expected '{'");
 	t->Next();
 
@@ -67,8 +68,10 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 	auto mem = MemoryGuard(body);
 
 	// Parse each body statement
-	while (t->Next() != TokenType::BracketLeft)
-		body->AddNode(ParseBody(state));
+	while (t->Next() != TokenType::BracketRight) {
+		auto node = ParseBody(state);
+		body->AddNode(node);
+	}
 
 
 	body->_text = ReadOnlyString(first.data(), t->GetString().data());
@@ -104,13 +107,14 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	const auto& returns = function->GetReturns();
 	auto numReturnsLeft = returns.Size();
 	while (numReturnsLeft > 0) {
+		ISyntaxTreeNode* const node = ParseCompare(state);
+		op->AddNode(node);
+		numReturnsLeft--;
 		if (numReturnsLeft > 0) {
 			if (t->GetType() != TokenType::Comma)
 				throw ParseErrorSyntaxError(state, "expected ,");
 			t->Next();
 		}
-		ISyntaxTreeNode* const node = ParseCompare(state);
-		op->AddNode(node);
 	}
 	return mem.Done();
 }
@@ -162,6 +166,14 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
 
 ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 {
+	Token* const t = state->token;
+	switch (t->GetType())
+	{
+	case TokenType::Int:
+		return SyntaxTreeNodeConstant::Parse(state);
+	}
+	
+
 	return nullptr;
 }
 

@@ -98,7 +98,6 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 		SyntaxTreeNodePackage* package;
 	} visitor(t->GetString());
 
-
 	// Search for a package in the syntax tree. The package string is a little special because
 	// we know that a package definition's parent will be part of the same string, so you can figure out the
 	// full signature based on the parent's signatures

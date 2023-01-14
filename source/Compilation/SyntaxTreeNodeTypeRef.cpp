@@ -18,7 +18,7 @@ SyntaxTreeNodeTypeRef::~SyntaxTreeNodeTypeRef()
 void SyntaxTreeNodeTypeRef::ToString(StringStream& s, int indent) const
 {
 	s << Indent(indent);
-	s << "Ref(name=" << _fullName << ", definitions=[";
+	s << "TypeRef(name=" << _fullName << ", definitions=[";
 	for (int i = 0; i < _definitions.Size(); ++i) {
 		if (i != 0)
 			s << ",";

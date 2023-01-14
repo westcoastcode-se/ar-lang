@@ -9,6 +9,7 @@ namespace WestCoastCode::Compilation
 	enum class ParseErrorType : int
 	{
 		ExpectedIdentity,
+		ExpectedConstant,
 		NotImplemented,
 		SyntaxError,
 	};
@@ -60,6 +61,13 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		ParseErrorExpectedIdentity(const ParserState* state);
+	};
+
+	// Error raised if we expected constant
+	class ParseErrorExpectedConstant : public ParseError
+	{
+	public:
+		ParseErrorExpectedConstant(const ParserState* state);
 	};
 
 	// Error raised if we've reached functionality that's not implemented yet

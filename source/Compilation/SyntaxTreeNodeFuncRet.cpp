@@ -63,10 +63,11 @@ void SyntaxTreeNodeFuncRet::SetReturnType(ISyntaxTreeNodeTypeRef* type)
 SyntaxTreeNodeFuncRet* SyntaxTreeNodeFuncRet::Parse(ParserState* state)
 {
 	Token* const t = state->token;
+	if (t->GetType() != TokenType::Identity)
+		throw ParseErrorExpectedIdentity(state);
 
 	auto ret = new SyntaxTreeNodeFuncRet(SourceCodeView(state->sourceCode, t));
 	auto guard = MemoryGuard(ret);
-	t->Next();
 	ret->SetReturnType(SyntaxTreeNodeTypeRef::Parse(state));
 	return guard.Done();
 }

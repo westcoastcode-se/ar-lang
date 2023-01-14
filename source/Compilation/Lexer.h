@@ -80,11 +80,16 @@ namespace WestCoastCode::Compilation
 
 		Bit_End,
 
+		Value_Start,
+
 		Int,
 		Hex,
 		Bool,
 		Decimal,
 		String,
+		
+		Value_End,
+
 
 		ParantLeft,
 		ParantRight,
@@ -116,6 +121,10 @@ namespace WestCoastCode::Compilation
 	enum class TokenModifier : int
 	{
 		None,
+		// The constant value is a negative value
+		Negative,
+		// Normally used for strings and comments. Indicates that the token is a multiline value
+		Multiline
 	};
 
 	class Token
@@ -136,6 +145,9 @@ namespace WestCoastCode::Compilation
 
 		// Get the current token type
 		inline TokenType GetType() const { return _type; }
+
+		// Get modifier flags for the current type
+		inline TokenModifier GetModifier() const { return _modifier; }
 
 		// Get which line we are parsing at the moment
 		inline int GetLine() const { return _line; }
@@ -159,6 +171,29 @@ namespace WestCoastCode::Compilation
 
 		// Is the supplied token a keyword
 		static bool IsKeyword(TokenType type);
+
+		// Is the current token a constant
+		bool IsValue() const {
+			return IsValue(_type);
+		}
+
+		// Is the supplied token a constant
+		static bool IsValue(TokenType type);
+
+		// Convert to a boolean value
+		IB ToBool() const;
+
+		// Convert into 64-bit integer
+		I64 ToI64() const;
+
+		// Convert into 64-bit unsigned integer
+		U64 ToU64() const;
+
+		// Convert into 64-bit real value
+		F64 ToF32() const;
+
+		// Convert into 64-bit real value
+		F64 ToF64() const;
 
 	private:
 		// Get the next token

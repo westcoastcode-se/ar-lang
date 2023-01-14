@@ -93,6 +93,7 @@ SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)
 			t->Next();
 		}
 	}
+	t->Next();
 
 	// Parse return types. Paranteses are optional if you only have one return. 
 	// You are also allowed to not have a return type at all.

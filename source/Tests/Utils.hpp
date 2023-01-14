@@ -347,6 +347,14 @@ struct UtilsType<F64*>
 	static constexpr IncodeProps props1 = (IncodeProps)PrimitiveType::Ptr;
 };
 
+namespace WestCoastCode::Compilation
+{
+	static inline std::ostream& operator<< (std::ostream& out, TokenType const& t)
+	{
+		out << (I32)t;
+		return out;
+	}
+}
 
 struct TestUtils
 {

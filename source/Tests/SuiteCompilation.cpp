@@ -14,7 +14,7 @@ struct TestUtilsCompilation : TestUtils
 	{
 		if (e != nullptr) {
 			StringStream ss;
-			syntaxTree->ToString(ss);
+			compiler->GetSyntaxTree()->ToString(ss);
 			std::cerr << ss.str() << std::endl;
 		}
 
@@ -108,6 +108,80 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 	}
 };
 
+
+struct SuiteLexer : TestUtilsCompilation
+{
+	void BeforeEach()
+	{
+	}
+
+	void AfterEach(const std::exception* e)
+	{
+	}
+
+	void VerifyToken(Token& t, TokenType type)
+	{
+		AssertEquals(t.Next(), type);
+	}
+
+	void VerifyUntilEoe(Token& t)
+	{
+		while (t.Next() == TokenType::Newline);
+		AssertEquals(t.GetType(), TokenType::Eof);
+	}
+
+	void TestEof()
+	{
+		Lexer l("");
+		Token t(&l);
+
+		VerifyToken(t, TokenType::Eof);
+	}
+
+	void SimpleFunction()
+	{
+		Lexer l(R"(
+func Calc(lhs int32, rhs int32) (int32) {
+	return lhs + rhs
+}
+)");
+		Token t(&l);
+
+		VerifyToken(t, TokenType::Newline);
+		VerifyToken(t, TokenType::Func);
+		VerifyToken(t, TokenType::Identity);
+
+		VerifyToken(t, TokenType::ParantLeft);
+		VerifyToken(t, TokenType::Identity);
+		VerifyToken(t, TokenType::Identity);
+		VerifyToken(t, TokenType::Comma);
+		VerifyToken(t, TokenType::Identity);
+		VerifyToken(t, TokenType::Identity);
+		VerifyToken(t, TokenType::ParantRight);
+
+		VerifyToken(t, TokenType::ParantLeft);
+		VerifyToken(t, TokenType::Identity);
+		VerifyToken(t, TokenType::ParantRight);
+
+		VerifyToken(t, TokenType::BracketLeft);
+		VerifyToken(t, TokenType::Newline);
+		VerifyToken(t, TokenType::Return);
+		VerifyToken(t, TokenType::Identity);
+		VerifyToken(t, TokenType::OpPlus);
+		VerifyToken(t, TokenType::Identity);
+		VerifyToken(t, TokenType::Newline);
+		VerifyToken(t, TokenType::BracketRight);
+
+		VerifyUntilEoe(t);
+	}
+
+	void operator()()
+	{
+		TEST(TestEof());
+		TEST(SimpleFunction());
+	}
+};
+
 struct SuiteSyntaxTree : TestUtilsCompilation
 {
 	template<class T>
@@ -178,16 +252,37 @@ package WestCoastCode.Game.Stuff
 		AssertEquals(visitor.nodes[3]->GetName(), ReadOnlyString("Stuff"));
 	}
 
+	void FunctionInPackage()
+	{
+		AddSourceCode(new SourceCode(R"(
+package WestCoastCode
+
+func Main() int32 {
+	return 123
+}
+)", "main.arl"));
+
+		TypeVisitor<ISyntaxTreeNodeFuncDef> visitor;
+		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
+
+		AssertEquals(visitor.nodes.Size(), 1);
+
+		AssertEquals(visitor.nodes[0]->GetName(), ReadOnlyString("Main"));
+		AssertType<ISyntaxTreeNodePackage>(visitor.nodes[0]->GetParent());
+	}
+
 	void operator()()
 	{
 		TEST(EmptySyntaxTree());
 		TEST(EmptyPackage());
 		TEST(PackageInPackage());
+		TEST(FunctionInPackage());
 	}
 };
 
 // Run all compilation tests
 void SuiteCompilation()
 {
+	SUITE(SuiteLexer);
 	SUITE(SuiteSyntaxTree);
 }

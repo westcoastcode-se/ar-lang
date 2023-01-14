@@ -6,6 +6,7 @@ using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
 SyntaxTree::SyntaxTree()
+	: _root(nullptr)
 {
 }
 
@@ -16,7 +17,8 @@ SyntaxTree::~SyntaxTree()
 
 void SyntaxTree::ToString(StringStream& s) const
 {
-	_root->ToString(s, 0);
+	if (_root)
+		_root->ToString(s, 0);
 }
 
 void SyntaxTree::Visit(ISyntaxTreeNodeVisitor<ISyntaxTreeNode>* visitor, VisitFlags flags)

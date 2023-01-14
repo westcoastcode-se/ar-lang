@@ -33,6 +33,14 @@ ParseErrorExpectedIdentity::ParseErrorExpectedIdentity(const ParserState* state)
 	SetError(s.str());
 }
 
+ParseErrorExpectedConstant::ParseErrorExpectedConstant(const ParserState* state)
+	: ParseError(state->sourceCode, state->token, ParseErrorType::ExpectedConstant)
+{
+	StringStream s;
+	s << "expected constant but was '" << state->token->GetString() << "'";
+	SetError(s.str());
+}
+
 ParseErrorNotImplemented::ParseErrorNotImplemented(const ParserState* state)
 	: ParseError(state->sourceCode, state->token, ParseErrorType::NotImplemented)
 {

@@ -86,6 +86,7 @@ add_library(ArlangBuilder
     "source/Builder/MemoryStream.cpp" 
     "source/Builder/Instructions.cpp"
 )
+
 add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNodePackage.cpp" 
     "source/Compilation/SyntaxTreeNodeRef.cpp" 
@@ -103,7 +104,10 @@ add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNodeFuncRet.cpp"
     "source/Compilation/SyntaxTreeNodeTypeRef.cpp"
     "source/Compilation/SyntaxTreeNodeOpReturn.cpp"
- "source/Compilation/SyntaxTree.cpp" "source/Compilation/SyntaxTreeNode.cpp")
+    "source/Compilation/SyntaxTree.cpp"
+    "source/Compilation/SyntaxTreeNode.cpp"
+    "source/Compilation/SyntaxTreeNodeConstant.cpp")
+
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 
     "source/Interpreter/ThreadStack.cpp"
