@@ -1,13 +1,15 @@
 #include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodeFuncArg.h"
-#include "SyntaxTreeNodeFuncRet.h"
+#include "SyntaxTreeNodeTypeRef.h"
+#include "SyntaxTreeNodeTypes.h"
+#include "SyntaxTreeNodePackage.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeFuncDef::SyntaxTreeNodeFuncDef(SourceCodeView sourceCode, ReadOnlyString name)
-	: _parent(nullptr), _sourceCode(sourceCode), _name(name), _body(nullptr), _symbol(nullptr)
+	: _parent(nullptr), _sourceCode(sourceCode), _name(name), _returns(nullptr), _body(nullptr), _symbol(nullptr)
 {
 }
 
@@ -29,6 +31,13 @@ void SyntaxTreeNodeFuncDef::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
+ReadOnlyArray<ISyntaxTreeNode*> SyntaxTreeNodeFuncDef::GetReturns() const
+{
+	if (_returns)
+		return _returns->GetChildren();
+	return ReadOnlyArray<ISyntaxTreeNode*>();
+}
+
 ISyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncDef::GetBody() const
 {
 	return _body;
@@ -45,8 +54,14 @@ void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
 
 void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
 {
-	if (_symbol == nullptr)
+	if (_symbol == nullptr) {
 		_symbol = new Builder::Function(_name);
+		// TODO: Add support for functions inside another function
+		if (dynamic_cast<SyntaxTreeNodePackage*>(_parent)) {
+			auto symbol = static_cast<SyntaxTreeNodePackage*>(_parent)->GetSymbol();
+			symbol->Add(_symbol);
+		}
+	}
 	Default::Compile(this, linker);
 }
 
@@ -60,8 +75,8 @@ void SyntaxTreeNodeFuncDef::SetBody(SyntaxTreeNodeFuncBody* body)
 {
 	assert(_body == nullptr &&
 		"A function is only allowed to have one body");
-	AddNode(body);
 	_body = body;
+	_body->SetFunction(this);
 }
 
 void SyntaxTreeNodeFuncDef::AddArgument(ISyntaxTreeNodeFuncArg* arg)
@@ -70,10 +85,10 @@ void SyntaxTreeNodeFuncDef::AddArgument(ISyntaxTreeNodeFuncArg* arg)
 	_arguments.Add(arg);
 }
 
-void SyntaxTreeNodeFuncDef::AddReturn(ISyntaxTreeNodeFuncRet* ret)
+void SyntaxTreeNodeFuncDef::SetReturns(ISyntaxTreeNodeTypes* ret)
 {
 	AddNode(ret);
-	_returns.Add(ret);
+	_returns = ret;
 }
 
 SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)
@@ -101,23 +116,6 @@ SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)
 		}
 	}
 	t->Next();
-
-	// Parse return types. Paranteses are optional if you only have one return. 
-	// You are also allowed to not have a return type at all.
-	if (t->GetType() == TokenType::Identity)
-		funcdef->AddReturn(SyntaxTreeNodeFuncRet::Parse(state));
-	else if (t->GetType() == TokenType::ParantLeft)
-	{
-		while (t->Next() != TokenType::ParantRight)
-		{
-			funcdef->AddReturn(SyntaxTreeNodeFuncRet::Parse(state));
-
-			// Ignore comma
-			if (t->GetType() == TokenType::Comma) {
-				t->Next();
-			}
-		}
-	}
-
+	funcdef->SetReturns(SyntaxTreeNodeTypes::Parse(state));
 	return guard.Done();
 }

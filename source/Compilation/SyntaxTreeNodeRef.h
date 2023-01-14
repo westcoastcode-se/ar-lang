@@ -34,11 +34,11 @@ namespace WestCoastCode::Compilation
 		void SetSectionNode(SyntaxTreeNodeRefSection* section);
 
 		// Parse
-		static SyntaxTreeNodeRef* Parse(ParserState* state, DefinitionQueryTypes queryType,
+		static SyntaxTreeNodeRef* Parse(const ParserState* state, DefinitionQueryTypes queryType,
 			DefinitionQueryTypes sectionTypes);
 
 		// Parse
-		static SyntaxTreeNodeRef* Parse(ParserState* state);
+		static SyntaxTreeNodeRef* Parse(const ParserState* state);
 
 	private:
 		const ID _id;
@@ -84,7 +84,7 @@ namespace WestCoastCode::Compilation
 		void ResolveFromParent(ISyntaxTreeNode* parent);
 
 		// Parse
-		static SyntaxTreeNodeRefSection* Parse(ParserState* state,
+		static SyntaxTreeNodeRefSection* Parse(const ParserState* state,
 			DefinitionQueryTypes queryTypes);
 
 	private:

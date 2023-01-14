@@ -1,4 +1,5 @@
 #include "SyntaxTreeNodeOpReturn.h"
+#include "SyntaxTreeNodeFuncBody.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -34,7 +35,12 @@ void SyntaxTreeNodeOpReturn::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-void SyntaxTreeNodeOpReturn::AddNode(ISyntaxTreeNode* node)
+void SyntaxTreeNodeOpReturn::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
+{
+	instructions.Ret();
+}
+
+void SyntaxTreeNodeOpReturn::AddOp(ISyntaxTreeNodeOp* node)
 {
 	_children.Add(node);
 	node->SetParent(this);

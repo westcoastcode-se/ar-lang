@@ -23,45 +23,49 @@ namespace WestCoastCode::Compilation
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		ReadOnlyString GetText() const final { return _text; }
 		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
-		ReadOnlyArray<ISyntaxTreeNodeFuncLocal*> GetLocals() const { return _locals; }
+		void Compile(Builder::Linker* linker) final;
 
 	public:
-		typedef ISyntaxTreeNode* (*ParseFn)(ParserState*);
+		typedef ISyntaxTreeNodeOp* (*ParseFn)(ParserState*);
 
 		// Add a child node
-		void AddNode(ISyntaxTreeNode* node);
+		void AddOp(ISyntaxTreeNodeOp* node);
+
+		// Set the definition associated with this function body
+		void SetFunction(ISyntaxTreeNodeFuncDef* funcdef);
 
 		// Parse a function body using the supplied state
 		static SyntaxTreeNodeFuncBody* Parse(ParserState* state);
 
+	private:
 		//
-		static ISyntaxTreeNode* ParseBody(ParserState* state);
+		static ISyntaxTreeNodeOp* ParseBody(ParserState* state);
 
 		//
-		static ISyntaxTreeNode* ParseReturn(ParserState* state);
+		static ISyntaxTreeNodeOp* ParseReturn(ParserState* state);
 
 		//
-		static ISyntaxTreeNode* ParseCompare(ParserState* state);
+		static ISyntaxTreeNodeOp* ParseCompare(ParserState* state);
 
 		//
-		static ISyntaxTreeNode* ParseExpr(ParserState* state);
+		static ISyntaxTreeNodeOp* ParseExpr(ParserState* state);
 
 		//
-		static ISyntaxTreeNode* ParseTerm(ParserState* state);
+		static ISyntaxTreeNodeOp* ParseTerm(ParserState* state);
 
 		//
-		static ISyntaxTreeNode* ParseFactor(ParserState* state);
+		static ISyntaxTreeNodeOp* ParseFactor(ParserState* state);
 
 		//
-		static ISyntaxTreeNode* ParseAtom(ParserState* state);
+		static ISyntaxTreeNodeOp* ParseAtom(ParserState* state);
 
 		//
-		static ISyntaxTreeNode* ParseUnaryop(ParserState* state, 
+		static ISyntaxTreeNodeOp* ParseUnaryop(ParserState* state,
 			TokenType tokenType,
 			ParseFn rightFunc);
 
 		//
-		static ISyntaxTreeNode* ParseBinop(ParserState* state,
+		static ISyntaxTreeNodeOp* ParseBinop(ParserState* state,
 			const Vector<TokenType>& types,
 			ParseFn leftFunc, ParseFn rightFunc);
 
@@ -74,7 +78,6 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* _parent;
 		SourceCodeView _sourceCode;
 		ReadOnlyString _text;
-		Vector<ISyntaxTreeNode*> _children;
-		Vector<ISyntaxTreeNodeFuncLocal*> _locals;
+		Vector<ISyntaxTreeNodeOp*> _children;
 	};
 }

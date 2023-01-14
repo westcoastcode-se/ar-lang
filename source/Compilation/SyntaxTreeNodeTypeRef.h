@@ -29,7 +29,7 @@ namespace WestCoastCode::Compilation
 		void AddNode(ISyntaxTreeNode* node);
 
 		// Parse
-		static SyntaxTreeNodeTypeRef* Parse(ParserState* state);
+		static SyntaxTreeNodeTypeRef* Parse(const ParserState* state);
 
 	private:
 		const ID _id;

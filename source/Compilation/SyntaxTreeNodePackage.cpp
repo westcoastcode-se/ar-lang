@@ -137,7 +137,9 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 
 			// Parse the function body
 			auto childState2 = ParserState(&childState, funcdef);
-			funcdef->SetBody(SyntaxTreeNodeFuncBody::Parse(&childState2));
+			auto funcbody = SyntaxTreeNodeFuncBody::Parse(&childState2);
+			funcdef->SetBody(funcbody);
+			package->AddNode(funcbody);
 			break;
 		}
 		case TokenType::Package:

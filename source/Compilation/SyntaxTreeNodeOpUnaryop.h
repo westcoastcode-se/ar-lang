@@ -10,7 +10,7 @@ namespace WestCoastCode::Compilation
 	public:
 		SyntaxTreeNodeOpUnaryop(SourceCodeView sourceCode,
 			ISyntaxTreeNodeFuncDef* function,
-			ISyntaxTreeNode* right, Op op)
+			ISyntaxTreeNodeOp* right, Op op)
 			: _parent(nullptr), _children(right), _sourceCode(sourceCode), _op(op), _function(function) {}
 
 		~SyntaxTreeNodeOpUnaryop() final;
@@ -26,7 +26,7 @@ namespace WestCoastCode::Compilation
 
 		// Inherited via ISyntaxTreeNodeOpUnaryop
 		const ID& GetID() const final { return _id; }
-		ISyntaxTreeNode* GetRight() const final { return _children[0]; }
+		ISyntaxTreeNodeOp* GetRight() const final { return _children[0]; }
 		Op GetOperator() const final { return _op; }
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
@@ -37,11 +37,12 @@ namespace WestCoastCode::Compilation
 		virtual void SetParent(ISyntaxTreeNode* parent) override;
 		virtual ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
 		virtual ISyntaxTreeNodePackage* GetPackage() const final;
+		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
 
 	private:
 		const ID _id;
 		ISyntaxTreeNode* _parent;
-		Array<ISyntaxTreeNode*, 1> _children;
+		Array<ISyntaxTreeNodeOp*, 1> _children;
 		SourceCodeView _sourceCode;
 		Op _op;
 		ISyntaxTreeNodeFuncDef* _function;

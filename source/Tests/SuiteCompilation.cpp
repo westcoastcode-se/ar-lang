@@ -292,7 +292,6 @@ func Main() int32 {
 
 		auto returns = func->GetReturns();
 		AssertEquals(returns.Size(), 1);
-		AssertNotNull(returns[0]->GetReturnType());
 
 		auto body = func->GetBody();
 		AssertNotNull(body);
@@ -322,7 +321,6 @@ func Main() Engine.Graphics.Value {
 
 		auto returns = func->GetReturns();
 		AssertEquals(returns.Size(), 1);
-		AssertNotNull(returns[0]->GetReturnType());
 	}
 
 	void operator()()

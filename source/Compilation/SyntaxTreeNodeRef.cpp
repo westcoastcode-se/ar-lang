@@ -125,7 +125,7 @@ void SyntaxTreeNodeRef::SetSectionNode(SyntaxTreeNodeRefSection* section)
 	section->SetParent(this);
 }
 
-SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(ParserState* state, DefinitionQueryTypes queryType,
+SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(const ParserState* state, DefinitionQueryTypes queryType,
 	DefinitionQueryTypes sectionTypes)
 {
 	Token* const t = state->token;
@@ -156,7 +156,7 @@ SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(ParserState* state, DefinitionQueryT
 	return mem.Done();
 }
 
-SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(ParserState* state)
+SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(const ParserState* state)
 {
 	return Parse(state, All, All);
 }
@@ -270,7 +270,7 @@ void SyntaxTreeNodeRefSection::ResolveFromParent(ISyntaxTreeNode* parent)
 
 }
 
-SyntaxTreeNodeRefSection* SyntaxTreeNodeRefSection::Parse(ParserState* state,
+SyntaxTreeNodeRefSection* SyntaxTreeNodeRefSection::Parse(const ParserState* state,
 	DefinitionQueryTypes queryTypes)
 {
 	Token* const t = state->token;

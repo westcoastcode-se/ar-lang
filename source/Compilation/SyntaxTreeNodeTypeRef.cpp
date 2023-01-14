@@ -54,7 +54,7 @@ void SyntaxTreeNodeTypeRef::AddNode(ISyntaxTreeNode* node)
 	node->SetParent(this);
 }
 
-SyntaxTreeNodeTypeRef* SyntaxTreeNodeTypeRef::Parse(ParserState* state)
+SyntaxTreeNodeTypeRef* SyntaxTreeNodeTypeRef::Parse(const ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->GetType() != TokenType::Identity)

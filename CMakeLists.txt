@@ -102,14 +102,14 @@ add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNodeImport.cpp"
     "source/Compilation/SyntaxTreeNodeFuncBody.cpp" 
     "source/Compilation/SyntaxTreeNodeFuncArg.cpp"
-    "source/Compilation/SyntaxTreeNodeFuncRet.cpp"
+    
     "source/Compilation/SyntaxTreeNodeTypeRef.cpp"
     "source/Compilation/SyntaxTreeNodeOpReturn.cpp"
     "source/Compilation/SyntaxTree.cpp"
     "source/Compilation/SyntaxTreeNode.cpp"
     "source/Compilation/SyntaxTreeNodeConstant.cpp"
     "source/Compilation/SyntaxTreeNodeScope.cpp"
-    "source/Compilation/CompileError.cpp")
+    "source/Compilation/CompileError.cpp" "source/Compilation/SyntaxTreeNodeTypes.cpp")
 
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 

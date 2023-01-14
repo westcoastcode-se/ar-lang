@@ -4,17 +4,16 @@
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeFuncDef;
-
-	// An return node for a function
-	class SyntaxTreeNodeFuncRet : public ISyntaxTreeNodeFuncRet
+	// Class that contains one or many type definitions. Example on a use-case where this is used
+	// is for functions returning more than one value
+	class SyntaxTreeNodeTypes : public ISyntaxTreeNodeTypes
 	{
 	public:
-		SyntaxTreeNodeFuncRet(SourceCodeView sourceCode);
+		SyntaxTreeNodeTypes(SourceCodeView sourceCode);
 
-		~SyntaxTreeNodeFuncRet() final;
+		~SyntaxTreeNodeTypes() final;
 
-		// Inherited via ISyntaxTreeNodeFuncRet
+		// Inherited via ISyntaxTreeNodeTypeRef
 		const ID& GetID() const final { return _id; }
 		void ToString(StringStream& s, int indent) const final;
 		ISyntaxTree* GetSyntaxTree() const final;
@@ -23,23 +22,22 @@ namespace WestCoastCode::Compilation
 		void SetParent(ISyntaxTreeNode* parent) final;
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		ISyntaxTreeNodeTypeRef* GetReturnType() const final { return _returnType; }
+		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }
+		ISyntaxTreeNode* GetStackType() final { return this; }
+		void ResolveReferences() final;
 
 	public:
-		// Add a child node
+		// Add a new node
 		void AddNode(ISyntaxTreeNode* node);
 
-		// Set the return type for this return statement
-		void SetReturnType(ISyntaxTreeNodeTypeRef* type);
-
-		// Parse
-		static SyntaxTreeNodeFuncRet* Parse(ParserState* state);
+		// Parse one or more types
+		static SyntaxTreeNodeTypes* Parse(const ParserState*);
 
 	private:
 		const ID _id;
 		ISyntaxTreeNode* _parent;
 		SourceCodeView _sourceCode;
 		Vector<ISyntaxTreeNode*> _children;
-		ISyntaxTreeNodeTypeRef* _returnType;
+		Vector<ISyntaxTreeNode*> _definitions;
 	};
 }

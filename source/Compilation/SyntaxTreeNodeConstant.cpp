@@ -1,5 +1,6 @@
 #include "SyntaxTreeNodeConstant.h"
 #include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodeFuncBody.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -50,6 +51,11 @@ ISyntaxTreeNode* WestCoastCode::Compilation::SyntaxTreeNodeConstant::GetRootNode
 void SyntaxTreeNodeConstant::SetParent(ISyntaxTreeNode* parent)
 {
     _parent = parent;
+}
+
+void SyntaxTreeNodeConstant::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
+{
+    //instructions.Ldc(stackType, _value);
 }
 
 SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)

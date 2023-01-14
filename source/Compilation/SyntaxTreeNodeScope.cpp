@@ -34,7 +34,13 @@ void SyntaxTreeNodeScope::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-void SyntaxTreeNodeScope::AddNode(ISyntaxTreeNode* node)
+void SyntaxTreeNodeScope::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
+{
+	for (auto child : _children)
+		child->Compile(linker, instructions);
+}
+
+void SyntaxTreeNodeScope::AddOp(ISyntaxTreeNodeOp* node)
 {
 	_children.Add(node);
 	node->SetParent(this);

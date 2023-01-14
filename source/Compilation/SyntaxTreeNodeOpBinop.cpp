@@ -43,3 +43,18 @@ ISyntaxTreeNodePackage* SyntaxTreeNodeOpBinop::GetPackage() const
 		return static_cast<SyntaxTreeNodePackage*>(_function->GetParent());
 	return nullptr;
 }
+
+void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
+{
+/*	GetLeft()->Compile(linker, instructions);
+	GetRight()->Compile(linker, instructions);
+
+	switch (_op)
+	{
+	case Op::Plus:
+		//instructions.Add(GetRight());
+		break;
+	}
+	*/
+	throw CompileErrorNotImplemented(this, "Binop");
+}

@@ -9,7 +9,7 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		SyntaxTreeNodeOpBinop(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* function,
-			ISyntaxTreeNode* left, ISyntaxTreeNode* right, Op op)
+			ISyntaxTreeNodeOp* left, ISyntaxTreeNodeOp* right, Op op)
 			: _parent(nullptr), _function(function), _children(left, right), _sourceCode(sourceCode), _op(op) {}
 
 		~SyntaxTreeNodeOpBinop() final;
@@ -36,8 +36,8 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		ISyntaxTreeNode* GetLeft() const final { return _children[0]; }
-		ISyntaxTreeNode* GetRight() const final { return _children[1]; }
+		ISyntaxTreeNodeOp* GetLeft() const final { return _children[0]; }
+		ISyntaxTreeNodeOp* GetRight() const final { return _children[1]; }
 		Op GetOperator() const final { return _op; }
 		void ToString(StringStream& s, int indent) const final;
 		ISyntaxTree* GetSyntaxTree() const override;
@@ -45,12 +45,13 @@ namespace WestCoastCode::Compilation
 		void SetParent(ISyntaxTreeNode* parent) override;
 		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() const final;
+		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
 
 	private:
 		const ID _id;
 		ISyntaxTreeNode* _parent;
 		ISyntaxTreeNodeFuncDef* _function;
-		Array<ISyntaxTreeNode*, 2> _children;
+		Array<ISyntaxTreeNodeOp*, 2> _children;
 		SourceCodeView _sourceCode;
 		Op _op;
 	};

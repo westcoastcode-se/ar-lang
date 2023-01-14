@@ -30,7 +30,6 @@ namespace WestCoastCode::Compilation
 	class ISyntaxTreeNode;
 	class ISyntaxTreeNodePackage;
 	class ISyntaxTreeNodeFuncArg;
-	class ISyntaxTreeNodeFuncRet;
 	class ISyntaxTreeNodeFuncDef;
 	class ISyntaxTreeNodeTypeRef;
 	class ISyntaxTreeNodeFuncBody;
@@ -183,7 +182,139 @@ namespace WestCoastCode::Compilation
 
 	};
 
-	class ISyntaxTreeNodeOpBinop : public ISyntaxTreeNode
+	class ISyntaxTreeNodeTypes : public ISyntaxTreeNode
+	{
+	public:
+		// All types that this node referrs to
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
+	};
+
+	class INamedSyntaxTreeNode : public ISyntaxTreeNode
+	{
+	public:
+		// Get the name of the node
+		virtual ReadOnlyString GetName() const = 0;
+	};
+
+	// Represents a package
+	class ISyntaxTreeNodePackage : public INamedSyntaxTreeNode
+	{
+	};
+
+	// A primitive. These are normally created by the compiler outside the source code
+	// parser and put into the root package
+	class ISyntaxTreeNodePrimitive : public INamedSyntaxTreeNode
+	{
+	public:
+		// The memory size of this primitive
+		virtual I32 GetSize() const = 0;
+	};
+
+	// A reference to another syntax tree node
+	class ISyntaxTreeNodeRef : public INamedSyntaxTreeNode
+	{
+	public:
+		// Various query types that can be used when searching for specific definitions
+		enum class DefinitionQueryType : I32
+		{
+			Package = 1 << 0,
+			Class = 1 << 1,
+			Func = 1 << 2,
+			Arg = 1 << 3,
+			Local = 1 << 4,
+			Global = 1 << 5,
+			Member = 1 << 6,
+			Primitive = 1 << 7,
+		};
+		typedef int DefinitionQueryTypes;
+
+		// Represents all types
+		static constexpr DefinitionQueryTypes Type = (I32)DefinitionQueryType::Class | 
+			(I32)DefinitionQueryType::Primitive;
+
+		// Represents all nodes
+		static constexpr DefinitionQueryTypes All = INT32_MAX;
+
+		// Get all definitions that this reference referres to. This
+		// is normally resolved during the Resolve phase but can, in specific cases,
+		// be resolved when the tree is being parsed (for example, if it points to a primitive)
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
+
+		// Get which types this reference is searching for
+		virtual DefinitionQueryTypes GetQueryTypes() const = 0;
+	};
+
+	class ISyntaxTreeNodeFuncDef : public INamedSyntaxTreeNode
+	{
+	public:
+		// Get all arguments 
+		virtual ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const = 0;
+
+		// Get all return types
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetReturns() const = 0;
+
+		// Is this function a void function
+		virtual bool IsVoidReturn() const = 0;
+
+		// Get the function body
+		virtual ISyntaxTreeNodeFuncBody* GetBody() const = 0;
+	};
+
+	class ISyntaxTreeNodeFuncArg : public INamedSyntaxTreeNode
+	{
+	public:
+		// Get the type which the argument variable is of
+		virtual ISyntaxTreeNodeTypeRef* GetVariableType() const = 0;
+	};
+
+	// A reference to a type
+	class ISyntaxTreeNodeTypeRef : public INamedSyntaxTreeNode
+	{
+	public:
+		// All types that this reference resolved into. The item at the top of the vector
+		// is the one closest to the reference
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
+	};
+
+	//
+	class ISyntaxTreeNodeFuncLocal : public INamedSyntaxTreeNode
+	{
+	public:
+	};
+
+	// A scope
+	class ISyntaxTreeNodeFuncScope : public INamedSyntaxTreeNode
+	{
+	public:
+		// Get all locals part of this scope
+		virtual ReadOnlyArray<ISyntaxTreeNodeFuncLocal*> GetLocals() const = 0;
+	};
+
+	// Base class for operations that's executed in the function body
+	class ISyntaxTreeNodeOp : public ISyntaxTreeNode
+	{
+	public:
+		// The normal compile functionality is no longer allowed. Implement the other Compile
+		// method instead.
+		void Compile(Builder::Linker* linker) final {}
+
+		// Compile this operation
+		virtual void Compile(Builder::Linker* linker, Builder::Instructions& instructions) = 0;
+
+	};
+
+	// A node containing the function body logic
+	class ISyntaxTreeNodeFuncBody : public ISyntaxTreeNode
+	{
+	public:
+		// Get the body content
+		virtual ReadOnlyString GetText() const = 0;
+
+		// Get the definition used when executing this body
+		virtual ISyntaxTreeNodeFuncDef* GetFunction() const = 0;
+	};
+
+	class ISyntaxTreeNodeOpBinop : public ISyntaxTreeNodeOp
 	{
 	public:
 		enum Op {
@@ -239,10 +370,10 @@ namespace WestCoastCode::Compilation
 		}
 
 		// Get the node on the left-hand side
-		virtual ISyntaxTreeNode* GetLeft() const = 0;
+		virtual ISyntaxTreeNodeOp* GetLeft() const = 0;
 
 		// Get the node on the right-hand side
-		virtual ISyntaxTreeNode* GetRight() const = 0;
+		virtual ISyntaxTreeNodeOp* GetRight() const = 0;
 
 		// Get the operator
 		virtual Op GetOperator() const = 0;
@@ -254,7 +385,7 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTreeNodePackage* GetPackage() const = 0;
 	};
 
-	class ISyntaxTreeNodeOpUnaryop : public ISyntaxTreeNode
+	class ISyntaxTreeNodeOpUnaryop : public ISyntaxTreeNodeOp
 	{
 	public:
 		enum Op {
@@ -280,7 +411,7 @@ namespace WestCoastCode::Compilation
 		}
 
 		// Get the node on the right-hand side
-		virtual ISyntaxTreeNode* GetRight() const = 0;
+		virtual ISyntaxTreeNodeOp* GetRight() const = 0;
 
 		// Get the operator
 		virtual Op GetOperator() const = 0;
@@ -292,131 +423,15 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTreeNodePackage* GetPackage() const = 0;
 	};
 
-	class INamedSyntaxTreeNode : public ISyntaxTreeNode
-	{
-	public:
-		// Get the name of the node
-		virtual ReadOnlyString GetName() const = 0;
-	};
-
-	class ISyntaxTreeNodePackage : public INamedSyntaxTreeNode
+	class ISyntaxTreeNodeScope : public ISyntaxTreeNodeOp
 	{
 	};
 
-	class ISyntaxTreeNodePrimitive : public INamedSyntaxTreeNode
-	{
-	public:
-		// The memory size of this primtive
-		virtual I32 GetSize() const = 0;
-	};
-
-	// A reference to another syntax tree node
-	class ISyntaxTreeNodeRef : public INamedSyntaxTreeNode
-	{
-	public:
-		// Various query types that can be used when searching for specific definitions
-		enum class DefinitionQueryType : I32
-		{
-			Package = 1 << 0,
-			Class = 1 << 1,
-			Func = 1 << 2,
-			Arg = 1 << 3,
-			Local = 1 << 4,
-			Global = 1 << 5,
-			Member = 1 << 6,
-			Primitive = 1 << 7,
-		};
-		typedef int DefinitionQueryTypes;
-
-		// Represents all types
-		static constexpr DefinitionQueryTypes Type = (I32)DefinitionQueryType::Class | 
-			(I32)DefinitionQueryType::Primitive;
-
-		// Represents all nodes
-		static constexpr DefinitionQueryTypes All = INT32_MAX;
-
-		// Get all definitions that this reference referres to. This
-		// is normally resolved during the Resolve phase but can, in specific cases,
-		// be resolved when the tree is being parsed (for example, if it points to a primitive)
-		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
-
-		// Get which types this reference is searching for
-		virtual DefinitionQueryTypes GetQueryTypes() const = 0;
-	};
-
-	class ISyntaxTreeNodeFuncDef : public INamedSyntaxTreeNode
-	{
-	public:
-		// Get all arguments 
-		virtual ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const = 0;
-
-		// Get all return types
-		virtual ReadOnlyArray<ISyntaxTreeNodeFuncRet*> GetReturns() const = 0;
-
-		// Is this function a void function
-		virtual bool IsVoidReturn() const = 0;
-
-		// Get the function body
-		virtual ISyntaxTreeNodeFuncBody* GetBody() const = 0;
-	};
-
-	class ISyntaxTreeNodeFuncArg : public INamedSyntaxTreeNode
-	{
-	public:
-		// Get the type which the argument variable is of
-		virtual ISyntaxTreeNodeTypeRef* GetVariableType() const = 0;
-	};
-
-	class ISyntaxTreeNodeFuncRet : public ISyntaxTreeNode
-	{
-	public:
-		// Get the return type
-		virtual ISyntaxTreeNodeTypeRef* GetReturnType() const = 0;
-	};
-
-	// A reference to a type
-	class ISyntaxTreeNodeTypeRef : public INamedSyntaxTreeNode
-	{
-	public:
-		// All types that this reference resolved into. The item at the top of the vector
-		// is the one closest to the reference
-		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
-	};
-
-	//
-	class ISyntaxTreeNodeFuncLocal : public INamedSyntaxTreeNode
-	{
-	public:
-	};
-
-	// A scope
-	class ISyntaxTreeNodeFuncScope : public INamedSyntaxTreeNode
-	{
-	public:
-		// Get all locals part of this scope
-		virtual ReadOnlyArray<ISyntaxTreeNodeFuncScope*> GetLocals() const = 0;
-	};
-
-	// A node containing the function body logic
-	class ISyntaxTreeNodeFuncBody : public ISyntaxTreeNode
-	{
-	public:
-		// Get the body content
-		virtual ReadOnlyString GetText() const = 0;
-
-		// Get the function body
-		virtual ISyntaxTreeNodeFuncDef* GetFunction() const = 0;
-	};
-
-	class ISyntaxTreeNodeScope : public ISyntaxTreeNode
+	class ISyntaxTreeNodeOpReturn : public ISyntaxTreeNodeOp
 	{
 	};
 
-	class ISyntaxTreeNodeOpReturn : public ISyntaxTreeNode
-	{
-	};
-
-	class ISyntaxTreeNodeConstant : public ISyntaxTreeNode
+	class ISyntaxTreeNodeConstant : public ISyntaxTreeNodeOp
 	{
 	public:
 		// Get the constant value

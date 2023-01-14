@@ -42,3 +42,17 @@ ISyntaxTreeNodePackage* SyntaxTreeNodeOpUnaryop::GetPackage() const
 		return static_cast<SyntaxTreeNodePackage*>(_function->GetParent());
 	return nullptr;
 }
+
+void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
+{
+/*	GetRight()->Compile(linker, instructions);
+
+	switch (_op)
+	{
+	case Op::Minus:
+		//instructions.Add(GetRight());
+		break;
+	}
+	*/
+	throw CompileErrorNotImplemented(this, "Unaryop");
+}

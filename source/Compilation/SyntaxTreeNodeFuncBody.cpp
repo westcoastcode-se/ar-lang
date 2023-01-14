@@ -23,7 +23,7 @@ SyntaxTreeNodeFuncBody::~SyntaxTreeNodeFuncBody()
 void SyntaxTreeNodeFuncBody::ToString(StringStream& s, int indent) const
 {
 	s << _id << Indent(indent);
-	s << "FuncBody()" << std::endl;
+	s << "FuncBody(definition=" << _function->GetID() << ")" << std::endl;
 	for (auto c : _children)
 		c->ToString(s, indent + 1);
 }
@@ -42,16 +42,29 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::GetRootNode()
 
 void SyntaxTreeNodeFuncBody::SetParent(ISyntaxTreeNode* parent)
 {
-	_function = dynamic_cast<ISyntaxTreeNodeFuncDef*>(parent);
-	assert(_function != nullptr &&
-		"Expected the parent to be a function definition");
 	_parent = parent;
 }
 
-void SyntaxTreeNodeFuncBody::AddNode(ISyntaxTreeNode* node)
+void SyntaxTreeNodeFuncBody::Compile(Builder::Linker* linker)
+{
+	auto funcSymbol = static_cast<SyntaxTreeNodeFuncDef*>(_function)->GetSymbol();
+	Builder::Instructions& instructions = funcSymbol->Begin();
+	for (auto child : _children)
+		child->Compile(linker, instructions);
+	instructions.End();
+}
+
+void SyntaxTreeNodeFuncBody::AddOp(ISyntaxTreeNodeOp* node)
 {
 	_children.Add(node);
 	node->SetParent(this);
+}
+
+void SyntaxTreeNodeFuncBody::SetFunction(ISyntaxTreeNodeFuncDef* funcdef)
+{
+	assert(_function == nullptr &&
+		"a function body cannot have two definitions");
+	_function = funcdef;
 }
 
 SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
@@ -69,20 +82,19 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 	auto body = new SyntaxTreeNodeFuncBody(SourceCodeView(state->sourceCode, t));
 	auto mem = MemoryGuard(body);
 	auto scope = new SyntaxTreeNodeScope(SourceCodeView(state->sourceCode, t), state->function);
-	body->AddNode(scope);
+	body->AddOp(scope);
 
 	// Parse each body statement
 	while (t->Next() != TokenType::BracketRight) {
 		auto node = ParseBody(state);
-		scope->AddNode(node);
+		scope->AddOp(node);
 	}
-
 
 	body->_text = ReadOnlyString(first.data(), t->GetString().data());
 	return mem.Done();
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseBody(ParserState* state)
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBody(ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->IsKeyword())
@@ -99,7 +111,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseBody(ParserState* state)
 	return ParseCompare(state);
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 {
 	Token* const t = state->token;
 	t->Next();
@@ -111,8 +123,8 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	const auto& returns = function->GetReturns();
 	auto numReturnsLeft = returns.Size();
 	while (numReturnsLeft > 0) {
-		ISyntaxTreeNode* const node = ParseCompare(state);
-		op->AddNode(node);
+		ISyntaxTreeNodeOp* const node = ParseCompare(state);
+		op->AddOp(node);
 		numReturnsLeft--;
 		if (numReturnsLeft > 0) {
 			if (t->GetType() != TokenType::Comma)
@@ -123,7 +135,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	return mem.Done();
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->GetType() == TokenType::Not) {
@@ -138,7 +150,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
 	}
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseExpr(ParserState* state)
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseExpr(ParserState* state)
 {
 	static const Vector<TokenType> types(
 			   TokenType::OpPlus, TokenType::OpMinus
@@ -146,7 +158,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseExpr(ParserState* state)
 	return ParseBinop(state, types, ParseTerm, ParseTerm);
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseTerm(ParserState* state)
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseTerm(ParserState* state)
 {
 	static const Vector<TokenType> types(
 			   TokenType::OpMult, TokenType::OpDiv
@@ -154,7 +166,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseTerm(ParserState* state)
 	return ParseBinop(state, types, ParseFactor, ParseFactor);
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
 {
 	Token* const t = state->token;
 	switch (t->GetType())
@@ -168,7 +180,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
 	}
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 {
 	Token* const t = state->token;
 	switch (t->GetType())
@@ -181,7 +193,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 	return nullptr;
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, TokenType tokenType,
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, TokenType tokenType,
 	ParseFn rightFunc)
 {
 	Token* const t = state->token;
@@ -199,7 +211,7 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, TokenT
 	return unaryop;
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Vector<TokenType>& types, 
+ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Vector<TokenType>& types,
 	ParseFn leftFunc, ParseFn rightFunc)
 {
 	Token* const t = state->token;

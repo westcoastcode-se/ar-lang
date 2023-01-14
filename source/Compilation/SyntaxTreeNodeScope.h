@@ -25,16 +25,17 @@ namespace WestCoastCode::Compilation
 		const SourceCodeView* GetSourceCode() const final {
 			return &_sourceCode;
 		}
+		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
 
 	public:
 		// Add a new node to be returned
-		void AddNode(ISyntaxTreeNode* node);
+		void AddOp(ISyntaxTreeNodeOp* node);
 
 	private:
 		const ID _id;
 		ISyntaxTreeNode* _parent;
 		ISyntaxTreeNodeFuncDef* _function;
-		Vector<ISyntaxTreeNode*> _children;
+		Vector<ISyntaxTreeNodeOp*> _children;
 		SourceCodeView _sourceCode;
 	};
 }
