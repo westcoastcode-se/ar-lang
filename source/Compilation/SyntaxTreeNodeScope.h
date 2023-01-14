@@ -26,6 +26,8 @@ namespace WestCoastCode::Compilation
 			return &_sourceCode;
 		}
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
+		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
+		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
 
 	public:
 		// Add a new node to be returned

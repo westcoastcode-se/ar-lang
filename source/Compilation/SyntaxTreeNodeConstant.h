@@ -24,6 +24,8 @@ namespace WestCoastCode::Compilation
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		const Interpreter::PrimitiveValue& GetValue() const final { return _value; }
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
+		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
+		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
 	
 	public:
 		// Parse the supplied state and return a constant

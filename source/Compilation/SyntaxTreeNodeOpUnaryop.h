@@ -35,8 +35,8 @@ namespace WestCoastCode::Compilation
 		virtual ISyntaxTree* GetSyntaxTree() const override;
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		virtual void SetParent(ISyntaxTreeNode* parent) override;
-		virtual ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
-		virtual ISyntaxTreeNodePackage* GetPackage() const final;
+		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
+		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
 
 	private:

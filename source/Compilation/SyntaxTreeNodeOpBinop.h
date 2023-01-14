@@ -43,8 +43,8 @@ namespace WestCoastCode::Compilation
 		ISyntaxTree* GetSyntaxTree() const override;
 		ISyntaxTreeNode* GetRootNode() override;
 		void SetParent(ISyntaxTreeNode* parent) override;
-		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
-		ISyntaxTreeNodePackage* GetPackage() const final;
+		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
+		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
 
 	private:

@@ -36,13 +36,6 @@ void SyntaxTreeNodeOpUnaryop::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-ISyntaxTreeNodePackage* SyntaxTreeNodeOpUnaryop::GetPackage() const
-{
-	if (dynamic_cast<SyntaxTreeNodePackage*>(_function->GetParent()))
-		return static_cast<SyntaxTreeNodePackage*>(_function->GetParent());
-	return nullptr;
-}
-
 void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
 {
 /*	GetRight()->Compile(linker, instructions);

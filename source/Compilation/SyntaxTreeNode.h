@@ -247,6 +247,9 @@ namespace WestCoastCode::Compilation
 	class ISyntaxTreeNodeFuncDef : public INamedSyntaxTreeNode
 	{
 	public:
+		// Get the package this function is part of
+		virtual ISyntaxTreeNodePackage* GetPackage() = 0;
+
 		// Get all arguments 
 		virtual ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const = 0;
 
@@ -301,6 +304,11 @@ namespace WestCoastCode::Compilation
 		// Compile this operation
 		virtual void Compile(Builder::Linker* linker, Builder::Instructions& instructions) = 0;
 
+		// Get the function this operation is part of (if any)
+		virtual ISyntaxTreeNodeFuncDef* GetFunction() = 0;
+
+		// Get the package this operation is part of
+		virtual ISyntaxTreeNodePackage* GetPackage() = 0;
 	};
 
 	// A node containing the function body logic
@@ -377,12 +385,6 @@ namespace WestCoastCode::Compilation
 
 		// Get the operator
 		virtual Op GetOperator() const = 0;
-
-		// Get the function this operation is part of (if any)
-		virtual ISyntaxTreeNodeFuncDef* GetFunction() const = 0;
-
-		// Get the package this operation is part of
-		virtual ISyntaxTreeNodePackage* GetPackage() const = 0;
 	};
 
 	class ISyntaxTreeNodeOpUnaryop : public ISyntaxTreeNodeOp
@@ -415,12 +417,6 @@ namespace WestCoastCode::Compilation
 
 		// Get the operator
 		virtual Op GetOperator() const = 0;
-
-		// Get the function this operation is part of (if any)
-		virtual ISyntaxTreeNodeFuncDef* GetFunction() const = 0;
-
-		// Get the package this operation is part of
-		virtual ISyntaxTreeNodePackage* GetPackage() const = 0;
 	};
 
 	class ISyntaxTreeNodeScope : public ISyntaxTreeNodeOp

@@ -65,6 +65,12 @@ void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
 	Default::Compile(this, linker);
 }
 
+ISyntaxTreeNodePackage* SyntaxTreeNodeFuncDef::GetPackage()
+{
+	// TODO: Add support for functions inside another function
+	return dynamic_cast<SyntaxTreeNodePackage*>(_parent);
+}
+
 void SyntaxTreeNodeFuncDef::AddNode(ISyntaxTreeNode* node)
 {
 	_children.Add(node);

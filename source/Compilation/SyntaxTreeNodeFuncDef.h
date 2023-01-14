@@ -30,6 +30,7 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNodeFuncBody* GetBody() const final;
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker) final;
+		ISyntaxTreeNodePackage* GetPackage() final;
 
 	public:
 		// add the supplied node

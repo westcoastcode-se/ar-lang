@@ -37,13 +37,6 @@ void SyntaxTreeNodeOpBinop::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
-ISyntaxTreeNodePackage* SyntaxTreeNodeOpBinop::GetPackage() const
-{
-	if (dynamic_cast<SyntaxTreeNodePackage*>(_function->GetParent()))
-		return static_cast<SyntaxTreeNodePackage*>(_function->GetParent());
-	return nullptr;
-}
-
 void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
 {
 /*	GetLeft()->Compile(linker, instructions);
