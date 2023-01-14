@@ -11,12 +11,12 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		SyntaxTreeNodePrimitive(SyntaxTreeNodePackage* package, 
-			size_t size, Interpreter::PrimitiveType primitiveType, ReadOnlyString name)
+			I32 size, Interpreter::PrimitiveType primitiveType, ReadOnlyString name)
 			: _package(package), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(nullptr),
 			_unrefInto(nullptr), _symbol(nullptr) {}
 
 		SyntaxTreeNodePrimitive(SyntaxTreeNodePackage* package,
-			size_t size, Interpreter::PrimitiveType primitiveType, ReadOnlyString name,
+			I32 size, Interpreter::PrimitiveType primitiveType, ReadOnlyString name,
 			SyntaxTreeNodePrimitive* inheritsFrom, SyntaxTreeNodePrimitive* unrefInto)
 			: _package(package), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(inheritsFrom),
 			_unrefInto(unrefInto), _symbol(nullptr) {}
@@ -30,9 +30,10 @@ namespace WestCoastCode::Compilation
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final;
 		const SourceCodeView* GetSourceCode() const final { return nullptr; }
 		void ToString(StringStream& s, int indent) const final;
-		size_t GetSize() const final { return _stackSize; }
+		I32 GetSize() const final { return _stackSize; }
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		void Compile(Builder::Linker* linker) final;
+		ISyntaxTreeNode* GetStackType() final { return this; }
 
 		// Get the builder symbol for this primitive
 		Builder::Type* GetSymbol() const { return _symbol; }
@@ -40,7 +41,7 @@ namespace WestCoastCode::Compilation
 	private:
 		const ID _id;
 		SyntaxTreeNodePackage* const _package;
-		const size_t _stackSize;
+		const I32 _stackSize;
 		const Interpreter::PrimitiveType _primitiveType;
 		const ReadOnlyString _name;
 		SyntaxTreeNodePrimitive* const _inheritsFrom;

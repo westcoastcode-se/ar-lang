@@ -42,6 +42,9 @@ ISyntaxTreeNode* SyntaxTreeNodePrimitive::GetRootNode()
 
 void SyntaxTreeNodePrimitive::Compile(Builder::Linker* linker)
 {
+	if (_symbol != nullptr)
+		return;
+
 	Builder::TypeFlags flags = (Builder::TypeFlags)Builder::TypeFlag::Primitive;
 	if (_primitiveType == Interpreter::PrimitiveType::Ptr)
 		flags |= (Builder::TypeFlags)Builder::TypeFlag::Ptr;

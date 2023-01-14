@@ -30,6 +30,7 @@ namespace WestCoastCode::Compilation
 		bool IsVoidReturn() const final { return _returns.IsEmpty(); }
 		ISyntaxTreeNodeFuncBody* GetBody() const final;
 		void ToString(StringStream& s, int indent) const final;
+		void Compile(Builder::Linker* linker) final;
 
 	public:
 		// add the supplied node
@@ -43,6 +44,9 @@ namespace WestCoastCode::Compilation
 
 		// Add a return statement
 		void AddReturn(ISyntaxTreeNodeFuncRet* ret);
+
+		// Get the symbol
+		Builder::Function* GetSymbol() { return _symbol; }
 
 		// Parse source code into a function definition node. Will throw ParseError if parsing of the 
 		// source code failed
@@ -59,5 +63,6 @@ namespace WestCoastCode::Compilation
 		Vector<ISyntaxTreeNodeFuncRet*> _returns;
 		SyntaxTreeNodeFuncBody* _body;
 
+		Builder::Function* _symbol;
 	};
 }

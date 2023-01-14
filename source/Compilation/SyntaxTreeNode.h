@@ -160,6 +160,11 @@ namespace WestCoastCode::Compilation
 			Default::Compile(this, linker);
 		}
 
+		// Get the stack type used if this node results into a push onto the stack
+		virtual ISyntaxTreeNode* GetStackType() {
+			return Default::GetStackType(this);
+		}
+
 	public:
 		// Default implementations
 		struct Default
@@ -169,6 +174,7 @@ namespace WestCoastCode::Compilation
 			static VisitResult Query(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
 			static void ResolveReferences(ISyntaxTreeNode* node);
 			static void Compile(ISyntaxTreeNode* node, Builder::Linker* linker);
+			static ISyntaxTreeNode* GetStackType(ISyntaxTreeNode* node);
 		};
 	};
 
@@ -301,7 +307,7 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		// The memory size of this primtive
-		virtual size_t GetSize() const = 0;
+		virtual I32 GetSize() const = 0;
 	};
 
 	// A reference to another syntax tree node

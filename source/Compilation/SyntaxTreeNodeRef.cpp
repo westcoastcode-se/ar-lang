@@ -177,9 +177,7 @@ void SyntaxTreeNodeRefSection::ToString(StringStream& s, int indent) const
 	for (int i = 0; i < _definitions.Size(); ++i) {
 		if (i != 0)
 			s << ",";
-		char tmp[32];
-		sprintf(tmp, "%p", _definitions[i]);
-		s << tmp;
+		s << _definitions[i]->GetID();
 	}
 	s << "])";
 	s << std::endl;

@@ -104,3 +104,13 @@ void ISyntaxTreeNode::Default::Compile(ISyntaxTreeNode* node, Builder::Linker* l
 	for (auto child : node->GetChildren())
 		child->Compile(linker);
 }
+
+ISyntaxTreeNode* ISyntaxTreeNode::Default::GetStackType(ISyntaxTreeNode* node)
+{
+	for (auto child : node->GetChildren()) {
+		auto type = child->GetStackType();
+		if (type != nullptr)
+			return type;
+	}
+	return nullptr;
+}

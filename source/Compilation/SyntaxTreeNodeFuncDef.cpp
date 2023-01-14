@@ -7,7 +7,7 @@ using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeFuncDef::SyntaxTreeNodeFuncDef(SourceCodeView sourceCode, ReadOnlyString name)
-	: _parent(nullptr), _sourceCode(sourceCode), _name(name), _body(nullptr)
+	: _parent(nullptr), _sourceCode(sourceCode), _name(name), _body(nullptr), _symbol(nullptr)
 {
 }
 
@@ -41,6 +41,13 @@ void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
 	for (auto i : _children) {
 		i->ToString(s, indent + 1);
 	}
+}
+
+void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
+{
+	if (_symbol == nullptr)
+		_symbol = new Builder::Function(_name);
+	Default::Compile(this, linker);
 }
 
 void SyntaxTreeNodeFuncDef::AddNode(ISyntaxTreeNode* node)

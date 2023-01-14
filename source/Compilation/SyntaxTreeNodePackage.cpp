@@ -72,7 +72,8 @@ void SyntaxTreeNodePackage::ToString(StringStream& s, int indent) const
 
 void SyntaxTreeNodePackage::Compile(Builder::Linker* linker)
 {
-	_symbol = linker->AddPackage(new Builder::Package(_name));
+	if (_symbol == nullptr)
+		_symbol = linker->AddPackage(new Builder::Package(_name));
 	Default::Compile(this, linker);
 }
 
