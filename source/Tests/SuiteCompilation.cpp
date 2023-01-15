@@ -377,6 +377,7 @@ func Get() %s {
 	{
 		TEST(Constant_T<I32>(123));
 		TEST(Constant_T<I16>(INT16_MAX));
+		TEST(Constant_T<F32>(1.0));
 	}
 };
 

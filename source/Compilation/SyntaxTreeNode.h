@@ -19,6 +19,10 @@ namespace WestCoastCode::Compilation
 		ID();
 
 		ID(const ID& rhs) : value(rhs.value) {}
+
+#if defined (ARLANG_MEMORY_TRACKING)
+		~ID();
+#endif
 	};
 
 	static inline std::ostream& operator<< (std::ostream& out, ID const& t)

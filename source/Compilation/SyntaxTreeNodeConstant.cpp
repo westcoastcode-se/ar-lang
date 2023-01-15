@@ -7,6 +7,58 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
+namespace
+{
+    void Convert(Interpreter::PrimitiveValue& value,
+        Interpreter::PrimitiveType from, Interpreter::PrimitiveType to) {
+        value.type = to;
+        if (from == Interpreter::PrimitiveType::I64) {
+            switch (to)
+            {
+            case Interpreter::PrimitiveType::F32:
+                value.f32 = (F32)value.i64;
+                return;
+            case Interpreter::PrimitiveType::F64:
+                value.f64 = (F64)value.i64;
+                return;
+            }
+        }
+        else if (from == Interpreter::PrimitiveType::U64) {
+            switch (to)
+            {
+            case Interpreter::PrimitiveType::F32:
+                value.f32 = (F32)value.u64;
+                return;
+            case Interpreter::PrimitiveType::F64:
+                value.f64 = (F64)value.u64;
+                return;
+            }
+        }
+        else if (from == Interpreter::PrimitiveType::I32) {
+            switch (to)
+            {
+            case Interpreter::PrimitiveType::F32:
+                value.f32 = (F32)value.i32;
+                return;
+            case Interpreter::PrimitiveType::F64:
+                value.f64 = (F64)value.i32;
+                return;
+            }
+        }
+        else if (from == Interpreter::PrimitiveType::U32) {
+            switch (to)
+            {
+            case Interpreter::PrimitiveType::F32:
+                value.f32 = (F32)value.u32;
+                return;
+            case Interpreter::PrimitiveType::F64:
+                value.f64 = (F64)value.u32;
+                return;
+            }
+        }
+    }
+}
+
 void SyntaxTreeNodeConstant::ToString(StringStream& s, int indent) const
 {
     s << _id << Indent(indent);
@@ -64,6 +116,8 @@ void SyntaxTreeNodeConstant::Compile(Builder::Linker* linker, Builder::Instructi
 
 SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(ISyntaxTreeNodeType* newType)
 {
+    // Figure out the new constant value by compile-time evaluating the expression
+    // into a new type
     SyntaxTreeNodePrimitive* primitive = nullptr;
     auto ref = dynamic_cast<ISyntaxTreeNodeTypeRef*>(newType);
     if (ref != nullptr) {
@@ -76,7 +130,6 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(ISyntaxTreeNodeType* newTyp
 
     // Is the type a primitive type?
     if (primitive == nullptr) {
-        
         auto primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(newType);
         if (primitive == nullptr) {
             return nullptr;
@@ -85,9 +138,8 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(ISyntaxTreeNodeType* newTyp
 
     // Convert the constant value
     Interpreter::PrimitiveValue newValue = _value;
-    const auto newPrimitiveType = primitive->GetPrimitiveType();
-    //TODO: Convert value if different from current primitive
-    newValue.type = newPrimitiveType;
+    Convert(newValue, static_cast<SyntaxTreeNodePrimitive*>(_stackType)->GetPrimitiveType(), 
+        primitive->GetPrimitiveType());
     return new SyntaxTreeNodeConstant(_function, _sourceCode, newValue, primitive);
 }
 
