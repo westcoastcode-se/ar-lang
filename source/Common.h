@@ -8,6 +8,7 @@
 #include <string_view>
 #include <sstream>
 #include <cassert>
+#include <unordered_map>
 #include "Config.h"
 
 namespace WestCoastCode
@@ -21,6 +22,9 @@ namespace WestCoastCode
 	typedef char Char;
 
 	typedef std::stringstream StringStream;
+
+	template<typename Key, typename Val>
+	using Map = std::unordered_map<Key, Val>;
 
 	// A memory guard that will ensure that memory is cleared if exceptions are thrown
 	template<class T>

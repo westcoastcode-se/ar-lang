@@ -120,17 +120,36 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	auto mem = MemoryGuard(op);
 
 	const SyntaxTreeNodeFuncDef* const function = state->function;
-	const auto& returns = function->GetReturns();
-	auto numReturnsLeft = returns.Size();
-	while (numReturnsLeft > 0) {
-		ISyntaxTreeNodeOp* const node = ParseCompare(state);
-		op->AddOp(node);
-		numReturnsLeft--;
-		if (numReturnsLeft > 0) {
-			if (t->GetType() != TokenType::Comma)
-				throw ParseErrorSyntaxError(state, "expected ,");
-			t->Next();
+	const auto& returns = function->GetReturnType();
+	
+	if (dynamic_cast<ISyntaxTreeNodeMultiType*>(returns))
+	{
+		auto multiType = static_cast<ISyntaxTreeNodeMultiType*>(returns);
+		auto subtypes = multiType->GetTypes();
+
+		for (int i = 0; i < subtypes.Size(); ++i) {
+			ISyntaxTreeNodeOp* const node = ParseCompare(state);
+			auto nodeType = node->GetStackType();
+			if (!nodeType->IsCompatibleWith(subtypes[i])) {
+				throw ParseErrorIncompatibleTypes(state, nodeType, subtypes[i]);
+			}
+			op->AddOp(node);
+
+			if (i < subtypes.Size() - 1) {
+				if (t->GetType() != TokenType::Comma)
+					throw ParseErrorSyntaxError(state, "expected ,");
+				t->Next();
+			}
 		}
+	}
+	else
+	{
+		ISyntaxTreeNodeOp* const node = ParseCompare(state);
+		auto nodeType = node->GetStackType();
+		if (!nodeType->IsCompatibleWith(returns)) {
+			throw ParseErrorIncompatibleTypes(state, nodeType, returns);
+		}
+		op->AddOp(node);
 	}
 	return mem.Done();
 }

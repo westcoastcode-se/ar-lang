@@ -48,6 +48,21 @@ void SyntaxTreeNodeTypeRef::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
+void SyntaxTreeNodeTypeRef::ResolveReferences()
+{
+	if (!_definitions.IsEmpty())
+		return;
+
+	Default::ResolveReferences(this);
+
+	auto definitions = dynamic_cast<SyntaxTreeNodeRef*>(_children[0])->GetDefinitions();
+	for (auto def : definitions) {
+		auto typeDef = dynamic_cast<ISyntaxTreeNodeType*>(def);
+		if (typeDef)
+			_definitions.Add(typeDef);
+	}
+}
+
 void SyntaxTreeNodeTypeRef::AddNode(ISyntaxTreeNode* node)
 {
 	_children.Add(node);

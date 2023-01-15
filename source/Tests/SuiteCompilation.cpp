@@ -290,8 +290,9 @@ func Main() int32 {
 		AssertEquals(func->GetName(), ReadOnlyString("Main"));
 		AssertTrue(func->GetArguments().IsEmpty());
 
-		auto returns = func->GetReturns();
-		AssertEquals(returns.Size(), 1);
+		auto returnType = func->GetReturnType();
+		AssertNotNull(returnType);
+		AssertType<ISyntaxTreeNodeType>(returnType);
 
 		auto body = func->GetBody();
 		AssertNotNull(body);
@@ -319,8 +320,9 @@ func Main() Engine.Graphics.Value {
 		AssertEquals(func->GetName(), ReadOnlyString("Main"));
 		AssertTrue(func->GetArguments().IsEmpty());
 
-		auto returns = func->GetReturns();
-		AssertEquals(returns.Size(), 1);
+		auto returnType = func->GetReturnType();
+		AssertNotNull(returnType);
+		AssertType<ISyntaxTreeNodeType>(returnType);
 	}
 
 	void operator()()
@@ -355,6 +357,10 @@ func Get() int32 {
 
 		// Compile the source code
 		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(I32));
+		AssertEquals(Pop<I32>(), 123);
+
 	}
 
 	void operator()()

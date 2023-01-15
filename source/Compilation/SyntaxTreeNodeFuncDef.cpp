@@ -2,14 +2,15 @@
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodeFuncArg.h"
 #include "SyntaxTreeNodeTypeRef.h"
-#include "SyntaxTreeNodeTypes.h"
+#include "SyntaxTreeNodeMultiType.h"
 #include "SyntaxTreeNodePackage.h"
+#include "SyntaxTreeNodePrimitive.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeFuncDef::SyntaxTreeNodeFuncDef(SourceCodeView sourceCode, ReadOnlyString name)
-	: _parent(nullptr), _sourceCode(sourceCode), _name(name), _returns(nullptr), _body(nullptr), _symbol(nullptr)
+	: _parent(nullptr), _sourceCode(sourceCode), _name(name), _returnType(nullptr), _body(nullptr), _symbol(nullptr)
 {
 }
 
@@ -29,13 +30,6 @@ ISyntaxTreeNode* SyntaxTreeNodeFuncDef::GetRootNode()
 void SyntaxTreeNodeFuncDef::SetParent(ISyntaxTreeNode* parent)
 {
 	_parent = parent;
-}
-
-ReadOnlyArray<ISyntaxTreeNode*> SyntaxTreeNodeFuncDef::GetReturns() const
-{
-	if (_returns)
-		return _returns->GetChildren();
-	return ReadOnlyArray<ISyntaxTreeNode*>();
 }
 
 ISyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncDef::GetBody() const
@@ -62,7 +56,21 @@ void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
 			symbol->Add(_symbol);
 		}
 	}
-	Default::Compile(this, linker);
+
+	// Compile children
+	for (auto child : _children)
+		child->Compile(linker);
+
+	// Attach return types
+	if (dynamic_cast<ISyntaxTreeNodeTypeRef*>(_returnType)) {
+		auto definitions =
+			static_cast<ISyntaxTreeNodeTypeRef*>(_returnType)->GetDefinitions();
+		auto definition = dynamic_cast<SyntaxTreeNodePrimitive*>(definitions[0]);
+		_symbol->AddReturn(definition->GetSymbol());
+	}
+	else {
+
+	}
 }
 
 ISyntaxTreeNodePackage* SyntaxTreeNodeFuncDef::GetPackage()
@@ -91,10 +99,10 @@ void SyntaxTreeNodeFuncDef::AddArgument(ISyntaxTreeNodeFuncArg* arg)
 	_arguments.Add(arg);
 }
 
-void SyntaxTreeNodeFuncDef::SetReturns(ISyntaxTreeNodeTypes* ret)
+void SyntaxTreeNodeFuncDef::SetReturnType(ISyntaxTreeNodeType* returnType)
 {
-	AddNode(ret);
-	_returns = ret;
+	AddNode(returnType);
+	_returnType = returnType;
 }
 
 SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)
@@ -122,6 +130,12 @@ SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)
 		}
 	}
 	t->Next();
-	funcdef->SetReturns(SyntaxTreeNodeTypes::Parse(state));
+
+	// Parse return types. Paranteses are optional if you only have one return. 
+	// You are also allowed to not have a return type at all.
+	if (t->GetType() == TokenType::Identity)
+		funcdef->SetReturnType(SyntaxTreeNodeTypeRef::Parse(state));
+	else if (t->GetType() == TokenType::ParantLeft)
+		funcdef->SetReturnType(SyntaxTreeNodeMultiType::Parse(state));
 	return guard.Done();
 }

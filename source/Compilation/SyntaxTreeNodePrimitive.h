@@ -33,7 +33,6 @@ namespace WestCoastCode::Compilation
 		I32 GetSize() const final { return _stackSize; }
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		void Compile(Builder::Linker* linker) final;
-		ISyntaxTreeNode* GetStackType() final { return this; }
 
 		// Get the builder symbol for this primitive
 		Builder::Type* GetSymbol() const { return _symbol; }

@@ -9,14 +9,14 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		SyntaxTreeNodePackage(SourceCodeView sourceCode, ReadOnlyString name)
-			: _syntaxTree(nullptr), _parent(nullptr), _sourceCode(sourceCode), _name(name), _symbol(nullptr) {}
+			: _parent(nullptr), _sourceCode(sourceCode), _name(name), _symbol(nullptr) {}
 
-		~SyntaxTreeNodePackage() final;
+		~SyntaxTreeNodePackage() override;
 
 		// Inherited via ISyntaxTreeNodePackage
 		const ID& GetID() const final { return _id; }
 		ReadOnlyString GetName() const final { return _name; }
-		ISyntaxTree* GetSyntaxTree() const final { return _syntaxTree; }
+		ISyntaxTree* GetSyntaxTree() const override;
 		ISyntaxTreeNode* GetRootNode() final;
 		ISyntaxTreeNode* GetParent() const final { return _parent; }
 		void SetParent(ISyntaxTreeNode* parent) final;
@@ -26,10 +26,7 @@ namespace WestCoastCode::Compilation
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker) final;
 
-	public:
-		// set which syntax tree this node is part of
-		void SetSyntaxTree(ISyntaxTree* syntaxTree) { _syntaxTree = syntaxTree; }
-		
+	public:		
 		// add the supplied node
 		void AddNode(ISyntaxTreeNode* node);
 
@@ -42,12 +39,10 @@ namespace WestCoastCode::Compilation
 
 	private:
 		const ID _id;
-		ISyntaxTree* _syntaxTree;
 		SyntaxTreeNodePackage* _parent;
 		Vector<ISyntaxTreeNode*> _children;
 		SourceCodeView _sourceCode;
 		ReadOnlyString _name;
-
 		Builder::Package* _symbol;
 	};
 }

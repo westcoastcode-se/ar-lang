@@ -45,6 +45,7 @@ namespace WestCoastCode::Compilation
 		void SetParent(ISyntaxTreeNode* parent) override;
 		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
+		ISyntaxTreeNodeType* GetStackType() final;
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
 
 	private:

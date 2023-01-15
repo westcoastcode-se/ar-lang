@@ -6,8 +6,8 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		SyntaxTreeNodeConstant(ISyntaxTreeNodeFuncDef* func, SourceCodeView sourceCode, 
-			const Interpreter::PrimitiveValue& value)
-			: _function(func), _parent(nullptr), _sourceCode(sourceCode), _value(value) {
+			const Interpreter::PrimitiveValue& value, ISyntaxTreeNodePrimitive* stackType)
+			: _function(func), _parent(nullptr), _sourceCode(sourceCode), _value(value), _stackType(stackType) {
 
 		}
 
@@ -26,6 +26,7 @@ namespace WestCoastCode::Compilation
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
 		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
+		ISyntaxTreeNodeType* GetStackType() final { return _stackType; }
 	
 	public:
 		// Parse the supplied state and return a constant
@@ -37,5 +38,6 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNode* _parent;
 		const SourceCodeView _sourceCode;
 		const Interpreter::PrimitiveValue _value;
+		ISyntaxTreeNodePrimitive* const _stackType;
 	};
 }

@@ -1,6 +1,7 @@
 #include "SyntaxTreeNodeOpBinop.h"
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodePrimitive.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -37,17 +38,36 @@ void SyntaxTreeNodeOpBinop::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
+ISyntaxTreeNodeType* SyntaxTreeNodeOpBinop::GetStackType()
+{
+	return SyntaxTreeNodeOpBinop::GetRight()->GetStackType();
+}
+
 void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
 {
-/*	GetLeft()->Compile(linker, instructions);
+	GetLeft()->Compile(linker, instructions);
 	GetRight()->Compile(linker, instructions);
+
+	auto stackType = GetStackType();
+	if (stackType == nullptr || dynamic_cast<SyntaxTreeNodePrimitive*>(stackType) == nullptr)
+		throw CompileErrorNotImplemented(this, "Binop");
+	auto primitive = static_cast<SyntaxTreeNodePrimitive*>(stackType);
 
 	switch (_op)
 	{
 	case Op::Plus:
-		//instructions.Add(GetRight());
+		instructions.Add(primitive->GetSymbol());
 		break;
+	case Op::Minus:
+		instructions.Add(primitive->GetSymbol());
+		break;
+	case Op::Mult:
+		instructions.Add(primitive->GetSymbol());
+		break;
+	case Op::Div:
+		instructions.Add(primitive->GetSymbol());
+		break;
+	default:
+		throw CompileErrorNotImplemented(this, "Binop");
 	}
-	*/
-	throw CompileErrorNotImplemented(this, "Binop");
 }

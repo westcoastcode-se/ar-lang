@@ -49,3 +49,8 @@ void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instruct
 	*/
 	throw CompileErrorNotImplemented(this, "Unaryop");
 }
+
+ISyntaxTreeNodeType* SyntaxTreeNodeOpUnaryop::GetStackType()
+{
+	return _children[0]->GetStackType();
+}

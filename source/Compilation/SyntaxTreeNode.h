@@ -28,6 +28,7 @@ namespace WestCoastCode::Compilation
 
 	class ISyntaxTree;
 	class ISyntaxTreeNode;
+	class ISyntaxTreeNodeType;
 	class ISyntaxTreeNodePackage;
 	class ISyntaxTreeNodeFuncArg;
 	class ISyntaxTreeNodeFuncDef;
@@ -159,11 +160,6 @@ namespace WestCoastCode::Compilation
 			Default::Compile(this, linker);
 		}
 
-		// Get the stack type used if this node results into a push onto the stack
-		virtual ISyntaxTreeNode* GetStackType() {
-			return Default::GetStackType(this);
-		}
-
 	public:
 		// Default implementations
 		struct Default
@@ -173,20 +169,12 @@ namespace WestCoastCode::Compilation
 			static VisitResult Query(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
 			static void ResolveReferences(ISyntaxTreeNode* node);
 			static void Compile(ISyntaxTreeNode* node, Builder::Linker* linker);
-			static ISyntaxTreeNode* GetStackType(ISyntaxTreeNode* node);
 		};
 	};
 
 	class ISyntaxTreeNodeImport : public ISyntaxTreeNode
 	{
 
-	};
-
-	class ISyntaxTreeNodeTypes : public ISyntaxTreeNode
-	{
-	public:
-		// All types that this node referrs to
-		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
 	};
 
 	class INamedSyntaxTreeNode : public ISyntaxTreeNode
@@ -201,9 +189,29 @@ namespace WestCoastCode::Compilation
 	{
 	};
 
+	// A specific type
+	class ISyntaxTreeNodeType : public INamedSyntaxTreeNode
+	{
+	public:
+		// Check to see if the supplied type is compatible
+		virtual bool IsCompatibleWith(ISyntaxTreeNodeType* otherType) const { return true; }
+	};
+
+	// Represents a type that contains multiple types. For example:
+	// (int32, bool) is considered a multitype of one int32 and one bool.
+	class ISyntaxTreeNodeMultiType : public ISyntaxTreeNodeType
+	{
+	public:
+		// All types that this node referrs to
+		virtual ReadOnlyArray<ISyntaxTreeNodeType*> GetTypes() const = 0;
+
+		// All types that this node referrs to
+		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
+	};
+
 	// A primitive. These are normally created by the compiler outside the source code
 	// parser and put into the root package
-	class ISyntaxTreeNodePrimitive : public INamedSyntaxTreeNode
+	class ISyntaxTreeNodePrimitive : public ISyntaxTreeNodeType
 	{
 	public:
 		// The memory size of this primitive
@@ -253,8 +261,8 @@ namespace WestCoastCode::Compilation
 		// Get all arguments 
 		virtual ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const = 0;
 
-		// Get all return types
-		virtual ReadOnlyArray<ISyntaxTreeNode*> GetReturns() const = 0;
+		// Get return type
+		virtual ISyntaxTreeNodeType* GetReturnType() const = 0;
 
 		// Is this function a void function
 		virtual bool IsVoidReturn() const = 0;
@@ -271,12 +279,12 @@ namespace WestCoastCode::Compilation
 	};
 
 	// A reference to a type
-	class ISyntaxTreeNodeTypeRef : public INamedSyntaxTreeNode
+	class ISyntaxTreeNodeTypeRef : public ISyntaxTreeNodeType
 	{
 	public:
 		// All types that this reference resolved into. The item at the top of the vector
 		// is the one closest to the reference
-		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
+		virtual ReadOnlyArray<ISyntaxTreeNodeType*> GetDefinitions() const = 0;
 	};
 
 	//
@@ -309,6 +317,9 @@ namespace WestCoastCode::Compilation
 
 		// Get the package this operation is part of
 		virtual ISyntaxTreeNodePackage* GetPackage() = 0;
+
+		// Get the type which this operator results into onto the stack
+		virtual ISyntaxTreeNodeType* GetStackType() = 0;
 	};
 
 	// A node containing the function body logic
@@ -432,6 +443,7 @@ namespace WestCoastCode::Compilation
 	public:
 		// Get the constant value
 		virtual const Interpreter::PrimitiveValue& GetValue() const = 0;
+
 	};
 }
 

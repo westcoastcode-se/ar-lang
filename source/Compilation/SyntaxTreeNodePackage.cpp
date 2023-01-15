@@ -13,6 +13,11 @@ SyntaxTreeNodePackage::~SyntaxTreeNodePackage()
 		delete i;
 }
 
+ISyntaxTree* SyntaxTreeNodePackage::GetSyntaxTree() const
+{
+	return _parent->GetSyntaxTree();
+}
+
 ISyntaxTreeNode* SyntaxTreeNodePackage::GetRootNode()
 {
 	if (_parent)

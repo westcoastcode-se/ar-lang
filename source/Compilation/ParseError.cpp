@@ -1,4 +1,5 @@
 #include "ParseError.h"
+#include "SyntaxTreeNode.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -44,5 +45,15 @@ ParseErrorSyntaxError::ParseErrorSyntaxError(const ParserState* state, const cha
 {
 	StringStream s;
 	s << prefix << " but was '" << state->token->GetString() << "'";
+	SetError(s.str());
+}
+
+ParseErrorIncompatibleTypes::ParseErrorIncompatibleTypes(const ParserState* state, 
+	const ISyntaxTreeNodeType* type1,
+	const ISyntaxTreeNodeType* type2)
+	: ParseError(state->sourceCode, state->token, ParseErrorType::IncompatibleTypes)
+{
+	StringStream s;
+	s << type1->GetName() << " is not compatible with " << type2->GetName();
 	SetError(s.str());
 }

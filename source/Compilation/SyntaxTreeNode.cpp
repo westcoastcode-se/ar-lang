@@ -90,6 +90,19 @@ VisitResult ISyntaxTreeNode::Default::Query(ISyntaxTreeNode* node, ISyntaxTreeNo
 		}
 	}
 
+	if (BIT_ISSET(flags, QuerySearchFlag::TraverseChildren)) {
+		auto children = node->GetChildren();
+		for (auto c : children) {
+			switch (c->Query(visitor, 0))
+			{
+			case VisitResult::Stop:
+				return VisitResult::Stop;
+			default:
+				break;
+			}
+		}
+	}
+
 	return VisitResult::Continue;
 }
 
@@ -103,14 +116,4 @@ void ISyntaxTreeNode::Default::Compile(ISyntaxTreeNode* node, Builder::Linker* l
 {
 	for (auto child : node->GetChildren())
 		child->Compile(linker);
-}
-
-ISyntaxTreeNode* ISyntaxTreeNode::Default::GetStackType(ISyntaxTreeNode* node)
-{
-	for (auto child : node->GetChildren()) {
-		auto type = child->GetStackType();
-		if (type != nullptr)
-			return type;
-	}
-	return nullptr;
 }

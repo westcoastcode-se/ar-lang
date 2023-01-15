@@ -38,6 +38,7 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
+		ISyntaxTreeNodeType* GetStackType() final;
 
 	private:
 		const ID _id;

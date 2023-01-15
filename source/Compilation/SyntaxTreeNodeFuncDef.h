@@ -25,8 +25,8 @@ namespace WestCoastCode::Compilation
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const final { return _arguments; }
-		ReadOnlyArray<ISyntaxTreeNode*> GetReturns() const final;
-		bool IsVoidReturn() const final { return _returns->GetChildren().IsEmpty(); }
+		ISyntaxTreeNodeType* GetReturnType() const final { return _returnType; }
+		bool IsVoidReturn() const final { return _returnType == nullptr; }
 		ISyntaxTreeNodeFuncBody* GetBody() const final;
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker) final;
@@ -43,7 +43,7 @@ namespace WestCoastCode::Compilation
 		void AddArgument(ISyntaxTreeNodeFuncArg* arg);
 
 		// Add a return statement
-		void SetReturns(ISyntaxTreeNodeTypes* ret);
+		void SetReturnType(ISyntaxTreeNodeType* returnType);
 
 		// Get the symbol
 		Builder::Function* GetSymbol() { return _symbol; }
@@ -60,7 +60,7 @@ namespace WestCoastCode::Compilation
 		ReadOnlyString _name;
 
 		Vector<ISyntaxTreeNodeFuncArg*> _arguments;
-		ISyntaxTreeNodeTypes* _returns;
+		ISyntaxTreeNodeType* _returnType;
 		SyntaxTreeNodeFuncBody* _body;
 
 		Builder::Function* _symbol;

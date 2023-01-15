@@ -1,6 +1,8 @@
 #include "SyntaxTreeNodeConstant.h"
 #include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodeFuncBody.h"
+#include "SyntaxTreeNodePrimitive.h"
+#include "Compiler.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -33,15 +35,16 @@ void SyntaxTreeNodeConstant::ToString(StringStream& s, int indent) const
         s << "?";
         break;
     }
+    s << ",type=" << _stackType->GetName();
     s << ")" << std::endl;
 }
 
-ISyntaxTree* WestCoastCode::Compilation::SyntaxTreeNodeConstant::GetSyntaxTree() const
+ISyntaxTree* SyntaxTreeNodeConstant::GetSyntaxTree() const
 {
     return _parent->GetSyntaxTree();
 }
 
-ISyntaxTreeNode* WestCoastCode::Compilation::SyntaxTreeNodeConstant::GetRootNode()
+ISyntaxTreeNode* SyntaxTreeNodeConstant::GetRootNode()
 {
     if (_parent)
         return _parent->GetRootNode();
@@ -55,29 +58,47 @@ void SyntaxTreeNodeConstant::SetParent(ISyntaxTreeNode* parent)
 
 void SyntaxTreeNodeConstant::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
 {
-    //instructions.Ldc(stackType, _value);
+    auto symbol = static_cast<SyntaxTreeNodePrimitive*>(_stackType)->GetSymbol();
+    instructions.Ldc(symbol, _value);
 }
 
 SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
 {
     Token* const t = state->token;
 
+    ISyntaxTreeNodePrimitive* stackType = nullptr;
     Interpreter::PrimitiveValue value;
     switch (t->GetType())
     {
+    case TokenType::Bool:
+        value.bool4 = t->ToBool();
+        value.type = Interpreter::PrimitiveType::Bool;
+        stackType = state->compiler->FindPrimitive(ReadOnlyString("bool"));
+        break;
     case TokenType::Int:
         if (t->GetModifier() == TokenModifier::Negative) {
             value.i64 = t->ToI64();
             value.type = Interpreter::PrimitiveType::I32;
+            stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
         }
         else {
-            value.u64 = t->ToU64();
-            value.type = Interpreter::PrimitiveType::I32;
+            U64 i = t->ToU64();
+            if (i > (I64)INT32_MAX) {
+                value.u64 = i;
+                value.type = Interpreter::PrimitiveType::U32;
+                stackType = state->compiler->FindPrimitive(ReadOnlyString("uint32"));
+            }
+            else {
+                value.i64 = (I64)i;
+                value.type = Interpreter::PrimitiveType::I32;
+                stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
+            }
         }
         break;
     case TokenType::Decimal:
         value.f64 = t->ToF64();
         value.type = Interpreter::PrimitiveType::F64;
+        stackType = state->compiler->FindPrimitive(ReadOnlyString("float64"));
         break;
     default:
         throw ParseErrorExpectedConstant(state);
@@ -85,5 +106,5 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
 
     t->Next();
     return new SyntaxTreeNodeConstant(state->function, SourceCodeView(state->sourceCode, t),
-        value);
+        value, stackType);
 }

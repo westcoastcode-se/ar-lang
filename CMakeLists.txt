@@ -109,7 +109,9 @@ add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNode.cpp"
     "source/Compilation/SyntaxTreeNodeConstant.cpp"
     "source/Compilation/SyntaxTreeNodeScope.cpp"
-    "source/Compilation/CompileError.cpp" "source/Compilation/SyntaxTreeNodeTypes.cpp")
+    "source/Compilation/CompileError.cpp"
+    "source/Compilation/SyntaxTreeNodeMultiType.cpp"
+    "source/Compilation/SyntaxTreeNodeRoot.cpp")
 
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 

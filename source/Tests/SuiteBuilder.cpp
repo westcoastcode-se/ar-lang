@@ -143,7 +143,6 @@ struct Constants : UtilsBuilderWithInterpreter
 
 		CompileAndInvoke("Get()");
 		VerifyStackSize(sizeof(T));
-		VerifyStackSize(sizeof(T));
 		AssertEquals(Pop<T>(), (T)value);
 	}
 
@@ -164,7 +163,6 @@ struct Constants : UtilsBuilderWithInterpreter
 
 		CompileAndInvoke("Get()");
 		VerifyStackSize(sizeof(T));
-		VerifyStackSize(sizeof(T));
 		AssertEquals(Pop<T>(), (T)value);
 	}
 
@@ -184,7 +182,6 @@ struct Constants : UtilsBuilderWithInterpreter
 		instr.End();
 
 		CompileAndInvoke("Get()");
-		VerifyStackSize(sizeof(T));
 		VerifyStackSize(sizeof(T));
 		AssertEquals(Pop<T>(), (T)value);
 	}

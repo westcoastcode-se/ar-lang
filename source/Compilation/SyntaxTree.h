@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeRoot.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -20,7 +21,7 @@ namespace WestCoastCode::Compilation
 		virtual void Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) = 0;
 
 		// Get the root package where primitives and built-in functions are located
-		virtual ISyntaxTreeNodePackage* GetRootNode() = 0;
+		virtual SyntaxTreeNodeRoot* GetRootNode() = 0;
 
 		// Resolve references
 		virtual void ResolveReferences() = 0;

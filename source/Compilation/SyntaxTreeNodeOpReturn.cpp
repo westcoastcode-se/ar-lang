@@ -37,7 +37,17 @@ void SyntaxTreeNodeOpReturn::SetParent(ISyntaxTreeNode* parent)
 
 void SyntaxTreeNodeOpReturn::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
 {
+	for (auto c : _children)
+		c->Compile(linker, instructions);
 	instructions.Ret();
+}
+
+ISyntaxTreeNodeType* SyntaxTreeNodeOpReturn::GetStackType()
+{
+	if (_children.Size() == 1) {
+		return _children[0]->GetStackType();
+	}
+	throw CompileErrorNotImplemented(this, "MultiReturn");
 }
 
 void SyntaxTreeNodeOpReturn::AddOp(ISyntaxTreeNodeOp* node)

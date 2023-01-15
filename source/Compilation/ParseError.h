@@ -11,6 +11,7 @@ namespace WestCoastCode::Compilation
 		ExpectedConstant,
 		NotImplemented,
 		SyntaxError,
+		IncompatibleTypes
 	};
 
 	// Error raised if parsing of a specific source code failed
@@ -71,5 +72,15 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		ParseErrorSyntaxError(const ParserState* state, const char* prefix);
+	};
+
+	class ISyntaxTreeNodeType;
+
+	// Error raised if two types are incompatible with each other
+	class ParseErrorIncompatibleTypes : public ParseError
+	{
+	public:
+		ParseErrorIncompatibleTypes(const ParserState* state, const ISyntaxTreeNodeType* type1,
+			const ISyntaxTreeNodeType* type2);
 	};
 }

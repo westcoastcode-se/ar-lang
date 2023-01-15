@@ -22,7 +22,8 @@ namespace WestCoastCode::Compilation
 		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
 		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		ReadOnlyString GetName() const final { return _fullName; }
-		ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const final { return _definitions; }
+		ReadOnlyArray<ISyntaxTreeNodeType*> GetDefinitions() const final { return _definitions; }
+		void ResolveReferences() final;
 
 	public:
 		// Add a node to this type reference
@@ -37,6 +38,6 @@ namespace WestCoastCode::Compilation
 		SourceCodeView _sourceCode;
 		Vector<ISyntaxTreeNode*> _children;
 		ReadOnlyString _fullName;
-		Vector<ISyntaxTreeNode*> _definitions;
+		Vector<ISyntaxTreeNodeType*> _definitions;
 	};
 }

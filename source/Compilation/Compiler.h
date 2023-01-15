@@ -18,15 +18,12 @@ namespace WestCoastCode::Compilation
 		// Inherited via ISyntaxTree
 		void ToString(StringStream& s) const final;
 		void Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) final;
-		ISyntaxTreeNodePackage* GetRootNode() final;
+		SyntaxTreeNodeRoot* GetRootNode() final;
 		void ResolveReferences() final;
 		void Compile(Builder::Linker* linker) final;
 
-		// Add the supplied package
-		void SetRootPackage(SyntaxTreeNodePackage* package);
-
 	private:
-		ISyntaxTreeNodePackage* _root;
+		SyntaxTreeNodeRoot* const _root;
 	};
 
 	// The compiler used
@@ -48,6 +45,9 @@ namespace WestCoastCode::Compilation
 		// can use. Please note that this moves the ownership of the bytecode the the one calling
 		// this method
 		Byte* Compile();
+
+		// Find the primitive with the supplied name
+		ISyntaxTreeNodePrimitive* FindPrimitive(ReadOnlyString name);
 
 	private:
 		// Start parsing tokens and convert them into syntax tree nodes
