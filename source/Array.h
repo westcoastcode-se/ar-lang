@@ -53,16 +53,8 @@ namespace WestCoastCode
 		void Add(T value)
 		{
 			// Resize if neccessary
-			if (_size == _capacity) {
-				_capacity += Resize;
-				if (_memory == nullptr)
-					_memory = (T*)malloc(sizeof(T) * _capacity);
-				else {
-					auto newMemory = (T*)realloc(_memory, sizeof(T) * _capacity);
-					assert(newMemory);
-					_memory = newMemory;
-				}
-			}
+			if (_size == _capacity)
+				_Resize();
 			_memory[_size++] = value;
 		}
 
@@ -74,18 +66,18 @@ namespace WestCoastCode
 		}
 
 		// Remove the item at the supplied index
-		void RemoveAt(I32 idx)
+		T RemoveAt(I32 idx)
 		{
 			assert(_capacity > idx);
 			assert(_size > idx);
-			if (idx > _size)
-				return;
 
 			// Move all items backwards one step
+			T removed = _memory[idx];
 			for (I32 i = idx + 1; i < _size; ++i) {
 				_memory[i - 1] = _memory[i];
 			}
 			_size--;
+			return removed;
 		}
 
 		// Remove the supplied item
@@ -100,8 +92,41 @@ namespace WestCoastCode
 			}
 		}
 
-		T* Ptr() { return _memory; }
+		// Insert the supplied array at the supplied index. All items after the supplied index
+		// are automatically moved forward. Returns the number of new items added to the list
+		I32 InsertAt(ReadOnlyArray<T> arr, I32 index) {
+			assert(index >= 0);
+			if (index >= _size)
+				Add(arr);
+			else {
+				// Resize the memory block so that we can fit all items
+				if (_size + index > _capacity)
+					_Resize(_size + index + Resize);
+				const I32 size = arr.Size();
+				for (int i = index; i < size; ++i) {
+					_memory[i + size] = _memory[i];
+					_memory[i] = arr[i];
+				}
+				_size += arr.Size();
+			}
+			return arr.Size();
+		}
 
+
+
+		// All all items in the supplied array
+		void Add(ReadOnlyArray<T> arr) {
+			for (auto a : arr)
+				Add(a);
+		}
+
+		// Reset the size of this vector
+		void Clear()
+		{
+			_size = 0;
+		}
+
+		T* Ptr() { return _memory; }
 		const T* Ptr() const { return _memory; }
 
 	public:
@@ -138,6 +163,23 @@ namespace WestCoastCode
 		void _VarSet(I32 index, T first, Args... args) {
 			_memory[index] = first;
 			_VarSet(index + 1, args...);
+		}
+
+		void _Resize()
+		{
+			_Resize(Resize);
+		}
+
+		void _Resize(I32 minCount)
+		{
+			_capacity += minCount;
+			if (_memory == nullptr)
+				_memory = (T*)malloc(sizeof(T) * _capacity);
+			else {
+				auto newMemory = (T*)realloc(_memory, sizeof(T) * _capacity);
+				assert(newMemory);
+				_memory = newMemory;
+			}
 		}
 
 	private:

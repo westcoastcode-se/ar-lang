@@ -29,6 +29,7 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
 		ISyntaxTreeNodeType* GetStackType() final;
+		Vector<ISyntaxTreeNodeOp*> OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer) final;
 
 	public:
 		// Add a new node to be returned

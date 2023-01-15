@@ -35,6 +35,16 @@ struct TestUtilsCompilation : TestUtils
 		syntaxTree = compiler->AddSourceCode(sourceCode);
 		AssertNotNull(syntaxTree);
 	}
+
+	String Format(const Char* fmt, ...)
+	{
+		Char bytes[4096];
+		va_list argptr;
+		va_start(argptr, fmt);
+		vsprintf(bytes, fmt, argptr);
+		va_end(argptr);
+		return String(bytes);
+	}
 };
 
 struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
@@ -345,27 +355,28 @@ struct SuiteCompilationError
 
 struct SuiteCompileAndThenInterpret : TestUtilsCompilationWithInterpreter
 {
-	void Constant()
+	template<typename T>
+	void Constant_T(T val)
 	{
-		AddSourceCode(new SourceCode(R"(
+		AddSourceCode(new SourceCode(Format(R"(
 package Main
 
-func Get() int32 {
-	return 123
+func Get() %s {
+	return (%s)%lld
 }
-)", "main.arl"));
+)", Name<T>(), Name<T>(), (I64)val), "main.arl"));
 
 		// Compile the source code
 		CompileAndInvoke("Get()");
 
-		VerifyStackSize(sizeof(I32));
-		AssertEquals(Pop<I32>(), 123);
-
+		VerifyStackSize(sizeof(T));
+		AssertEquals(Pop<T>(), val);
 	}
 
 	void operator()()
 	{
-		TEST(Constant());
+		TEST(Constant_T<I32>(123));
+		TEST(Constant_T<I16>(INT16_MAX));
 	}
 };
 

@@ -11,8 +11,8 @@ SyntaxTreeNodeTypeRef::SyntaxTreeNodeTypeRef(SourceCodeView sourceCode)
 
 SyntaxTreeNodeTypeRef::~SyntaxTreeNodeTypeRef()
 {
-	for (int i = 0; i < _children.Size(); ++i)
-		delete _children[i];
+	for (auto c : _children)
+		delete c;
 }
 
 void SyntaxTreeNodeTypeRef::ToString(StringStream& s, int indent) const
@@ -60,6 +60,13 @@ void SyntaxTreeNodeTypeRef::ResolveReferences()
 		auto typeDef = dynamic_cast<ISyntaxTreeNodeType*>(def);
 		if (typeDef)
 			_definitions.Add(typeDef);
+	}
+
+	if (!_definitions.IsEmpty()) {
+		// No need for references if we've found definitions
+		for (auto c : _children)
+			delete c;
+		_children.Clear();
 	}
 }
 

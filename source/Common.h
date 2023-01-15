@@ -44,6 +44,9 @@ namespace WestCoastCode
 
 		// Guard is now considered done and should not delete any memory
 		T* Done() { T* tmp = ptr; ptr = nullptr; return tmp; }
+
+		// Switch the guarded value with a new one
+		void SwitchWith(T* newValue) { ptr = newValue; }
 		
 		MemoryGuard<T>& operator=(MemoryGuard<T>& rhs) { ptr = rhs.Done(); }
 

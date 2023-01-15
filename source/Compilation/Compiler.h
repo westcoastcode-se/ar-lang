@@ -19,8 +19,15 @@ namespace WestCoastCode::Compilation
 		void ToString(StringStream& s) const final;
 		void Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) final;
 		SyntaxTreeNodeRoot* GetRootNode() final;
-		void ResolveReferences() final;
-		void Compile(Builder::Linker* linker) final;
+
+		// Resolve references
+		void ResolveReferences();
+
+		// Compile the syntaxtree and link it together into bytecode
+		void Compile(Builder::Linker* linker);
+		
+		// Optimize the syntax tree. Level 0 is only basic constant merge, while Level 3 is the highest optimization
+		void Optimize(ISyntaxTreeNodeOptimizer* optimizer);
 
 	private:
 		SyntaxTreeNodeRoot* const _root;
@@ -43,8 +50,11 @@ namespace WestCoastCode::Compilation
 
 		// Compile the added source codes and return the byte code that the interpreter
 		// can use. Please note that this moves the ownership of the bytecode the the one calling
-		// this method
-		Byte* Compile();
+		// this method.
+		//
+		// You can also specify which optimization level you wish to perform on the compiled source code. Please
+		// note that the higher level the longer time it will take to compile it
+		Byte* Compile(int optimizationLevel = 0);
 
 		// Find the primitive with the supplied name
 		ISyntaxTreeNodePrimitive* FindPrimitive(ReadOnlyString name);

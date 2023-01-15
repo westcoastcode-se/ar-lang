@@ -40,6 +40,26 @@ void SyntaxTreeNodeScope::Compile(Builder::Linker* linker, Builder::Instructions
 		child->Compile(linker, instructions);
 }
 
+Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeScope::OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer)
+{
+	for (int i = 0; i < _children.Size(); ++i) {
+		auto optimized = _children[i]->OptimizeOp(optimizer);
+		if (!optimized.IsEmpty()) {
+			if (optimized.Size() == 1) {
+				delete _children[i];
+				_children[i] = static_cast<ISyntaxTreeNodeOp*>(optimized[0]);
+			}
+			else {
+				i += _children.InsertAt(optimized, i);
+				delete _children.RemoveAt(i);
+				i -= 1;
+			}
+
+		}
+	}
+	return optimizer->Optimize(this);
+}
+
 void SyntaxTreeNodeScope::AddOp(ISyntaxTreeNodeOp* node)
 {
 	_children.Add(node);

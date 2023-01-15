@@ -11,20 +11,14 @@ SyntaxTreeNodeMultiType::SyntaxTreeNodeMultiType(SourceCodeView sourceCode)
 
 SyntaxTreeNodeMultiType::~SyntaxTreeNodeMultiType()
 {
-	for (int i = 0; i < _children.Size(); ++i)
-		delete _children[i];
+	for (auto c : _children)
+		delete c;
 }
 
 void SyntaxTreeNodeMultiType::ToString(StringStream& s, int indent) const
 {
 	s << _id << Indent(indent);
-	s << "Types(definitions=[";
-	for (int i = 0; i < _definitions.Size(); ++i) {
-		if (i != 0)
-			s << ",";
-		s << _definitions[i]->GetID();
-	}
-	s << "])" << std::endl;
+	s << "MiltiType(count=" << _children.Size() << "])" << std::endl;
 	for (int i = 0; i < _children.Size(); ++i)
 		_children[i]->ToString(s, indent + 1);
 }
@@ -48,9 +42,6 @@ void SyntaxTreeNodeMultiType::SetParent(ISyntaxTreeNode* parent)
 
 void SyntaxTreeNodeMultiType::ResolveReferences()
 {
-	if (!_definitions.IsEmpty())
-		return;
-
 	// Resolve children first
 	Default::ResolveReferences(this);
 }

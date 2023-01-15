@@ -11,7 +11,7 @@ SyntaxTreeNodeImport::SyntaxTreeNodeImport(SourceCodeView sourceCode, SyntaxTree
 
 SyntaxTreeNodeImport::~SyntaxTreeNodeImport()
 {
-	for (auto& n : _children)
+	for (auto n : _children)
 		delete n;
 }
 

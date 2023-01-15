@@ -426,13 +426,13 @@ struct TestUtils
 	}
 
 	template<typename T>
-	const char* Name()
+	const Char* Name()
 	{
 		return UtilsType<T>::name;
 	}
 
 	template<typename T>
-	const char* NameOf(T)
+	const Char* NameOf(T)
 	{
 		return UtilsType<T>::name;
 	}

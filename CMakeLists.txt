@@ -111,7 +111,8 @@ add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNodeScope.cpp"
     "source/Compilation/CompileError.cpp"
     "source/Compilation/SyntaxTreeNodeMultiType.cpp"
-    "source/Compilation/SyntaxTreeNodeRoot.cpp")
+    "source/Compilation/SyntaxTreeNodeRoot.cpp"
+    "source/Compilation/SyntaxTreeNodeOpTypeCast.cpp")
 
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 

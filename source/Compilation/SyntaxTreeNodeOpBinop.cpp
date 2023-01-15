@@ -71,3 +71,17 @@ void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructio
 		throw CompileErrorNotImplemented(this, "Binop");
 	}
 }
+
+Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer)
+{
+	for (int i = 0; i < _children.Size(); ++i) {
+		auto optimized = _children[i]->OptimizeOp(optimizer);
+		if (!optimized.IsEmpty()) {
+			if (optimized.Size() != 1)
+				throw CompileErrorNotImplemented(this, "Binop optimize is not allowed expand");
+			delete _children[i];
+			_children[i] = optimized[0];
+		}
+	}
+	return optimizer->Optimize(this);
+}

@@ -117,3 +117,9 @@ void ISyntaxTreeNode::Default::Compile(ISyntaxTreeNode* node, Builder::Linker* l
 	for (auto child : node->GetChildren())
 		child->Compile(linker);
 }
+
+void ISyntaxTreeNode::Default::Optimize(ISyntaxTreeNode* node, ISyntaxTreeNodeOptimizer* optimizer)
+{
+	for (auto child : node->GetChildren())
+		child->Optimize(optimizer);
+}

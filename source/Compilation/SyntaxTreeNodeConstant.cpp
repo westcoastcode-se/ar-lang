@@ -62,6 +62,35 @@ void SyntaxTreeNodeConstant::Compile(Builder::Linker* linker, Builder::Instructi
     instructions.Ldc(symbol, _value);
 }
 
+SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(ISyntaxTreeNodeType* newType)
+{
+    SyntaxTreeNodePrimitive* primitive = nullptr;
+    auto ref = dynamic_cast<ISyntaxTreeNodeTypeRef*>(newType);
+    if (ref != nullptr) {
+        auto definitions = ref->GetDefinitions();
+        if (definitions.IsEmpty())
+            return nullptr;
+
+        primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(definitions[0]);
+    }
+
+    // Is the type a primitive type?
+    if (primitive == nullptr) {
+        
+        auto primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(newType);
+        if (primitive == nullptr) {
+            return nullptr;
+        }
+    }
+
+    // Convert the constant value
+    Interpreter::PrimitiveValue newValue = _value;
+    const auto newPrimitiveType = primitive->GetPrimitiveType();
+    //TODO: Convert value if different from current primitive
+    newValue.type = newPrimitiveType;
+    return new SyntaxTreeNodeConstant(_function, _sourceCode, newValue, primitive);
+}
+
 SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
 {
     Token* const t = state->token;

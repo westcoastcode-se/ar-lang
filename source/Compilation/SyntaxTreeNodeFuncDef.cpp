@@ -50,14 +50,14 @@ void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
 {
 	if (_symbol == nullptr) {
 		_symbol = new Builder::Function(_name);
+
 		// TODO: Add support for functions inside another function
-		if (dynamic_cast<SyntaxTreeNodePackage*>(_parent)) {
-			auto symbol = static_cast<SyntaxTreeNodePackage*>(_parent)->GetSymbol();
-			symbol->Add(_symbol);
-		}
+		auto package = GetPackage();
+		auto symbol = static_cast<SyntaxTreeNodePackage*>(package)->GetSymbol();
+		symbol->Add(_symbol);
 	}
 
-	// Compile children
+	// Compile children so that we have valid symbols for arguments and return types
 	for (auto child : _children)
 		child->Compile(linker);
 
@@ -90,7 +90,6 @@ void SyntaxTreeNodeFuncDef::SetBody(SyntaxTreeNodeFuncBody* body)
 	assert(_body == nullptr &&
 		"A function is only allowed to have one body");
 	_body = body;
-	_body->SetFunction(this);
 }
 
 void SyntaxTreeNodeFuncDef::AddArgument(ISyntaxTreeNodeFuncArg* arg)

@@ -43,6 +43,5 @@ namespace WestCoastCode::Compilation
 		SourceCodeView _sourceCode;
 		Vector<ISyntaxTreeNode*> _children;
 		ISyntaxTreeNodeTypeRef* _variableType;
-
 	};
 }

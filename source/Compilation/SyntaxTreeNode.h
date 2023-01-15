@@ -28,6 +28,7 @@ namespace WestCoastCode::Compilation
 
 	class ISyntaxTree;
 	class ISyntaxTreeNode;
+	class ISyntaxTreeNodeOp;
 	class ISyntaxTreeNodeType;
 	class ISyntaxTreeNodePackage;
 	class ISyntaxTreeNodeFuncArg;
@@ -90,6 +91,16 @@ namespace WestCoastCode::Compilation
 
 		// Visit the supplied node. Return true if we want to continue search for more nodes
 		virtual VisitorResult Visit(ISyntaxTreeNode* node) = 0;
+	};
+
+	// Optimizer. It is assumed that the optimization is done bottom-up
+	class ISyntaxTreeNodeOptimizer
+	{
+	public:
+		virtual ~ISyntaxTreeNodeOptimizer() {}
+
+		// Optimize the supplied node and return a list of nodes that should replace the supplied node
+		virtual Vector<ISyntaxTreeNodeOp*> Optimize(ISyntaxTreeNodeOp* node) = 0;
 	};
 
 	class IStringify
@@ -160,6 +171,11 @@ namespace WestCoastCode::Compilation
 			Default::Compile(this, linker);
 		}
 
+		// Optimize this tree node's children using the supplied optimizer
+		virtual void Optimize(ISyntaxTreeNodeOptimizer* optimizer) {
+			Default::Optimize(this, optimizer);
+		}
+
 	public:
 		// Default implementations
 		struct Default
@@ -169,6 +185,7 @@ namespace WestCoastCode::Compilation
 			static VisitResult Query(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
 			static void ResolveReferences(ISyntaxTreeNode* node);
 			static void Compile(ISyntaxTreeNode* node, Builder::Linker* linker);
+			static void Optimize(ISyntaxTreeNode* node, ISyntaxTreeNodeOptimizer* optimizer);
 		};
 	};
 
@@ -204,9 +221,6 @@ namespace WestCoastCode::Compilation
 	public:
 		// All types that this node referrs to
 		virtual ReadOnlyArray<ISyntaxTreeNodeType*> GetTypes() const = 0;
-
-		// All types that this node referrs to
-		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
 	};
 
 	// A primitive. These are normally created by the compiler outside the source code
@@ -216,6 +230,9 @@ namespace WestCoastCode::Compilation
 	public:
 		// The memory size of this primitive
 		virtual I32 GetSize() const = 0;
+
+		// Get the interpreter primitive type
+		virtual Interpreter::PrimitiveType GetPrimitiveType() const = 0;
 	};
 
 	// A reference to another syntax tree node
@@ -309,8 +326,14 @@ namespace WestCoastCode::Compilation
 		// method instead.
 		void Compile(Builder::Linker* linker) final {}
 
+		// This normal optimize functionality is no longer allowed. 
+		virtual void Optimize(ISyntaxTreeNodeOptimizer* optimizer) final {}
+
 		// Compile this operation
 		virtual void Compile(Builder::Linker* linker, Builder::Instructions& instructions) = 0;
+
+		// Optimize this operator
+		virtual Vector<ISyntaxTreeNodeOp*> OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer) = 0;
 
 		// Get the function this operation is part of (if any)
 		virtual ISyntaxTreeNodeFuncDef* GetFunction() = 0;
@@ -320,6 +343,14 @@ namespace WestCoastCode::Compilation
 
 		// Get the type which this operator results into onto the stack
 		virtual ISyntaxTreeNodeType* GetStackType() = 0;
+	};
+
+	// Type-cast the result of any child operations into a new type
+	class ISyntaxTreeNodeOpTypeCast : public ISyntaxTreeNodeOp
+	{
+	public:
+		// Cast from the supplied type
+		virtual ISyntaxTreeNodeType* FromType() = 0;
 	};
 
 	// A node containing the function body logic

@@ -8,7 +8,6 @@ namespace WestCoastCode::Compilation
 		SyntaxTreeNodeConstant(ISyntaxTreeNodeFuncDef* func, SourceCodeView sourceCode, 
 			const Interpreter::PrimitiveValue& value, ISyntaxTreeNodePrimitive* stackType)
 			: _function(func), _parent(nullptr), _sourceCode(sourceCode), _value(value), _stackType(stackType) {
-
 		}
 
 		// Inherited via ISyntaxTreeNode
@@ -27,8 +26,12 @@ namespace WestCoastCode::Compilation
 		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
 		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
 		ISyntaxTreeNodeType* GetStackType() final { return _stackType; }
+		Vector<ISyntaxTreeNodeOp*> OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer) final { return Vector<ISyntaxTreeNodeOp*>(); }
 	
 	public:
+		// Try to cast this constant into a new constant
+		SyntaxTreeNodeConstant* Cast(ISyntaxTreeNodeType* newType);
+
 		// Parse the supplied state and return a constant
 		static SyntaxTreeNodeConstant* Parse(const ParserState* state);
 

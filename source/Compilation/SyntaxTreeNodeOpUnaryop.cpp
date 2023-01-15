@@ -7,8 +7,8 @@ using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeOpUnaryop::~SyntaxTreeNodeOpUnaryop()
 {
-	for(int i = 0; i < _children.Size(); ++i)
-		delete _children[i];
+	for (auto c : _children)
+		delete c;
 }
 
 void SyntaxTreeNodeOpUnaryop::ToString(StringStream& s, int indent) const
@@ -38,7 +38,7 @@ void SyntaxTreeNodeOpUnaryop::SetParent(ISyntaxTreeNode* parent)
 
 void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
 {
-/*	GetRight()->Compile(linker, instructions);
+	GetRight()->Compile(linker, instructions);
 
 	switch (_op)
 	{
@@ -46,11 +46,24 @@ void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instruct
 		//instructions.Add(GetRight());
 		break;
 	}
-	*/
 	throw CompileErrorNotImplemented(this, "Unaryop");
 }
 
 ISyntaxTreeNodeType* SyntaxTreeNodeOpUnaryop::GetStackType()
 {
 	return _children[0]->GetStackType();
+}
+
+Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpUnaryop::OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer)
+{
+	for (int i = 0; i < _children.Size(); ++i) {
+		auto optimized = _children[i]->OptimizeOp(optimizer);
+		if (!optimized.IsEmpty()) {
+			if (optimized.Size() != 1)
+				throw CompileErrorNotImplemented(this, "Unaryop optimize is not allowed expand");
+			delete _children[i];
+			_children[i] = optimized[0];
+		}
+	}
+	return optimizer->Optimize(this);
 }

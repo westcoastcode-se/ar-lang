@@ -22,11 +22,5 @@ namespace WestCoastCode::Compilation
 
 		// Get the root package where primitives and built-in functions are located
 		virtual SyntaxTreeNodeRoot* GetRootNode() = 0;
-
-		// Resolve references
-		virtual void ResolveReferences() = 0;
-
-		// Compile the syntaxtree and link it together into bytecode
-		virtual void Compile(Builder::Linker* linker) = 0;
 	};
 }

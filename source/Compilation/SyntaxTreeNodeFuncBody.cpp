@@ -5,12 +5,14 @@
 #include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodeConstant.h"
 #include "SyntaxTreeNodeScope.h"
+#include "SyntaxTreeNodeOpTypeCast.h"
+#include "SyntaxTreeNodeTypeRef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView sourceCode)
-	: _function(nullptr), _parent(nullptr), _sourceCode(sourceCode)
+SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* func)
+	: _function(func), _parent(nullptr), _sourceCode(sourceCode)
 {
 }
 
@@ -54,17 +56,29 @@ void SyntaxTreeNodeFuncBody::Compile(Builder::Linker* linker)
 	instructions.End();
 }
 
+void SyntaxTreeNodeFuncBody::Optimize(ISyntaxTreeNodeOptimizer* optimizer)
+{
+	for (int i = 0; i < _children.Size(); ++i) {
+		auto optimized = _children[i]->OptimizeOp(optimizer);
+		if (!optimized.IsEmpty()) {
+			if (optimized.Size() == 1) {
+				delete _children[i];
+				_children[i] = static_cast<ISyntaxTreeNodeOp*>(optimized[0]);
+			}
+			else {
+				i += _children.InsertAt(optimized, i);
+				delete _children.RemoveAt(i);
+				i -= 1;
+			}
+			
+		}
+	}
+}
+
 void SyntaxTreeNodeFuncBody::AddOp(ISyntaxTreeNodeOp* node)
 {
 	_children.Add(node);
 	node->SetParent(this);
-}
-
-void SyntaxTreeNodeFuncBody::SetFunction(ISyntaxTreeNodeFuncDef* funcdef)
-{
-	assert(_function == nullptr &&
-		"a function body cannot have two definitions");
-	_function = funcdef;
 }
 
 SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
@@ -79,7 +93,7 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 	// Get the start of the string that represents the type we are trying to resolve
 	const ReadOnlyString first = t->GetString();
 
-	auto body = new SyntaxTreeNodeFuncBody(SourceCodeView(state->sourceCode, t));
+	auto body = new SyntaxTreeNodeFuncBody(SourceCodeView(state->sourceCode, t), state->function);
 	auto mem = MemoryGuard(body);
 	auto scope = new SyntaxTreeNodeScope(SourceCodeView(state->sourceCode, t), state->function);
 	body->AddOp(scope);
@@ -206,6 +220,32 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 	{
 	case TokenType::Int:
 		return SyntaxTreeNodeConstant::Parse(state);
+	case TokenType::ParantLeft: {
+		t->Next();
+
+		// It might be a type-cast
+		// It might also be a (local1 + 10), so the
+		if (t->GetType() == TokenType::Identity) {
+			Token peek(t);
+			if (peek.Next() == TokenType::ParantRight) {
+				auto newType = SyntaxTreeNodeTypeRef::Parse(state);
+				t->Next();
+				auto cast = new SyntaxTreeNodeOpTypeCast(SourceCodeView(state->sourceCode, t),
+					state->function);
+				cast->SetNewType(newType);
+				auto guard = MemoryGuard(cast);
+				cast->SetOp(ParseCompare(state));
+				return guard.Done();
+			}
+		}
+
+		auto node = ParseBody(state);
+		if (t->GetType() != TokenType::ParantRight) {
+			throw ParseErrorSyntaxError(state, "expected ')'");
+		}
+		t->Next();
+		return node;
+	}
 	}
 	
 
@@ -219,15 +259,11 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, Toke
 	auto right = rightFunc(state);
 	auto guard = MemoryGuard(right);
 
-	// Try to merge all children
-	// right = arC_syntax_tree_merge_children(s, guard.Done());
-	// guard = MemoryGuard(right);
-
 	auto unaryop = new SyntaxTreeNodeOpUnaryop(SourceCodeView(state->sourceCode, t),
 		state->function, guard.Done(), SyntaxTreeNodeOpUnaryop::FromTokenType(tokenType));
 	guard = MemoryGuard(unaryop);
-	// return arC_syntax_tree_merge_children(s, guard.Done());
-	return unaryop;
+
+	return guard.Done();
 }
 
 ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Vector<TokenType>& types,
@@ -240,10 +276,6 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const 
 	auto left = leftFunc(state);
 	auto guard = MemoryGuard(left);
 
-	// Try to merge all children
-	//left = arC_syntax_tree_merge_children(s, guard.Done());
-	//guard = MemoryGuard(left);
-
 	while (true) {
 		const auto size = types.Size();
 		const auto tokenType = t->GetType();
@@ -253,18 +285,9 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const 
 			t->Next();
 
 			auto right = rightFunc(state);
-
-			// Try to merge all children
-			//right = arC_syntax_tree_merge_children(s, right);
-
-			auto binop = new SyntaxTreeNodeOpBinop(SourceCodeView(state->sourceCode, t), state->function,
+			left = new SyntaxTreeNodeOpBinop(SourceCodeView(state->sourceCode, t), state->function,
 				guard.Done(), right, SyntaxTreeNodeOpBinop::FromTokenType(tokenType));
-			left = binop;
 			guard = MemoryGuard(left);
-
-			// Try to merge all children
-			//left = arC_syntax_tree_merge_children(s, guard.Done());
-			//guard = MemoryGuard(left);
 		}
 
 		if (size == types.Size())

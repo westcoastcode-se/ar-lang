@@ -1,6 +1,8 @@
 #include "Compiler.h"
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodePrimitive.h"
+#include "SyntaxTreeNodeOpBinop.h"
+#include "SyntaxTreeNodeOpTypeCast.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -19,7 +21,7 @@ SyntaxTree::~SyntaxTree()
 void SyntaxTree::ToString(StringStream& s) const
 {
 	if (_root)
-		_root->ToString(s, 0);
+		_root->ToString(s, 1);
 }
 
 void SyntaxTree::Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags)
@@ -40,6 +42,11 @@ void SyntaxTree::ResolveReferences()
 void SyntaxTree::Compile(Builder::Linker* linker)
 {
 	_root->Compile(linker);
+}
+
+void SyntaxTree::Optimize(ISyntaxTreeNodeOptimizer* optimizer)
+{
+	_root->Optimize(optimizer);
 }
 
 Compiler::Compiler()
@@ -64,10 +71,14 @@ SyntaxTree* Compiler::AddSourceCode(SourceCode* sourceCode)
 	return _syntaxTree;
 }
 
-Byte* Compiler::Compile()
+Byte* Compiler::Compile(int optimizationLevel)
 {
 	// Start by resolving all references
 	_syntaxTree->ResolveReferences();
+
+	// Optimize the syntax tree
+	SyntaxTreeNodeOpTypeCast::Optimize0_Merge optimizer0_1;
+	_syntaxTree->Optimize(&optimizer0_1);
 
 	// Link the bytecode together and return the bytecode
 	auto linker = new Builder::Linker();

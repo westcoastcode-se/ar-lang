@@ -8,7 +8,7 @@ namespace WestCoastCode::Compilation
 	class SyntaxTreeNodeFuncBody : public ISyntaxTreeNodeFuncBody
 	{
 	public:
-		SyntaxTreeNodeFuncBody(SourceCodeView sourceCode);
+		SyntaxTreeNodeFuncBody(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* func);
 
 		~SyntaxTreeNodeFuncBody() final;
 
@@ -24,15 +24,13 @@ namespace WestCoastCode::Compilation
 		ReadOnlyString GetText() const final { return _text; }
 		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
 		void Compile(Builder::Linker* linker) final;
+		void Optimize(ISyntaxTreeNodeOptimizer* optimizer) final;
 
 	public:
 		typedef ISyntaxTreeNodeOp* (*ParseFn)(ParserState*);
 
 		// Add a child node
 		void AddOp(ISyntaxTreeNodeOp* node);
-
-		// Set the definition associated with this function body
-		void SetFunction(ISyntaxTreeNodeFuncDef* funcdef);
 
 		// Parse a function body using the supplied state
 		static SyntaxTreeNodeFuncBody* Parse(ParserState* state);
@@ -74,7 +72,7 @@ namespace WestCoastCode::Compilation
 
 	private:
 		const ID _id;
-		ISyntaxTreeNodeFuncDef* _function;
+		ISyntaxTreeNodeFuncDef* const _function;
 		ISyntaxTreeNode* _parent;
 		SourceCodeView _sourceCode;
 		ReadOnlyString _text;

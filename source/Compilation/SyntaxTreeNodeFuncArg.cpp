@@ -20,9 +20,7 @@ void SyntaxTreeNodeFuncArg::ToString(StringStream& s, int indent) const
 	s << _id << Indent(indent);
 	s << "FuncArg(name=" << _name << ", type=";
 	if (_variableType) {
-		char tmp[32];
-		sprintf(tmp, "%p", _variableType);
-		s << tmp;
+		s << _variableType->GetID();
 	}
 	s << ")" << std::endl;
 	for (auto c : _children)

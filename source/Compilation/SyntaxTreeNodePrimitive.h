@@ -31,6 +31,7 @@ namespace WestCoastCode::Compilation
 		const SourceCodeView* GetSourceCode() const final { return nullptr; }
 		void ToString(StringStream& s, int indent) const final;
 		I32 GetSize() const final { return _stackSize; }
+		Interpreter::PrimitiveType GetPrimitiveType() const final { return _primitiveType; }
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		void Compile(Builder::Linker* linker) final;
 
