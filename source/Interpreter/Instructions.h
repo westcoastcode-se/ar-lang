@@ -172,5 +172,12 @@ union { \
 		Ldc_s_I16_1 = Props(Incode::Ldc_s, PrimitiveType::I16, 1, 0),
 		Ldc_s_U16_0 = Props(Incode::Ldc_s, PrimitiveType::U16, 0, 0),
 		Ldc_s_U16_1 = Props(Incode::Ldc_s, PrimitiveType::U16, 1, 0),
+
+		Add_I8 = Props(Incode::Add, PrimitiveType::I8, 0, 0),
+		Add_I16 = Props(Incode::Add, PrimitiveType::I16, 0, 0),
+		Add_I32 = Props(Incode::Add, PrimitiveType::I32, 0, 0),
+		Add_I64 = Props(Incode::Add, PrimitiveType::I64, 0, 0),
+		Add_F32 = Props(Incode::Add, PrimitiveType::F32, 0, 0),
+		Add_F64 = Props(Incode::Add, PrimitiveType::F64, 0, 0)
 	};
 }

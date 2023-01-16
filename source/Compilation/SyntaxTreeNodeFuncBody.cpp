@@ -220,6 +220,13 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 	{
 	case TokenType::Int:
 		return SyntaxTreeNodeConstant::Parse(state);
+	case TokenType::Identity:
+		// Identity might be:
+		// 1. Variable (local, argument, global, constant)
+		// 2. Type (type, primitive, class, package)
+		// 3. Function
+		// 4. Method
+		break;
 	case TokenType::ParantLeft: {
 		t->Next();
 

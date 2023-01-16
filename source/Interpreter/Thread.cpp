@@ -41,6 +41,7 @@ void Thread::ExecEntrypoint(const Function* entrypoint)
 #include "Instructions/Ldc_s.c"
 #include "Instructions/Ldc_l.c"
 #include "Instructions/Ret.c"
+#include "Instructions/Add.c"
 
 void Thread::Exec(const Byte* ip)
 {
@@ -97,6 +98,24 @@ void Thread::Exec0(const Byte* ip) noexcept
 			continue;
 		case (I32)Opcodes::Ldc_s_U16_1:
 			ip = Ldc_s_U16(&_stack, ip, 1);
+			continue;
+		case (I32)Opcodes::Add_I8:
+			ip = Add_I8(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Add_I16:
+			ip = Add_I16(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Add_I32:
+			ip = Add_I32(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Add_I64:
+			ip = Add_I64(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Add_F32:
+			ip = Add_F32(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Add_F64:
+			ip = Add_F64(&_stack, ip);
 			continue;
 		default:
 			break;

@@ -12,17 +12,7 @@ namespace
 ID::ID()
 	: value(++nextId)
 {
-#if defined (ARLANG_MEMORY_TRACKING)
-	printf("+ID(%d)\n", value);
-#endif
 }
-
-#if defined (ARLANG_MEMORY_TRACKING)
-ID::~ID()
-{
-	printf("-ID(%d)\n", value);
-}
-#endif
 
 Vector<ISyntaxTreeNode*> ISyntaxTreeNode::Default::GetSiblingsBefore(const ISyntaxTreeNode* node)
 {

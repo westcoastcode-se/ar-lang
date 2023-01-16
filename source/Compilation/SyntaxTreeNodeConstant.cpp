@@ -65,6 +65,9 @@ void SyntaxTreeNodeConstant::ToString(StringStream& s, int indent) const
     s << "Constant(value=";
     switch (_value.type)
     {
+    case Interpreter::PrimitiveType::I16:
+        s << _value.i16;
+        break;
     case Interpreter::PrimitiveType::I32:
         s << _value.i32;
         break;

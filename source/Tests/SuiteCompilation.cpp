@@ -373,11 +373,49 @@ func Get() %s {
 		AssertEquals(Pop<T>(), val);
 	}
 
+	void Add_I32()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Get() int32 {
+	return 10 + 123
+}
+)", "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(I32));
+		AssertEquals(Pop<I32>(), 133);
+	}
+
+	void Add_I64()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Get() int64 {
+	return (int64)(10 + 123)
+}
+)", "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(I64));
+		AssertEquals(Pop<I64>(), (I64)133);
+		DebugSyntaxTree();
+	}
+
 	void operator()()
 	{
 		TEST(Constant_T<I32>(123));
 		TEST(Constant_T<I16>(INT16_MAX));
 		TEST(Constant_T<F32>(1.0));
+
+		TEST(Add_I32());
+		//TEST(Add_I64());
 	}
 };
 

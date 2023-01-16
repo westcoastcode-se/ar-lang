@@ -13,6 +13,7 @@ namespace WestCoastCode::Builder
 	class IFunction;
 	class IType;
 
+	// Interface for symbols
 	class ARLANG_API ISymbol
 	{
 	public:
@@ -34,6 +35,7 @@ namespace WestCoastCode::Builder
 		virtual const ReadOnlyString GetSignature() const = 0;
 	};
 
+	// Interface for packages
 	class ARLANG_API IPackage : public ISymbol
 	{
 	public:
@@ -50,6 +52,7 @@ namespace WestCoastCode::Builder
 		virtual ReadOnlyArray<IType*> GetTypes() const = 0;
 	};
 
+	// Interface for a function
 	class ARLANG_API IFunction : public ISymbol
 	{
 	public:
@@ -70,7 +73,7 @@ namespace WestCoastCode::Builder
 	};
 	typedef I32 TypeFlags;
 
-
+	// Interface for type
 	class ARLANG_API IType : public ISymbol
 	{
 	public:
