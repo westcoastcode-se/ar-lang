@@ -27,7 +27,7 @@ Bytes Linker::Link()
 	header->header[1] = 'R';
 	header->header[2] = 'L';
 	header->header[3] = '0';
-	header->version = VM_VERSION;
+	header->version = ARLANG_INTERPRETER_VERSION;
 	header->codeOffset = readOnlyOffset;
 	header->codeSize = totalSize - readOnlyOffset;
 	header->dataOffset = totalHeaderSize;

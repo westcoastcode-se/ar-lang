@@ -6,7 +6,7 @@
 namespace WestCoastCode::Builder
 {
 	// Memory stream for writing bytecode
-	class MemoryStream
+	class ARLANG_API MemoryStream
 	{
 	public:
 		MemoryStream(I32 totalSize);

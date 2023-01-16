@@ -87,7 +87,7 @@ void Process::Load(Bytes bytecode, bool deleteOnExit)
 	auto header = (const ProcessHeader*)bytecode;
 	if (header->header[0] != 'A' || header->header[1] != 'R' || header->header[2] != 'L' || header->header[3] != '0')
 		throw ProcessErrorFailedToLoad();
-	if (header->version != VM_VERSION)
+	if (header->version != ARLANG_INTERPRETER_VERSION)
 		throw ProcessErrorIncompatibleVersion(header->version);
 
 	// First package information is expected to be after the header

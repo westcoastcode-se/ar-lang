@@ -96,18 +96,26 @@ namespace WestCoastCode
 		// are automatically moved forward. Returns the number of new items added to the list
 		I32 InsertAt(ReadOnlyArray<T> arr, I32 index) {
 			assert(index >= 0);
+			if (arr.IsEmpty()) return 0;
 			if (index >= _size)
 				Add(arr);
 			else {
 				// Resize the memory block so that we can fit all items
-				if (_size + index > _capacity)
-					_Resize(_size + index + Resize);
-				const I32 size = arr.Size();
-				for (int i = index; i < size; ++i) {
-					_memory[i + size] = _memory[i];
-					_memory[i] = arr[i];
-				}
+				if (_size + arr.Size() > _capacity)
+					_Resize(_size + arr.Size() + Resize);
 				_size += arr.Size();
+				
+				// Move forward items from the back towards the front
+				const T* src = &_memory[_size - arr.Size() - 1];
+				T* dest = &_memory[_size - 1];
+				const T* end = &_memory[index + arr.Size() - 1];
+				for (; dest != end; --src, --dest)
+					*dest = *src;
+
+				// Copy data from the source array into the destination
+				const I32 size = arr.Size();
+				for (int i = 0; i < size; ++i)
+					_memory[i + index] = arr[i];
 			}
 			return arr.Size();
 		}
@@ -290,7 +298,7 @@ namespace WestCoastCode
 				}
 			}
 			else {
-				return 0;
+				return v.Size();
 			}
 		}
 
@@ -305,7 +313,7 @@ namespace WestCoastCode
 				}
 			}
 			else {
-				return 0;
+				return const_cast<Vector<Class>&>(v).Ptr();
 			}
 		}
 
@@ -319,7 +327,7 @@ namespace WestCoastCode
 				}
 			}
 			else {
-				return 0;
+				return v.Size();
 			}
 		}
 
@@ -334,7 +342,7 @@ namespace WestCoastCode
 				}
 			}
 			else {
-				return 0;
+				return const_cast<Array<Class, Size>&>(v).Ptr();
 			}
 		}
 	public:

@@ -7,7 +7,7 @@
 namespace WestCoastCode::Builder
 {
 	// Error raised when 
-	class LinkError : public std::exception
+	class ARLANG_API LinkError : public std::exception
 	{
 	public:
 		char const* what() const;
@@ -23,7 +23,7 @@ namespace WestCoastCode::Builder
 		String _error;
 	};
 
-	class LinkErrorInvalidBytecodeSize : public LinkError
+	class ARLANG_API LinkErrorInvalidBytecodeSize : public LinkError
 	{
 	public:
 		char const* what() const final { return "invalid bytecode size generation"; }

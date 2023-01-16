@@ -13,7 +13,7 @@ namespace WestCoastCode::Builder
 	class IFunction;
 	class IType;
 
-	class ISymbol
+	class ARLANG_API ISymbol
 	{
 	public:
 		virtual ~ISymbol() {}
@@ -34,7 +34,7 @@ namespace WestCoastCode::Builder
 		virtual const ReadOnlyString GetSignature() const = 0;
 	};
 
-	class IPackage : public ISymbol
+	class ARLANG_API IPackage : public ISymbol
 	{
 	public:
 		// Get the signature of this symbol
@@ -50,7 +50,7 @@ namespace WestCoastCode::Builder
 		virtual ReadOnlyArray<IType*> GetTypes() const = 0;
 	};
 
-	class IFunction : public ISymbol
+	class ARLANG_API IFunction : public ISymbol
 	{
 	public:
 		// Get the amount of bytes the argument values require
@@ -60,7 +60,7 @@ namespace WestCoastCode::Builder
 		virtual I32 GetReturnsSize() const = 0;
 	};
 
-	enum class TypeFlag
+	enum class ARLANG_API TypeFlag
 	{
 		Void = 1 << 0,
 		Primitive = 1 << 1,
@@ -71,7 +71,7 @@ namespace WestCoastCode::Builder
 	typedef I32 TypeFlags;
 
 
-	class IType : public ISymbol
+	class ARLANG_API IType : public ISymbol
 	{
 	public:
 		// Get the offset where the type information is located
@@ -87,7 +87,7 @@ namespace WestCoastCode::Builder
 		virtual Interpreter::PrimitiveType GetPrimitiveType() const = 0;
 	};
 
-	class IGlobal : public ISymbol
+	class ARLANG_API IGlobal : public ISymbol
 	{
 	public:
 		// Get the offset where this global is located
@@ -105,7 +105,7 @@ namespace WestCoastCode::Builder
 	class Function;
 
 	// Represents a package
-	class Package : public IPackage
+	class ARLANG_API Package : public IPackage
 	{
 	public:
 		// The name of the package
@@ -158,7 +158,7 @@ namespace WestCoastCode::Builder
 		I32 _offset;
 	};
 
-	class Global : public IGlobal
+	class ARLANG_API Global : public IGlobal
 	{
 	public:
 		Global(IType* type, ReadOnlyString name)
@@ -194,7 +194,7 @@ namespace WestCoastCode::Builder
 		I32 _offset;
 	};
 
-	class Type : public IType
+	class ARLANG_API Type : public IType
 	{
 	public:
 		Type(ReadOnlyString name, I32 size, TypeFlags flags, 
@@ -231,7 +231,7 @@ namespace WestCoastCode::Builder
 	};
 
 	// All instructions in a specific function
-	class Instructions
+	class ARLANG_API Instructions
 	{
 	public:
 		Instructions(Function* f) : _function(f), _stackSize(0) {}
@@ -270,7 +270,7 @@ namespace WestCoastCode::Builder
 		I32 _stackSize;
 	};
 
-	class Function : public IFunction
+	class ARLANG_API Function : public IFunction
 	{
 	public:
 		Function(ReadOnlyString name)

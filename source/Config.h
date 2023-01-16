@@ -5,7 +5,7 @@
 #define ARLANG_MAJOR_VERSION 0
 #define ARLANG_MINOR_VERSION 0
 #define ARLANG_PATCH_VERSION 1
-#define VM_VERSION 1
+#define ARLANG_INTERPRETER_VERSION 1
 
 // Define that helps us define an arlang function.
 #if defined(ARLANG_DYNAMIC_LIB)
@@ -15,7 +15,7 @@
 #		define ARLANG_API __declspec(dllimport)
 #	endif
 #else
-#	define ARLANG_API extern
+#	define ARLANG_API
 #endif
 
 // Define which indicates if compiled in 32 or 64-bit mode
@@ -55,15 +55,15 @@
 #endif
 
 // Enable memory tracking. This is enabled by default when compiling in debug mode
-#if !defined(VM_MEMORY_TRACKING)
+#if !defined(ARLANG_MEMORY_TRACKING)
 #	if !defined(NDEBUG)
-#		define VM_MEMORY_TRACKING 1
+#		define ARLANG_MEMORY_TRACKING 1
 #	else
-#		define VM_MEMORY_TRACKING 0
+#		define ARLANG_MEMORY_TRACKING 0
 #	endif
 #endif
 
-// Enable runtime stack validation. This is only used if ARLANG_INSTRUCTION_DEBUG is enabled.
+// Enable runtime stack validation.
 // This is enabled by default when building in debug mode. 
 #if !defined(VM_STACK_DEBUG)
 #	if !defined(NDEBUG)

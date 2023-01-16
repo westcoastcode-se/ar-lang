@@ -33,7 +33,32 @@ struct SuiteCommonArray : TestUtils
 		virtual int Id() { return Value; }
 	};
 
-	void EmptyArray()
+	void ArrayWithInheritence()
+	{
+		Array<MyClass1*, 2> arr;
+		arr[0] = new MyClass1();
+		arr[1] = new MyClass2();
+		ReadOnlyArray<MyInterface*> readOnly = arr;
+		AssertEquals(arr.Size(), 2);
+		AssertEquals(readOnly.Size(), 2);
+		AssertEquals(readOnly[0], (MyInterface*)arr[0]);
+		AssertEquals(readOnly[1], (MyInterface*)arr[1]);
+		AssertEquals(readOnly[0]->Id(), MyClass1::Value);
+		AssertEquals(readOnly[1]->Id(), MyClass2::Value);
+		delete arr[1];
+		delete arr[0];
+	}
+
+	void ArrayWithVarargs()
+	{
+		Array<I32, 3> items(1, 2, 3);
+		AssertEquals(items.Size(), 3);
+		AssertEquals(items[0], 1);
+		AssertEquals(items[1], 2);
+		AssertEquals(items[2], 3);
+	}
+
+	void EmptyVector()
 	{
 		Vector<MyInterface*> arr;
 		ReadOnlyArray<MyInterface*> readOnly = arr;
@@ -41,7 +66,7 @@ struct SuiteCommonArray : TestUtils
 		AssertEquals(readOnly.Size(), 0);
 	}
 
-	void EmptyArrayWithInheritence()
+	void EmptyVectorWithInheritence()
 	{
 		Vector<MyClass1*> arr;
 		ReadOnlyArray<MyInterface*> readOnly = arr;
@@ -49,7 +74,7 @@ struct SuiteCommonArray : TestUtils
 		AssertEquals(readOnly.Size(), 0);
 	}
 
-	void ArrayWithInheritence()
+	void VectorWithInheritence()
 	{
 		Vector<MyClass1*> arr;
 		arr.Add(new MyClass1());
@@ -63,15 +88,6 @@ struct SuiteCommonArray : TestUtils
 		AssertEquals(readOnly[1]->Id(), MyClass2::Value);
 	}
 
-	void ArrayWithVarargs()
-	{
-		Array<I32, 3> items(1, 2, 3);
-		AssertEquals(items.Size(), 3);
-		AssertEquals(items[0], 1);
-		AssertEquals(items[1], 2);
-		AssertEquals(items[2], 3);
-	}
-
 	void VectorWithVarargs()
 	{
 		Vector<I32> items(1, 2, 3);
@@ -81,24 +97,54 @@ struct SuiteCommonArray : TestUtils
 		AssertEquals(items[2], 3);
 	}
 
-	void RangeFrom()
+	void VectorInsertAtEnd()
 	{
-		Vector<MyClass1*> arr;
-		ReadOnlyArray<MyInterface*> readOnly = arr;
-		AssertEquals(arr.Size(), 0);
-		AssertEquals(readOnly.Size(), 0);
+		Vector<I32> items(1, 2, 3);
+		items.Add(Vector<I32>(4, 5));
+		AssertEquals(items.Size(), 5);
+		AssertEquals(items[0], 1);
+		AssertEquals(items[1], 2);
+		AssertEquals(items[2], 3);
+		AssertEquals(items[3], 4);
+		AssertEquals(items[4], 5);
+	}
+
+	void VectorInsertAtStart()
+	{
+		Vector<I32> items(1, 2, 3);
+		items.InsertAt(Vector<I32>(4, 5), 0);
+		AssertEquals(items.Size(), 5);
+		AssertEquals(items[0], 4);
+		AssertEquals(items[1], 5);
+		AssertEquals(items[2], 1);
+		AssertEquals(items[3], 2);
+		AssertEquals(items[4], 3);
+	}
+
+	void VectorInsertAtMiddle()
+	{
+		Vector<I32> items(1, 2, 3);
+		items.InsertAt(Vector<I32>(4, 5), 2);
+		AssertEquals(items.Size(), 5);
+		AssertEquals(items[0], 1);
+		AssertEquals(items[1], 2);
+		AssertEquals(items[2], 4);
+		AssertEquals(items[3], 5);
+		AssertEquals(items[4], 3);
 	}
 
 	void operator()()
 	{
-		TEST(EmptyArray());
-		TEST(EmptyArrayWithInheritence());
 		TEST(ArrayWithInheritence());
 		TEST(ArrayWithVarargs());
+
+		TEST(EmptyVector());
+		TEST(EmptyVectorWithInheritence());
+		TEST(VectorWithInheritence());
 		TEST(VectorWithVarargs());
-		//TEST(RangeFrom());
-		//TEST(RangeTo());
-		//TEST(Range());
+		TEST(VectorInsertAtEnd());
+		TEST(VectorInsertAtStart());
+		TEST(VectorInsertAtMiddle());
 	}
 };
 

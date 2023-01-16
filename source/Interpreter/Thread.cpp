@@ -65,11 +65,10 @@ void Thread::Exec0(const Byte* ip) noexcept
 		if (_haltFlags != 0) return;
 
 #ifdef ARLANG_INSTRUCTION_DEBUG
-#	ifdef VM_STACK_DEBUG
-		printf("\n%p] [stack=%05d] ", ip, _stack.GetSize());
-#	else
 		printf("\n%p] ", ip);
-#	endif
+#endif
+#if defined(VM_STACK_DEBUG)
+		printf("[stack=%05d] ", _stack.GetSize());
 #endif
 		const OpcodeHeader* const header = (const OpcodeHeader*)ip;
 

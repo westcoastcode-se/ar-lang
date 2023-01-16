@@ -11,7 +11,7 @@ namespace WestCoastCode::Builder
 	class IFunction;
 
 	// Definition of an instruction
-	class Instr
+	class ARLANG_API Instr
 	{
 	public:
 		Instr() : _offset(-1) {}
@@ -35,7 +35,7 @@ namespace WestCoastCode::Builder
 	};
 
 	template<class T>
-	class TInstr : public Instr
+	class ARLANG_API TInstr : public Instr
 	{
 	public:
 		TInstr() { data.opcode = 0; }
@@ -46,7 +46,7 @@ namespace WestCoastCode::Builder
 	};
 
 	template<typename T>
-	class InstrWithType : public TInstr<T>
+	class ARLANG_API InstrWithType : public TInstr<T>
 	{
 	public:
 		InstrWithType(const IType* type) 
@@ -56,7 +56,7 @@ namespace WestCoastCode::Builder
 		const IType* const type;
 	};
 
-	class InstrAdd : public InstrWithType<Interpreter::InstrAdd>
+	class ARLANG_API InstrAdd : public InstrWithType<Interpreter::InstrAdd>
 	{
 	public:
 		InstrAdd(const IType* type) : InstrWithType(type) {}
@@ -64,7 +64,7 @@ namespace WestCoastCode::Builder
 		void Write(MemoryStream& s) final;
 	};
 
-	class InstrSub : public InstrWithType<Interpreter::InstrSub>
+	class ARLANG_API InstrSub : public InstrWithType<Interpreter::InstrSub>
 	{
 	public:
 		InstrSub(const IType* type) : InstrWithType(type) {}
@@ -72,7 +72,7 @@ namespace WestCoastCode::Builder
 		void Write(MemoryStream& s) final;
 	};
 
-	class InstrMult : public InstrWithType<Interpreter::InstrMult>
+	class ARLANG_API InstrMult : public InstrWithType<Interpreter::InstrMult>
 	{
 	public:
 		InstrMult(const IType* type) : InstrWithType(type) {}
@@ -80,7 +80,7 @@ namespace WestCoastCode::Builder
 		void Write(MemoryStream& s) final;
 	};
 
-	class InstrDiv : public InstrWithType<Interpreter::InstrDiv>
+	class ARLANG_API InstrDiv : public InstrWithType<Interpreter::InstrDiv>
 	{
 	public:
 		InstrDiv(const IType* type) : InstrWithType(type) {}
@@ -88,7 +88,7 @@ namespace WestCoastCode::Builder
 		void Write(MemoryStream& s) final;
 	};
 
-	class InstrRet : public TInstr<Interpreter::InstrRet>
+	class ARLANG_API InstrRet : public TInstr<Interpreter::InstrRet>
 	{
 	public:
 		InstrRet(const IFunction* f) : function(f) {}
@@ -98,7 +98,7 @@ namespace WestCoastCode::Builder
 		const IFunction* const function;
 	};
 
-	class InstrLdc : public Instr
+	class ARLANG_API InstrLdc : public Instr
 	{
 	public:
 		InstrLdc(const IType* stackType, const Interpreter::PrimitiveValue& value)
@@ -112,7 +112,7 @@ namespace WestCoastCode::Builder
 		Interpreter::PrimitiveValue value;
 	};
 
-	class InstrMarker
+	class ARLANG_API InstrMarker
 	{
 	public:
 		InstrMarker()

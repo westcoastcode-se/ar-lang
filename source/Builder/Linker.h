@@ -7,7 +7,7 @@ namespace WestCoastCode::Builder
 {
 	// Linker used to build bytecode that the virtual machine understands
 	// based on symbol
-	class Linker
+	class ARLANG_API Linker
 	{
 	public:
 		~Linker();

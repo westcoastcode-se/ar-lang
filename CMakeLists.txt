@@ -77,8 +77,15 @@ include_directories("${VM_INCLUDE_DIRS}")
 add_executable(test "test/main.cpp" "test/test.hpp" "test/utils.hpp" "test/suite_builder.cpp" "test/suite_compiler.cpp")
 target_link_libraries(test arlang)
 
-
 set(CMAKE_CXX_STANDARD 20)
+
+# Set options to editor
+if(WIN32)
+    ADD_DEFINITIONS("${COMPILER_OPTS_MSVC}")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_OPTS_GCC}")
+endif()
+
 add_library(ArlangBuilder
     "source/Builder/Symbols.cpp" 
     "source/Builder/Linker.cpp"
