@@ -9,49 +9,49 @@ using namespace WestCoastCode::Compilation;
 
 namespace
 {
-    void Convert(Interpreter::PrimitiveValue& value,
-        Interpreter::PrimitiveType from, Interpreter::PrimitiveType to) {
+    void Convert(PrimitiveValue& value,
+        PrimitiveType from, PrimitiveType to) {
         value.type = to;
-        if (from == Interpreter::PrimitiveType::I64) {
+        if (from == PrimitiveType::I64) {
             switch (to)
             {
-            case Interpreter::PrimitiveType::F32:
+            case PrimitiveType::F32:
                 value.f32 = (F32)value.i64;
                 return;
-            case Interpreter::PrimitiveType::F64:
+            case PrimitiveType::F64:
                 value.f64 = (F64)value.i64;
                 return;
             }
         }
-        else if (from == Interpreter::PrimitiveType::U64) {
+        else if (from == PrimitiveType::U64) {
             switch (to)
             {
-            case Interpreter::PrimitiveType::F32:
+            case PrimitiveType::F32:
                 value.f32 = (F32)value.u64;
                 return;
-            case Interpreter::PrimitiveType::F64:
+            case PrimitiveType::F64:
                 value.f64 = (F64)value.u64;
                 return;
             }
         }
-        else if (from == Interpreter::PrimitiveType::I32) {
+        else if (from == PrimitiveType::I32) {
             switch (to)
             {
-            case Interpreter::PrimitiveType::F32:
+            case PrimitiveType::F32:
                 value.f32 = (F32)value.i32;
                 return;
-            case Interpreter::PrimitiveType::F64:
+            case PrimitiveType::F64:
                 value.f64 = (F64)value.i32;
                 return;
             }
         }
-        else if (from == Interpreter::PrimitiveType::U32) {
+        else if (from == PrimitiveType::U32) {
             switch (to)
             {
-            case Interpreter::PrimitiveType::F32:
+            case PrimitiveType::F32:
                 value.f32 = (F32)value.u32;
                 return;
-            case Interpreter::PrimitiveType::F64:
+            case PrimitiveType::F64:
                 value.f64 = (F64)value.u32;
                 return;
             }
@@ -65,25 +65,25 @@ void SyntaxTreeNodeConstant::ToString(StringStream& s, int indent) const
     s << "Constant(value=";
     switch (_value.type)
     {
-    case Interpreter::PrimitiveType::I16:
+    case PrimitiveType::I16:
         s << _value.i16;
         break;
-    case Interpreter::PrimitiveType::I32:
+    case PrimitiveType::I32:
         s << _value.i32;
         break;
-    case Interpreter::PrimitiveType::U32:
+    case PrimitiveType::U32:
         s << _value.u32;
         break;
-    case Interpreter::PrimitiveType::I64:
+    case PrimitiveType::I64:
         s << _value.i64;
         break;
-    case Interpreter::PrimitiveType::U64:
+    case PrimitiveType::U64:
         s << _value.u64;
         break;
-    case Interpreter::PrimitiveType::F32:
+    case PrimitiveType::F32:
         s << _value.f32;
         break;
-    case Interpreter::PrimitiveType::F64:
+    case PrimitiveType::F64:
         s << _value.f64;
         break;
     default:
@@ -140,7 +140,7 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(ISyntaxTreeNodeType* newTyp
     }
 
     // Convert the constant value
-    Interpreter::PrimitiveValue newValue = _value;
+    PrimitiveValue newValue = _value;
     Convert(newValue, static_cast<SyntaxTreeNodePrimitive*>(_stackType)->GetPrimitiveType(), 
         primitive->GetPrimitiveType());
     return new SyntaxTreeNodeConstant(_function, _sourceCode, newValue, primitive);
@@ -151,37 +151,37 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
     Token* const t = state->token;
 
     ISyntaxTreeNodePrimitive* stackType = nullptr;
-    Interpreter::PrimitiveValue value;
+    PrimitiveValue value;
     switch (t->GetType())
     {
     case TokenType::Bool:
         value.bool4 = t->ToBool();
-        value.type = Interpreter::PrimitiveType::Bool;
+        value.type = PrimitiveType::Bool;
         stackType = state->compiler->FindPrimitive(ReadOnlyString("bool"));
         break;
     case TokenType::Int:
         if (t->GetModifier() == TokenModifier::Negative) {
             value.i64 = t->ToI64();
-            value.type = Interpreter::PrimitiveType::I32;
+            value.type = PrimitiveType::I32;
             stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
         }
         else {
             U64 i = t->ToU64();
             if (i > (I64)INT32_MAX) {
                 value.u64 = i;
-                value.type = Interpreter::PrimitiveType::U32;
+                value.type = PrimitiveType::U32;
                 stackType = state->compiler->FindPrimitive(ReadOnlyString("uint32"));
             }
             else {
                 value.i64 = (I64)i;
-                value.type = Interpreter::PrimitiveType::I32;
+                value.type = PrimitiveType::I32;
                 stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
             }
         }
         break;
     case TokenType::Decimal:
         value.f64 = t->ToF64();
-        value.type = Interpreter::PrimitiveType::F64;
+        value.type = PrimitiveType::F64;
         stackType = state->compiler->FindPrimitive(ReadOnlyString("float64"));
         break;
     default:

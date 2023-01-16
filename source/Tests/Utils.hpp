@@ -497,63 +497,63 @@ struct TestUtils
 		return str;
 	}
 
-	Interpreter::PrimitiveValue Const(I8 value)
+	PrimitiveValue Const(I8 value)
 	{
-		return Interpreter::PrimitiveValue::I8(value);
+		return PrimitiveValue::I8(value);
 	}
 
-	Interpreter::PrimitiveValue Const(U8 value)
+	PrimitiveValue Const(U8 value)
 	{
-		return Interpreter::PrimitiveValue::U8(value);
+		return PrimitiveValue::U8(value);
 	}
 
-	Interpreter::PrimitiveValue Const(I16 value)
+	PrimitiveValue Const(I16 value)
 	{
-		return Interpreter::PrimitiveValue::I16(value);
+		return PrimitiveValue::I16(value);
 	}
 
-	Interpreter::PrimitiveValue Const(U16 value)
+	PrimitiveValue Const(U16 value)
 	{
-		return Interpreter::PrimitiveValue::U16(value);
+		return PrimitiveValue::U16(value);
 	}
 
-	Interpreter::PrimitiveValue Const(I32 value)
+	PrimitiveValue Const(I32 value)
 	{
-		return Interpreter::PrimitiveValue::I32(value);
+		return PrimitiveValue::I32(value);
 	}
 
-	Interpreter::PrimitiveValue Const(U32 value)
+	PrimitiveValue Const(U32 value)
 	{
-		return Interpreter::PrimitiveValue::U32(value);
+		return PrimitiveValue::U32(value);
 	}
 
-	Interpreter::PrimitiveValue Const(I64 value)
+	PrimitiveValue Const(I64 value)
 	{
-		return Interpreter::PrimitiveValue::I64(value);
+		return PrimitiveValue::I64(value);
 	}
 
-	Interpreter::PrimitiveValue Const(U64 value)
+	PrimitiveValue Const(U64 value)
 	{
-		return Interpreter::PrimitiveValue::U64(value);
+		return PrimitiveValue::U64(value);
 	}
 
-	Interpreter::PrimitiveValue Const(F32 value)
+	PrimitiveValue Const(F32 value)
 	{
-		return Interpreter::PrimitiveValue::F32(value);
+		return PrimitiveValue::F32(value);
 	}
 
-	Interpreter::PrimitiveValue Const(F64 value)
+	PrimitiveValue Const(F64 value)
 	{
-		return Interpreter::PrimitiveValue::F64(value);
+		return PrimitiveValue::F64(value);
 	}
 
-	Interpreter::PrimitiveValue Const(bool value)
+	PrimitiveValue Const(bool value)
 	{
-		return Interpreter::PrimitiveValue::Bool(value ? 1 : 0);
+		return PrimitiveValue::Bool(value ? 1 : 0);
 	}
 
-	Interpreter::PrimitiveValue Const(void* value)
+	PrimitiveValue Const(void* value)
 	{
-		return Interpreter::PrimitiveValue::Ptr(value);
+		return PrimitiveValue::Ptr(value);
 	}
 };

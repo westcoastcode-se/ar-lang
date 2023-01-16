@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ProcessError.h"
-#include "Primitive.h"
+#include "../Primitive.h"
 #include "Thread.h"
 #include "../Array.h"
 #include <unordered_map>

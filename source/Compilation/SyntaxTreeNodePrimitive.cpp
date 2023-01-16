@@ -46,7 +46,7 @@ void SyntaxTreeNodePrimitive::Compile(Builder::Linker* linker)
 		return;
 
 	Builder::TypeFlags flags = (Builder::TypeFlags)Builder::TypeFlag::Primitive;
-	if (_primitiveType == Interpreter::PrimitiveType::Ptr)
+	if (_primitiveType == PrimitiveType::Ptr)
 		flags |= (Builder::TypeFlags)Builder::TypeFlag::Ptr;
 	_symbol = new Builder::Type(_name, _stackSize, flags, _primitiveType);
 	_package->GetSymbol()->Add(_symbol);

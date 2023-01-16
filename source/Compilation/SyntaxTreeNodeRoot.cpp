@@ -26,62 +26,62 @@ SyntaxTreeNodeRoot* SyntaxTreeNodeRoot::Create()
 {
 	auto root = new SyntaxTreeNodeRoot();
 
-	auto voidPtr = new SyntaxTreeNodePrimitive(root, sizeof(void*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*void"));
+	auto voidPtr = new SyntaxTreeNodePrimitive(root, sizeof(void*), PrimitiveType::Ptr, ReadOnlyString("*void"));
 	root->AddPrimitive(voidPtr);
 
-	auto i = new SyntaxTreeNodePrimitive(root, sizeof(IB), Interpreter::PrimitiveType::Bool, ReadOnlyString("bool"));
+	auto i = new SyntaxTreeNodePrimitive(root, sizeof(IB), PrimitiveType::Bool, ReadOnlyString("bool"));
 	root->AddPrimitive(i);
-	auto ip = new SyntaxTreeNodePrimitive(root, sizeof(IB*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*bool"), voidPtr, i);
+	auto ip = new SyntaxTreeNodePrimitive(root, sizeof(IB*), PrimitiveType::Ptr, ReadOnlyString("*bool"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(I8), Interpreter::PrimitiveType::I8, ReadOnlyString("int8"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(I8), PrimitiveType::I8, ReadOnlyString("int8"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(I8*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*int8"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(I8*), PrimitiveType::Ptr, ReadOnlyString("*int8"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(U8), Interpreter::PrimitiveType::U8, ReadOnlyString("uint8"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(U8), PrimitiveType::U8, ReadOnlyString("uint8"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(U8*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*uint8"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(U8*), PrimitiveType::Ptr, ReadOnlyString("*uint8"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(I16), Interpreter::PrimitiveType::I16, ReadOnlyString("int16"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(I16), PrimitiveType::I16, ReadOnlyString("int16"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(I16*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*int16"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(I16*), PrimitiveType::Ptr, ReadOnlyString("*int16"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(U16), Interpreter::PrimitiveType::U16, ReadOnlyString("uint16"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(U16), PrimitiveType::U16, ReadOnlyString("uint16"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(U16*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*uint16"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(U16*), PrimitiveType::Ptr, ReadOnlyString("*uint16"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(I32), Interpreter::PrimitiveType::I32, ReadOnlyString("int32"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(I32), PrimitiveType::I32, ReadOnlyString("int32"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(I32*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*int32"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(I32*), PrimitiveType::Ptr, ReadOnlyString("*int32"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(U32), Interpreter::PrimitiveType::U32, ReadOnlyString("uint32"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(U32), PrimitiveType::U32, ReadOnlyString("uint32"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(U32*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*uint32"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(U32*), PrimitiveType::Ptr, ReadOnlyString("*uint32"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(I64), Interpreter::PrimitiveType::I64, ReadOnlyString("int64"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(I64), PrimitiveType::I64, ReadOnlyString("int64"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(I64*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*int64"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(I64*), PrimitiveType::Ptr, ReadOnlyString("*int64"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(U64), Interpreter::PrimitiveType::U64, ReadOnlyString("uint64"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(U64), PrimitiveType::U64, ReadOnlyString("uint64"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(U64*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*uint64"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(U64*), PrimitiveType::Ptr, ReadOnlyString("*uint64"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(F32), Interpreter::PrimitiveType::F32, ReadOnlyString("float32"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(F32), PrimitiveType::F32, ReadOnlyString("float32"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(F32*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*float32"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(F32*), PrimitiveType::Ptr, ReadOnlyString("*float32"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = new SyntaxTreeNodePrimitive(root, sizeof(F64), Interpreter::PrimitiveType::F64, ReadOnlyString("float64"));
+	i = new SyntaxTreeNodePrimitive(root, sizeof(F64), PrimitiveType::F64, ReadOnlyString("float64"));
 	root->AddPrimitive(i);
-	ip = new SyntaxTreeNodePrimitive(root, sizeof(F64*), Interpreter::PrimitiveType::Ptr, ReadOnlyString("*float64"), voidPtr, i);
+	ip = new SyntaxTreeNodePrimitive(root, sizeof(F64*), PrimitiveType::Ptr, ReadOnlyString("*float64"), voidPtr, i);
 	root->AddPrimitive(ip);
 
 	return root;

@@ -290,7 +290,7 @@ InstrDiv* Instructions::Div(Type* type)
 	return static_cast<InstrDiv*>(Add(new InstrDiv(type)));
 }
 
-InstrLdc* Instructions::Ldc(Type* stackType, Interpreter::PrimitiveValue value)
+InstrLdc* Instructions::Ldc(Type* stackType, PrimitiveValue value)
 {
 	return static_cast<InstrLdc*>(Add(new InstrLdc(stackType, value)));
 }

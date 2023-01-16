@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Common.h"
+#include "Common.h"
 
-namespace WestCoastCode::Interpreter
+namespace WestCoastCode
 {
 	enum class PrimitiveType : I32
 	{

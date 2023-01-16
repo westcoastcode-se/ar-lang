@@ -56,5 +56,12 @@ namespace WestCoastCode::Compilation
 		Array<ISyntaxTreeNodeOp*, 2> _children;
 		SourceCodeView _sourceCode;
 		Op _op;
+
+	public:
+		// Optimizer that merges a binop if the two children are constants
+		class Optimize0_Merge : public ISyntaxTreeNodeOptimizer {
+		public:
+			Vector<ISyntaxTreeNodeOp*> Optimize(ISyntaxTreeNodeOp* node) final;
+		};
 	};
 }

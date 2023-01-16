@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Common.h"
-#include "Primitive.h"
+#include "../Primitive.h"
 
 #define VMI_PROPS1_OPCODE(P) ((P) << 8)
 #define VMI_PROPS2_OPCODE(P) ((P) << 16)

@@ -4,7 +4,7 @@
 #include "Instructions.h"
 #include "../Common.h"
 #include "../Array.h"
-#include "../Interpreter/Primitive.h"
+#include "../Primitive.h"
 
 namespace WestCoastCode::Builder
 {
@@ -87,7 +87,7 @@ namespace WestCoastCode::Builder
 		virtual TypeFlags GetFlags() const = 0;
 		
 		// Get the primitive type, if one is applicable
-		virtual Interpreter::PrimitiveType GetPrimitiveType() const = 0;
+		virtual PrimitiveType GetPrimitiveType() const = 0;
 	};
 
 	class ARLANG_API IGlobal : public ISymbol
@@ -201,7 +201,7 @@ namespace WestCoastCode::Builder
 	{
 	public:
 		Type(ReadOnlyString name, I32 size, TypeFlags flags, 
-			Interpreter::PrimitiveType primitiveType)
+			PrimitiveType primitiveType)
 			: _parent(nullptr), _name(name), _stackSize(size), _flags(flags), _primitiveType(primitiveType), _offset(-1) {}
 		~Type() {}
 
@@ -221,7 +221,7 @@ namespace WestCoastCode::Builder
 		I32 GetOffset() const final { return _offset; }
 		I32 GetStackSize() const final { return _stackSize; }
 		TypeFlags GetFlags() const final { return _flags; }
-		Interpreter::PrimitiveType GetPrimitiveType() const final { return _primitiveType; }
+		PrimitiveType GetPrimitiveType() const final { return _primitiveType; }
 
 	private:
 		ISymbol* _parent;
@@ -229,7 +229,7 @@ namespace WestCoastCode::Builder
 		String _signature;
 		I32 _stackSize;
 		TypeFlags _flags;
-		Interpreter::PrimitiveType _primitiveType;
+		PrimitiveType _primitiveType;
 		I32 _offset;
 	};
 
@@ -262,7 +262,7 @@ namespace WestCoastCode::Builder
 		InstrDiv* Div(Type* type);
 		InstrMult* Mult(Type* type);
 
-		InstrLdc* Ldc(Type* stackType, Interpreter::PrimitiveValue value);
+		InstrLdc* Ldc(Type* stackType, PrimitiveValue value);
 
 		InstrRet* Ret();
 

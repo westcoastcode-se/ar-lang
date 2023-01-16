@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ProcessError.h"
-#include "Primitive.h"
+#include "../Primitive.h"
 
 namespace WestCoastCode::Interpreter
 {

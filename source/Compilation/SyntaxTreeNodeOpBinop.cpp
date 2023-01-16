@@ -2,6 +2,7 @@
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodePrimitive.h"
+#include "SyntaxTreeNodeConstant.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -84,4 +85,21 @@ Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::OptimizeOp(ISyntaxTreeNodeOpti
 		}
 	}
 	return optimizer->Optimize(this);
+}
+
+Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(ISyntaxTreeNodeOp* node)
+{
+	auto impl = dynamic_cast<SyntaxTreeNodeOpBinop*>(node);
+	if (impl == nullptr)
+		return Vector<ISyntaxTreeNodeOp*>();
+
+	auto left = static_cast<ISyntaxTreeNodeOp*>(impl->GetLeft());
+	auto right = static_cast<ISyntaxTreeNodeOp*>(impl->GetRight());
+
+	// Compile-time combin ethe two constants using this operator
+	if (dynamic_cast<SyntaxTreeNodeConstant*>(left) && dynamic_cast<SyntaxTreeNodeConstant*>(right)) {
+
+	}
+
+	return Vector<ISyntaxTreeNodeOp*>();
 }

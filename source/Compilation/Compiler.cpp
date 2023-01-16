@@ -77,6 +77,8 @@ Byte* Compiler::Compile(int optimizationLevel)
 	_syntaxTree->ResolveReferences();
 
 	// Optimize the syntax tree
+	SyntaxTreeNodeOpBinop::Optimize0_Merge optimizer0_0;
+	_syntaxTree->Optimize(&optimizer0_0);
 	SyntaxTreeNodeOpTypeCast::Optimize0_Merge optimizer0_1;
 	_syntaxTree->Optimize(&optimizer0_1);
 

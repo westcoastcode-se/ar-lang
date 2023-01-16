@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SyntaxTreeNode.h"
-#include "../Interpreter/Primitive.h"
+#include "../Primitive.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -11,12 +11,12 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		SyntaxTreeNodePrimitive(SyntaxTreeNodePackage* package, 
-			I32 size, Interpreter::PrimitiveType primitiveType, ReadOnlyString name)
+			I32 size, PrimitiveType primitiveType, ReadOnlyString name)
 			: _package(package), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(nullptr),
 			_unrefInto(nullptr), _symbol(nullptr) {}
 
 		SyntaxTreeNodePrimitive(SyntaxTreeNodePackage* package,
-			I32 size, Interpreter::PrimitiveType primitiveType, ReadOnlyString name,
+			I32 size, PrimitiveType primitiveType, ReadOnlyString name,
 			SyntaxTreeNodePrimitive* inheritsFrom, SyntaxTreeNodePrimitive* unrefInto)
 			: _package(package), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(inheritsFrom),
 			_unrefInto(unrefInto), _symbol(nullptr) {}
@@ -31,7 +31,7 @@ namespace WestCoastCode::Compilation
 		const SourceCodeView* GetSourceCode() const final { return nullptr; }
 		void ToString(StringStream& s, int indent) const final;
 		I32 GetSize() const final { return _stackSize; }
-		Interpreter::PrimitiveType GetPrimitiveType() const final { return _primitiveType; }
+		PrimitiveType GetPrimitiveType() const final { return _primitiveType; }
 		virtual ISyntaxTreeNode* GetRootNode() override;
 		void Compile(Builder::Linker* linker) final;
 
@@ -42,7 +42,7 @@ namespace WestCoastCode::Compilation
 		const ID _id;
 		SyntaxTreeNodePackage* const _package;
 		const I32 _stackSize;
-		const Interpreter::PrimitiveType _primitiveType;
+		const PrimitiveType _primitiveType;
 		const ReadOnlyString _name;
 		SyntaxTreeNodePrimitive* const _inheritsFrom;
 		SyntaxTreeNodePrimitive* const _unrefInto;

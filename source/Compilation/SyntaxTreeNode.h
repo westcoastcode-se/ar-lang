@@ -6,7 +6,7 @@
 #include "SourceCodeParser.h"
 #include "ParseError.h"
 #include "CompileError.h"
-#include "../Interpreter/Primitive.h"
+#include "../Primitive.h"
 #include "../Builder/Linker.h"
 
 namespace WestCoastCode::Compilation
@@ -232,7 +232,7 @@ namespace WestCoastCode::Compilation
 		virtual I32 GetSize() const = 0;
 
 		// Get the interpreter primitive type
-		virtual Interpreter::PrimitiveType GetPrimitiveType() const = 0;
+		virtual PrimitiveType GetPrimitiveType() const = 0;
 	};
 
 	// A reference to another syntax tree node
@@ -473,7 +473,7 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		// Get the constant value
-		virtual const Interpreter::PrimitiveValue& GetValue() const = 0;
+		virtual const PrimitiveValue& GetValue() const = 0;
 
 	};
 }

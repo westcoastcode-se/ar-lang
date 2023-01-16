@@ -3,7 +3,7 @@
 #include "MemoryStream.h"
 #include "../Common.h"
 #include "../Interpreter/Instructions.h"
-#include "../Interpreter/Primitive.h"
+#include "../Primitive.h"
 
 namespace WestCoastCode::Builder
 {
@@ -101,7 +101,7 @@ namespace WestCoastCode::Builder
 	class ARLANG_API InstrLdc : public Instr
 	{
 	public:
-		InstrLdc(const IType* stackType, const Interpreter::PrimitiveValue& value)
+		InstrLdc(const IType* stackType, const PrimitiveValue& value)
 			: stackType(stackType), value(value) {}
 
 		I32 GetSize() const final;
@@ -109,7 +109,7 @@ namespace WestCoastCode::Builder
 		void Write(MemoryStream& s) final;
 
 		const IType* stackType;
-		Interpreter::PrimitiveValue value;
+		PrimitiveValue value;
 	};
 
 	class ARLANG_API InstrMarker
