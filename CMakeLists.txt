@@ -86,6 +86,10 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_OPTS_GCC}")
 endif()
 
+add_library(ArlangCommon 
+    "source/Primitive.cpp"
+)
+
 add_library(ArlangBuilder
     "source/Builder/Symbols.cpp" 
     "source/Builder/Linker.cpp"
@@ -135,4 +139,4 @@ add_executable(ArlangTest
     "source/Tests/main.cpp"
     "source/Tests/SuiteCompilation.cpp" 
     "source/Tests/SuiteCommon.cpp")
-target_link_libraries(ArlangTest ArlangInterpreter ArlangCompilation ArlangBuilder)
+target_link_libraries(ArlangTest ArlangInterpreter ArlangCompilation ArlangBuilder ArlangCommon)

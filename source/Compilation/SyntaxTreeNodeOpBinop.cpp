@@ -98,7 +98,30 @@ Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(ISyn
 
 	// Compile-time combin ethe two constants using this operator
 	if (dynamic_cast<SyntaxTreeNodeConstant*>(left) && dynamic_cast<SyntaxTreeNodeConstant*>(right)) {
+		auto leftConst = static_cast<SyntaxTreeNodeConstant*>(left);
+		auto rightConst = static_cast<SyntaxTreeNodeConstant*>(right);
 
+		PrimitiveValue newValue = leftConst->GetValue();
+		switch (impl->_op)
+		{
+		case Op::Plus:
+			if (PrimitiveValue::Add(&newValue, &rightConst->GetValue())) {
+				// TODO: Add support for converting the new type into the appropriate
+				auto leftType = static_cast<ISyntaxTreeNodePrimitive*>(leftConst->GetStackType());
+				auto rightType = static_cast<ISyntaxTreeNodePrimitive*>(rightConst->GetStackType());
+				auto newType = rightType;
+				if (newValue.type != newType->GetPrimitiveType())
+					newType = leftType;
+				auto combined = new SyntaxTreeNodeConstant(impl->_function,
+					impl->_sourceCode, newValue, 
+					newType);
+				count++;
+				return Vector<ISyntaxTreeNodeOp*>(combined);
+			}
+			break;
+		default:
+			break;
+		}
 	}
 
 	return Vector<ISyntaxTreeNodeOp*>();

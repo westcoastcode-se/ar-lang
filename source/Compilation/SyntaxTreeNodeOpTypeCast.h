@@ -44,6 +44,7 @@ namespace WestCoastCode::Compilation
 		// Optimizer that merges this type-cast with the underlying node
 		class Optimize0_Merge : public ISyntaxTreeNodeOptimizer {
 		public:
+			I32 count = 0;
 			Vector<ISyntaxTreeNodeOp*> Optimize(ISyntaxTreeNodeOp* node) final;
 		};
 	};

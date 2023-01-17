@@ -38,7 +38,7 @@ namespace WestCoastCode
 			U16 u16;
 			I8 i8;
 			U8 u8;
-			void* ptr;
+			Byte* ptr;
 		};
 		PrimitiveType type;
 
@@ -133,9 +133,17 @@ namespace WestCoastCode
 		static PrimitiveValue Ptr(void* val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::Ptr };
-			p.ptr = val;
+			p.ptr = (Byte*)val;
 			return p;
 		}
+
+		// Figure out which primitive type is the result of combining
+		// the two supplied types
+		static PrimitiveType Result(PrimitiveType rhs, PrimitiveType lhs);
+
+		// Add the values and put the result into the lhs value. Returns true
+		// if the two primitives are added
+		static bool Add(PrimitiveValue* lhs, const PrimitiveValue* rhs);
 	};
 	static_assert(sizeof(PrimitiveValue) == 16, "Expected the value size to be 16");
 }

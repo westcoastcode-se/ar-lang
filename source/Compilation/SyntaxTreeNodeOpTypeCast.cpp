@@ -89,6 +89,7 @@ Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpTypeCast::Optimize0_Merge::Optimize(I
 	// Is the child a constant? If so, then try to perform the type-casting during compile time
 	// and return the constant as the merged child
 	if (dynamic_cast<SyntaxTreeNodeConstant*>(child)) {
+		count++;
 		auto constant = static_cast<SyntaxTreeNodeConstant*>(child);
 		return constant->Cast(impl->GetStackType());
 	}

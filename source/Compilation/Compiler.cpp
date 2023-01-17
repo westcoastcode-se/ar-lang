@@ -77,10 +77,18 @@ Byte* Compiler::Compile(int optimizationLevel)
 	_syntaxTree->ResolveReferences();
 
 	// Optimize the syntax tree
-	SyntaxTreeNodeOpBinop::Optimize0_Merge optimizer0_0;
-	_syntaxTree->Optimize(&optimizer0_0);
-	SyntaxTreeNodeOpTypeCast::Optimize0_Merge optimizer0_1;
-	_syntaxTree->Optimize(&optimizer0_1);
+	while (true) {
+		SyntaxTreeNodeOpBinop::Optimize0_Merge optimizer0_0;
+		SyntaxTreeNodeOpTypeCast::Optimize0_Merge optimizer0_1;
+		_syntaxTree->Optimize(&optimizer0_0);
+		_syntaxTree->Optimize(&optimizer0_1);
+
+		// We can't optimize the tree any more
+		if (optimizer0_0.count == 0 && optimizer0_1.count == 0)
+			break;
+		optimizer0_0.count = 0;
+		optimizer0_1.count = 0;
+	}
 
 	// Link the bytecode together and return the bytecode
 	auto linker = new Builder::Linker();

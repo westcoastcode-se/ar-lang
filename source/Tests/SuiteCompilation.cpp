@@ -379,12 +379,13 @@ func Get() %s {
 package Main
 
 func Get() int32 {
-	return 10 + 123
+	return (int32)(10 + 123)
 }
 )", "main.arl"));
-
+		DebugSyntaxTree();
 		// Compile the source code
 		CompileAndInvoke("Get()");
+		DebugSyntaxTree();
 
 		VerifyStackSize(sizeof(I32));
 		AssertEquals(Pop<I32>(), 133);
