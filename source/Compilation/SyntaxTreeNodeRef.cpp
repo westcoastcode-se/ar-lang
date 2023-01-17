@@ -135,7 +135,7 @@ SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(const ParserState* state, Definition
 	// Get the start of the string that represents the type we are trying to resolve
 	const ReadOnlyString first = t->GetString();
 
-	auto ref = new SyntaxTreeNodeRef(SourceCodeView(state->sourceCode, t), queryType);
+	auto ref = ARLANG_NEW SyntaxTreeNodeRef(SourceCodeView(state->sourceCode, t), queryType);
 	auto mem = MemoryGuard(ref);
 	
 	auto section = SyntaxTreeNodeRefSection::Parse(state, sectionTypes);
@@ -277,7 +277,7 @@ SyntaxTreeNodeRefSection* SyntaxTreeNodeRefSection::Parse(const ParserState* sta
 	if (t->GetType() != TokenType::Identity)
 		throw ParseErrorExpectedIdentity(state);
 
-	auto section = new SyntaxTreeNodeRefSection(SourceCodeView(state->sourceCode, t),
+	auto section = ARLANG_NEW SyntaxTreeNodeRefSection(SourceCodeView(state->sourceCode, t),
 		t->GetString(), queryTypes);
 	auto mem = MemoryGuard(section);
 

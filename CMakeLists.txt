@@ -88,6 +88,7 @@ endif()
 
 add_library(ArlangCommon 
     "source/Primitive.cpp"
+    "source/Memory.cpp"
 )
 
 add_library(ArlangBuilder
@@ -113,7 +114,6 @@ add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNodeImport.cpp"
     "source/Compilation/SyntaxTreeNodeFuncBody.cpp" 
     "source/Compilation/SyntaxTreeNodeFuncArg.cpp"
-    
     "source/Compilation/SyntaxTreeNodeTypeRef.cpp"
     "source/Compilation/SyntaxTreeNodeOpReturn.cpp"
     "source/Compilation/SyntaxTree.cpp"

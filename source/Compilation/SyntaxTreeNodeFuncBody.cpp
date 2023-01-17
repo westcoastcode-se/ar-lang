@@ -93,9 +93,9 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 	// Get the start of the string that represents the type we are trying to resolve
 	const ReadOnlyString first = t->GetString();
 
-	auto body = new SyntaxTreeNodeFuncBody(SourceCodeView(state->sourceCode, t), state->function);
+	auto body = ARLANG_NEW SyntaxTreeNodeFuncBody(SourceCodeView(state->sourceCode, t), state->function);
 	auto mem = MemoryGuard(body);
-	auto scope = new SyntaxTreeNodeScope(SourceCodeView(state->sourceCode, t), state->function);
+	auto scope = ARLANG_NEW SyntaxTreeNodeScope(SourceCodeView(state->sourceCode, t), state->function);
 	body->AddOp(scope);
 
 	// Parse each body statement
@@ -130,7 +130,7 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	Token* const t = state->token;
 	t->Next();
 
-	auto op = new SyntaxTreeNodeOpReturn(SourceCodeView(state->sourceCode, t), state->function);
+	auto op = ARLANG_NEW SyntaxTreeNodeOpReturn(SourceCodeView(state->sourceCode, t), state->function);
 	auto mem = MemoryGuard(op);
 
 	const SyntaxTreeNodeFuncDef* const function = state->function;
@@ -237,7 +237,7 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 			if (peek.Next() == TokenType::ParantRight) {
 				auto newType = SyntaxTreeNodeTypeRef::Parse(state);
 				t->Next();
-				auto cast = new SyntaxTreeNodeOpTypeCast(SourceCodeView(state->sourceCode, t),
+				auto cast = ARLANG_NEW SyntaxTreeNodeOpTypeCast(SourceCodeView(state->sourceCode, t),
 					state->function);
 				cast->SetNewType(newType);
 				auto guard = MemoryGuard(cast);
@@ -266,7 +266,7 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, Toke
 	auto right = rightFunc(state);
 	auto guard = MemoryGuard(right);
 
-	auto unaryop = new SyntaxTreeNodeOpUnaryop(SourceCodeView(state->sourceCode, t),
+	auto unaryop = ARLANG_NEW SyntaxTreeNodeOpUnaryop(SourceCodeView(state->sourceCode, t),
 		state->function, guard.Done(), SyntaxTreeNodeOpUnaryop::FromTokenType(tokenType));
 	guard = MemoryGuard(unaryop);
 
@@ -292,7 +292,7 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const 
 			t->Next();
 
 			auto right = rightFunc(state);
-			left = new SyntaxTreeNodeOpBinop(SourceCodeView(state->sourceCode, t), state->function,
+			left = ARLANG_NEW SyntaxTreeNodeOpBinop(SourceCodeView(state->sourceCode, t), state->function,
 				guard.Done(), right, SyntaxTreeNodeOpBinop::FromTokenType(tokenType));
 			guard = MemoryGuard(left);
 		}

@@ -64,7 +64,7 @@ SyntaxTreeNodeFuncArg* SyntaxTreeNodeFuncArg::Parse(ParserState* state)
 	if (t->GetType() != TokenType::Identity)
 		throw ParseErrorExpectedIdentity(state);
 
-	auto arg = new SyntaxTreeNodeFuncArg(SourceCodeView(state->sourceCode, t), t->GetString());
+	auto arg = ARLANG_NEW SyntaxTreeNodeFuncArg(SourceCodeView(state->sourceCode, t), t->GetString());
 	auto guard = MemoryGuard(arg);
 	t->Next();	
 	arg->SetVariableType(SyntaxTreeNodeTypeRef::Parse(state));

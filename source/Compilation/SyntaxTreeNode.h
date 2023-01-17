@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Common.h"
+#include "../Memory.h"
 #include "../Array.h"
 #include "SourceCodeView.h"
 #include "SourceCodeParser.h"
@@ -103,11 +103,9 @@ namespace WestCoastCode::Compilation
 		virtual Vector<ISyntaxTreeNodeOp*> Optimize(ISyntaxTreeNodeOp* node) = 0;
 	};
 
-	class IStringify
+	class IStringify : public IMemoryTracked
 	{
 	public:
-		virtual ~IStringify() {}
-
 		// Stringify this syntax tree node
 		virtual void ToString(StringStream& s, int indent) const = 0;
 
@@ -123,8 +121,6 @@ namespace WestCoastCode::Compilation
 	class ISyntaxTreeNode : public IStringify
 	{
 	public:
-		virtual ~ISyntaxTreeNode() {}
-
 		// Get the unique id for this node
 		virtual const ID& GetID() const = 0;
 
@@ -477,4 +473,3 @@ namespace WestCoastCode::Compilation
 
 	};
 }
-

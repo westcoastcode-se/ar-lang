@@ -112,7 +112,7 @@ Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(ISyn
 				auto newType = rightType;
 				if (newValue.type != newType->GetPrimitiveType())
 					newType = leftType;
-				auto combined = new SyntaxTreeNodeConstant(impl->_function,
+				auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->_function,
 					impl->_sourceCode, newValue, 
 					newType);
 				count++;

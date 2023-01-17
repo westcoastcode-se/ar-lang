@@ -58,7 +58,7 @@ SyntaxTreeNodeMultiType* SyntaxTreeNodeMultiType::Parse(const ParserState* state
 	if (t->GetType() != TokenType::Identity && t->GetType() != TokenType::ParantLeft)
 		throw ParseErrorExpectedIdentity(state);
 
-	auto types = new SyntaxTreeNodeMultiType(SourceCodeView(state->sourceCode, t));
+	auto types = ARLANG_NEW SyntaxTreeNodeMultiType(SourceCodeView(state->sourceCode, t));
 	auto guard = MemoryGuard(types);
 
 	while (t->Next() != TokenType::ParantRight)

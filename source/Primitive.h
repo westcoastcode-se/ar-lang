@@ -23,7 +23,7 @@ namespace WestCoastCode
 	};
 
 	// Represents a constant primitive value up to 8 bytes
-	struct PrimitiveValue
+	struct ARLANG_API PrimitiveValue
 	{
 		// Represents an unknown value up to 8 bytes
 		union {
@@ -43,7 +43,7 @@ namespace WestCoastCode
 		PrimitiveType type;
 
 		// Create a primitive
-		static PrimitiveValue I8(I8 val)
+		static inline PrimitiveValue I8(I8 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::I8 };
 			p.i8 = val;
@@ -51,7 +51,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue U8(U8 val)
+		static inline PrimitiveValue U8(U8 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::U8 };
 			p.u8 = val;
@@ -59,7 +59,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue I16(I16 val)
+		static inline PrimitiveValue I16(I16 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::I16 };
 			p.i16 = val;
@@ -67,7 +67,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue U16(U16 val)
+		static inline PrimitiveValue U16(U16 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::U16 };
 			p.u16 = val;
@@ -75,7 +75,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue I32(I32 val)
+		static inline PrimitiveValue I32(I32 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::I32 };
 			p.i32 = val;
@@ -83,7 +83,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue U32(U32 val)
+		static inline PrimitiveValue U32(U32 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::U32 };
 			p.u32 = val;
@@ -91,7 +91,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue I64(I64 val)
+		static inline PrimitiveValue I64(I64 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::I64 };
 			p.i64 = val;
@@ -99,14 +99,14 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue U64(U64 val)
+		static inline PrimitiveValue U64(U64 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::U64 };
 			p.u64 = val;
 			return p;
 		}
 		// Create a primitive
-		static PrimitiveValue F32(F32 val)
+		static inline PrimitiveValue F32(F32 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::F32 };
 			p.f32 = val;
@@ -114,7 +114,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue F64(F64 val)
+		static inline PrimitiveValue F64(F64 val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::F64 };
 			p.f64 = val;
@@ -122,7 +122,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue Bool(IB val)
+		static inline PrimitiveValue Bool(IB val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::Bool };
 			p.bool4 = val;
@@ -130,7 +130,7 @@ namespace WestCoastCode
 		}
 
 		// Create a primitive
-		static PrimitiveValue Ptr(void* val)
+		static inline PrimitiveValue Ptr(void* val)
 		{
 			PrimitiveValue p = { 0, PrimitiveType::Ptr };
 			p.ptr = (Byte*)val;

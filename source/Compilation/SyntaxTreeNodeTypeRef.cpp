@@ -82,7 +82,7 @@ SyntaxTreeNodeTypeRef* SyntaxTreeNodeTypeRef::Parse(const ParserState* state)
 	if (t->GetType() != TokenType::Identity)
 		throw ParseErrorExpectedIdentity(state);
 
-	auto typeref = new SyntaxTreeNodeTypeRef(SourceCodeView(state->sourceCode, t));
+	auto typeref = ARLANG_NEW SyntaxTreeNodeTypeRef(SourceCodeView(state->sourceCode, t));
 	auto mem = MemoryGuard(typeref);
 	auto ref = SyntaxTreeNodeRef::Parse(state, ISyntaxTreeNodeRef::Type, ISyntaxTreeNodeRef::All);
 	typeref->AddNode(ref);

@@ -143,7 +143,7 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(ISyntaxTreeNodeType* newTyp
     PrimitiveValue newValue = _value;
     Convert(newValue, static_cast<SyntaxTreeNodePrimitive*>(_stackType)->GetPrimitiveType(), 
         primitive->GetPrimitiveType());
-    return new SyntaxTreeNodeConstant(_function, _sourceCode, newValue, primitive);
+    return ARLANG_NEW SyntaxTreeNodeConstant(_function, _sourceCode, newValue, primitive);
 }
 
 SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
@@ -189,6 +189,6 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
     }
 
     t->Next();
-    return new SyntaxTreeNodeConstant(state->function, SourceCodeView(state->sourceCode, t),
+    return ARLANG_NEW SyntaxTreeNodeConstant(state->function, SourceCodeView(state->sourceCode, t),
         value, stackType);
 }

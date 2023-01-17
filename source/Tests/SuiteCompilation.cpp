@@ -7,6 +7,7 @@ struct TestUtilsCompilation : TestUtils
 
 	void BeforeEach()
 	{
+		MemoryTracker::Begin();
 		compiler = new Compiler();
 	}
 
@@ -21,10 +22,14 @@ struct TestUtilsCompilation : TestUtils
 			delete compiler;
 			compiler = nullptr;
 		}
+
+		AssertTrue(MemoryTracker::End());
 	}
 
 	void DebugSyntaxTree()
 	{
+		if (compiler == nullptr)
+			return;
 		StringStream ss;
 		compiler->GetSyntaxTree()->ToString(ss);
 		std::cerr << ss.str() << std::endl;

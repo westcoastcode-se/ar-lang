@@ -119,9 +119,9 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 	state->parentNode->Query(&visitor, (I32)QuerySearchFlag::TraverseChildren);
 	SyntaxTreeNodePackage* package = visitor.package;
 	if (package == NULL) {
-		package = new SyntaxTreeNodePackage(SourceCodeView(state->sourceCode, t), t->GetString());
+		package = ARLANG_NEW SyntaxTreeNodePackage(SourceCodeView(state->sourceCode, t), t->GetString());
 		auto rootNode = state->parentNode->GetRootNode();
-		package->AddNode(new SyntaxTreeNodeImport(SourceCodeView(state->sourceCode, t), 
+		package->AddNode(ARLANG_NEW SyntaxTreeNodeImport(SourceCodeView(state->sourceCode, t),
 			dynamic_cast<SyntaxTreeNodePackage*>(rootNode)));
 		state->package->AddNode(package);
 	}

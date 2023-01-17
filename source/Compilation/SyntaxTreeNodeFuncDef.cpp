@@ -111,7 +111,7 @@ SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)
 		throw ParseErrorExpectedIdentity(state);
 
 	// Function
-	auto funcdef = new SyntaxTreeNodeFuncDef(SourceCodeView(state->sourceCode, t), t->GetString());
+	auto funcdef = ARLANG_NEW SyntaxTreeNodeFuncDef(SourceCodeView(state->sourceCode, t), t->GetString());
 	auto guard = MemoryGuard(funcdef);
 
 	// Function arguments list has to start with a (
