@@ -379,13 +379,12 @@ func Get() %s {
 package Main
 
 func Get() int32 {
-	return (int32)(10 + 123)
+	return 10 + 123
 }
 )", "main.arl"));
-		DebugSyntaxTree();
+
 		// Compile the source code
 		CompileAndInvoke("Get()");
-		DebugSyntaxTree();
 
 		VerifyStackSize(sizeof(I32));
 		AssertEquals(Pop<I32>(), 133);
@@ -406,7 +405,6 @@ func Get() int64 {
 
 		VerifyStackSize(sizeof(I64));
 		AssertEquals(Pop<I64>(), (I64)133);
-		DebugSyntaxTree();
 	}
 
 	void operator()()
@@ -416,7 +414,7 @@ func Get() int64 {
 		TEST(Constant_T<F32>(1.0));
 
 		TEST(Add_I32());
-		//TEST(Add_I64());
+		TEST(Add_I64());
 	}
 };
 
