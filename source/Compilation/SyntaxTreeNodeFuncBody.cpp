@@ -11,6 +11,19 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
+static const Vector<TokenType> PARSE_COMPARE_TOKENS(
+	TokenType::TestEquals, TokenType::TestNotEquals,
+	TokenType::TestLt, TokenType::TestLte, TokenType::TestGt, TokenType::TestGte
+);
+
+static const Vector<TokenType> PARSE_EXPR_TOKENS(
+	TokenType::OpPlus, TokenType::OpMinus
+);
+
+static const Vector<TokenType> PARSE_TERM_TOKENS(
+	TokenType::OpMult, TokenType::OpDiv
+);
+
 SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* func)
 	: _function(func), _parent(nullptr), _sourceCode(sourceCode)
 {
@@ -175,28 +188,18 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
 		return ParseUnaryop(state, t->GetType(), ParseCompare);
 	}
 	else {
-		static const Vector<TokenType> types(
-			TokenType::TestEquals, TokenType::TestNotEquals,
-			TokenType::TestLt, TokenType::TestLte, TokenType::TestGt, TokenType::TestGte
-		);
-		return ParseBinop(state, types, ParseExpr, ParseExpr);
+		return ParseBinop(state, PARSE_COMPARE_TOKENS, ParseExpr, ParseExpr);
 	}
 }
 
 ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseExpr(ParserState* state)
 {
-	static const Vector<TokenType> types(
-			   TokenType::OpPlus, TokenType::OpMinus
-	);
-	return ParseBinop(state, types, ParseTerm, ParseTerm);
+	return ParseBinop(state, PARSE_EXPR_TOKENS, ParseTerm, ParseTerm);
 }
 
 ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseTerm(ParserState* state)
 {
-	static const Vector<TokenType> types(
-			   TokenType::OpMult, TokenType::OpDiv
-	);
-	return ParseBinop(state, types, ParseFactor, ParseFactor);
+	return ParseBinop(state, PARSE_TERM_TOKENS, ParseFactor, ParseFactor);
 }
 
 ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)

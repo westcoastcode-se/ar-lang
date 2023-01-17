@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include "Memory.h"
 
 namespace WestCoastCode
 {
@@ -27,20 +28,22 @@ namespace WestCoastCode
 		}
 
 		Vector(int initialSize)
-			: _capacity(initialSize), _memory((T*)malloc(sizeof(T)* _capacity)), _size(initialSize) {
+			: _capacity(initialSize), _memory((T*)ARLANG_MALLOC(sizeof(T)* _capacity)), _size(initialSize) {
 			assert(_memory != nullptr);
 		}
 
 		template<typename ...Args>
 		Vector(Args... args)
-			: _capacity(sizeof...(Args)), _memory((T*)malloc(sizeof(T)* _capacity)), _size(_capacity) {
+			: _capacity(sizeof...(Args)), _memory((T*)ARLANG_MALLOC(sizeof(T)* _capacity)), _size(_capacity) {
 			_VarSet(0, args...);
 		}
 
 		~Vector()
 		{
-			if (_memory)
-				free(_memory);
+			if (_memory) {
+				ARLANG_FREE(_memory);
+				_memory = nullptr;
+			}
 		}
 
 		// Get the size of the array
@@ -145,7 +148,7 @@ namespace WestCoastCode
 		Vector<T, Resize>& operator=(const Vector<T, Resize>& rhs) {
 			_size = rhs._size;
 			_capacity = _size;
-			_memory = (T*)malloc(sizeof(T) * _capacity);
+			_memory = (T*)ARLANG_MALLOC(sizeof(T) * _capacity);
 			for (I32 i = 0; i < _size; ++i)
 				_memory[i] = rhs._memory[i];
 			return *this;
@@ -182,9 +185,9 @@ namespace WestCoastCode
 		{
 			_capacity += minCount;
 			if (_memory == nullptr)
-				_memory = (T*)malloc(sizeof(T) * _capacity);
+				_memory = (T*)ARLANG_MALLOC(sizeof(T) * _capacity);
 			else {
-				auto newMemory = (T*)realloc(_memory, sizeof(T) * _capacity);
+				auto newMemory = (T*)ARLANG_REALLOC(_memory, sizeof(T) * _capacity);
 				assert(newMemory);
 				_memory = newMemory;
 			}
@@ -363,7 +366,7 @@ namespace WestCoastCode
 	{
 		_size = rhs.Size();
 		_capacity = _size;
-		_memory = (T*)malloc(sizeof(T) * _capacity);
+		_memory = (T*)ARLANG_MALLOC(sizeof(T) * _capacity);
 		auto memory = rhs.Ptr();
 		for (I32 i = 0; i < _size; ++i)
 			_memory[i] = memory[i];

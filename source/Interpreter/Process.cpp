@@ -74,6 +74,9 @@ Process::~Process()
 		free(_bytecode);
 		_bytecode = nullptr;
 	}
+
+	for (auto p : _packages)
+		delete p;
 }
 
 void Process::Load(Bytes bytecode, bool deleteOnExit)

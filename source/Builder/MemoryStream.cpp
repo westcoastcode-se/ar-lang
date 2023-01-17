@@ -1,7 +1,7 @@
 #include "MemoryStream.h"
 #include "LinkError.h"
 #include "../Interpreter/Instructions.h"
-#include <memory>
+#include "../Memory.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Builder;
