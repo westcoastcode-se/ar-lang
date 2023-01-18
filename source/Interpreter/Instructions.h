@@ -22,6 +22,8 @@ namespace WestCoastCode::Interpreter
 		Ldc_s,
 		Ldc_l,
 
+		Conv,
+
 		Add,
 		Sub,
 		Mult,
@@ -82,6 +84,7 @@ union { \
 	typedef InstrSingle InstrSub;
 	typedef InstrSingle InstrMult;
 	typedef InstrSingle InstrDiv;
+	typedef InstrSingle InstrConv;
 	typedef InstrSingle InstrNeg;
 	typedef InstrSingle InstrBitNot;
 	typedef InstrSingle InstrEoe;

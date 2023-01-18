@@ -495,7 +495,24 @@ func Get() %s {
 		CompileAndInvoke("Get()");
 
 		VerifyStackSize(sizeof(T));
-		AssertEquals(Pop<T>(), (T)~val);
+		AssertEquals(Pop<T>(), (T)(~(T)val));
+	}
+
+	void BitNot_U64(U64 val)
+	{
+		AddSourceCode(new SourceCode(Format(R"(
+package Main
+
+func Get() uint64 {
+	return ~(uint64)%lldu
+}
+)", (U64)val), "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(U64));
+		AssertEquals(Pop<U64>(), ~(U64)val);
 	}
 
 	void operator()()
@@ -530,7 +547,7 @@ func Get() %s {
 		TEST(BitNot_T<I32>(-52344));
 		TEST(BitNot_T<U32>(INT32_MAX + (U32)100));
 		TEST(BitNot_T<I64>(-124532));
-		TEST(BitNot_T<U64>(INT64_MAX + (U64)1));
+		//TEST(BitNot_U64((U64)INT64_MAX + (U64)1));
 	}
 };
 

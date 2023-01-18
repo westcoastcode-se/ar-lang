@@ -1,5 +1,6 @@
 #include "SyntaxTreeNodeOpTypeCast.h"
 #include "SyntaxTreeNodeConstant.h"
+#include "SyntaxTreeNodePrimitive.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -36,10 +37,41 @@ void SyntaxTreeNodeOpTypeCast::SetParent(ISyntaxTreeNode* parent)
 	_parent = parent;
 }
 
+namespace
+{
+	SyntaxTreeNodePrimitive* GetPrimitiveType(ISyntaxTreeNode* node)
+	{
+		auto ref = dynamic_cast<ISyntaxTreeNodeTypeRef*>(node);
+		if (ref) {
+			auto defs = ref->GetDefinitions();
+			for (auto def : defs) {
+				auto primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(def);
+				if (primitive != nullptr)
+					return primitive;
+			}
+		}
+
+		auto primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(node);
+		if (primitive != nullptr)
+			return primitive;
+
+		return nullptr;
+	}
+}
+
 void SyntaxTreeNodeOpTypeCast::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
 {
 	// The second child is what we want to cast
-	static_cast<ISyntaxTreeNodeOp*>(_children[1])->Compile(linker, instructions);	
+	static_cast<ISyntaxTreeNodeOp*>(_children[1])->Compile(linker, instructions);
+
+	auto fromType = GetPrimitiveType(FromType());
+	auto toType = GetPrimitiveType(GetStackType());
+
+	if (fromType == nullptr || toType == nullptr) {
+		throw CompileErrorNotImplemented(this, "TypeCast only supports casting between primitives ftm");
+	}
+
+	instructions.Conv(fromType->GetSymbol(), toType->GetSymbol());
 }
 
 ISyntaxTreeNodeType* SyntaxTreeNodeOpTypeCast::GetStackType()
@@ -58,7 +90,7 @@ Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpTypeCast::OptimizeOp(ISyntaxTreeNodeO
 	auto optimized = static_cast<ISyntaxTreeNodeOp*>(_children[1])->OptimizeOp(optimizer);
 	if (!optimized.IsEmpty()) {
 		if (optimized.Size() != 1)
-			throw CompileErrorNotImplemented(this, "Unaryop optimize is not allowed expand");
+			throw CompileErrorNotImplemented(this, "TypeCast optimize is not allowed expand");
 		delete _children[1];
 		_children[1] = optimized[0];
 	}

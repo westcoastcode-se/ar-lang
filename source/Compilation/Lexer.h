@@ -192,7 +192,7 @@ namespace WestCoastCode::Compilation
 		U64 ToU64() const;
 
 		// Convert into 64-bit real value
-		F64 ToF32() const;
+		F32 ToF32() const;
 
 		// Convert into 64-bit real value
 		F64 ToF64() const;

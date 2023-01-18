@@ -200,7 +200,7 @@ U64 Token::ToU64() const
 	return Strtou64(_stringStart, (int)(_stringEnd - _stringStart));
 }
 
-F64 Token::ToF32() const
+F32 Token::ToF32() const
 {
 	char temp[64];
 	temp[sprintf(temp, "%.*s", (int)(_stringEnd - _stringStart), _stringStart)] = 0;

@@ -257,6 +257,8 @@ namespace WestCoastCode::Builder
 		void Serialize(MemoryStream& stream);
 
 	public:
+		InstrConv* Conv(Type* from, Type* to);
+
 		InstrAdd* Add(Type* type);
 		InstrSub* Sub(Type* type);
 		InstrDiv* Div(Type* type);

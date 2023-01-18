@@ -270,6 +270,11 @@ void Instructions::Serialize(MemoryStream& stream)
 		i->Write(stream);
 }
 
+InstrConv* Instructions::Conv(Type* from, Type* to)
+{
+	return static_cast<InstrConv*>(Add(new InstrConv(from, to)));
+}
+
 InstrAdd* Instructions::Add(Type* type)
 {
 	return static_cast<InstrAdd*>(Add(new InstrAdd(type)));

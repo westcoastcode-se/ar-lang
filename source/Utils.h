@@ -20,8 +20,12 @@ namespace WestCoastCode
 	inline static U64 Strtou64(const char* str, int len)
 	{
 		U64 ret = 0;
-		for (int i = 0; i < len; ++i)
-			ret = (ret * (U64)10) + (U64)(str[i] - '0');
+		for (int i = 0; i < len; ++i) {
+			const auto v = str[i];
+			if (v == 'u')
+				break;
+			ret = (ret * (U64)10) + (U64)(v - '0');
+		}
 		return ret;
 	}
 

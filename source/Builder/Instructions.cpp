@@ -106,3 +106,11 @@ void InstrBitNot::Write(MemoryStream& s)
 	data.props1 = (I8)type->GetPrimitiveType();
 	s.Write(&data);
 }
+
+void InstrConv::Write(MemoryStream& s)
+{
+	data.icode = Interpreter::Incode::Conv;
+	data.props1 = (I8)type->GetPrimitiveType();
+	data.props2 = (I8)to->GetPrimitiveType();
+	s.Write(&data);
+}
