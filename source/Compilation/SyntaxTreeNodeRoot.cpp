@@ -55,14 +55,15 @@ SyntaxTreeNodeRoot* SyntaxTreeNodeRoot::Create()
 	root->AddPrimitive(ip);
 
 	SyntaxTreeNodePrimitive* int32;
+	SyntaxTreeNodePrimitive* int32ptr;
 	int32 = i = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(I32), PrimitiveType::I32, ReadOnlyString("int32"));
 	root->AddPrimitive(i);
-	ip = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(I32*), PrimitiveType::Ptr, ReadOnlyString("*int32"), voidPtr, i);
+	int32ptr = ip = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(I32*), PrimitiveType::Ptr, ReadOnlyString("*int32"), voidPtr, i);
 	root->AddPrimitive(ip);
 
 	i = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(I32), PrimitiveType::I32, ReadOnlyString("int"), int32, nullptr);
 	root->AddPrimitive(i);
-	ip = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(I32*), PrimitiveType::Ptr, ReadOnlyString("*int"), voidPtr, i);
+	ip = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(I32*), PrimitiveType::Ptr, ReadOnlyString("*int"), int32ptr, i);
 	root->AddPrimitive(ip);
 
 	i = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(U32), PrimitiveType::U32, ReadOnlyString("uint32"));
@@ -80,9 +81,16 @@ SyntaxTreeNodeRoot* SyntaxTreeNodeRoot::Create()
 	ip = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(U64*), PrimitiveType::Ptr, ReadOnlyString("*uint64"), voidPtr, i);
 	root->AddPrimitive(ip);
 
-	i = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(F32), PrimitiveType::F32, ReadOnlyString("float32"));
+	SyntaxTreeNodePrimitive* float32;
+	SyntaxTreeNodePrimitive* float32ptr;
+	float32 = i = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(F32), PrimitiveType::F32, ReadOnlyString("float32"));
 	root->AddPrimitive(i);
-	ip = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(F32*), PrimitiveType::Ptr, ReadOnlyString("*float32"), voidPtr, i);
+	float32ptr = ip = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(F32*), PrimitiveType::Ptr, ReadOnlyString("*float32"), voidPtr, i);
+	root->AddPrimitive(ip);
+
+	i = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(F32), PrimitiveType::F32, ReadOnlyString("float"), float32, nullptr);
+	root->AddPrimitive(i);
+	ip = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(F32*), PrimitiveType::Ptr, ReadOnlyString("*float"), float32ptr, i);
 	root->AddPrimitive(ip);
 
 	i = ARLANG_NEW SyntaxTreeNodePrimitive(root, sizeof(F64), PrimitiveType::F64, ReadOnlyString("float64"));

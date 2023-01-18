@@ -244,7 +244,7 @@ struct SuiteSyntaxTree : TestUtilsCompilation
 		AssertEquals(package->GetName(), ReadOnlyString("<root>"));
 
 		auto primitives = package->GetChildren();
-		AssertEquals(primitives.Size(), 25);
+		AssertEquals(primitives.Size(), 27);
 	}
 
 	void EmptyPackage()
