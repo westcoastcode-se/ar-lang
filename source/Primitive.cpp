@@ -1005,3 +1005,42 @@ bool PrimitiveValue::Add(PrimitiveValue* lhs, const PrimitiveValue* rhs)
 }
 
 #pragma endregion
+
+bool PrimitiveValue::Neg(PrimitiveValue* lhs)
+{
+	switch (lhs->type)
+	{
+	case PrimitiveType::I8:
+		lhs->i8 = -lhs->i8;
+		return true;
+	case PrimitiveType::I16:
+		lhs->i16 = -lhs->i16;
+		return true;
+	case PrimitiveType::I32:
+		lhs->i32 = -lhs->i32;
+		return true;
+	case PrimitiveType::I64:
+		lhs->i64 = -lhs->i64;
+		return true;
+	case PrimitiveType::F32:
+		lhs->f32 = -lhs->f32;
+		return true;
+	case PrimitiveType::F64:
+		lhs->f64 = -lhs->f64;
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool PrimitiveValue::Not(PrimitiveValue* lhs)
+{
+	switch (lhs->type)
+	{
+	case PrimitiveType::Bool:
+		lhs->bool4 = (lhs->bool4 == 1) ? 0 : 1;
+		return true;
+	default:
+		return false;
+	}
+}

@@ -221,7 +221,9 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 	Token* const t = state->token;
 	switch (t->GetType())
 	{
+	case TokenType::Bool:
 	case TokenType::Int:
+	case TokenType::Decimal:
 		return SyntaxTreeNodeConstant::Parse(state);
 	case TokenType::Identity:
 		// Identity might be:

@@ -43,6 +43,7 @@ void Thread::ExecEntrypoint(const Function* entrypoint)
 #include "Instructions/Ret.inc.cpp"
 #include "Instructions/Add.inc.cpp"
 #include "Instructions/Neg.inc.cpp"
+#include "Instructions/BitNot.inc.cpp"
 
 void Thread::Exec(const Byte* ip)
 {
@@ -137,6 +138,31 @@ void Thread::Exec0(const Byte* ip) noexcept
 			continue;
 		case (I32)Opcodes::Neg_F64:
 			ip = Neg_F64(&_stack, ip);
+			continue;
+
+		case (I32)Opcodes::BitNot_I8:
+			ip = BitNot_I8(&_stack, ip);
+			continue;
+		case (I32)Opcodes::BitNot_U8:
+			ip = BitNot_U8(&_stack, ip);
+			continue;
+		case (I32)Opcodes::BitNot_I16:
+			ip = BitNot_I16(&_stack, ip);
+			continue;
+		case (I32)Opcodes::BitNot_U16:
+			ip = BitNot_U16(&_stack, ip);
+			continue;
+		case (I32)Opcodes::BitNot_I32:
+			ip = BitNot_I32(&_stack, ip);
+			continue;
+		case (I32)Opcodes::BitNot_U32:
+			ip = BitNot_U32(&_stack, ip);
+			continue;
+		case (I32)Opcodes::BitNot_I64:
+			ip = BitNot_I64(&_stack, ip);
+			continue;
+		case (I32)Opcodes::BitNot_U64:
+			ip = BitNot_U64(&_stack, ip);
 			continue;
 
 		default:

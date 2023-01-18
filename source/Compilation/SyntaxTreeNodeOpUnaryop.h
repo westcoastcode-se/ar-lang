@@ -10,8 +10,7 @@ namespace WestCoastCode::Compilation
 	public:
 		SyntaxTreeNodeOpUnaryop(SourceCodeView sourceCode,
 			ISyntaxTreeNodeFuncDef* function,
-			ISyntaxTreeNodeOp* right, Op op)
-			: _parent(nullptr), _children(right), _sourceCode(sourceCode), _op(op), _function(function) {}
+			ISyntaxTreeNodeOp* right, Op op);
 
 		~SyntaxTreeNodeOpUnaryop() final;
 
@@ -48,6 +47,12 @@ namespace WestCoastCode::Compilation
 		SourceCodeView _sourceCode;
 		Op _op;
 		ISyntaxTreeNodeFuncDef* _function;
-
+	public:
+		// Optimizer that merges a unaryop
+		class Optimize0_Merge : public ISyntaxTreeNodeOptimizer {
+		public:
+			I32 count = 0;
+			Vector<ISyntaxTreeNodeOp*> Optimize(ISyntaxTreeNodeOp* node) final;
+		};
 	};
 }

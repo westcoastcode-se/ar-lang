@@ -378,6 +378,40 @@ func Get() %s {
 		AssertEquals(Pop<T>(), val);
 	}
 
+	void Constant_F32(F32 val)
+	{
+		AddSourceCode(new SourceCode(Format(R"(
+package Main
+
+func Get() float32 {
+	return (float32)%f
+}
+)", val), "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(F32));
+		AssertEquals(Pop<F32>(), val);
+	}
+
+	void Constant_F64(F64 val)
+	{
+		AddSourceCode(new SourceCode(Format(R"(
+package Main
+
+func Get() float64 {
+	return (float64)%f
+}
+)", val), "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(F64));
+		AssertEquals(Pop<F64>(), val);
+	}
+
 	void Add_I32()
 	{
 		AddSourceCode(new SourceCode(R"(
@@ -412,15 +446,47 @@ func Get() int64 {
 		AssertEquals(Pop<I64>(), (I64)133);
 	}
 
+	template<typename T>
+	void BitNot_T(T val)
+	{
+		AddSourceCode(new SourceCode(Format(R"(
+package Main
+
+func Get() %s {
+	return ~(%s)%lld
+}
+)", Name<T>(), Name<T>(), (I64)val), "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(T));
+		AssertEquals(Pop<T>(), (T)~val);
+	}
+
 	void operator()()
 	{
 		TEST(Constant_T<I32>(-1));
 		TEST(Constant_T<I32>(123));
 		TEST(Constant_T<I16>(INT16_MAX));
-		TEST(Constant_T<F32>(1.0));
+		TEST(Constant_T<I16>(-1234));
+		TEST(Constant_F32(1.23f));
+		TEST(Constant_F32(-1.23f));
+		TEST(Constant_F64(123.456));
+		TEST(Constant_F64(-123.456));
 
 		TEST(Add_I32());
 		TEST(Add_I64());
+		
+		TEST(BitNot_T<I8>(10));
+		TEST(BitNot_T<U8>(200));
+		TEST(BitNot_T<I16>(123));
+		TEST(BitNot_T<U16>(INT16_MAX + 100));
+		TEST(BitNot_T<I32>(52344));
+		TEST(BitNot_T<I32>(-52344));
+		TEST(BitNot_T<U32>(INT32_MAX + (U32)100));
+		TEST(BitNot_T<I64>(-124532));
+		TEST(BitNot_T<U64>(INT64_MAX + (U64)1));
 	}
 };
 

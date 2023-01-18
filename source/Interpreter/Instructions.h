@@ -192,5 +192,14 @@ union { \
 		Neg_I64 = Props(Incode::Neg, PrimitiveType::I64, 0, 0),
 		Neg_F32 = Props(Incode::Neg, PrimitiveType::F32, 0, 0),
 		Neg_F64 = Props(Incode::Neg, PrimitiveType::F64, 0, 0),
+
+		BitNot_I8 = Props(Incode::BitNot, PrimitiveType::I8, 0, 0),
+		BitNot_U8 = Props(Incode::BitNot, PrimitiveType::U8, 0, 0),
+		BitNot_I16 = Props(Incode::BitNot, PrimitiveType::I16, 0, 0),
+		BitNot_U16 = Props(Incode::BitNot, PrimitiveType::U16, 0, 0),
+		BitNot_I32 = Props(Incode::BitNot, PrimitiveType::I32, 0, 0),
+		BitNot_U32 = Props(Incode::BitNot, PrimitiveType::U32, 0, 0),
+		BitNot_I64 = Props(Incode::BitNot, PrimitiveType::I64, 0, 0),
+		BitNot_U64 = Props(Incode::BitNot, PrimitiveType::U64, 0, 0),
 	};
 }

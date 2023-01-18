@@ -37,6 +37,9 @@ namespace
         else if (from == PrimitiveType::I32) {
             switch (to)
             {
+            case PrimitiveType::I64:
+                value.i64 = (I64)value.i32;
+                return;
             case PrimitiveType::F32:
                 value.f32 = (F32)value.i32;
                 return;
@@ -53,6 +56,14 @@ namespace
                 return;
             case PrimitiveType::F64:
                 value.f64 = (F64)value.u32;
+                return;
+            }
+        }
+        else if (from == PrimitiveType::F64) {
+            switch (to)
+            {
+            case PrimitiveType::F32:
+                value.f32 = (F32)value.f64;
                 return;
             }
         }

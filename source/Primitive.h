@@ -144,6 +144,12 @@ namespace WestCoastCode
 		// Add the values and put the result into the lhs value. Returns true
 		// if the two primitives are added
 		static bool Add(PrimitiveValue* lhs, const PrimitiveValue* rhs);
+
+		// Negate the supplied value. Returns true if negation was successfull
+		static bool Neg(PrimitiveValue* lhs);
+
+		// Not the supplied value
+		static bool Not(PrimitiveValue* lhs);
 	};
 	static_assert(sizeof(PrimitiveValue) == 16, "Expected the value size to be 16");
 }
