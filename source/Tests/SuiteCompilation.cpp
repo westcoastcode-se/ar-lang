@@ -395,13 +395,30 @@ func Get() uint64 {
 		AssertEquals(Pop<U64>(), val);
 	}
 
-	void Constant_F32(F32 val)
+	void Constant_F32_Cast(F32 val)
 	{
 		AddSourceCode(new SourceCode(Format(R"(
 package Main
 
 func Get() float32 {
-	return (float32)%ff
+	return (float32)%f
+}
+)", val), "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(F32));
+		AssertEquals(Pop<F32>(), val);
+	}
+
+	void Constant_F32_Suffix(F32 val)
+	{
+		AddSourceCode(new SourceCode(Format(R"(
+package Main
+
+func Get() float32 {
+	return %ff
 }
 )", val), "main.arl"));
 
@@ -495,8 +512,10 @@ func Get() %s {
 		TEST(Constant_T<I64>(-1234512));
 		TEST(Constant_T<I64>(123412432));
 		TEST(Constant_U64(UINT64_MAX - 100));
-		TEST(Constant_F32(1.23f));
-		TEST(Constant_F32(-1.23f));
+		TEST(Constant_F32_Cast(1.23f));
+		TEST(Constant_F32_Cast(-1.23f));
+		TEST(Constant_F32_Suffix(1.23f));
+		TEST(Constant_F32_Suffix(-1.23f));
 		TEST(Constant_F64(123.456));
 		TEST(Constant_F64(-123.456));
 
