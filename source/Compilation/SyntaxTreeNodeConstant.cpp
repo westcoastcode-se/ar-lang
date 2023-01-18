@@ -171,20 +171,48 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
         stackType = state->compiler->FindPrimitive(ReadOnlyString("bool"));
         break;
     case TokenType::Int:
-        value.i64 = t->ToI64();
-        if (value.i64 > (I64)INT32_MAX) {
-            value.type = PrimitiveType::I64;
-            stackType = state->compiler->FindPrimitive(ReadOnlyString("int64"));
+        if (t->GetModifier() == TokenModifier::HintUnsigned)
+        {
+            value.u64 = t->ToU64();
+            if (value.u64 > (U64)UINT32_MAX)
+            {
+                value.type = PrimitiveType::U64;
+                stackType = state->compiler->FindPrimitive(ReadOnlyString("uint64"));
+            }
+            else {
+                value.u32 = (U32)value.u64;
+                value.type = PrimitiveType::U32;
+                stackType = state->compiler->FindPrimitive(ReadOnlyString("uint32"));
+            }
         }
-        else {
-            value.type = PrimitiveType::I32;
-            stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
+        else
+        {
+            value.i64 = t->ToI64();
+            if (value.i64 > (I64)INT32_MAX) {
+                value.type = PrimitiveType::I64;
+                stackType = state->compiler->FindPrimitive(ReadOnlyString("int64"));
+            }
+            else {
+                value.i32 = (I32)value.i64;
+                value.type = PrimitiveType::I32;
+                stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
+            }
         }
         break;
     case TokenType::Decimal:
-        value.f64 = t->ToF64();
-        value.type = PrimitiveType::F64;
-        stackType = state->compiler->FindPrimitive(ReadOnlyString("float64"));
+        if (t->GetModifier() == TokenModifier::HintFloat)
+        {
+            value.f32 = t->ToF32();
+            value.type = PrimitiveType::F32;
+            stackType = state->compiler->FindPrimitive(ReadOnlyString("float32"));
+        }
+        else
+        {
+            value.f64 = t->ToF64();
+            value.type = PrimitiveType::F64;
+            stackType = state->compiler->FindPrimitive(ReadOnlyString("float64"));
+        }
+
         break;
     default:
         throw ParseErrorExpectedConstant(state);

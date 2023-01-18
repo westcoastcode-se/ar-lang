@@ -378,13 +378,30 @@ func Get() %s {
 		AssertEquals(Pop<T>(), val);
 	}
 
+	void Constant_U64(U64 val)
+	{
+		AddSourceCode(new SourceCode(Format(R"(
+package Main
+
+func Get() uint64 {
+	return (uint64)%llu
+}
+)", val), "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(U64));
+		AssertEquals(Pop<U64>(), val);
+	}
+
 	void Constant_F32(F32 val)
 	{
 		AddSourceCode(new SourceCode(Format(R"(
 package Main
 
 func Get() float32 {
-	return (float32)%f
+	return (float32)%ff
 }
 )", val), "main.arl"));
 
@@ -466,10 +483,18 @@ func Get() %s {
 
 	void operator()()
 	{
+		TEST(Constant_T<I8>(-10));
+		TEST(Constant_T<I8>(122));
+		TEST(Constant_T<U8>(200));
+		TEST(Constant_T<I16>(-1234));
+		TEST(Constant_T<I16>(INT16_MAX));
+		TEST(Constant_T<U16>(20000));
 		TEST(Constant_T<I32>(-1));
 		TEST(Constant_T<I32>(123));
-		TEST(Constant_T<I16>(INT16_MAX));
-		TEST(Constant_T<I16>(-1234));
+		TEST(Constant_T<U32>(UINT32_MAX - 100));
+		TEST(Constant_T<I64>(-1234512));
+		TEST(Constant_T<I64>(123412432));
+		TEST(Constant_U64(UINT64_MAX - 100));
 		TEST(Constant_F32(1.23f));
 		TEST(Constant_F32(-1.23f));
 		TEST(Constant_F64(123.456));

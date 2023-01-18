@@ -375,6 +375,12 @@ void Token::NextNumber()
 				while (IsDigit(*_pos)) _pos++;
 			}
 		}
+
+		if (*_pos == 'f') {
+			_modifier = TokenModifier::HintFloat;
+			_pos++;
+		}
+
 		_stringStart = start;
 		_stringEnd = _pos;
 		return;
@@ -387,6 +393,12 @@ void Token::NextNumber()
 
 		// Ignore all numbers
 		while (IsHex(*_pos)) _pos++;
+	}
+
+	// Hint that this value is an unsigned constant
+	if (*_pos == 'u') {
+		_modifier = TokenModifier::HintUnsigned;
+		_pos++;
 	}
 
 	_stringStart = start;

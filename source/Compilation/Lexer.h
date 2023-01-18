@@ -122,7 +122,11 @@ namespace WestCoastCode::Compilation
 	{
 		None,
 		// Normally used for strings and comments. Indicates that the token is a multiline value
-		Multiline
+		Multiline,
+		// Hint that the supplied number is an unsigned 64bit value
+		HintUnsigned,
+		// Hint that the supplied decimal value is a 32bit decimal
+		HintFloat,
 	};
 
 	class Token
