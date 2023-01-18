@@ -121,8 +121,6 @@ namespace WestCoastCode::Compilation
 	enum class TokenModifier : int
 	{
 		None,
-		// The constant value is a negative value
-		Negative,
 		// Normally used for strings and comments. Indicates that the token is a multiline value
 		Multiline
 	};

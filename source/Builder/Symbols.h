@@ -262,6 +262,10 @@ namespace WestCoastCode::Builder
 		InstrDiv* Div(Type* type);
 		InstrMult* Mult(Type* type);
 
+		InstrNeg* Neg(Type* type);
+
+		InstrBitNot* BitNot(Type* type);
+
 		InstrLdc* Ldc(Type* stackType, PrimitiveValue value);
 
 		InstrRet* Ret();

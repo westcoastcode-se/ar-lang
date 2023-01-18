@@ -37,11 +37,12 @@ void Thread::ExecEntrypoint(const Function* entrypoint)
 	return Exec(_ip);
 }
 
-#include "Instructions/Ldc.c"
-#include "Instructions/Ldc_s.c"
-#include "Instructions/Ldc_l.c"
-#include "Instructions/Ret.c"
-#include "Instructions/Add.c"
+#include "Instructions/Ldc.inc.cpp"
+#include "Instructions/Ldc_s.inc.cpp"
+#include "Instructions/Ldc_l.inc.cpp"
+#include "Instructions/Ret.inc.cpp"
+#include "Instructions/Add.inc.cpp"
+#include "Instructions/Neg.inc.cpp"
 
 void Thread::Exec(const Byte* ip)
 {
@@ -99,6 +100,7 @@ void Thread::Exec0(const Byte* ip) noexcept
 		case (I32)Opcodes::Ldc_s_U16_1:
 			ip = Ldc_s_U16(&_stack, ip, 1);
 			continue;
+
 		case (I32)Opcodes::Add_I8:
 			ip = Add_I8(&_stack, ip);
 			continue;
@@ -117,6 +119,26 @@ void Thread::Exec0(const Byte* ip) noexcept
 		case (I32)Opcodes::Add_F64:
 			ip = Add_F64(&_stack, ip);
 			continue;
+
+		case (I32)Opcodes::Neg_I8:
+			ip = Neg_I8(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Neg_I16:
+			ip = Neg_I16(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Neg_I32:
+			ip = Neg_I32(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Neg_I64:
+			ip = Neg_I64(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Neg_F32:
+			ip = Neg_F32(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Neg_F64:
+			ip = Neg_F64(&_stack, ip);
+			continue;
+
 		default:
 			break;
 		}

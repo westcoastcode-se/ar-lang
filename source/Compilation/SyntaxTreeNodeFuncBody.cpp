@@ -266,6 +266,8 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, Toke
 	ParseFn rightFunc)
 {
 	Token* const t = state->token;
+	t->Next();
+
 	auto right = rightFunc(state);
 	auto guard = MemoryGuard(right);
 

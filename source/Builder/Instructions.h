@@ -88,6 +88,22 @@ namespace WestCoastCode::Builder
 		void Write(MemoryStream& s) final;
 	};
 
+	class ARLANG_API InstrNeg : public InstrWithType<Interpreter::InstrNeg>
+	{
+	public:
+		InstrNeg(const IType* type) : InstrWithType(type) {}
+
+		void Write(MemoryStream& s) final;
+	};
+
+	class ARLANG_API InstrBitNot : public InstrWithType<Interpreter::InstrBitNot>
+	{
+	public:
+		InstrBitNot(const IType* type) : InstrWithType(type) {}
+
+		void Write(MemoryStream& s) final;
+	};
+
 	class ARLANG_API InstrRet : public TInstr<Interpreter::InstrRet>
 	{
 	public:

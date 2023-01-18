@@ -160,23 +160,14 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
         stackType = state->compiler->FindPrimitive(ReadOnlyString("bool"));
         break;
     case TokenType::Int:
-        if (t->GetModifier() == TokenModifier::Negative) {
-            value.i64 = t->ToI64();
-            value.type = PrimitiveType::I32;
-            stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
+        value.i64 = t->ToI64();
+        if (value.i64 > (I64)INT32_MAX) {
+            value.type = PrimitiveType::I64;
+            stackType = state->compiler->FindPrimitive(ReadOnlyString("int64"));
         }
         else {
-            U64 i = t->ToU64();
-            if (i > (I64)INT32_MAX) {
-                value.u64 = i;
-                value.type = PrimitiveType::U32;
-                stackType = state->compiler->FindPrimitive(ReadOnlyString("uint32"));
-            }
-            else {
-                value.i64 = (I64)i;
-                value.type = PrimitiveType::I32;
-                stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
-            }
+            value.type = PrimitiveType::I32;
+            stackType = state->compiler->FindPrimitive(ReadOnlyString("int32"));
         }
         break;
     case TokenType::Decimal:

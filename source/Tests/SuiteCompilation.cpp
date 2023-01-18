@@ -192,8 +192,8 @@ func Calc(lhs int32, rhs int32) (int32) {
 		Lexer l("-10");
 		Token t(&l);
 
+		VerifyToken(t, TokenType::OpMinus);
 		VerifyToken(t, TokenType::Int);
-		AssertEquals(t.GetModifier(), TokenModifier::Negative);
 	}
 
 	void DecreaseNegativeValue()
@@ -202,8 +202,8 @@ func Calc(lhs int32, rhs int32) (int32) {
 		Token t(&l);
 
 		VerifyToken(t, TokenType::OpDecrement);
+		VerifyToken(t, TokenType::OpMinus);
 		VerifyToken(t, TokenType::Int);
-		AssertEquals(t.GetModifier(), TokenModifier::Negative);
 	}
 
 	void operator()()
@@ -414,6 +414,7 @@ func Get() int64 {
 
 	void operator()()
 	{
+		TEST(Constant_T<I32>(-1));
 		TEST(Constant_T<I32>(123));
 		TEST(Constant_T<I16>(INT16_MAX));
 		TEST(Constant_T<F32>(1.0));

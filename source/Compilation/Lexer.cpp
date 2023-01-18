@@ -486,13 +486,6 @@ void Token::NextMinusOrDecrement()
 		Atom(TokenType::OpDecrement);
 		return;
 	}
-	else if (IsDigit(*peek))
-	{
-		_pos++;
-		_modifier = TokenModifier::Negative;
-		NextNumber();
-		return;
-	}
 
 	Atom(TokenType::OpMinus);
 }

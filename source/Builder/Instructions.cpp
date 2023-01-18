@@ -92,3 +92,17 @@ void InstrRet::Write(MemoryStream& s)
 #endif
 	s.Write(&data);
 }
+
+void InstrNeg::Write(MemoryStream& s)
+{
+	data.icode = Interpreter::Incode::Neg;
+	data.props1 = (I8)type->GetPrimitiveType();
+	s.Write(&data);
+}
+
+void InstrBitNot::Write(MemoryStream& s)
+{
+	data.icode = Interpreter::Incode::BitNot;
+	data.props1 = (I8)type->GetPrimitiveType();
+	s.Write(&data);
+}

@@ -285,6 +285,16 @@ InstrMult* Instructions::Mult(Type* type)
 	return static_cast<InstrMult*>(Add(new InstrMult(type)));
 }
 
+InstrNeg* Instructions::Neg(Type* type)
+{
+	return static_cast<InstrNeg*>(Add(new InstrNeg(type)));
+}
+
+InstrBitNot* Instructions::BitNot(Type* type)
+{
+	return static_cast<InstrBitNot*>(Add(new InstrBitNot(type)));
+}
+
 InstrDiv* Instructions::Div(Type* type)
 {
 	return static_cast<InstrDiv*>(Add(new InstrDiv(type)));

@@ -27,6 +27,10 @@ namespace WestCoastCode::Interpreter
 		Mult,
 		Div,
 
+		Neg,
+
+		BitNot,
+
 		ScopeIn,
 		ScopeOut,
 		Ret,
@@ -78,6 +82,8 @@ union { \
 	typedef InstrSingle InstrSub;
 	typedef InstrSingle InstrMult;
 	typedef InstrSingle InstrDiv;
+	typedef InstrSingle InstrNeg;
+	typedef InstrSingle InstrBitNot;
 	typedef InstrSingle InstrEoe;
 	static_assert(sizeof(InstrSingle) == sizeof(OpcodeHeader));
 
@@ -178,6 +184,13 @@ union { \
 		Add_I32 = Props(Incode::Add, PrimitiveType::I32, 0, 0),
 		Add_I64 = Props(Incode::Add, PrimitiveType::I64, 0, 0),
 		Add_F32 = Props(Incode::Add, PrimitiveType::F32, 0, 0),
-		Add_F64 = Props(Incode::Add, PrimitiveType::F64, 0, 0)
+		Add_F64 = Props(Incode::Add, PrimitiveType::F64, 0, 0),
+
+		Neg_I8 = Props(Incode::Neg, PrimitiveType::I8, 0, 0),
+		Neg_I16 = Props(Incode::Neg, PrimitiveType::I16, 0, 0),
+		Neg_I32 = Props(Incode::Neg, PrimitiveType::I32, 0, 0),
+		Neg_I64 = Props(Incode::Neg, PrimitiveType::I64, 0, 0),
+		Neg_F32 = Props(Incode::Neg, PrimitiveType::F32, 0, 0),
+		Neg_F64 = Props(Incode::Neg, PrimitiveType::F64, 0, 0),
 	};
 }

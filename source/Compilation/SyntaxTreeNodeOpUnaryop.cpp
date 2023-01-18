@@ -1,6 +1,7 @@
 #include "SyntaxTreeNodeOpUnaryop.h"
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodePrimitive.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -40,13 +41,24 @@ void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instruct
 {
 	GetRight()->Compile(linker, instructions);
 
+	auto stackType = GetStackType();
+	if (stackType == nullptr || dynamic_cast<SyntaxTreeNodePrimitive*>(stackType) == nullptr)
+		throw CompileErrorNotImplemented(this, "Unaryop");
+	auto primitive = static_cast<SyntaxTreeNodePrimitive*>(stackType);
+
 	switch (_op)
 	{
 	case Op::Minus:
-		//instructions.Add(GetRight());
+		instructions.Neg(primitive->GetSymbol());
 		break;
+	case Op::BitNot:
+		instructions.BitNot(primitive->GetSymbol());
+		break;
+	case Op::Plus:
+		break;
+	default:
+		throw CompileErrorNotImplemented(this, "Unaryop");
 	}
-	throw CompileErrorNotImplemented(this, "Unaryop");
 }
 
 ISyntaxTreeNodeType* SyntaxTreeNodeOpUnaryop::GetStackType()
