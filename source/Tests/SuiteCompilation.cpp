@@ -504,7 +504,7 @@ func Get() %s {
 package Main
 
 func Get() uint64 {
-	return ~(uint64)%lldu
+	return ~(uint64)%lluu
 }
 )", (U64)val), "main.arl"));
 
@@ -547,7 +547,7 @@ func Get() uint64 {
 		TEST(BitNot_T<I32>(-52344));
 		TEST(BitNot_T<U32>(INT32_MAX + (U32)100));
 		TEST(BitNot_T<I64>(-124532));
-		//TEST(BitNot_U64((U64)INT64_MAX + (U64)1));
+		TEST(BitNot_U64(9223372036854775807ui64 + 1ui64));
 	}
 };
 
