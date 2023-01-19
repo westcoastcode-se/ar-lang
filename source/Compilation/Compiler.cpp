@@ -76,24 +76,7 @@ Byte* Compiler::Compile(int optimizationLevel)
 {
 	// Start by resolving all references
 	_syntaxTree->ResolveReferences();
-
-	// Optimize the syntax tree
-	// These optimizations are always done - no matter what type of level we are using
-	/*while (true) {
-		SyntaxTreeNodeOpBinop::Optimize0_Merge optimizer0_0;
-		SyntaxTreeNodeOpUnaryop::Optimize0_Merge optimizer0_1;
-		SyntaxTreeNodeOpTypeCast::Optimize0_Merge optimizer0_2;
-		_syntaxTree->Optimize(&optimizer0_0);
-		_syntaxTree->Optimize(&optimizer0_1);
-		_syntaxTree->Optimize(&optimizer0_2);
-
-		// We can't optimize the tree any more
-		if (optimizer0_0.count == 0 && optimizer0_1.count == 0 && optimizer0_2.count == 0)
-			break;
-		optimizer0_0.count = 0;
-		optimizer0_1.count = 0;
-		optimizer0_2.count = 0;
-	}*/
+	Optimize(optimizationLevel);
 
 	// Link the bytecode together and return the bytecode
 	auto linker = new Builder::Linker();
@@ -110,6 +93,28 @@ Byte* Compiler::Compile(int optimizationLevel)
 	}
 	
 	return nullptr;
+}
+
+void Compiler::Optimize(int level)
+{
+	// Optimize the syntax tree
+	if (level > 0) {
+		while (true) {
+			SyntaxTreeNodeOpBinop::Optimize0_Merge optimizer0_0;
+			SyntaxTreeNodeOpUnaryop::Optimize0_Merge optimizer0_1;
+			SyntaxTreeNodeOpTypeCast::Optimize0_Merge optimizer0_2;
+			_syntaxTree->Optimize(&optimizer0_0);
+			_syntaxTree->Optimize(&optimizer0_1);
+			_syntaxTree->Optimize(&optimizer0_2);
+
+			// We can't optimize the tree any more
+			if (optimizer0_0.count == 0 && optimizer0_1.count == 0 && optimizer0_2.count == 0)
+				break;
+			optimizer0_0.count = 0;
+			optimizer0_1.count = 0;
+			optimizer0_2.count = 0;
+		}
+	}
 }
 
 ISyntaxTreeNodePrimitive* Compiler::FindPrimitive(ReadOnlyString name)

@@ -63,6 +63,9 @@ namespace WestCoastCode::Compilation
 		// Start parsing tokens and convert them into syntax tree nodes
 		void ParseTokens(SourceCode* sourceCode, Token* t);
 
+		// Perform optimization
+		void Optimize(int level);
+
 	private:
 		Vector<SourceCode*> _sourceCodes;
 		SyntaxTree* _syntaxTree;
