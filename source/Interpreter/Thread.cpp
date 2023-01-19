@@ -484,22 +484,22 @@ void Thread::Exec0(const Byte* ip) noexcept
 			continue;
 
 		case (I32)Opcodes::Neg_I8:
-			ip = Neg_I8(&_stack, ip);
+			ip = Neg_T<I8>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Neg_I16:
-			ip = Neg_I16(&_stack, ip);
+			ip = Neg_T<I16>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Neg_I32:
-			ip = Neg_I32(&_stack, ip);
+			ip = Neg_T<I32>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Neg_I64:
-			ip = Neg_I64(&_stack, ip);
+			ip = Neg_T<I64>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Neg_F32:
-			ip = Neg_F32(&_stack, ip);
+			ip = Neg_T<F32>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Neg_F64:
-			ip = Neg_F64(&_stack, ip);
+			ip = Neg_T<F64>(&_stack, ip);
 			continue;
 
 		case (I32)Opcodes::BitNot_I8:
