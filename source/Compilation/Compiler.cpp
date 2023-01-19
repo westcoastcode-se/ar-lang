@@ -99,6 +99,7 @@ void Compiler::Optimize(int level)
 {
 	// Optimize the syntax tree
 	if (level > 0) {
+		// TODO: Add maximum iterations?
 		while (true) {
 			SyntaxTreeNodeOpBinop::Optimize0_Merge optimizer0_0;
 			SyntaxTreeNodeOpUnaryop::Optimize0_Merge optimizer0_1;
@@ -114,6 +115,15 @@ void Compiler::Optimize(int level)
 			optimizer0_1.count = 0;
 			optimizer0_2.count = 0;
 		}
+	}
+
+	if (level > 1) {
+		// TODO: Add inline optimzations for level = 2 and above if function complexity is lower than X
+	}
+
+	if (level > 2) {
+		// TODO: Merge scopes variable memory together
+		// TODO: Reuse same scope memory if variables are not used 
 	}
 }
 
