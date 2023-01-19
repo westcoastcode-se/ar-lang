@@ -63,7 +63,6 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 		TestUtilsCompilation::BeforeEach();
 		process = nullptr;
 		thread = nullptr;
-		optimizationLevel = 0;
 	}
 
 	void AfterEach(const std::exception* e)
