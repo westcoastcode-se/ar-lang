@@ -56,12 +56,14 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 {
 	Interpreter::Process* process = nullptr;
 	Interpreter::Thread* thread = nullptr;
+	int optimizationLevel;
 
 	void BeforeEach()
 	{
 		TestUtilsCompilation::BeforeEach();
 		process = nullptr;
 		thread = nullptr;
+		optimizationLevel = 0;
 	}
 
 	void AfterEach(const std::exception* e)
@@ -84,7 +86,7 @@ struct TestUtilsCompilationWithInterpreter : TestUtilsCompilation
 	void CompileAndInvoke(ReadOnlyString packageName, ReadOnlyString functionName)
 	{
 		// Generate the bytecode
-		Byte* bytecode = compiler->Compile();
+		Byte* bytecode = compiler->Compile(optimizationLevel);
 
 		// New process and load the bytecode
 		process = new Process();
@@ -515,8 +517,11 @@ func Get() uint64 {
 		AssertEquals(Pop<U64>(), ~(U64)val);
 	}
 
-	void operator()()
+	void operator()(int level)
 	{
+		// Set the optimization level
+		optimizationLevel = level;
+
 		TEST(Constant_T<I8>(-10));
 		TEST(Constant_T<I8>(122));
 		TEST(Constant_T<U8>(200));
@@ -557,5 +562,5 @@ void SuiteCompilation()
 	SUITE(SuiteLexer);
 	SUITE(SuiteSyntaxTree);
 	SUITE(SuiteCompilationError);
-	SUITE(SuiteCompileAndThenInterpret);
+	SUITE_RANGE(SuiteCompileAndThenInterpret, 0, 4);
 }

@@ -32,6 +32,14 @@ struct ErrorStringStream : public std::stringstream
 	cout << "Suite '" << #s << "'" << endl; \
 	s _##s; _##s();
 
+#define SUITE_RANGE(s, start, end) {\
+	cout << "Suite '" << #s << endl; \
+	for(int i = start; i < end; ++i) { \
+	cout << "Suite '" << #s << "' (" << i << ")" << endl; \
+		s _##s; _##s(i); \
+	} \
+}
+
 #define TEST(s) \
 	_tests_count++;\
 	cout << "\tTest '" << #s << "'"; \
