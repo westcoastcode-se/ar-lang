@@ -119,11 +119,13 @@ void Compiler::Optimize(int level)
 
 	if (level > 1) {
 		// TODO: Add inline optimzations for level = 2 and above if function complexity is lower than X
+		// TODO: Merge scopes variable memory together
 	}
 
 	if (level > 2) {
-		// TODO: Merge scopes variable memory together
 		// TODO: Reuse same scope memory if variables are not used 
+		// TODO: Create hidden functions where all code related to a return value is 
+		//		 removed if the return values are discarded by the caller.
 	}
 }
 
