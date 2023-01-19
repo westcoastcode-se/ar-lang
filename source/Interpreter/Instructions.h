@@ -218,6 +218,32 @@ union { \
 		Conv_I8_F64 = Props(Incode::Conv, PrimitiveType::I8, PrimitiveType::F64, 0),
 		Conv_I8_Ptr = Props(Incode::Conv, PrimitiveType::I8, PrimitiveType::Ptr, 0),
 
+		Conv_I16_Bool = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::Bool, 0),
+		Conv_I16_I8 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::I8, 0),
+		Conv_I16_U8 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::U8, 0),
+		Conv_I16_I16 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::I16, 0),
+		Conv_I16_U16 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::U16, 0),
+		Conv_I16_I32 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::I32, 0),
+		Conv_I16_U32 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::U32, 0),
+		Conv_I16_I64 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::I64, 0),
+		Conv_I16_U64 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::U64, 0),
+		Conv_I16_F32 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::F32, 0),
+		Conv_I16_F64 = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::F64, 0),
+		Conv_I16_Ptr = Props(Incode::Conv, PrimitiveType::I16, PrimitiveType::Ptr, 0),
+
+		Conv_U16_Bool = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::Bool, 0),
+		Conv_U16_I8 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::I8, 0),
+		Conv_U16_U8 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::U8, 0),
+		Conv_U16_I16 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::I16, 0),
+		Conv_U16_U16 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::U16, 0),
+		Conv_U16_I32 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::I32, 0),
+		Conv_U16_U32 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::U32, 0),
+		Conv_U16_I64 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::I64, 0),
+		Conv_U16_U64 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::U64, 0),
+		Conv_U16_F32 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::F32, 0),
+		Conv_U16_F64 = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::F64, 0),
+		Conv_U16_Ptr = Props(Incode::Conv, PrimitiveType::U16, PrimitiveType::Ptr, 0),
+
 		Conv_I32_Bool = Props(Incode::Conv, PrimitiveType::I32, PrimitiveType::Bool, 0),
 		Conv_I32_I8 = Props(Incode::Conv, PrimitiveType::I32, PrimitiveType::I8, 0),
 		Conv_I32_U8 = Props(Incode::Conv, PrimitiveType::I32, PrimitiveType::U8, 0),
@@ -230,6 +256,19 @@ union { \
 		Conv_I32_F32 = Props(Incode::Conv, PrimitiveType::I32, PrimitiveType::F32, 0),
 		Conv_I32_F64 = Props(Incode::Conv, PrimitiveType::I32, PrimitiveType::F64, 0),
 		Conv_I32_Ptr = Props(Incode::Conv, PrimitiveType::I32, PrimitiveType::Ptr, 0),
+
+		Conv_U32_Bool = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::Bool, 0),
+		Conv_U32_I8 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::I8, 0),
+		Conv_U32_U8 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::U8, 0),
+		Conv_U32_I16 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::I16, 0),
+		Conv_U32_U16 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::U16, 0),
+		Conv_U32_I32 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::I32, 0),
+		Conv_U32_U32 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::U32, 0),
+		Conv_U32_I64 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::I64, 0),
+		Conv_U32_U64 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::U64, 0),
+		Conv_U32_F32 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::F32, 0),
+		Conv_U32_F64 = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::F64, 0),
+		Conv_U32_Ptr = Props(Incode::Conv, PrimitiveType::U32, PrimitiveType::Ptr, 0),
 
 		Conv_I64_Bool = Props(Incode::Conv, PrimitiveType::I64, PrimitiveType::Bool, 0),
 		Conv_I64_I8 = Props(Incode::Conv, PrimitiveType::I64, PrimitiveType::I8, 0),
@@ -267,7 +306,6 @@ union { \
 		Conv_F32_U64 = Props(Incode::Conv, PrimitiveType::F32, PrimitiveType::U64, 0),
 		Conv_F32_F32 = Props(Incode::Conv, PrimitiveType::F32, PrimitiveType::F32, 0),
 		Conv_F32_F64 = Props(Incode::Conv, PrimitiveType::F32, PrimitiveType::F64, 0),
-		Conv_F32_Ptr = Props(Incode::Conv, PrimitiveType::F32, PrimitiveType::Ptr, 0),
 
 		Conv_F64_I8 = Props(Incode::Conv, PrimitiveType::F64, PrimitiveType::I8, 0),
 		Conv_F64_U8 = Props(Incode::Conv, PrimitiveType::F64, PrimitiveType::U8, 0),
@@ -278,7 +316,6 @@ union { \
 		Conv_F64_I64 = Props(Incode::Conv, PrimitiveType::F64, PrimitiveType::I64, 0),
 		Conv_F64_U64 = Props(Incode::Conv, PrimitiveType::F64, PrimitiveType::U64, 0),
 		Conv_F64_F32 = Props(Incode::Conv, PrimitiveType::F64, PrimitiveType::F32, 0),
-		Conv_F64_F64 = Props(Incode::Conv, PrimitiveType::F64, PrimitiveType::F64, 0),
-		Conv_F64_Ptr = Props(Incode::Conv, PrimitiveType::F64, PrimitiveType::Ptr, 0)
+		Conv_F64_F64 = Props(Incode::Conv, PrimitiveType::F64, PrimitiveType::F64, 0)
 	};
 }
