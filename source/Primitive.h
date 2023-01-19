@@ -157,71 +157,95 @@ namespace WestCoastCode
 	struct PrimitiveTypeString
 	{
 		static constexpr auto Name = "?";
+		static constexpr auto Primitive = "?";
+		static constexpr auto Ptr = "*void";
 	};
 
 	template<>
 	struct PrimitiveTypeString<I8>
 	{
 		static constexpr auto Name = "I8";
+		static constexpr auto Primitive = "int8";
+		static constexpr auto Ptr = "*int8";
 	};
 
 	template<>
 	struct PrimitiveTypeString<U8>
 	{
 		static constexpr auto Name = "U8";
+		static constexpr auto Primitive = "uint8";
+		static constexpr auto Ptr = "*uint8";
 	};
 
 	template<>
 	struct PrimitiveTypeString<I16>
 	{
 		static constexpr auto Name = "I16";
+		static constexpr auto Primitive = "int16";
+		static constexpr auto Ptr = "*int16";
 	};
 
 	template<>
 	struct PrimitiveTypeString<U16>
 	{
 		static constexpr auto Name = "U16";
+		static constexpr auto Primitive = "uint16";
+		static constexpr auto Ptr = "*uint16";
 	};
 
 	template<>
 	struct PrimitiveTypeString<I32>
 	{
 		static constexpr auto Name = "I32";
+		static constexpr auto Primitive = "int32";
+		static constexpr auto Ptr = "*int32";
 	};
 
 	template<>
 	struct PrimitiveTypeString<U32>
 	{
 		static constexpr auto Name = "U32";
+		static constexpr auto Primitive = "uint32";
+		static constexpr auto Ptr = "*uint32";
 	};
 
 	template<>
 	struct PrimitiveTypeString<I64>
 	{
 		static constexpr auto Name = "I64";
+		static constexpr auto Primitive = "int64";
+		static constexpr auto Ptr = "*int64";
 	};
 
 	template<>
 	struct PrimitiveTypeString<U64>
 	{
 		static constexpr auto Name = "U64";
+		static constexpr auto Primitive = "uint64";
+		static constexpr auto Ptr = "*uint64";
 	};
 
 	template<>
 	struct PrimitiveTypeString<F32>
 	{
 		static constexpr auto Name = "F32";
+		static constexpr auto Primitive = "float32";
+		static constexpr auto Ptr = "*float32";
 	};
 
 	template<>
 	struct PrimitiveTypeString<F64>
 	{
 		static constexpr auto Name = "F64";
+		static constexpr auto Primitive = "float64";
+		static constexpr auto Ptr = "*float64";
 	};
 
 	template<typename T>
 	struct PrimitiveTypeString<T*>
 	{
 		static constexpr auto Name = "Ptr";
+		static constexpr auto Primitive = PrimitiveTypeString<T>::Ptr;
+		static constexpr auto Ptr = "**void";
 	};
 }
