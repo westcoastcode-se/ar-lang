@@ -462,22 +462,25 @@ void Thread::Exec0(const Byte* ip) noexcept
 			continue;
 
 		case (I32)Opcodes::Add_I8:
-			ip = Add_I8(&_stack, ip);
+			ip = Add_T<I8>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Add_I16:
-			ip = Add_I16(&_stack, ip);
+			ip = Add_T<I16>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Add_I32:
-			ip = Add_I32(&_stack, ip);
+			ip = Add_T<I32>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Add_I64:
-			ip = Add_I64(&_stack, ip);
+			ip = Add_T<I64>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Add_F32:
-			ip = Add_F32(&_stack, ip);
+			ip = Add_T<F32>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::Add_F64:
-			ip = Add_F64(&_stack, ip);
+			ip = Add_T<F64>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Add_Ptr:
+			ip = Add_Ptr(&_stack, ip);
 			continue;
 
 		case (I32)Opcodes::Neg_I8:
@@ -500,28 +503,28 @@ void Thread::Exec0(const Byte* ip) noexcept
 			continue;
 
 		case (I32)Opcodes::BitNot_I8:
-			ip = BitNot_I8(&_stack, ip);
+			ip = BitNot_T<I8>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::BitNot_U8:
-			ip = BitNot_U8(&_stack, ip);
+			ip = BitNot_T<U8>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::BitNot_I16:
-			ip = BitNot_I16(&_stack, ip);
+			ip = BitNot_T<I16>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::BitNot_U16:
-			ip = BitNot_U16(&_stack, ip);
+			ip = BitNot_T<U16>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::BitNot_I32:
-			ip = BitNot_I32(&_stack, ip);
+			ip = BitNot_T<I32>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::BitNot_U32:
-			ip = BitNot_U32(&_stack, ip);
+			ip = BitNot_T<U32>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::BitNot_I64:
-			ip = BitNot_I64(&_stack, ip);
+			ip = BitNot_T<I64>(&_stack, ip);
 			continue;
 		case (I32)Opcodes::BitNot_U64:
-			ip = BitNot_U64(&_stack, ip);
+			ip = BitNot_T<U64>(&_stack, ip);
 			continue;
 
 		default:

@@ -188,6 +188,7 @@ union { \
 		Add_I64 = Props(Incode::Add, PrimitiveType::I64, 0, 0),
 		Add_F32 = Props(Incode::Add, PrimitiveType::F32, 0, 0),
 		Add_F64 = Props(Incode::Add, PrimitiveType::F64, 0, 0),
+		Add_Ptr = Props(Incode::Add, PrimitiveType::Ptr, 0, 0),
 
 		Neg_I8 = Props(Incode::Neg, PrimitiveType::I8, 0, 0),
 		Neg_I16 = Props(Incode::Neg, PrimitiveType::I16, 0, 0),
