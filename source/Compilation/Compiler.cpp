@@ -79,7 +79,7 @@ Byte* Compiler::Compile(int optimizationLevel)
 
 	// Optimize the syntax tree
 	// These optimizations are always done - no matter what type of level we are using
-	while (true) {
+	/*while (true) {
 		SyntaxTreeNodeOpBinop::Optimize0_Merge optimizer0_0;
 		SyntaxTreeNodeOpUnaryop::Optimize0_Merge optimizer0_1;
 		SyntaxTreeNodeOpTypeCast::Optimize0_Merge optimizer0_2;
@@ -93,7 +93,7 @@ Byte* Compiler::Compile(int optimizationLevel)
 		optimizer0_0.count = 0;
 		optimizer0_1.count = 0;
 		optimizer0_2.count = 0;
-	}
+	}*/
 
 	// Link the bytecode together and return the bytecode
 	auto linker = new Builder::Linker();

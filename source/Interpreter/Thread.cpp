@@ -103,6 +103,133 @@ void Thread::Exec0(const Byte* ip) noexcept
 			ip = Ldc_s_U16(&_stack, ip, 1);
 			continue;
 
+		case (I32)Opcodes::Conv_I8_I8:
+			ip = Conv_From_To<I8, I8>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_U8:
+			ip = Conv_From_To<I8, U8>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_I16:
+			ip = Conv_From_To<I8, I16>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_U16:
+			ip = Conv_From_To<I8, U16>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_I32:
+			ip = Conv_From_To<I8, I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_U32:
+			ip = Conv_From_To<I8, I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_U64:
+			ip = Conv_From_To<I8, I64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_F32:
+			ip = Conv_From_To<I8, F32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_F64:
+			ip = Conv_From_To<I8, F64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I8_Ptr:
+			ip = Conv_From_To<I8, char*>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_I8:
+			ip = Conv_From_To<I32, I8>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_U8:
+			ip = Conv_From_To<I32, I8>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_I16:
+			ip = Conv_From_To<I32, I16>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_U16:
+			ip = Conv_From_To<I32, I16>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_I32:
+			ip = Conv_From_To<I32, I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_U32:
+			ip = Conv_From_To<I32, I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_I64:
+			ip = Conv_From_To<I32, I64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_U64:
+			ip = Conv_From_To<I32, I64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_F32:
+			ip = Conv_From_To<I32, F32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_F64:
+			ip = Conv_From_To<I32, F64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I32_Ptr:
+			ip = Conv_From_ToPtr<I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_I8:
+			ip = Conv_From_To<I64, I8>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_U8:
+			ip = Conv_From_To<I64, I8>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_I16:
+			ip = Conv_From_To<I64, I16>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_U16:
+			ip = Conv_From_To<I64, I16>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_I32:
+			ip = Conv_From_To<I64, I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_U32:
+			ip = Conv_From_To<I64, I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_I64:
+			ip = Conv_From_To<I64, I64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_U64:
+			ip = Conv_From_To<I64, I64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_F32:
+			ip = Conv_From_To<I64, F32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_F64:
+			ip = Conv_From_To<I64, F64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_I64_Ptr:
+			ip = Conv_From_ToPtr<I64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_I8:
+			ip = Conv_From_To<F64, I8>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_U8:
+			ip = Conv_From_To<F64, I8>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_I16:
+			ip = Conv_From_To<F64, I16>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_U16:
+			ip = Conv_From_To<F64, I16>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_I32:
+			ip = Conv_From_To<F64, I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_U32:
+			ip = Conv_From_To<F64, I32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_I64:
+			ip = Conv_From_To<F64, I64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_U64:
+			ip = Conv_From_To<F64, I64>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_F32:
+			ip = Conv_From_To<F64, F32>(_stack, ip);
+			continue;
+		case (I32)Opcodes::Conv_F64_F64:
+			ip = Conv_From_To<F64, F64>(_stack, ip);
+			continue;
+
 		case (I32)Opcodes::Add_I8:
 			ip = Add_I8(&_stack, ip);
 			continue;
@@ -181,9 +308,6 @@ void Thread::Exec0(const Byte* ip) noexcept
 			continue;
 		case Incode::Ldc_l:
 			ip = Ldc_l(this, ip);
-			continue;
-		case Incode::Conv:
-			ip = Conv(this, ip);
 			continue;
 		case Incode::Ret:
 			ip = Ret(this, ip);

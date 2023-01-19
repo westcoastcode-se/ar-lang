@@ -152,4 +152,76 @@ namespace WestCoastCode
 		static bool Not(PrimitiveValue* lhs);
 	};
 	static_assert(sizeof(PrimitiveValue) == 16, "Expected the value size to be 16");
+
+	template<typename T>
+	struct PrimitiveTypeString
+	{
+		static constexpr auto Name = "?";
+	};
+
+	template<>
+	struct PrimitiveTypeString<I8>
+	{
+		static constexpr auto Name = "I8";
+	};
+
+	template<>
+	struct PrimitiveTypeString<U8>
+	{
+		static constexpr auto Name = "U8";
+	};
+
+	template<>
+	struct PrimitiveTypeString<I16>
+	{
+		static constexpr auto Name = "I16";
+	};
+
+	template<>
+	struct PrimitiveTypeString<U16>
+	{
+		static constexpr auto Name = "U16";
+	};
+
+	template<>
+	struct PrimitiveTypeString<I32>
+	{
+		static constexpr auto Name = "I32";
+	};
+
+	template<>
+	struct PrimitiveTypeString<U32>
+	{
+		static constexpr auto Name = "U32";
+	};
+
+	template<>
+	struct PrimitiveTypeString<I64>
+	{
+		static constexpr auto Name = "I64";
+	};
+
+	template<>
+	struct PrimitiveTypeString<U64>
+	{
+		static constexpr auto Name = "U64";
+	};
+
+	template<>
+	struct PrimitiveTypeString<F32>
+	{
+		static constexpr auto Name = "F32";
+	};
+
+	template<>
+	struct PrimitiveTypeString<F64>
+	{
+		static constexpr auto Name = "F64";
+	};
+
+	template<typename T>
+	struct PrimitiveTypeString<T*>
+	{
+		static constexpr auto Name = "Ptr";
+	};
 }
