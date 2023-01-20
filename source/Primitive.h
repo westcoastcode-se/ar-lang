@@ -22,6 +22,42 @@ namespace WestCoastCode
 		Count
 	};
 
+	// Convert the supplied primitive type to a string
+	static inline const char* ToString(PrimitiveType t)
+	{
+		switch (t)
+		{
+		case PrimitiveType::Unknown:
+			return "Unknown";
+		case PrimitiveType::Bool:
+			return "Bool";
+		case PrimitiveType::I8:
+			return "I8";
+		case PrimitiveType::U8:
+			return "U8";
+		case PrimitiveType::I16:
+			return "I16";
+		case PrimitiveType::U16:
+			return "U16";
+		case PrimitiveType::I32:
+			return "I32";
+		case PrimitiveType::U32:
+			return "U32";
+		case PrimitiveType::I64:
+			return "I64";
+		case PrimitiveType::U64:
+			return "U64";
+		case PrimitiveType::F32:
+			return "F32";
+		case PrimitiveType::F64:
+			return "F64";
+		case PrimitiveType::Ptr:
+			return "Ptr";
+		default:
+			return "Unknown";
+		}
+	}
+
 	// Represents a constant primitive value up to 8 bytes
 	struct ARLANG_API PrimitiveValue
 	{
@@ -154,7 +190,7 @@ namespace WestCoastCode
 	static_assert(sizeof(PrimitiveValue) == 16, "Expected the value size to be 16");
 
 	template<typename T>
-	struct PrimitiveTypeString
+	struct PrimitiveTypeTraits
 	{
 		static constexpr auto Name = "?";
 		static constexpr auto Primitive = "?";
@@ -162,7 +198,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<I8>
+	struct PrimitiveTypeTraits<I8>
 	{
 		static constexpr auto Name = "I8";
 		static constexpr auto Primitive = "int8";
@@ -170,7 +206,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<U8>
+	struct PrimitiveTypeTraits<U8>
 	{
 		static constexpr auto Name = "U8";
 		static constexpr auto Primitive = "uint8";
@@ -178,7 +214,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<I16>
+	struct PrimitiveTypeTraits<I16>
 	{
 		static constexpr auto Name = "I16";
 		static constexpr auto Primitive = "int16";
@@ -186,7 +222,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<U16>
+	struct PrimitiveTypeTraits<U16>
 	{
 		static constexpr auto Name = "U16";
 		static constexpr auto Primitive = "uint16";
@@ -194,7 +230,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<I32>
+	struct PrimitiveTypeTraits<I32>
 	{
 		static constexpr auto Name = "I32";
 		static constexpr auto Primitive = "int32";
@@ -202,7 +238,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<U32>
+	struct PrimitiveTypeTraits<U32>
 	{
 		static constexpr auto Name = "U32";
 		static constexpr auto Primitive = "uint32";
@@ -210,7 +246,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<I64>
+	struct PrimitiveTypeTraits<I64>
 	{
 		static constexpr auto Name = "I64";
 		static constexpr auto Primitive = "int64";
@@ -218,7 +254,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<U64>
+	struct PrimitiveTypeTraits<U64>
 	{
 		static constexpr auto Name = "U64";
 		static constexpr auto Primitive = "uint64";
@@ -226,7 +262,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<F32>
+	struct PrimitiveTypeTraits<F32>
 	{
 		static constexpr auto Name = "F32";
 		static constexpr auto Primitive = "float32";
@@ -234,7 +270,7 @@ namespace WestCoastCode
 	};
 
 	template<>
-	struct PrimitiveTypeString<F64>
+	struct PrimitiveTypeTraits<F64>
 	{
 		static constexpr auto Name = "F64";
 		static constexpr auto Primitive = "float64";
@@ -242,10 +278,10 @@ namespace WestCoastCode
 	};
 
 	template<typename T>
-	struct PrimitiveTypeString<T*>
+	struct PrimitiveTypeTraits<T*>
 	{
 		static constexpr auto Name = "Ptr";
-		static constexpr auto Primitive = PrimitiveTypeString<T>::Ptr;
+		static constexpr auto Primitive = PrimitiveTypeTraits<T>::Ptr;
 		static constexpr auto Ptr = "**void";
 	};
 }

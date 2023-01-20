@@ -162,6 +162,7 @@ union { \
 		union
 		{
 			I64 i64;
+			U64 u64;
 			F64 f64;
 #ifdef ARLANG_64BIT
 			void* ptr;

@@ -5,7 +5,7 @@ const Byte* Ret(Thread* t, const Byte* ip)
 {
 	const InstrRet* const instr = (const InstrRet*)ip;
 #ifdef ARLANG_INSTRUCTION_DEBUG
-	printf("RET to=");
+	printf("Ret ");
 #endif
 	// Remove memory for all local variables
 	// // TODO: This should be done using scope-in and scope-out statements

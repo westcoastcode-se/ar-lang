@@ -549,7 +549,7 @@ void Thread::Exec0(const Byte* ip) noexcept
 		case Incode::Eoe:
 			ip = (const Byte*)&eoe;
 #ifdef ARLANG_INSTRUCTION_DEBUG
-			printf("EOE\n");
+			printf("Eoe\n");
 #endif
 			return;
 		default:
