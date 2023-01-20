@@ -173,6 +173,9 @@ namespace WestCoastCode
 			return p;
 		}
 
+		// Represents an operation that can be done between two primitives
+		typedef bool (*OpFn)(PrimitiveValue* lhs, const PrimitiveValue* rhs);
+
 		// Figure out which primitive type is the result of combining
 		// the two supplied types
 		static PrimitiveType Result(PrimitiveType rhs, PrimitiveType lhs);
@@ -180,6 +183,18 @@ namespace WestCoastCode
 		// Add the values and put the result into the lhs value. Returns true
 		// if the two primitives are added
 		static bool Add(PrimitiveValue* lhs, const PrimitiveValue* rhs);
+
+		// Subtract the values and put the result into the lhs value. Returns true
+		// if the two primitives are subtracted
+		static bool Sub(PrimitiveValue* lhs, const PrimitiveValue* rhs);
+
+		// Multiply the values and put the result into the lhs value. Returns true
+		// if the two primitives are multiplied
+		static bool Mult(PrimitiveValue* lhs, const PrimitiveValue* rhs);
+
+		// Divide the values and put the result into the lhs value. Returns true
+		// if the two primitives are divided
+		static bool Div(PrimitiveValue* lhs, const PrimitiveValue* rhs);
 
 		// Negate the supplied value. Returns true if negation was successfull
 		static bool Neg(PrimitiveValue* lhs);

@@ -102,25 +102,37 @@ Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(ISyn
 		auto rightConst = static_cast<SyntaxTreeNodeConstant*>(right);
 
 		PrimitiveValue newValue = leftConst->GetValue();
+		PrimitiveValue::OpFn fn;
 		switch (impl->_op)
 		{
 		case Op::Plus:
-			if (PrimitiveValue::Add(&newValue, &rightConst->GetValue())) {
-				// TODO: Add support for converting the new type into the appropriate
-				auto leftType = static_cast<ISyntaxTreeNodePrimitive*>(leftConst->GetStackType());
-				auto rightType = static_cast<ISyntaxTreeNodePrimitive*>(rightConst->GetStackType());
-				auto newType = rightType;
-				if (newValue.type != newType->GetPrimitiveType())
-					newType = leftType;
-				auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->_function,
-					impl->_sourceCode, newValue, 
-					newType);
-				count++;
-				return Vector<ISyntaxTreeNodeOp*>(combined);
-			}
+			fn = PrimitiveValue::Add;
+			break;
+		case Op::Minus:
+			fn = PrimitiveValue::Sub;
+			break;
+		case Op::Mult:
+			fn = PrimitiveValue::Mult;
+			break;
+		case Op::Div:
+			fn = PrimitiveValue::Div;
 			break;
 		default:
-			break;
+			return Vector<ISyntaxTreeNodeOp*>();
+		}
+
+		if (fn(&newValue, &rightConst->GetValue())) {
+			// TODO: Add support for converting the new type into the appropriate
+			auto leftType = static_cast<ISyntaxTreeNodePrimitive*>(leftConst->GetStackType());
+			auto rightType = static_cast<ISyntaxTreeNodePrimitive*>(rightConst->GetStackType());
+			auto newType = rightType;
+			if (newValue.type != newType->GetPrimitiveType())
+				newType = leftType;
+			auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->_function,
+				impl->_sourceCode, newValue,
+				newType);
+			count++;
+			return Vector<ISyntaxTreeNodeOp*>(combined);
 		}
 	}
 
