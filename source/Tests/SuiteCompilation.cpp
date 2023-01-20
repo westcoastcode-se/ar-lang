@@ -341,6 +341,36 @@ func Main() Engine.Graphics.Value {
 		AssertType<ISyntaxTreeNodeType>(returnType);
 	}
 
+	void FunctionWithOneArgument()
+	{
+		AddSourceCode(new SourceCode(R"(
+package WestCoastCode
+
+func Main(in int32) int32 {
+	return in
+}
+)", "main.arl"));
+
+		TypeVisitor<ISyntaxTreeNodeFuncDef> visitor;
+		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
+
+		AssertEquals(visitor.nodes.Size(), 1);
+		auto func = visitor.nodes[0];
+
+		AssertType<ISyntaxTreeNodePackage>(func->GetParent());
+		AssertEquals(func->GetName(), ReadOnlyString("Main"));
+		AssertEquals(func->GetArguments().Size(), 1);
+
+		auto returnType = func->GetReturnType();
+		AssertNotNull(returnType);
+		AssertType<ISyntaxTreeNodeType>(returnType);
+
+		auto body = func->GetBody();
+		AssertNotNull(body);
+
+		AssertType<ISyntaxTreeNodeScope>(func->GetBody()->GetChildren()[0]);
+	}
+
 	void operator()()
 	{
 		TEST(EmptySyntaxTree());
@@ -348,6 +378,7 @@ func Main() Engine.Graphics.Value {
 		TEST(PackageInPackage());
 		TEST(FunctionInPackage());
 		TEST(FunctionWithSpecializedReturn());
+		TEST(FunctionWithOneArgument());
 	}
 };
 

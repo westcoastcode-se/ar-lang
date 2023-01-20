@@ -260,8 +260,7 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 	}
 	}
 	
-
-	return nullptr;
+	throw ParseErrorSyntaxError(state, "Unknown op");
 }
 
 ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, TokenType tokenType,

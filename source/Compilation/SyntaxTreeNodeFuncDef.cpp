@@ -119,13 +119,19 @@ SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)
 		throw ParseErrorSyntaxError(state, "expected '('");
 	
 	// Parse all arguments: (name type[, ...])
-	while (t->Next() != TokenType::ParantRight)
-	{
-		funcdef->AddArgument(SyntaxTreeNodeFuncArg::Parse(state));
+	if (t->Next() != TokenType::ParantRight)
+{
+		while (true)
+		{
+			funcdef->AddArgument(SyntaxTreeNodeFuncArg::Parse(state));
 
-		// Ignore comma
-		if (t->GetType() == TokenType::Comma) {
-			t->Next();
+			// Ignore comma
+			if (t->GetType() == TokenType::Comma) {
+				t->Next();
+			}
+			else if (t->GetType() == TokenType::ParantRight) {
+				break;
+			}
 		}
 	}
 	t->Next();
