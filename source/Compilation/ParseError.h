@@ -26,6 +26,9 @@ namespace WestCoastCode::Compilation
 			return _sourceCode;
 		}
 
+		// Return what type of error this is
+		const ParseErrorType GetType() const { return _type; }
+
 		// Get the filename where the error originated from
 		const ReadOnlyString GetFilename() const;
 
@@ -37,6 +40,9 @@ namespace WestCoastCode::Compilation
 
 		// Where in the source code the error originated from
 		const int GetOffset() const { return _offset; }
+
+		// Print this error to stderr
+		void PrintToStderr() const;
 
 	private:
 		const SourceCode* const _sourceCode;

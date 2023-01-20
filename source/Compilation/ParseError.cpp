@@ -16,6 +16,29 @@ const ReadOnlyString ParseError::GetFilename() const
 	return _sourceCode->GetFilename();
 }
 
+void ParseError::PrintToStderr() const
+{
+	auto source = GetSourceCode();
+	fprintf(stderr, "Failed to compile %.*s:\n\n", 
+		(I32)source->GetFilename().length(), source->GetFilename().data());
+
+	auto text = source->GetText();
+	const char* s = text.data();
+	const char* end = s + text.length();
+	int line = 0;
+	for (; s != end; ++s) {
+		fprintf(stderr, "%c", *s);
+		if (*s == '\n') {
+			line++;
+			if (line == GetLine()) {
+				for (int i = 0; i < GetLineOffset(); ++i)
+					fprintf(stderr, " ");
+				fprintf(stderr, "^ PE%05d: %s\n", (I32)GetType(), what());
+			}
+		}
+	}
+}
+
 ParseErrorExpectedIdentity::ParseErrorExpectedIdentity(const ParserState* state)
 	: ParseError(state->sourceCode, state->token, ParseErrorType::ExpectedIdentity)
 {

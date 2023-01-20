@@ -14,6 +14,9 @@ struct TestUtilsCompilation : TestUtils
 	void AfterEach(const std::exception* e)
 	{
 		if (e != nullptr) {
+			auto ce = dynamic_cast<const Compilation::ParseError*>(e);
+			if (ce)
+				ce->PrintToStderr();
 			DebugSyntaxTree();
 		}
 
@@ -378,7 +381,7 @@ func Main(in int32) int32 {
 		TEST(PackageInPackage());
 		TEST(FunctionInPackage());
 		TEST(FunctionWithSpecializedReturn());
-		//TEST(FunctionWithOneArgument());
+		TEST(FunctionWithOneArgument());
 	}
 };
 
