@@ -155,6 +155,9 @@ namespace WestCoastCode::Compilation
 		inline int GetLine() const { return _line; }
 
 		// Get the offset, in bytes, on the line we are parsing at the moment
+		const Char* GetLineStart() const { return _lineOffset; }
+
+		// Get the offset, in bytes, on the line we are parsing at the moment
 		int GetLineOffset() const;
 
 		// Get the offset, in bytes, in the source code we are parsing at the moment

@@ -146,7 +146,7 @@ namespace
 
 int Token::GetLineOffset() const
 {
-	return (int)(_pos - _lineOffset);
+	return (int)(_pos - _lineOffset - GetString().length());
 }
 
 int Token::GetOffset() const

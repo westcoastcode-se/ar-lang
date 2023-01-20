@@ -49,6 +49,7 @@ namespace WestCoastCode::Compilation
 		const ParseErrorType _type;
 		const int _line;
 		const int _lineOffset;
+		const Char* _lineStart;
 		const int _offset;
 	};
 

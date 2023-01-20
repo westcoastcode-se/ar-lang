@@ -7,7 +7,7 @@ using namespace WestCoastCode::Compilation;
 ParseError::ParseError(const SourceCode* sourceCode,
 	const Token* token, ParseErrorType type)
 	: CompilationError(), _sourceCode(sourceCode), _type(type), _line(token->GetLine()),
-	_lineOffset(token->GetLineOffset()), _offset(token->GetOffset())
+	_lineOffset(token->GetLineOffset()), _lineStart(token->GetLineStart()), _offset(token->GetOffset())
 {
 }
 
@@ -29,10 +29,13 @@ void ParseError::PrintToStderr() const
 	for (; s != end; ++s) {
 		fprintf(stderr, "%c", *s);
 		if (*s == '\n') {
-			line++;
-			if (line == GetLine()) {
-				for (int i = 0; i < GetLineOffset(); ++i)
-					fprintf(stderr, " ");
+			if ((++line) == GetLine() + 1) {
+				for (int i = 0; i < _lineOffset; ++i) {
+					if (_lineStart[i] == '\t')
+						fprintf(stderr, "\t");
+					else
+						fprintf(stderr, " ");
+				}
 				fprintf(stderr, "^ PE%05d: %s\n", (I32)GetType(), what());
 			}
 		}
