@@ -43,6 +43,9 @@ void Thread::ExecEntrypoint(const Function* entrypoint)
 #include "Instructions/Conv.inc.cpp"
 #include "Instructions/Ret.inc.cpp"
 #include "Instructions/Add.inc.cpp"
+#include "Instructions/Sub.inc.cpp"
+#include "Instructions/Mult.inc.cpp"
+#include "Instructions/Div.inc.cpp"
 #include "Instructions/Neg.inc.cpp"
 #include "Instructions/BitNot.inc.cpp"
 
@@ -481,6 +484,66 @@ void Thread::Exec0(const Byte* ip) noexcept
 			continue;
 		case (I32)Opcodes::Add_Ptr:
 			ip = Add_Ptr(&_stack, ip);
+			continue;
+
+		case (I32)Opcodes::Sub_I8:
+			ip = Sub_T<I8>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Sub_I16:
+			ip = Sub_T<I16>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Sub_I32:
+			ip = Sub_T<I32>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Sub_I64:
+			ip = Sub_T<I64>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Sub_F32:
+			ip = Sub_T<F32>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Sub_F64:
+			ip = Sub_T<F64>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Sub_Ptr:
+			ip = Sub_Ptr(&_stack, ip);
+			continue;
+
+		case (I32)Opcodes::Mult_I8:
+			ip = Mult_T<I8>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Mult_I16:
+			ip = Mult_T<I16>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Mult_I32:
+			ip = Mult_T<I32>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Mult_I64:
+			ip = Mult_T<I64>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Mult_F32:
+			ip = Mult_T<F32>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Mult_F64:
+			ip = Mult_T<F64>(&_stack, ip);
+			continue;
+
+		case (I32)Opcodes::Div_I8:
+			ip = Div_T<I8>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Div_I16:
+			ip = Div_T<I16>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Div_I32:
+			ip = Div_T<I32>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Div_I64:
+			ip = Div_T<I64>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Div_F32:
+			ip = Div_T<F32>(&_stack, ip);
+			continue;
+		case (I32)Opcodes::Div_F64:
+			ip = Div_T<F64>(&_stack, ip);
 			continue;
 
 		case (I32)Opcodes::Neg_I8:

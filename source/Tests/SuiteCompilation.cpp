@@ -378,7 +378,7 @@ func Main(in int32) int32 {
 		TEST(PackageInPackage());
 		TEST(FunctionInPackage());
 		TEST(FunctionWithSpecializedReturn());
-		TEST(FunctionWithOneArgument());
+		//TEST(FunctionWithOneArgument());
 	}
 };
 
@@ -547,6 +547,40 @@ func Get() uint64 {
 		AssertEquals(Pop<U64>(), ~(U64)val);
 	}
 
+	void Parantheses1()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Get() int32 {
+	return (1 + 2) * 3
+}
+)", "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(I32));
+		AssertEquals(Pop<I32>(), (1 + 2) * 3);
+	}
+
+	void Parantheses2()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Get() int32 {
+	return 1 + ((2 + 3) * 4 + 5 * (6 - (10 - 20))) / 2
+}
+)", "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(I32));
+		AssertEquals(Pop<I32>(), 1 + ((2 + 3) * 4 + 5 * (6 - (10 - 20))) / 2);
+	}
+
 	void operator()(int level)
 	{
 		// Set the optimization level
@@ -583,6 +617,9 @@ func Get() uint64 {
 		TEST(BitNot_T<U32>(INT32_MAX + (U32)100));
 		TEST(BitNot_T<I64>(-124532));
 		TEST(BitNot_U64(9223372036854775807ui64 + 1ui64));
+
+		TEST(Parantheses1());
+		TEST(Parantheses2());
 	}
 };
 

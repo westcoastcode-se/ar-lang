@@ -191,6 +191,28 @@ union { \
 		Add_F64 = Props(Incode::Add, PrimitiveType::F64, 0, 0),
 		Add_Ptr = Props(Incode::Add, PrimitiveType::Ptr, 0, 0),
 
+		Sub_I8 = Props(Incode::Sub, PrimitiveType::I8, 0, 0),
+		Sub_I16 = Props(Incode::Sub, PrimitiveType::I16, 0, 0),
+		Sub_I32 = Props(Incode::Sub, PrimitiveType::I32, 0, 0),
+		Sub_I64 = Props(Incode::Sub, PrimitiveType::I64, 0, 0),
+		Sub_F32 = Props(Incode::Sub, PrimitiveType::F32, 0, 0),
+		Sub_F64 = Props(Incode::Sub, PrimitiveType::F64, 0, 0),
+		Sub_Ptr = Props(Incode::Sub, PrimitiveType::Ptr, 0, 0),
+
+		Mult_I8 = Props(Incode::Mult, PrimitiveType::I8, 0, 0),
+		Mult_I16 = Props(Incode::Mult, PrimitiveType::I16, 0, 0),
+		Mult_I32 = Props(Incode::Mult, PrimitiveType::I32, 0, 0),
+		Mult_I64 = Props(Incode::Mult, PrimitiveType::I64, 0, 0),
+		Mult_F32 = Props(Incode::Mult, PrimitiveType::F32, 0, 0),
+		Mult_F64 = Props(Incode::Mult, PrimitiveType::F64, 0, 0),
+
+		Div_I8 = Props(Incode::Div, PrimitiveType::I8, 0, 0),
+		Div_I16 = Props(Incode::Div, PrimitiveType::I16, 0, 0),
+		Div_I32 = Props(Incode::Div, PrimitiveType::I32, 0, 0),
+		Div_I64 = Props(Incode::Div, PrimitiveType::I64, 0, 0),
+		Div_F32 = Props(Incode::Div, PrimitiveType::F32, 0, 0),
+		Div_F64 = Props(Incode::Div, PrimitiveType::F64, 0, 0),
+
 		Neg_I8 = Props(Incode::Neg, PrimitiveType::I8, 0, 0),
 		Neg_I16 = Props(Incode::Neg, PrimitiveType::I16, 0, 0),
 		Neg_I32 = Props(Incode::Neg, PrimitiveType::I32, 0, 0),

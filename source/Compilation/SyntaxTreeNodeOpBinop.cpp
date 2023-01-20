@@ -60,13 +60,13 @@ void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructio
 		instructions.Add(primitive->GetSymbol());
 		break;
 	case Op::Minus:
-		instructions.Add(primitive->GetSymbol());
+		instructions.Sub(primitive->GetSymbol());
 		break;
 	case Op::Mult:
-		instructions.Add(primitive->GetSymbol());
+		instructions.Mult(primitive->GetSymbol());
 		break;
 	case Op::Div:
-		instructions.Add(primitive->GetSymbol());
+		instructions.Div(primitive->GetSymbol());
 		break;
 	default:
 		throw CompileErrorNotImplemented(this, "Binop");

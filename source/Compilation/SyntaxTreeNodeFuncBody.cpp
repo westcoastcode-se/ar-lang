@@ -250,13 +250,14 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 				return guard.Done();
 			}
 		}
-
-		auto node = ParseBody(state);
-		if (t->GetType() != TokenType::ParantRight) {
-			throw ParseErrorSyntaxError(state, "expected ')'");
+		else {
+			auto node = ParseCompare(state);
+			auto guard = MemoryGuard(node);
+			if (t->GetType() != TokenType::ParantRight)
+				throw ParseErrorSyntaxError(state, "expected ')'");
+			t->Next();
+			return guard.Done();
 		}
-		t->Next();
-		return node;
 	}
 	}
 	

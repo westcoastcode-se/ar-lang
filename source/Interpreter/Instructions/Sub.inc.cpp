@@ -2,24 +2,24 @@
 #include "ThreadStack.h"
 
 template<typename T>
-const Byte* Add_T(ThreadStack* const stack, const Byte* ip)
+const Byte* Sub_T(ThreadStack* const stack, const Byte* ip)
 {
 #ifdef ARLANG_INSTRUCTION_DEBUG
-	printf("Add <%s>", PrimitiveTypeTraits<T>::Name);
+	printf("Sub <%s>", PrimitiveTypeTraits<T>::Name);
 #endif
 	const T* const rhs = (const T*)stack->Pop(sizeof(T));
 	T* const dest = (T*)stack->Top(-(I32)sizeof(T));
-	*dest = *dest + *rhs;
-	return ip + sizeof(const InstrAdd);
+	*dest = *dest - *rhs;
+	return ip + sizeof(const InstrSub);
 }
 
-const Byte* Add_Ptr(ThreadStack* const stack, const Byte* ip)
+const Byte* Sub_Ptr(ThreadStack* const stack, const Byte* ip)
 {
 #ifdef ARLANG_INSTRUCTION_DEBUG
-	printf("Add <PTR>");
+	printf("Sub <PTR>");
 #endif
 	const Byte** const rhs = (const Byte**)stack->Pop(sizeof(Byte*));
 	Byte** const dest = (Byte**)stack->Top(-(I32)sizeof(Byte*));
-	*dest = *dest + (size_t)*rhs;
-	return ip + sizeof(const InstrAdd);
+	*dest = *dest - (size_t)*rhs;
+	return ip + sizeof(const InstrSub);
 }

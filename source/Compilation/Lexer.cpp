@@ -259,7 +259,7 @@ void Token::Next0()
 		Atom(TokenType::OpMult);
 		break;
 	case '/':
-		Atom(TokenType::OpMult);
+		Atom(TokenType::OpDiv);
 		break;
 	case '(':
 		Atom(TokenType::ParantLeft);
