@@ -185,7 +185,7 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->GetType() == TokenType::Not) {
-		return ParseUnaryop(state, t->GetType(), ParseCompare);
+		return ParseUnaryop(state, t->GetType(), ParseFactor);
 	}
 	else {
 		return ParseBinop(state, PARSE_COMPARE_TOKENS, ParseExpr, ParseExpr);
@@ -290,23 +290,22 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const 
 	auto left = leftFunc(state);
 	auto guard = MemoryGuard(left);
 
-	while (true) {
-		const auto size = types.Size();
+	const auto size = types.Size();
+	for (I32 i = 0; i < size; ++i) {
 		const auto tokenType = t->GetType();
-		for (auto i = 0; i < size; ++i) {
-			if (types[i] != tokenType)
-				continue;
-			t->Next();
+		if (types[i] != tokenType)
+			continue;
+		t->Next();
 
-			auto right = rightFunc(state);
-			left = ARLANG_NEW SyntaxTreeNodeOpBinop(SourceCodeView(state->sourceCode, t), state->function,
-				guard.Done(), right, SyntaxTreeNodeOpBinop::FromTokenType(tokenType));
-			guard = MemoryGuard(left);
-		}
-
-		if (size == types.Size())
-			break;
+		auto right = rightFunc(state);
+		left = ARLANG_NEW SyntaxTreeNodeOpBinop(SourceCodeView(state->sourceCode, t), state->function,
+			guard.Done(), right, SyntaxTreeNodeOpBinop::FromTokenType(tokenType));
+		guard = MemoryGuard(left);
+		
+		// Retry parsing. -1 will become 0 after "++i" is done in the for loop
+		i = -1; 
 	}
+
 	return guard.Done();
 }
 

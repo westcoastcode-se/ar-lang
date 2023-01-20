@@ -570,7 +570,7 @@ func Get() int32 {
 package Main
 
 func Get() int32 {
-	return 1 + ((2 + 3) * 4 + 5 * (6 - (10 - 20))) / 2
+	return (6 - (10 - 20) * 2 * 6)
 }
 )", "main.arl"));
 
@@ -578,7 +578,24 @@ func Get() int32 {
 		CompileAndInvoke("Get()");
 
 		VerifyStackSize(sizeof(I32));
-		AssertEquals(Pop<I32>(), 1 + ((2 + 3) * 4 + 5 * (6 - (10 - 20))) / 2);
+		AssertEquals(Pop<I32>(), (6 - (10 - 20) * 2 * 6));
+	}
+
+	void Parantheses3()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Get() int32 {
+	return 1 + ((2 + 3) * 4 + 5 * (6 - (10 - 20) + 2 * 6)) / 2
+}
+)", "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(I32));
+		AssertEquals(Pop<I32>(), 1 + ((2 + 3) * 4 + 5 * (6 - (10 - 20) + 2 * 6)) / 2);
 	}
 
 	void operator()(int level)
@@ -620,6 +637,7 @@ func Get() int32 {
 
 		TEST(Parantheses1());
 		TEST(Parantheses2());
+		TEST(Parantheses3());
 	}
 };
 
