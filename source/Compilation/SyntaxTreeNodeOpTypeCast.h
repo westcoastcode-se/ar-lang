@@ -9,17 +9,17 @@ namespace WestCoastCode::Compilation
 
 	public:
 		/// @return From which type are we casting
-		SyntaxTreeNodeTypeDef* FromType();
+		SyntaxTreeNodeType* FromType();
 
 #pragma region SyntaxTreeNodeOp
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker, Builder::Instructions& target) final;
-		SyntaxTreeNodeTypeDef* GetType() final;
+		SyntaxTreeNodeType* GetType() final;
 #pragma endregion
 
 		/// @brief Create a node which casts the supplied operator with the supplied type
 		static SyntaxTreeNodeOpTypeCast* Cast(SourceCodeView view, SyntaxTreeNodeFuncBody* body, 
-			SyntaxTreeNodeTypeDef* type, SyntaxTreeNodeOp* op);
+			SyntaxTreeNodeType* type, SyntaxTreeNodeOp* op);
 
 	public:
 		// Optimizer that merges this type-cast with the underlying node

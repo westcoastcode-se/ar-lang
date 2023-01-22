@@ -2,7 +2,7 @@
 #include "SyntaxTreeNodeImport.h"
 #include "SyntaxTreeNodeFunc.h"
 #include "SyntaxTreeNodeFuncBody.h"
-#include "SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 #include "Compiler.h"
 
 using namespace WestCoastCode;

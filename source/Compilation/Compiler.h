@@ -7,7 +7,7 @@
 #include "SyntaxTreeNodeImport.h"
 #include "SyntaxTreeNodeFunc.h"
 #include "SyntaxTreeNodeFuncBody.h"
-#include "SyntaxTreeNodeTypeDef.h"
+#include "SyntaxTreeNodeType.h"
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodeOpScope.h"
 

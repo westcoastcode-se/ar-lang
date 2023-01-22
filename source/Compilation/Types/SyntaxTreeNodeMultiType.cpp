@@ -5,7 +5,7 @@ using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeMultiType::SyntaxTreeNodeMultiType(SourceCodeView view)
-	: SyntaxTreeNodeTypeDef(view)
+	: SyntaxTreeNodeType(view)
 {
 }
 
@@ -13,7 +13,7 @@ void SyntaxTreeNodeMultiType::ToString(StringStream& s, int indent) const
 {
 	s << GetID() << Indent(indent);
 	s << "MiltiType()" << std::endl;
-	SyntaxTreeNodeTypeDef::ToString(s, indent);
+	SyntaxTreeNodeType::ToString(s, indent);
 }
 
 SyntaxTreeNodeMultiType* SyntaxTreeNodeMultiType::Parse(const ParserState* state)

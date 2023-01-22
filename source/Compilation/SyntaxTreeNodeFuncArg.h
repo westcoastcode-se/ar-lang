@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SyntaxTreeNode.h"
-#include "SyntaxTreeNodeTypeRef.h"
+#include "Types/SyntaxTreeNodeTypeRef.h"
 
 namespace WestCoastCode::Compilation
 {

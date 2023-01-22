@@ -50,7 +50,7 @@ namespace WestCoastCode::Compilation
 #pragma region SyntaxTreeNodeOp
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker, Builder::Instructions& target) final;
-		SyntaxTreeNodeTypeDef* GetType() final;
+		SyntaxTreeNodeType* GetType() final;
 #pragma endregion
 
 	private:

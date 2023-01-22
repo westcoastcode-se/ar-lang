@@ -1,7 +1,7 @@
 #include "SyntaxTreeNodeConstant.h"
 #include "SyntaxTreeNodeFuncBody.h"
-#include "SyntaxTreeNodePrimitive.h"
-#include "SyntaxTreeNodeTypeRef.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodeTypeRef.h"
 #include "Compiler.h"
 
 using namespace WestCoastCode;
@@ -118,7 +118,7 @@ void SyntaxTreeNodeConstant::Compile(Builder::Linker* linker, Builder::Instructi
     instructions.Ldc(symbol, _value);
 }
 
-SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(SyntaxTreeNodeTypeDef* newType)
+SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(SyntaxTreeNodeType* newType)
 {
     // If the newType returns null then we know that the supplied type is a reference
     auto type = newType->GetType();

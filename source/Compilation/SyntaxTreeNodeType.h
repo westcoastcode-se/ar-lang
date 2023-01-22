@@ -5,11 +5,11 @@
 namespace WestCoastCode::Compilation
 {
 	/// @brief A type definition. It might be a struct, a primitive. It might also be a reference to
-	///        the real SyntaxTreeNodeTypeDef
-	class SyntaxTreeNodeTypeDef : public SyntaxTreeNode
+	///        the real SyntaxTreeNodeType
+	class SyntaxTreeNodeType : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodeTypeDef(SourceCodeView view)
+		SyntaxTreeNodeType(SourceCodeView view)
 			: SyntaxTreeNode(view) {}
 
 		/// @return The name of this type
@@ -17,16 +17,16 @@ namespace WestCoastCode::Compilation
 
 		/// @brief Fetches the most likely type definition
 		/// @return The type definition
-		virtual SyntaxTreeNodeTypeDef* GetType() { return this; }
+		virtual SyntaxTreeNodeType* GetType() { return this; }
 
 		/// @brief Fetches all potential type definitions
 		/// @return A list of all types
-		virtual ReadOnlyArray<SyntaxTreeNodeTypeDef*> GetTypes() { return Vector<SyntaxTreeNodeTypeDef*>(this); }
+		virtual ReadOnlyArray<SyntaxTreeNodeType*> GetTypes() { return Vector<SyntaxTreeNodeType*>(this); }
 
 		/// @brief Check if the supplied definition is compatible
 		/// @param def 
 		/// @return 
-		virtual bool IsCompatibleWith(SyntaxTreeNodeTypeDef* def) { return true; }
+		virtual bool IsCompatibleWith(SyntaxTreeNodeType* def) { return true; }
 
 	protected:
 		ReadOnlyString _name;

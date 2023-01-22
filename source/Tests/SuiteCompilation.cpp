@@ -311,7 +311,7 @@ func Main() int32 {
 
 		auto returnType = func->GetReturnType();
 		AssertNotNull(returnType);
-		AssertType<SyntaxTreeNodeTypeDef>(returnType);
+		AssertType<SyntaxTreeNodeType>(returnType);
 
 		auto body = func->GetBody();
 		AssertNotNull(body);
@@ -341,7 +341,7 @@ func Main() Engine.Graphics.Value {
 
 		auto returnType = func->GetReturnType();
 		AssertNotNull(returnType);
-		AssertType<SyntaxTreeNodeTypeDef>(returnType);
+		AssertType<SyntaxTreeNodeType>(returnType);
 	}
 
 	void FunctionWithOneArgument()
@@ -366,7 +366,7 @@ func Main(in int32) int32 {
 
 		auto returnType = func->GetReturnType();
 		AssertNotNull(returnType);
-		AssertType<SyntaxTreeNodeTypeDef>(returnType);
+		AssertType<SyntaxTreeNodeType>(returnType);
 
 		auto body = func->GetBody();
 		AssertNotNull(body);

@@ -1,5 +1,5 @@
 #include "SyntaxTreeNodeOp.h"
-#include "SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -16,12 +16,12 @@ namespace WestCoastCode::Compilation
 #pragma region SyntaxTreeNodeOp
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
-		inline SyntaxTreeNodeTypeDef* GetType() final { return _stackType; }
+		inline SyntaxTreeNodeType* GetType() final { return _stackType; }
 #pragma endregion
 
 	public:
 		// Try to cast this constant into a new constant
-		SyntaxTreeNodeConstant* Cast(SyntaxTreeNodeTypeDef* newType);
+		SyntaxTreeNodeConstant* Cast(SyntaxTreeNodeType* newType);
 
 		// Parse the supplied state and return a constant
 		static SyntaxTreeNodeConstant* Parse(const ParserState* state);

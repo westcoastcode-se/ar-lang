@@ -6,8 +6,8 @@
 #include "SyntaxTreeNodeConstant.h"
 #include "SyntaxTreeNodeOpScope.h"
 #include "SyntaxTreeNodeOpTypeCast.h"
-#include "SyntaxTreeNodeTypeRef.h"
-#include "SyntaxTreeNodeMultiType.h"
+#include "Types/SyntaxTreeNodeTypeRef.h"
+#include "Types/SyntaxTreeNodeMultiType.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;

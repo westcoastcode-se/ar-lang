@@ -2,7 +2,7 @@
 
 #include "SyntaxTreeNodeOp.h"
 #include "SyntaxTreeNodeFuncBody.h"
-#include "SyntaxTreeNodeTypeDef.h"
+#include "SyntaxTreeNodeType.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -91,7 +91,7 @@ namespace WestCoastCode::Compilation
 		inline Op GetOperator() const { return _op; }
 
 #pragma region SyntaxTreeNodeOp
-		SyntaxTreeNodeTypeDef* GetType() final;
+		SyntaxTreeNodeType* GetType() final;
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker, Builder::Instructions& target) final;
 #pragma endregion

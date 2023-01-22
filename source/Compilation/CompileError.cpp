@@ -1,7 +1,7 @@
 #include "CompileError.h"
 #include "SyntaxTreeNode.h"
 #include "SyntaxTreeNodeRef.h"
-#include "SyntaxTreeNodeTypeRef.h"
+#include "Types/SyntaxTreeNodeTypeRef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;

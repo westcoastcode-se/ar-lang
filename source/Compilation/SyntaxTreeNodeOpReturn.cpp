@@ -23,7 +23,7 @@ void SyntaxTreeNodeOpReturn::Compile(Builder::Linker* linker, Builder::Instructi
 	target.Ret();
 }
 
-SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpReturn::GetType()
+SyntaxTreeNodeType* SyntaxTreeNodeOpReturn::GetType()
 {
 	if (GetChildren().Size() == 1) {
 		return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0])->GetType();

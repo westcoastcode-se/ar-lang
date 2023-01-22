@@ -1,19 +1,19 @@
 #pragma once
 
-#include "SyntaxTreeNodeTypeDef.h"
+#include "../SyntaxTreeNodeType.h"
 
 namespace WestCoastCode::Compilation
 {
 	/// @brief A type that contains multiple types, for example: (int32, bool)
-	class SyntaxTreeNodeMultiType : public SyntaxTreeNodeTypeDef
+	class SyntaxTreeNodeMultiType : public SyntaxTreeNodeType
 	{
 	public:
 		SyntaxTreeNodeMultiType(SourceCodeView view);
 
-#pragma region SyntaxTreeNodeTypeDef
-		inline ReadOnlyArray<SyntaxTreeNodeTypeDef*> GetTypes() final {
+#pragma region SyntaxTreeNodeType
+		inline ReadOnlyArray<SyntaxTreeNodeType*> GetTypes() final {
 			ASSERT_NOT_IMPLEMENTED();
-			return ReadOnlyArray<SyntaxTreeNodeTypeDef*>();
+			return ReadOnlyArray<SyntaxTreeNodeType*>();
 		}
 		void ToString(StringStream& s, int indent) const final;
 #pragma endregion

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SyntaxTreeNodePackage.h"
-#include "SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 
 namespace WestCoastCode::Compilation
 {

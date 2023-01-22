@@ -1,12 +1,12 @@
 #pragma once
 
 #include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeType.h"
 
 namespace WestCoastCode::Compilation
 {
 	class SyntaxTreeNodeFunc;
 	class SyntaxTreeNodeFuncBody;
-	class SyntaxTreeNodeTypeDef;
 
 	/// @brief Represents an operation executed inside a function
 	class ARLANG_API SyntaxTreeNodeOp : public SyntaxTreeNode
@@ -31,7 +31,7 @@ namespace WestCoastCode::Compilation
 		virtual Vector<SyntaxTreeNodeOp*> OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer);
 
 		/// @return The type which this operator resolves into
-		virtual SyntaxTreeNodeTypeDef* GetType() = 0;
+		virtual SyntaxTreeNodeType* GetType() = 0;
 
 #pragma region SyntaxTreeNode
 		void Compile(Builder::Linker* linker) final {

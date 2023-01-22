@@ -13,7 +13,7 @@ namespace WestCoastCode::Compilation
 
 #pragma region SyntaxTreeNodeOp
 		void ToString(StringStream& s, int indent) const final;
-		SyntaxTreeNodeTypeDef* GetType() final { return nullptr; }
+		SyntaxTreeNodeType* GetType() final { return nullptr; }
 #pragma endregion
 	};
 }

@@ -1,7 +1,6 @@
 #include "SyntaxTreeNodeOpUnaryop.h"
 #include "SyntaxTreeNodePackage.h"
-#include "SyntaxTreeNodePrimitive.h"
-#include "SyntaxTreeNodeTypeRef.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeConstant.h"
 
 using namespace WestCoastCode;
@@ -43,7 +42,7 @@ void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instruct
 	}
 }
 
-SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpUnaryop::GetType()
+SyntaxTreeNodeType* SyntaxTreeNodeOpUnaryop::GetType()
 {
 	return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0])->GetType();
 }

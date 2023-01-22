@@ -1,10 +1,10 @@
 #include "SyntaxTreeNodeFunc.h"
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodeFuncArg.h"
-#include "SyntaxTreeNodeTypeRef.h"
-#include "SyntaxTreeNodeMultiType.h"
+#include "Types/SyntaxTreeNodeTypeRef.h"
+#include "Types/SyntaxTreeNodeMultiType.h"
 #include "SyntaxTreeNodePackage.h"
-#include "SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeRef.h"
 
 using namespace WestCoastCode;
@@ -68,7 +68,7 @@ void SyntaxTreeNodeFunc::AddArgument(SyntaxTreeNodeFuncArg* arg)
 	_arguments.Add(arg);
 }
 
-void SyntaxTreeNodeFunc::SetReturnType(SyntaxTreeNodeTypeDef* returnType)
+void SyntaxTreeNodeFunc::SetReturnType(SyntaxTreeNodeType* returnType)
 {
 	AddChild(returnType);
 	_returnType = returnType;

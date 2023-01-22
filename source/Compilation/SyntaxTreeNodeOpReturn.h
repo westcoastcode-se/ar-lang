@@ -13,7 +13,7 @@ namespace WestCoastCode::Compilation
 #pragma region SyntaxTreeNodeOp
 		virtual void ToString(StringStream& s, int indent) const override;
 		void Compile(Builder::Linker* linker, Builder::Instructions& target) final;
-		SyntaxTreeNodeTypeDef* GetType() final;
+		SyntaxTreeNodeType* GetType() final;
 #pragma endregion
 	};
 }

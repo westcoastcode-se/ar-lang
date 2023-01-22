@@ -1,6 +1,6 @@
 #include "ParseError.h"
 #include "SyntaxTreeNode.h"
-#include "SyntaxTreeNodeTypeDef.h"
+#include "SyntaxTreeNodeType.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -84,8 +84,8 @@ ParseErrorSyntaxError::ParseErrorSyntaxError(const ParserState* state, const cha
 }
 
 ParseErrorIncompatibleTypes::ParseErrorIncompatibleTypes(const ParserState* state, 
-	const SyntaxTreeNodeTypeDef* type1,
-	const SyntaxTreeNodeTypeDef* type2)
+	const SyntaxTreeNodeType* type1,
+	const SyntaxTreeNodeType* type2)
 	: ParseError(state->sourceCode, state->token, ParseErrorType::IncompatibleTypes)
 {
 	StringStream s;

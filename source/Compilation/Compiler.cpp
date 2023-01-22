@@ -1,6 +1,6 @@
 #include "Compiler.h"
 #include "SyntaxTreeNodeRoot.h"
-#include "SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeOpBinop.h"
 #include "SyntaxTreeNodeOpUnaryop.h"
 #include "SyntaxTreeNodeOpTypeCast.h"

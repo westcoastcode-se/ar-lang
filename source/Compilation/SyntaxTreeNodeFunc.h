@@ -1,10 +1,10 @@
 #pragma once
 
 #include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeType.h"
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeTypeDef;
 	class SyntaxTreeNodePackage;
 	class SyntaxTreeNodeFuncBody;
 	class SyntaxTreeNodeFuncArg;
@@ -22,7 +22,7 @@ namespace WestCoastCode::Compilation
 		inline ReadOnlyArray<SyntaxTreeNodeFuncArg*> GetArguments() const { return _arguments; }
 
 		/// @return The type returned after calling the function
-		inline SyntaxTreeNodeTypeDef* GetReturnType() const { return _returnType; }
+		inline SyntaxTreeNodeType* GetReturnType() const { return _returnType; }
 
 		/// @return true if this function doesn't return anything
 		inline bool IsVoidReturn() const { return _returnType == nullptr; }
@@ -53,7 +53,7 @@ namespace WestCoastCode::Compilation
 		void AddArgument(SyntaxTreeNodeFuncArg* arg);
 
 		/// @brief Set the return type
-		void SetReturnType(SyntaxTreeNodeTypeDef* returnType);
+		void SetReturnType(SyntaxTreeNodeType* returnType);
 
 		/// @brief Parse source code into a function definition node. Will throw ParseError if parsing of the 
 		///	       source code failed
@@ -64,7 +64,7 @@ namespace WestCoastCode::Compilation
 	private:
 		ReadOnlyString _name;
 		Vector<SyntaxTreeNodeFuncArg*> _arguments;
-		SyntaxTreeNodeTypeDef* _returnType;
+		SyntaxTreeNodeType* _returnType;
 		SyntaxTreeNodeFuncBody* _body;
 		Builder::Function* _symbol;
 	};

@@ -1,7 +1,7 @@
 #include "SyntaxTreeNodeRef.h"
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodeFunc.h"
-#include "SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeFuncArg.h"
 
 using namespace WestCoastCode;

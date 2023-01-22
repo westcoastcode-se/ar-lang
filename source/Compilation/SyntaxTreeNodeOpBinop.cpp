@@ -1,6 +1,6 @@
 #include "SyntaxTreeNodeOpBinop.h"
 #include "SyntaxTreeNodePackage.h"
-#include "SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeConstant.h"
 
 using namespace WestCoastCode;
@@ -18,7 +18,7 @@ void SyntaxTreeNodeOpBinop::ToString(StringStream& s, int indent) const
 	SyntaxTreeNodeOp::ToString(s, indent);
 }
 
-SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpBinop::GetType()
+SyntaxTreeNodeType* SyntaxTreeNodeOpBinop::GetType()
 {
 	return SyntaxTreeNodeOpBinop::GetRight()->GetType();
 }

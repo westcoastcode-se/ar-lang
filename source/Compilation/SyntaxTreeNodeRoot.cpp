@@ -1,5 +1,5 @@
 #include "SyntaxTreeNodeRoot.h"
-#include "SyntaxTreeNodePrimitive.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;

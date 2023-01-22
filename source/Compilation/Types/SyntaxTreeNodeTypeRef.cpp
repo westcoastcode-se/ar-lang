@@ -1,11 +1,11 @@
 #include "SyntaxTreeNodeTypeRef.h"
-#include "SyntaxTreeNodeRef.h"
+#include "../SyntaxTreeNodeRef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeTypeRef::SyntaxTreeNodeTypeRef(SourceCodeView sourceCode)
-	: SyntaxTreeNodeTypeDef(sourceCode)
+	: SyntaxTreeNodeType(sourceCode)
 {
 }
 
@@ -19,10 +19,10 @@ void SyntaxTreeNodeTypeRef::ToString(StringStream& s, int indent) const
 		s << _definitions[i]->GetID();
 	}
 	s << "])" << std::endl;
-	SyntaxTreeNodeTypeDef::ToString(s, indent);
+	SyntaxTreeNodeType::ToString(s, indent);
 }
 
-SyntaxTreeNodeTypeDef* SyntaxTreeNodeTypeRef::GetType()
+SyntaxTreeNodeType* SyntaxTreeNodeTypeRef::GetType()
 {
 	if (_definitions.IsEmpty())
 		return this;
@@ -31,7 +31,7 @@ SyntaxTreeNodeTypeDef* SyntaxTreeNodeTypeRef::GetType()
 
 void SyntaxTreeNodeTypeRef::Resolve()
 {
-	SyntaxTreeNodeTypeDef::Resolve();
+	SyntaxTreeNodeType::Resolve();
 
 	if (!_definitions.IsEmpty())
 		return;
@@ -42,7 +42,7 @@ void SyntaxTreeNodeTypeRef::Resolve()
 	// Find all definitions that's a type
 	auto definitions = dynamic_cast<SyntaxTreeNodeRef*>(children[0])->GetDefinitions();
 	for (auto def : definitions) {
-		auto typeDef = dynamic_cast<SyntaxTreeNodeTypeDef*>(def);
+		auto typeDef = dynamic_cast<SyntaxTreeNodeType*>(def);
 		if (typeDef)
 			_definitions.Add(typeDef);
 	}

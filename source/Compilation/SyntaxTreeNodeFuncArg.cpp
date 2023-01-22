@@ -1,5 +1,5 @@
 #include "SyntaxTreeNodeFuncArg.h"
-#include "SyntaxTreeNodeTypeRef.h"
+#include "Types/SyntaxTreeNodeTypeRef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;

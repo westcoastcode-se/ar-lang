@@ -1,7 +1,7 @@
 #include "SyntaxTreeNodeOpTypeCast.h"
 #include "SyntaxTreeNodeConstant.h"
-#include "SyntaxTreeNodePrimitive.h"
-#include "SyntaxTreeNodeTypeDef.h"
+#include "Types/SyntaxTreeNodePrimitive.h"
+#include "SyntaxTreeNodeType.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -37,14 +37,14 @@ void SyntaxTreeNodeOpTypeCast::Compile(Builder::Linker* linker, Builder::Instruc
 	target.Conv(fromType->GetSymbol(), toType->GetSymbol());
 }
 
-SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpTypeCast::GetType()
+SyntaxTreeNodeType* SyntaxTreeNodeOpTypeCast::GetType()
 {
 	// The first child is the type that the value will have after casting is done
-	return static_cast<SyntaxTreeNodeTypeDef*>(GetChildren()[0]);
+	return static_cast<SyntaxTreeNodeType*>(GetChildren()[0]);
 }
 
 SyntaxTreeNodeOpTypeCast* SyntaxTreeNodeOpTypeCast::Cast(SourceCodeView view, SyntaxTreeNodeFuncBody* body,
-	SyntaxTreeNodeTypeDef* type, SyntaxTreeNodeOp* op)
+	SyntaxTreeNodeType* type, SyntaxTreeNodeOp* op)
 {
 	auto node = ARLANG_NEW SyntaxTreeNodeOpTypeCast(view, body);
 	auto guard = MemoryGuard(node);
@@ -53,7 +53,7 @@ SyntaxTreeNodeOpTypeCast* SyntaxTreeNodeOpTypeCast::Cast(SourceCodeView view, Sy
 	return guard.Done();
 }
 
-SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpTypeCast::FromType()
+SyntaxTreeNodeType* SyntaxTreeNodeOpTypeCast::FromType()
 {
 	// Second child is what we are casting from
 	return static_cast<SyntaxTreeNodeOp*>(GetChildren()[1])->GetType();
