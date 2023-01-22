@@ -1,4 +1,5 @@
 #include "Utils.hpp"
+#include "../Compilation/Operations/SyntaxTreeNodeOpScope.h"
 
 struct TestUtilsCompilation : TestUtils
 {

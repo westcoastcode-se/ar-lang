@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SyntaxTreeNodeOp.h"
-#include "SyntaxTreeNodeFuncBody.h"
-#include "SyntaxTreeNodeType.h"
+#include "../SyntaxTreeNodeOp.h"
+#include "../SyntaxTreeNodeFuncBody.h"
+#include "../SyntaxTreeNodeType.h"
 
 namespace WestCoastCode::Compilation
 {

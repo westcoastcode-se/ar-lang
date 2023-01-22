@@ -1,6 +1,6 @@
 #include "SyntaxTreeNodeOpBinop.h"
-#include "SyntaxTreeNodePackage.h"
-#include "Types/SyntaxTreeNodePrimitive.h"
+#include "../SyntaxTreeNodePackage.h"
+#include "../Types/SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeConstant.h"
 
 using namespace WestCoastCode;

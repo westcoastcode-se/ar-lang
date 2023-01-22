@@ -9,7 +9,6 @@
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodeType.h"
 #include "SyntaxTreeNodePackage.h"
-#include "SyntaxTreeNodeOpScope.h"
 
 namespace WestCoastCode::Compilation
 {

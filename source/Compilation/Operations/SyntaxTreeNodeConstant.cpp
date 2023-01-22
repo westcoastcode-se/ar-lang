@@ -1,8 +1,8 @@
 #include "SyntaxTreeNodeConstant.h"
-#include "SyntaxTreeNodeFuncBody.h"
-#include "Types/SyntaxTreeNodePrimitive.h"
-#include "Types/SyntaxTreeNodeTypeRef.h"
-#include "Compiler.h"
+#include "../SyntaxTreeNodeFuncBody.h"
+#include "../Types/SyntaxTreeNodePrimitive.h"
+#include "../Types/SyntaxTreeNodeTypeRef.h"
+#include "../Compiler.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;

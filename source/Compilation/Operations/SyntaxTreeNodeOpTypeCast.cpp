@@ -1,7 +1,7 @@
 #include "SyntaxTreeNodeOpTypeCast.h"
 #include "SyntaxTreeNodeConstant.h"
-#include "Types/SyntaxTreeNodePrimitive.h"
-#include "SyntaxTreeNodeType.h"
+#include "../Types/SyntaxTreeNodePrimitive.h"
+#include "../SyntaxTreeNodeType.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;

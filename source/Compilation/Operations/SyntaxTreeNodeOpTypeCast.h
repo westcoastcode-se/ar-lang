@@ -1,4 +1,6 @@
-#include "SyntaxTreeNodeOp.h"
+#pragma once
+
+#include "../SyntaxTreeNodeOp.h"
 
 namespace WestCoastCode::Compilation
 {

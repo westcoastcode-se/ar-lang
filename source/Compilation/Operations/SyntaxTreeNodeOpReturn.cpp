@@ -1,5 +1,5 @@
 #include "SyntaxTreeNodeOpReturn.h"
-#include "SyntaxTreeNodeFuncBody.h"
+#include "../SyntaxTreeNodeFuncBody.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;

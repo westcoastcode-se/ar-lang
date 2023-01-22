@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SyntaxTreeNodeOp.h"
+#include "../SyntaxTreeNodeOp.h"
 
 namespace WestCoastCode::Compilation
 {

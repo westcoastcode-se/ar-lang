@@ -1,9 +1,9 @@
 #include "Compiler.h"
 #include "SyntaxTreeNodeRoot.h"
 #include "Types/SyntaxTreeNodePrimitive.h"
-#include "SyntaxTreeNodeOpBinop.h"
-#include "SyntaxTreeNodeOpUnaryop.h"
-#include "SyntaxTreeNodeOpTypeCast.h"
+#include "Operations/SyntaxTreeNodeOpBinop.h"
+#include "Operations/SyntaxTreeNodeOpUnaryop.h"
+#include "Operations/SyntaxTreeNodeOpTypeCast.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;

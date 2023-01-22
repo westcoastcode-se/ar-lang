@@ -1,5 +1,7 @@
-#include "SyntaxTreeNodeOp.h"
-#include "Types/SyntaxTreeNodePrimitive.h"
+#pragma once
+
+#include "../SyntaxTreeNodeOp.h"
+#include "../Types/SyntaxTreeNodePrimitive.h"
 
 namespace WestCoastCode::Compilation
 {
