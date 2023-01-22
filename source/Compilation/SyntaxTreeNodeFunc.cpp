@@ -1,4 +1,4 @@
-#include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodeFunc.h"
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodeFuncArg.h"
 #include "SyntaxTreeNodeTypeRef.h"
@@ -10,19 +10,19 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeFuncDef::SyntaxTreeNodeFuncDef(SourceCodeView view, ReadOnlyString name)
+SyntaxTreeNodeFunc::SyntaxTreeNodeFunc(SourceCodeView view, ReadOnlyString name)
 	: SyntaxTreeNode(view), _name(name), _returnType(nullptr), _body(nullptr), _symbol(nullptr)
 {
 }
 
-void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
+void SyntaxTreeNodeFunc::ToString(StringStream& s, int indent) const
 {
 	s << GetID() << Indent(indent);
 	s << "FuncDef(name=" << _name << ")" << std::endl;
 	SyntaxTreeNode::ToString(s, indent);
 }
 
-void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
+void SyntaxTreeNodeFunc::Compile(Builder::Linker* linker)
 {
 	if (_symbol == nullptr) {
 		_symbol = new Builder::Function(_name);
@@ -51,37 +51,37 @@ void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
 	}
 }
 
-SyntaxTreeNodePackage* SyntaxTreeNodeFuncDef::GetPackage()
+SyntaxTreeNodePackage* SyntaxTreeNodeFunc::GetPackage()
 {
 	// TODO: Add support for functions inside another function
 	return dynamic_cast<SyntaxTreeNodePackage*>(GetParent());
 }
 
-void SyntaxTreeNodeFuncDef::SetBody(SyntaxTreeNodeFuncBody* body)
+void SyntaxTreeNodeFunc::SetBody(SyntaxTreeNodeFuncBody* body)
 {
 	_body = body;
 }
 
-void SyntaxTreeNodeFuncDef::AddArgument(SyntaxTreeNodeFuncArg* arg)
+void SyntaxTreeNodeFunc::AddArgument(SyntaxTreeNodeFuncArg* arg)
 {
 	AddChild(arg);
 	_arguments.Add(arg);
 }
 
-void SyntaxTreeNodeFuncDef::SetReturnType(SyntaxTreeNodeTypeDef* returnType)
+void SyntaxTreeNodeFunc::SetReturnType(SyntaxTreeNodeTypeDef* returnType)
 {
 	AddChild(returnType);
 	_returnType = returnType;
 }
 
-SyntaxTreeNodeFuncDef* SyntaxTreeNodeFuncDef::Parse(ParserState* state)
+SyntaxTreeNodeFunc* SyntaxTreeNodeFunc::Parse(ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->Next() != TokenType::Identity)
 		throw ParseErrorExpectedIdentity(state);
 
 	// Function
-	auto funcdef = ARLANG_NEW SyntaxTreeNodeFuncDef(SourceCodeView(state->sourceCode, t), t->GetString());
+	auto funcdef = ARLANG_NEW SyntaxTreeNodeFunc(SourceCodeView(state->sourceCode, t), t->GetString());
 	auto guard = MemoryGuard(funcdef);
 
 	// Function arguments list has to start with a (

@@ -1,5 +1,4 @@
 #include "SyntaxTreeNodeConstant.h"
-#include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeTypeRef.h"

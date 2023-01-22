@@ -5,7 +5,7 @@
 #include "Lexer.h"
 #include "SyntaxTree.h"
 #include "SyntaxTreeNodeImport.h"
-#include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodeFunc.h"
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodeTypeDef.h"
 #include "SyntaxTreeNodePackage.h"

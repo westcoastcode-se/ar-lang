@@ -1,6 +1,5 @@
 #include "SyntaxTreeNodeOpBinop.h"
 #include "SyntaxTreeNodePackage.h"
-#include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeConstant.h"
 

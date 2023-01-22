@@ -105,7 +105,7 @@ add_library(ArlangCompilation
     "source/Compilation/SyntaxTreeNodeRef.cpp" 
     "source/Compilation/SyntaxTreeNodeOpBinop.cpp"
     "source/Compilation/SyntaxTreeNodeOpUnaryop.cpp" 
-    "source/Compilation/SyntaxTreeNodeFuncDef.cpp" 
+    "source/Compilation/SyntaxTreeNodeFunc.cpp" 
     "source/Compilation/Lexer.cpp" 
     "source/Compilation/Compiler.cpp"
     "source/Compilation/SyntaxTreeNodePrimitive.cpp" 

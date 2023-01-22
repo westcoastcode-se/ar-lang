@@ -1,6 +1,6 @@
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodeImport.h"
-#include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodeFunc.h"
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodePrimitive.h"
 #include "Compiler.h"
@@ -57,7 +57,7 @@ void SyntaxTreeNodePackage::OnAddedToParent(SyntaxTreeNode* parent)
 
 void SyntaxTreeNodePackage::OnChildAdded(SyntaxTreeNode* parent)
 {
-	assert((dynamic_cast<SyntaxTreeNodePackage*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodeFuncDef*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodePrimitive*>(parent) != nullptr 
+	assert((dynamic_cast<SyntaxTreeNodePackage*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodeFunc*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodePrimitive*>(parent) != nullptr
 		|| dynamic_cast<SyntaxTreeNodeImport*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodeFuncBody*>(parent) != nullptr)
 		&& "incompatible child node");
 }
@@ -117,7 +117,7 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 		switch (t->GetType()) {
 		case TokenType::Func: {
 			auto childState = ParserState(state, package);
-			auto funcdef = SyntaxTreeNodeFuncDef::Parse(&childState);
+			auto funcdef = SyntaxTreeNodeFunc::Parse(&childState);
 			package->AddChild(funcdef);
 
 			// Parse the function body

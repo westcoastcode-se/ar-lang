@@ -6,16 +6,17 @@
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeFuncDef;
+	class SyntaxTreeNodeFunc;
 
-	/// @brief The body of a function. All children in the body must be an operation node type
+	/// @brief The body of a function. Children in the body is generally of the operation node type
+	///        with some rare exceptions
 	class ARLANG_API SyntaxTreeNodeFuncBody : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodeFuncBody(SourceCodeView view, SyntaxTreeNodeFuncDef* func);
+		SyntaxTreeNodeFuncBody(SourceCodeView view, SyntaxTreeNodeFunc* func);
 
 		/// @return The function this body is part of
-		inline SyntaxTreeNodeFuncDef* GetFunction() const { return _function; }
+		inline SyntaxTreeNodeFunc* GetFunction() const { return _function; }
 
 #pragma region SyntaxTreeNode
 		void ToString(StringStream& s, int indent) const final;
@@ -66,7 +67,7 @@ namespace WestCoastCode::Compilation
 		static bool Contains(const Vector<TokenType>& tokens, TokenType type);
 
 	private:
-		SyntaxTreeNodeFuncDef* const _function;
+		SyntaxTreeNodeFunc* const _function;
 		ReadOnlyString _text;
 	};
 }

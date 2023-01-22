@@ -9,7 +9,7 @@ SyntaxTreeNodeOp::SyntaxTreeNodeOp(SourceCodeView view, SyntaxTreeNodeFuncBody* 
 {
 }
 
-SyntaxTreeNodeFuncDef* SyntaxTreeNodeOp::GetFunction() const
+SyntaxTreeNodeFunc* SyntaxTreeNodeOp::GetFunction() const
 {
 	return _body->GetFunction();
 }

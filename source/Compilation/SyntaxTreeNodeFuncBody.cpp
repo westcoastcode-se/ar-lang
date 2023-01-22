@@ -2,7 +2,7 @@
 #include "SyntaxTreeNodeOpReturn.h"
 #include "SyntaxTreeNodeOpBinop.h"
 #include "SyntaxTreeNodeOpUnaryop.h"
-#include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodeFunc.h"
 #include "SyntaxTreeNodeConstant.h"
 #include "SyntaxTreeNodeOpScope.h"
 #include "SyntaxTreeNodeOpTypeCast.h"
@@ -25,7 +25,7 @@ static const Vector<TokenType> PARSE_TERM_TOKENS(
 	TokenType::OpMult, TokenType::OpDiv
 );
 
-SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView view, SyntaxTreeNodeFuncDef* func)
+SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView view, SyntaxTreeNodeFunc* func)
 	: SyntaxTreeNode(view), _function(func)
 {
 }
@@ -122,7 +122,7 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	auto op = ARLANG_NEW SyntaxTreeNodeOpReturn(SourceCodeView(state->sourceCode, t), state->functionBody);
 	auto mem = MemoryGuard(op);
 
-	const SyntaxTreeNodeFuncDef* const function = state->function;
+	const SyntaxTreeNodeFunc* const function = state->function;
 	const auto& returns = function->GetReturnType();
 	
 	if (dynamic_cast<SyntaxTreeNodeMultiType*>(returns))

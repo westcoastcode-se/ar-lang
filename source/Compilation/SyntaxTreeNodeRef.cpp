@@ -1,6 +1,6 @@
 #include "SyntaxTreeNodeRef.h"
 #include "SyntaxTreeNodePackage.h"
-#include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodeFunc.h"
 #include "SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeFuncArg.h"
 
@@ -155,7 +155,7 @@ void SyntaxTreeNodeRef::ResolveFromParent(SyntaxTreeNode* parent)
 				}
 			}
 			if (BIT_ISSET(queryTypes, DefinitionQueryType::Func)) {
-				auto impl = dynamic_cast<SyntaxTreeNodeFuncDef*>(node);
+				auto impl = dynamic_cast<SyntaxTreeNodeFunc*>(node);
 				if (impl && impl->GetName() == name) {
 					section->_definitions.Add(node);
 					return VisitorResult::Continue;

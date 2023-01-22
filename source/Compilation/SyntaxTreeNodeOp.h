@@ -4,7 +4,7 @@
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeFuncDef;
+	class SyntaxTreeNodeFunc;
 	class SyntaxTreeNodeFuncBody;
 	class SyntaxTreeNodeTypeDef;
 
@@ -15,7 +15,7 @@ namespace WestCoastCode::Compilation
 		SyntaxTreeNodeOp(SourceCodeView view, SyntaxTreeNodeFuncBody* body);
 
 		/// @return The function definition where this operation is part of
-		SyntaxTreeNodeFuncDef* GetFunction() const;
+		SyntaxTreeNodeFunc* GetFunction() const;
 
 		/// @return The function body this operation is part of
 		inline SyntaxTreeNodeFuncBody* GetBody() const { return _body; }

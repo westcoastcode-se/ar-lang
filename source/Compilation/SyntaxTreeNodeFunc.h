@@ -9,11 +9,11 @@ namespace WestCoastCode::Compilation
 	class SyntaxTreeNodeFuncBody;
 	class SyntaxTreeNodeFuncArg;
 
-	/// @brief A function definition node
-	class ARLANG_API SyntaxTreeNodeFuncDef : public SyntaxTreeNode
+	/// @brief A function node
+	class ARLANG_API SyntaxTreeNodeFunc : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodeFuncDef(SourceCodeView view, ReadOnlyString name);
+		SyntaxTreeNodeFunc(SourceCodeView view, ReadOnlyString name);
 
 		/// @return The name of this function
 		inline ReadOnlyString GetName() const { return _name; }
@@ -59,7 +59,7 @@ namespace WestCoastCode::Compilation
 		///	       source code failed
 		/// @param state 
 		/// @return 
-		static SyntaxTreeNodeFuncDef* Parse(ParserState* state);
+		static SyntaxTreeNodeFunc* Parse(ParserState* state);
 
 	private:
 		ReadOnlyString _name;
