@@ -15,7 +15,7 @@ struct TestUtilsCompilation : TestUtils
 	void AfterEach(const std::exception* e)
 	{
 		if (e != nullptr) {
-			auto ce = dynamic_cast<const Compilation::ParseError*>(e);
+			auto ce = dynamic_cast<const Compilation::CompilationError*>(e);
 			if (ce)
 				ce->PrintToStderr();
 			DebugSyntaxTree();
@@ -396,6 +396,23 @@ struct SuiteCompilationError
 
 struct SuiteCompileAndThenInterpret : TestUtilsCompilationWithInterpreter
 {
+	void Cast()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Get() uint64 {
+	return cast<uint64>(1234)
+}
+)", "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(U64));
+		AssertEquals(Pop<U64>(), (U64)1234);
+	}
+
 	template<typename T>
 	void Constant_T(T val)
 	{
@@ -606,6 +623,8 @@ func Get() int32 {
 	{
 		// Set the optimization level
 		optimizationLevel = level;
+
+		TEST(Cast());
 
 		TEST(Constant_T<I8>(-10));
 		TEST(Constant_T<I8>(122));

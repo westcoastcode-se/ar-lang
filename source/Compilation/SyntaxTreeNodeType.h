@@ -23,10 +23,12 @@ namespace WestCoastCode::Compilation
 		/// @return A list of all types
 		virtual ReadOnlyArray<SyntaxTreeNodeType*> GetTypes() { return Vector<SyntaxTreeNodeType*>(this); }
 
-		/// @brief Check if the supplied definition is compatible
+		/// @brief Check if the supplied definition is compatible enough for the compiler
+		///        to perform compile-time casting on it
 		/// @param def 
 		/// @return 
-		virtual bool IsCompatibleWith(SyntaxTreeNodeType* def) { return true; }
+		/// 
+		virtual bool IsCompatibleWith(SyntaxTreeNodeType* def) { return false; }
 
 	protected:
 		ReadOnlyString _name;

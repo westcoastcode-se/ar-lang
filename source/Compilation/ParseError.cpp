@@ -37,7 +37,7 @@ void ParseError::PrintToStderr() const
 					else
 						fprintf(stderr, " ");
 				}
-				fprintf(stderr, "^ PE%05d: %s\n", (I32)GetType(), what());
+				fprintf(stderr, "^ P%06d: %s\n", (I32)GetType(), what());
 			}
 		}
 	}

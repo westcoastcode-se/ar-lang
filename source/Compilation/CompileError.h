@@ -9,6 +9,7 @@ namespace WestCoastCode::Compilation
 	{
 		UnresolvedReference,
 		UnresolvedTypeReference,
+		IncompatibleTypes,
 		NotImplemented,
 	};
 
@@ -34,6 +35,8 @@ namespace WestCoastCode::Compilation
 
 		// Where in the source code the error originated from
 		const int GetOffset() const { return _sourceCode.GetOffset(); }
+
+		void PrintToStderr() const final;
 
 	private:
 		SourceCodeView _sourceCode;
@@ -67,4 +70,13 @@ namespace WestCoastCode::Compilation
 		CompileErrorNotImplemented(const SyntaxTreeNode* node, const Char* feature);
 	};
 
+	class SyntaxTreeNodeType;
+
+	/// @brief Error raised if two types are incompatible with each other
+	class CompileErrorIncompatibleTypes : public CompileError
+	{
+	public:
+		CompileErrorIncompatibleTypes(const SyntaxTreeNode* node, const SyntaxTreeNodeType* type1,
+			const SyntaxTreeNodeType* type2);
+	};
 }

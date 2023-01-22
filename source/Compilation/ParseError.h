@@ -42,8 +42,7 @@ namespace WestCoastCode::Compilation
 		// Where in the source code the error originated from
 		const int GetOffset() const { return _offset; }
 
-		// Print this error to stderr
-		void PrintToStderr() const;
+		void PrintToStderr() const final;
 
 	private:
 		const SourceCode* const _sourceCode;

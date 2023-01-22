@@ -15,6 +15,9 @@ namespace WestCoastCode::Compilation
 		// std::exception
 		char const* what() const final;
 
+		/// @brief Print the error to stderr
+		virtual void PrintToStderr() const = 0;
+
 	protected:
 		// Set the error message
 		void SetErrorf(const char* fmt, ...);

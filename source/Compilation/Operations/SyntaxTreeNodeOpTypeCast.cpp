@@ -40,7 +40,7 @@ void SyntaxTreeNodeOpTypeCast::Compile(Builder::Linker* linker, Builder::Instruc
 SyntaxTreeNodeType* SyntaxTreeNodeOpTypeCast::GetType()
 {
 	// The first child is the type that the value will have after casting is done
-	return static_cast<SyntaxTreeNodeType*>(GetChildren()[0]);
+	return static_cast<SyntaxTreeNodeType*>(GetChildren()[0])->GetType();
 }
 
 SyntaxTreeNodeOpTypeCast* SyntaxTreeNodeOpTypeCast::Cast(SourceCodeView view, SyntaxTreeNodeFuncBody* body,

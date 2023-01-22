@@ -28,3 +28,12 @@ void SyntaxTreeNodePrimitive::Compile(Builder::Linker* linker)
 	_symbol = new Builder::Type(_name, _stackSize, flags, _primitiveType);
 	package->Add(_symbol);
 }
+
+bool SyntaxTreeNodePrimitive::IsCompatibleWith(SyntaxTreeNodeType* def)
+{
+	auto prim = dynamic_cast<SyntaxTreeNodePrimitive*>(def);
+	if (prim) {
+		return PrimitiveValue::Result(GetPrimitiveType(), prim->GetPrimitiveType()) != PrimitiveType::Unknown;
+	}
+	return false;
+}

@@ -12,16 +12,17 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		SyntaxTreeNodePrimitive(I32 size, PrimitiveType primitiveType, ReadOnlyString name)
-			: SyntaxTreeNodeType(SourceCodeView()), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(nullptr),
-			_unrefInto(nullptr), _symbol(nullptr) {}
+			: SyntaxTreeNodeType(SourceCodeView()), _stackSize(size), _primitiveType(primitiveType), _inheritsFrom(nullptr),
+			_unrefInto(nullptr), _symbol(nullptr) {
+			_name = name;
+		}
 
 		SyntaxTreeNodePrimitive(I32 size, PrimitiveType primitiveType, ReadOnlyString name,
 			SyntaxTreeNodePrimitive* inheritsFrom, SyntaxTreeNodePrimitive* unrefInto)
-			: SyntaxTreeNodeType(SourceCodeView()), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(inheritsFrom),
-			_unrefInto(unrefInto), _symbol(nullptr) {}
-
-		/// @return The name of this primitive
-		inline ReadOnlyString GetName() const { return _name; }
+			: SyntaxTreeNodeType(SourceCodeView()), _stackSize(size), _primitiveType(primitiveType), _inheritsFrom(inheritsFrom),
+			_unrefInto(unrefInto), _symbol(nullptr) {
+			_name = name;
+		}
 
 		/// @return The underlying language primitive type
 		inline PrimitiveType GetPrimitiveType() const { return _primitiveType; }
@@ -35,12 +36,12 @@ namespace WestCoastCode::Compilation
 #pragma region SyntaxTreeNodeType
 		void Compile(Builder::Linker* linker) final;
 		void ToString(StringStream& s, int indent) const final;
+		bool IsCompatibleWith(SyntaxTreeNodeType* def) final;
 #pragma endregion
 
 	private:
 		const I32 _stackSize;
 		const PrimitiveType _primitiveType;
-		const ReadOnlyString _name;
 		SyntaxTreeNodePrimitive* const _inheritsFrom;
 		SyntaxTreeNodePrimitive* const _unrefInto;
 		Builder::Type* _symbol;

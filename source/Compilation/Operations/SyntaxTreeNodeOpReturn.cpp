@@ -1,5 +1,6 @@
 #include "SyntaxTreeNodeOpReturn.h"
 #include "../SyntaxTreeNodeFuncBody.h"
+#include "../SyntaxTreeNodeFunc.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -29,4 +30,17 @@ SyntaxTreeNodeType* SyntaxTreeNodeOpReturn::GetType()
 		return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0])->GetType();
 	}
 	throw CompileErrorNotImplemented(this, "MultiReturn");
+}
+
+void SyntaxTreeNodeOpReturn::Resolve()
+{
+	SyntaxTreeNodeOp::Resolve();
+
+	auto function = GetBody()->GetFunction();
+	auto expectedType = function->GetReturnType()->GetType();
+	auto returnedType = GetType();
+	// Perform post-resolve type validation
+	if (!expectedType->IsCompatibleWith(returnedType)) {
+		throw CompileErrorIncompatibleTypes(this, expectedType, returnedType);
+	}
 }

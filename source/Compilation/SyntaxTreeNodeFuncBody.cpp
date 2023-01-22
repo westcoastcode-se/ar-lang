@@ -88,8 +88,9 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 	body->AddChild(scope);
 
 	// Parse each body statement
+	ParserState innerState(state, body);
 	while (t->Next() != TokenType::BracketRight) {
-		auto node = ParseBody(state);
+		auto node = ParseBody(&innerState);
 		scope->AddChild(node);
 	}
 
@@ -132,10 +133,6 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 
 		for (int i = 0; i < subtypes.Size(); ++i) {
 			SyntaxTreeNodeOp* const node = ParseCompare(state);
-			auto nodeType = node->GetType();
-			if (!nodeType->IsCompatibleWith(subtypes[i])) {
-				throw ParseErrorIncompatibleTypes(state, nodeType, subtypes[i]);
-			}
 			op->AddChild(node);
 
 			if (i < subtypes.Size() - 1) {
@@ -148,10 +145,6 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	else
 	{
 		SyntaxTreeNodeOp* const node = ParseCompare(state);
-		auto nodeType = node->GetType();
-		if (!nodeType->IsCompatibleWith(returns)) {
-			throw ParseErrorIncompatibleTypes(state, nodeType, returns);
-		}
 		op->AddChild(node);
 	}
 	return mem.Done();
