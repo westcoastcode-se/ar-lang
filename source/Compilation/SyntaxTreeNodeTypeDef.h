@@ -4,7 +4,8 @@
 
 namespace WestCoastCode::Compilation
 {
-	/// @brief A type definition. It might be a struct, a primitive etc
+	/// @brief A type definition. It might be a struct, a primitive. It might also be a reference to
+	///        the real SyntaxTreeNodeTypeDef
 	class SyntaxTreeNodeTypeDef : public SyntaxTreeNode
 	{
 	public:

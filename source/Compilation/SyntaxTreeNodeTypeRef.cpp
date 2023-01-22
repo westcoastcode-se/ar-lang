@@ -25,7 +25,7 @@ void SyntaxTreeNodeTypeRef::ToString(StringStream& s, int indent) const
 SyntaxTreeNodeTypeDef* SyntaxTreeNodeTypeRef::GetType()
 {
 	if (_definitions.IsEmpty())
-		return nullptr;
+		return this;
 	return _definitions[0];
 }
 

@@ -10,7 +10,7 @@ namespace WestCoastCode::Compilation
 	class SyntaxTreeNodeFuncArg;
 
 	/// @brief A function definition node
-	class SyntaxTreeNodeFuncDef : public SyntaxTreeNode
+	class ARLANG_API SyntaxTreeNodeFuncDef : public SyntaxTreeNode
 	{
 	public:
 		SyntaxTreeNodeFuncDef(SourceCodeView view, ReadOnlyString name);

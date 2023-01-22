@@ -6,7 +6,7 @@
 namespace WestCoastCode::Compilation
 {
 	/// @brief Tree structure for where the source code is converted and placed into
-	class SyntaxTree
+	class ARLANG_API SyntaxTree
 	{
 	public:
 		SyntaxTree();

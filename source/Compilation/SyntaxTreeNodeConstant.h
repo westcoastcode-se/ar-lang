@@ -4,7 +4,7 @@
 namespace WestCoastCode::Compilation
 {
 	/// @brief A constant
-	class SyntaxTreeNodeConstant : public SyntaxTreeNodeOp
+	class ARLANG_API SyntaxTreeNodeConstant : public SyntaxTreeNodeOp
 	{
 	public:
 		SyntaxTreeNodeConstant(SourceCodeView view, SyntaxTreeNodeFuncBody* body,

@@ -229,8 +229,9 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 		// 3. (Variable + 10) = variable + 10
 		// 4. (Type)-10 = casting -10
 		// 5. (Variable)-10 = Variable - 10
-
-
+		// 6. (*Type) = casting to pointer type
+		// 7. (&Type) = reference-of type
+		// 8. (&value) = pointer-to value
 
 		// It might be a type-cast
 		// It might also be a (local1 + 10), so the

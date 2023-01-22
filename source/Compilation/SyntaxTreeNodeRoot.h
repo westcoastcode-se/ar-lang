@@ -33,6 +33,22 @@ namespace WestCoastCode::Compilation
 		/// @param primitive
 		void AddPrimitive(SyntaxTreeNodePrimitive* primitive);
 
+		/// @brief Add a new primitive
+		/// @param size 
+		/// @param primitiveType 
+		/// @param name 
+		SyntaxTreeNodePrimitive* AddPrimitive(I32 size, PrimitiveType primitiveType, ReadOnlyString name);
+
+		/// @brief 
+		/// @param size 
+		/// @param primitiveType 
+		/// @param name 
+		/// @param inheritsFrom 
+		/// @param unrefInto 
+		/// @return 
+		SyntaxTreeNodePrimitive* AddPrimitive(I32 size, PrimitiveType primitiveType, ReadOnlyString name,
+			SyntaxTreeNodePrimitive* inheritsFrom, SyntaxTreeNodePrimitive* unrefInto);
+
 		/// @param syntaxTree 
 		void SetSyntaxTree(SyntaxTree* syntaxTree) { _syntaxTree = syntaxTree; }
 
