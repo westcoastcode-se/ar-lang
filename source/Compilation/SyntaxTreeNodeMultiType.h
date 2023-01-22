@@ -1,41 +1,26 @@
 #pragma once
 
-#include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeTypeDef.h"
 
 namespace WestCoastCode::Compilation
 {
-	// Class that contains multiple return types
-	class SyntaxTreeNodeMultiType : public ISyntaxTreeNodeMultiType
+	/// @brief A type that contains multiple types, for example: (int32, bool)
+	class SyntaxTreeNodeMultiType : public SyntaxTreeNodeTypeDef
 	{
 	public:
-		SyntaxTreeNodeMultiType(SourceCodeView sourceCode);
+		SyntaxTreeNodeMultiType(SourceCodeView view);
 
-		~SyntaxTreeNodeMultiType() final;
-
-		// Inherited via ISyntaxTreeNodeTypeRef
-		const ID& GetID() const final { return _id; }
-		ReadOnlyString GetName() const final { return ReadOnlyString(); }
+#pragma region SyntaxTreeNodeTypeDef
+		inline ReadOnlyArray<SyntaxTreeNodeTypeDef*> GetTypes() final {
+			ASSERT_NOT_IMPLEMENTED();
+			return ReadOnlyArray<SyntaxTreeNodeTypeDef*>();
+		}
 		void ToString(StringStream& s, int indent) const final;
-		ISyntaxTree* GetSyntaxTree() const final;
-		ISyntaxTreeNode* GetRootNode() final;
-		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		void SetParent(ISyntaxTreeNode* parent) final;
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		ReadOnlyArray<ISyntaxTreeNodeType*> GetTypes() const final { return _children; }
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		void ResolveReferences() final;
+#pragma endregion
 
-	public:
-		// Add a new node
-		void AddType(ISyntaxTreeNodeType* type);
-
-		// Parse one or more types
+		/// @brief Parse the source code and turn it into a MultiType
+		/// @param  
+		/// @return 
 		static SyntaxTreeNodeMultiType* Parse(const ParserState*);
-
-	private:
-		const ID _id;
-		ISyntaxTreeNode* _parent;
-		SourceCodeView _sourceCode;
-		Vector<ISyntaxTreeNodeType*> _children;
 	};
 }

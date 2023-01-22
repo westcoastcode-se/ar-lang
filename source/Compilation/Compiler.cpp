@@ -1,5 +1,5 @@
 #include "Compiler.h"
-#include "SyntaxTreeNodePackage.h"
+#include "SyntaxTreeNodeRoot.h"
 #include "SyntaxTreeNodePrimitive.h"
 #include "SyntaxTreeNodeOpBinop.h"
 #include "SyntaxTreeNodeOpUnaryop.h"
@@ -37,7 +37,7 @@ SyntaxTreeNodeRoot* SyntaxTree::GetRootNode()
 
 void SyntaxTree::ResolveReferences()
 {
-	_root->ResolveReferences();
+	_root->Resolve();
 }
 
 void SyntaxTree::Compile(Builder::Linker* linker)
@@ -129,7 +129,7 @@ void Compiler::Optimize(int level)
 	}
 }
 
-ISyntaxTreeNodePrimitive* Compiler::FindPrimitive(ReadOnlyString name)
+SyntaxTreeNodePrimitive* Compiler::FindPrimitive(ReadOnlyString name)
 {
 	return _syntaxTree->GetRootNode()->FindPrimitive(name);
 }

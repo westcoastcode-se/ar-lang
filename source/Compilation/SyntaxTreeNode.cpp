@@ -1,39 +1,68 @@
 #include "SyntaxTreeNode.h"
-#include <atomic>
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-namespace
-{
-	std::atomic<I32> nextId(0);
-}
-
-ID::ID()
-	: value(++nextId)
+SyntaxTreeNode::SyntaxTreeNode(SourceCodeView view)
+	: _parent(nullptr), _children(), _sourceCode(view)
 {
 }
 
-Vector<ISyntaxTreeNode*> ISyntaxTreeNode::Default::GetSiblingsBefore(const ISyntaxTreeNode* node)
+SyntaxTreeNode::~SyntaxTreeNode()
 {
-	auto parent = node->GetParent();
-	if (parent == nullptr)
-		return Vector<ISyntaxTreeNode*>();
+	SyntaxTreeNode::DestroyChildren();
+}
 
-	auto children = parent->GetChildren();
-	Vector<ISyntaxTreeNode*> siblings;
+ReadOnlyArray<SyntaxTreeNode*> SyntaxTreeNode::GetChildren() const
+{ 
+	return _children;
+}
+
+void SyntaxTreeNode::AddChild(SyntaxTreeNode* node)
+{
+	_children.Add(node);
+	OnChildAdded(node);
+	node->SetParent(this);
+}
+
+void SyntaxTreeNode::SetParent(SyntaxTreeNode* parent)
+{
+	_parent = parent;
+	OnAddedToParent(parent);
+}
+
+void SyntaxTreeNode::Optimize(ISyntaxTreeNodeOptimizer* optimizer)
+{
+	for (auto n : _children)
+		n->Optimize(optimizer);
+}
+
+void SyntaxTreeNode::DestroyChildren()
+{
+	for (auto n : _children)
+		delete n;
+	_children.Clear();
+}
+
+Vector<SyntaxTreeNode*> SyntaxTreeNode::GetSiblingsBefore() const
+{
+	if (_parent == nullptr)
+		return Vector<SyntaxTreeNode*>();
+
+	auto children = _parent->GetChildren();
+	Vector<SyntaxTreeNode*> siblings;
 	for (auto child : children) {
-		if (child == node)
+		if (child == this)
 			break;
 		siblings.Add(child);
 	}
 	return siblings;
 }
 
-VisitResult ISyntaxTreeNode::Default::Visit(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, VisitFlags flags)
+VisitResult SyntaxTreeNode::Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags)
 {
 	// Visit this object
-	auto result = visitor->Visit(node);
+	auto result = visitor->Visit(this);
 	if (result == VisitorResult::Stop)
 		return VisitResult::Stop;
 
@@ -41,7 +70,7 @@ VisitResult ISyntaxTreeNode::Default::Visit(ISyntaxTreeNode* node, ISyntaxTreeNo
 	if (result != VisitorResult::ContinueExcludeChildren &&
 		BIT_ISSET(flags, VisitFlag::IncludeChildren))
 	{
-		for (auto child : node->GetChildren())
+		for (auto child : _children)
 		{
 			switch (child->Visit(visitor, flags))
 			{
@@ -55,17 +84,19 @@ VisitResult ISyntaxTreeNode::Default::Visit(ISyntaxTreeNode* node, ISyntaxTreeNo
 	return VisitResult::Continue;
 }
 
-VisitResult ISyntaxTreeNode::Default::Query(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags)
+VisitResult SyntaxTreeNode::Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags)
 {
 	// Visit this object
-	auto result = visitor->Visit(node);
+	auto result = visitor->Visit(this);
 	if (result == VisitorResult::Stop)
 		return VisitResult::Stop;
 
-	if (BIT_ISSET(flags, QuerySearchFlag::Backwards)) {
+	if (BIT_ISSET(flags, QuerySearchFlag::Backwards))
+	{
 		// Visit siblings
-		auto siblings = node->GetSiblingsBefore();
-		for (auto sibling : siblings) {
+		auto siblings = GetSiblingsBefore();
+		for (auto sibling : siblings)
+		{
 			switch (sibling->Query(visitor, 0))
 			{
 			case VisitResult::Stop:
@@ -76,9 +107,11 @@ VisitResult ISyntaxTreeNode::Default::Query(ISyntaxTreeNode* node, ISyntaxTreeNo
 		}
 	}
 
-	if (BIT_ISSET(flags, QuerySearchFlag::TraverseParent)) {
-		auto parent = node->GetParent();
-		if (parent) {
+	if (BIT_ISSET(flags, QuerySearchFlag::TraverseParent))
+	{
+		auto parent = _parent;
+		if (parent)
+		{
 			flags &= ~(QuerySearchFlags)QuerySearchFlag::TraverseChildren;
 			switch (parent->Query(visitor, flags))
 			{
@@ -90,9 +123,10 @@ VisitResult ISyntaxTreeNode::Default::Query(ISyntaxTreeNode* node, ISyntaxTreeNo
 		}
 	}
 
-	if (BIT_ISSET(flags, QuerySearchFlag::TraverseChildren)) {
-		auto children = node->GetChildren();
-		for (auto c : children) {
+	if (BIT_ISSET(flags, QuerySearchFlag::TraverseChildren))
+	{
+		for (auto c : _children)
+		{
 			switch (c->Query(visitor, 0))
 			{
 			case VisitResult::Stop:
@@ -106,20 +140,35 @@ VisitResult ISyntaxTreeNode::Default::Query(ISyntaxTreeNode* node, ISyntaxTreeNo
 	return VisitResult::Continue;
 }
 
-void ISyntaxTreeNode::Default::ResolveReferences(ISyntaxTreeNode* node)
+void SyntaxTreeNode::ToString(StringStream& s, int indent) const
 {
-	for (auto child : node->GetChildren())
-		child->ResolveReferences();
+	for (auto c : _children)
+		c->ToString(s, indent + 1);
 }
 
-void ISyntaxTreeNode::Default::Compile(ISyntaxTreeNode* node, Builder::Linker* linker)
+void SyntaxTreeNode::Compile(Builder::Linker* linker)
 {
-	for (auto child : node->GetChildren())
-		child->Compile(linker);
+	for (auto c : _children)
+		c->Compile(linker);
 }
 
-void ISyntaxTreeNode::Default::Optimize(ISyntaxTreeNode* node, ISyntaxTreeNodeOptimizer* optimizer)
+void SyntaxTreeNode::Resolve()
 {
-	for (auto child : node->GetChildren())
-		child->Optimize(optimizer);
+	for (auto c : _children)
+		c->Resolve();
+}
+
+void SyntaxTreeNode::ReplaceChild(I32 index, SyntaxTreeNode* node)
+{
+	delete _children[index];
+	_children[index] = node;
+	OnChildAdded(node);
+	node->SetParent(this);
+}
+
+I32 SyntaxTreeNode::ReplaceChildren(I32 index, ReadOnlyArray<SyntaxTreeNode*> nodes)
+{
+	index += _children.InsertAt(nodes, index);
+	delete _children.RemoveAt(index);
+	return index;
 }

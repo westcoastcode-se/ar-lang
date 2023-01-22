@@ -8,6 +8,7 @@ namespace WestCoastCode::Compilation
 	enum class CompileErrorType : int
 	{
 		UnresolvedReference,
+		UnresolvedTypeReference,
 		NotImplemented,
 	};
 
@@ -39,22 +40,31 @@ namespace WestCoastCode::Compilation
 		const CompileErrorType _type;
 	};
 
-	class ISyntaxTreeNodeRef;
+	class SyntaxTreeNodeRef;
 
 	// Error raised if we couldn't resolve a specific reference
 	class CompileErrorUnresolvedReference : public CompileError
 	{
 	public:
-		CompileErrorUnresolvedReference(const ISyntaxTreeNodeRef* reference);
+		CompileErrorUnresolvedReference(const SyntaxTreeNodeRef* reference);
 	};
 
-	class ISyntaxTreeNode;
+	class SyntaxTreeNodeTypeRef;
+
+	// Error raised if we couldn't resolve a specific type reference
+	class CompileErrorUnresolvedTypeReference : public CompileError
+	{
+	public:
+		CompileErrorUnresolvedTypeReference(const SyntaxTreeNodeTypeRef* reference);
+	};
+
+	class SyntaxTreeNode;
 
 	// Error raised if we've reached functionality that's not implemented yet
 	class CompileErrorNotImplemented : public CompileError
 	{
 	public:
-		CompileErrorNotImplemented(const ISyntaxTreeNode* node, const Char* feature);
+		CompileErrorNotImplemented(const SyntaxTreeNode* node, const Char* feature);
 	};
 
 }

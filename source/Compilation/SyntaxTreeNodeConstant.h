@@ -1,46 +1,33 @@
-#include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeOp.h"
+#include "SyntaxTreeNodePrimitive.h"
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeConstant : public ISyntaxTreeNodeConstant
+	/// @brief A constant
+	class SyntaxTreeNodeConstant : public SyntaxTreeNodeOp
 	{
 	public:
-		SyntaxTreeNodeConstant(ISyntaxTreeNodeFuncDef* func, SourceCodeView sourceCode, 
-			const PrimitiveValue& value, ISyntaxTreeNodePrimitive* stackType)
-			: _function(func), _parent(nullptr), _sourceCode(sourceCode), _value(value), _stackType(stackType) {
-		}
+		SyntaxTreeNodeConstant(SourceCodeView view, SyntaxTreeNodeFuncBody* body,
+			const PrimitiveValue& value, SyntaxTreeNodePrimitive* stackType);
 
-		// Inherited via ISyntaxTreeNode
-		const ID& GetID() const final { return _id; }
-		virtual void ToString(StringStream& s, int indent) const override;
-		virtual ISyntaxTree* GetSyntaxTree() const override;
-		virtual ISyntaxTreeNode* GetRootNode() override;
-		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		virtual void SetParent(ISyntaxTreeNode* parent) override;
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final {
-			return ReadOnlyArray<ISyntaxTreeNode*>();
-		}
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		const PrimitiveValue& GetValue() const final { return _value; }
+		/// @return The constant value
+		inline const PrimitiveValue& GetValue() const { return _value; }
+
+#pragma region SyntaxTreeNodeOp
+		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
-		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
-		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
-		ISyntaxTreeNodeType* GetStackType() final { return _stackType; }
-		Vector<ISyntaxTreeNodeOp*> OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer) final { return Vector<ISyntaxTreeNodeOp*>(); }
-	
+		inline SyntaxTreeNodeTypeDef* GetType() final { return _stackType; }
+#pragma endregion
+
 	public:
 		// Try to cast this constant into a new constant
-		SyntaxTreeNodeConstant* Cast(ISyntaxTreeNodeType* newType);
+		SyntaxTreeNodeConstant* Cast(SyntaxTreeNodeTypeDef* newType);
 
 		// Parse the supplied state and return a constant
 		static SyntaxTreeNodeConstant* Parse(const ParserState* state);
 
 	private:
-		const ID _id;
-		ISyntaxTreeNodeFuncDef* const _function;
-		ISyntaxTreeNode* _parent;
-		const SourceCodeView _sourceCode;
 		const PrimitiveValue _value;
-		ISyntaxTreeNodePrimitive* const _stackType;
+		SyntaxTreeNodePrimitive* const _stackType;
 	};
 }

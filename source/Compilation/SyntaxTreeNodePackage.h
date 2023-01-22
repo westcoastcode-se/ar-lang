@@ -4,45 +4,37 @@
 
 namespace WestCoastCode::Compilation
 {
-	// A package node
-	class SyntaxTreeNodePackage : public ISyntaxTreeNodePackage
+	/// @brief Represents a package
+	class SyntaxTreeNodePackage : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodePackage(SourceCodeView sourceCode, ReadOnlyString name)
-			: _parent(nullptr), _sourceCode(sourceCode), _name(name), _symbol(nullptr) {}
+		SyntaxTreeNodePackage(const SourceCodeView sourceCode, ReadOnlyString name)
+			: SyntaxTreeNode(sourceCode), _name(name), _symbol(nullptr) {}
 
-		~SyntaxTreeNodePackage() override;
+		/// @return The name of the package
+		inline ReadOnlyString GetName() { return _name; }
 
-		// Inherited via ISyntaxTreeNodePackage
-		const ID& GetID() const final { return _id; }
-		ReadOnlyString GetName() const final { return _name; }
-		ISyntaxTree* GetSyntaxTree() const override;
-		ISyntaxTreeNode* GetRootNode() final;
-		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		void SetParent(ISyntaxTreeNode* parent) final;
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags) final;
-		void ToString(StringStream& s, int indent) const final;
-		void Compile(Builder::Linker* linker) final;
 
-	public:		
-		// add the supplied node
-		void AddNode(ISyntaxTreeNode* node);
+		/// @return The builder symbol for this package
+		inline Builder::Package* GetSymbol() const { return _symbol; }
 
-		// Get the builder symbol for this package
-		Builder::Package* GetSymbol() const { return _symbol; }
-
-		// Parse source code into a package node. Will throw ParseError if parsing of the 
-		// source code failed
+		/// @brief Parse source code into a package node. Will throw ParseError 
+		///        if the source code is invalid
+		/// @param state 
+		/// @return 
 		static SyntaxTreeNodePackage* Parse(const ParserState* state);
 
+#pragma region SyntaxTreeNode
+		void Compile(Builder::Linker* linker) override;
+		VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags) final;
+		void ToString(StringStream& s, int indent) const override;
+		void OnAddedToParent(SyntaxTreeNode* parent) final;
+		void OnChildAdded(SyntaxTreeNode* parent) final;
+#pragma endregion
+
 	private:
-		const ID _id;
-		SyntaxTreeNodePackage* _parent;
-		Vector<ISyntaxTreeNode*> _children;
-		SourceCodeView _sourceCode;
 		ReadOnlyString _name;
 		Builder::Package* _symbol;
+		Vector<SyntaxTreeNodePackage*> _packages;
 	};
 }

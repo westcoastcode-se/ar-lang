@@ -7,41 +7,21 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeOpBinop::~SyntaxTreeNodeOpBinop()
+SyntaxTreeNodeOpBinop::SyntaxTreeNodeOpBinop(SourceCodeView view, SyntaxTreeNodeFuncBody* body, Op op)
+	:SyntaxTreeNodeOp(view, body), _op(op)
 {
-	for (auto i : _children)
-		delete i;
 }
 
 void SyntaxTreeNodeOpBinop::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
+	s << GetID() << Indent(indent);
 	s << "Binop(op=" << ToString(_op) << ")" << std::endl;
-	for (auto i : _children) {
-		i->ToString(s, indent + 1);
-	}
+	SyntaxTreeNodeOp::ToString(s, indent);
 }
 
-ISyntaxTree* SyntaxTreeNodeOpBinop::GetSyntaxTree() const
+SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpBinop::GetType()
 {
-	return _parent->GetSyntaxTree();
-}
-
-ISyntaxTreeNode* SyntaxTreeNodeOpBinop::GetRootNode()
-{
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
-
-void SyntaxTreeNodeOpBinop::SetParent(ISyntaxTreeNode* parent)
-{
-	_parent = parent;
-}
-
-ISyntaxTreeNodeType* SyntaxTreeNodeOpBinop::GetStackType()
-{
-	return SyntaxTreeNodeOpBinop::GetRight()->GetStackType();
+	return SyntaxTreeNodeOpBinop::GetRight()->GetType();
 }
 
 void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
@@ -49,7 +29,7 @@ void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructio
 	GetLeft()->Compile(linker, instructions);
 	GetRight()->Compile(linker, instructions);
 
-	auto stackType = GetStackType();
+	auto stackType = GetType();
 	if (stackType == nullptr || dynamic_cast<SyntaxTreeNodePrimitive*>(stackType) == nullptr)
 		throw CompileErrorNotImplemented(this, "Binop");
 	auto primitive = static_cast<SyntaxTreeNodePrimitive*>(stackType);
@@ -73,28 +53,14 @@ void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructio
 	}
 }
 
-Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer)
-{
-	for (int i = 0; i < _children.Size(); ++i) {
-		auto optimized = _children[i]->OptimizeOp(optimizer);
-		if (!optimized.IsEmpty()) {
-			if (optimized.Size() != 1)
-				throw CompileErrorNotImplemented(this, "Binop optimize is not allowed expand");
-			delete _children[i];
-			_children[i] = optimized[0];
-		}
-	}
-	return optimizer->Optimize(this);
-}
-
-Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(ISyntaxTreeNodeOp* node)
+Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(SyntaxTreeNodeOp* node)
 {
 	auto impl = dynamic_cast<SyntaxTreeNodeOpBinop*>(node);
 	if (impl == nullptr)
-		return Vector<ISyntaxTreeNodeOp*>();
+		return Vector<SyntaxTreeNodeOp*>();
 
-	auto left = static_cast<ISyntaxTreeNodeOp*>(impl->GetLeft());
-	auto right = static_cast<ISyntaxTreeNodeOp*>(impl->GetRight());
+	auto left = impl->GetLeft();
+	auto right = impl->GetRight();
 
 	// Compile-time combin ethe two constants using this operator
 	if (dynamic_cast<SyntaxTreeNodeConstant*>(left) && dynamic_cast<SyntaxTreeNodeConstant*>(right)) {
@@ -118,23 +84,22 @@ Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(ISyn
 			fn = PrimitiveValue::Div;
 			break;
 		default:
-			return Vector<ISyntaxTreeNodeOp*>();
+			return Vector<SyntaxTreeNodeOp*>();
 		}
 
 		if (fn(&newValue, &rightConst->GetValue())) {
 			// TODO: Add support for converting the new type into the appropriate
-			auto leftType = static_cast<ISyntaxTreeNodePrimitive*>(leftConst->GetStackType());
-			auto rightType = static_cast<ISyntaxTreeNodePrimitive*>(rightConst->GetStackType());
+			auto leftType = static_cast<SyntaxTreeNodePrimitive*>(leftConst->GetType());
+			auto rightType = static_cast<SyntaxTreeNodePrimitive*>(rightConst->GetType());
 			auto newType = rightType;
 			if (newValue.type != newType->GetPrimitiveType())
 				newType = leftType;
-			auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->_function,
-				impl->_sourceCode, newValue,
-				newType);
+			auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->GetSourceCode(), impl->GetBody(),
+				newValue, newType);
 			count++;
-			return Vector<ISyntaxTreeNodeOp*>(combined);
+			return Vector<SyntaxTreeNodeOp*>(combined);
 		}
 	}
 
-	return Vector<ISyntaxTreeNodeOp*>();
+	return Vector<SyntaxTreeNodeOp*>();
 }

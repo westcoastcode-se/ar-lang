@@ -6,31 +6,18 @@ namespace WestCoastCode::Compilation
 {
 	class SyntaxTreeNodePackage;
 
-	// Represents an import statement. 
-	class SyntaxTreeNodeImport : public ISyntaxTreeNodeImport
+	/// @brief Represents an import statement
+	class SyntaxTreeNodeImport : public SyntaxTreeNode
 	{
 	public:
-		// Import the supplied package
-		SyntaxTreeNodeImport(SourceCodeView sourceCode, SyntaxTreeNodePackage* import);
+		SyntaxTreeNodeImport(SourceCodeView view, SyntaxTreeNodePackage* import);
 
-		~SyntaxTreeNodeImport() final;
-
-		// Inherited via ISyntaxTreeNodeImport
-		const ID& GetID() const final { return _id; }
+#pragma region SyntaxTreeNode
 		void ToString(StringStream& s, int indent) const final;
-		ISyntaxTree* GetSyntaxTree() const final;
-		ISyntaxTreeNode* GetRootNode() final;
-		ISyntaxTreeNode* GetParent() const final;
-		void SetParent(ISyntaxTreeNode* parent) final;
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
 		VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags) final;
+#pragma endregion
 
 	private:
-		const ID _id;
-		ISyntaxTreeNodePackage* _parent;
-		SyntaxTreeNodePackage* _import;
-		Vector<ISyntaxTreeNode*> _children;
-		SourceCodeView _sourceCode;
+		SyntaxTreeNodePackage* const _import;
 	};
 }

@@ -1,43 +1,32 @@
 #pragma once
 
-#include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeTypeDef.h"
 
 namespace WestCoastCode::Compilation
 {
-	// Base class references that must point to a type
-	class SyntaxTreeNodeTypeRef : public ISyntaxTreeNodeTypeRef
+	/// @brief Represents reference to a type. Used primarily during compile time when we don't know which type
+	///        the developer is referring to in the source code. This can only be resolved when all source code
+	///        is parsed
+	class SyntaxTreeNodeTypeRef : public SyntaxTreeNodeTypeDef
 	{
 	public:
 		SyntaxTreeNodeTypeRef(SourceCodeView sourceCode);
 
-		~SyntaxTreeNodeTypeRef() final;
-
-		// Inherited via ISyntaxTreeNodeTypeRef
-		const ID& GetID() const final { return _id; }
-		void ToString(StringStream& s, int indent) const final;
-		ISyntaxTree* GetSyntaxTree() const final;
-		ISyntaxTreeNode* GetRootNode() final;
-		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		void SetParent(ISyntaxTreeNode* parent) final;
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		ReadOnlyString GetName() const final { return _fullName; }
-		ReadOnlyArray<ISyntaxTreeNodeType*> GetDefinitions() const final { return _definitions; }
-		void ResolveReferences() final;
-
-	public:
-		// Add a node to this type reference
-		void AddNode(ISyntaxTreeNode* node);
-
-		// Parse
+		/// @brief Parse the source code and extract a type reference 
+		/// @param state 
+		/// @return 
 		static SyntaxTreeNodeTypeRef* Parse(const ParserState* state);
 
+#pragma region SyntaxTreeNodeTypeDef
+		void ToString(StringStream& s, int indent) const final;
+		SyntaxTreeNodeTypeDef* GetType() final;
+		ReadOnlyArray<SyntaxTreeNodeTypeDef*> GetTypes() final { return _definitions; }
+		void Resolve() final;
+		void OnChildAdded(SyntaxTreeNode* child) final;
+#pragma endregion
+
 	private:
-		const ID _id;
-		ISyntaxTreeNode* _parent;
-		SourceCodeView _sourceCode;
-		Vector<ISyntaxTreeNode*> _children;
-		ReadOnlyString _fullName;
-		Vector<ISyntaxTreeNodeType*> _definitions;
+		/// @brief Definitions that's resolved by this type-ref
+		Vector<SyntaxTreeNodeTypeDef*> _definitions;
 	};
 }

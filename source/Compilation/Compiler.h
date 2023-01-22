@@ -4,6 +4,12 @@
 #include "SourceCode.h"
 #include "Lexer.h"
 #include "SyntaxTree.h"
+#include "SyntaxTreeNodeImport.h"
+#include "SyntaxTreeNodeFuncDef.h"
+#include "SyntaxTreeNodeFuncBody.h"
+#include "SyntaxTreeNodeTypeDef.h"
+#include "SyntaxTreeNodePackage.h"
+#include "SyntaxTreeNodeOpScope.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -57,7 +63,7 @@ namespace WestCoastCode::Compilation
 		Byte* Compile(int optimizationLevel = 0);
 
 		// Find the primitive with the supplied name
-		ISyntaxTreeNodePrimitive* FindPrimitive(ReadOnlyString name);
+		SyntaxTreeNodePrimitive* FindPrimitive(ReadOnlyString name);
 
 	private:
 		// Start parsing tokens and convert them into syntax tree nodes

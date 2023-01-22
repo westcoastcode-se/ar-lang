@@ -5,45 +5,21 @@
 #include "SyntaxTreeNodeMultiType.h"
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodePrimitive.h"
+#include "SyntaxTreeNodeRef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeFuncDef::SyntaxTreeNodeFuncDef(SourceCodeView sourceCode, ReadOnlyString name)
-	: _parent(nullptr), _sourceCode(sourceCode), _name(name), _returnType(nullptr), _body(nullptr), _symbol(nullptr)
+SyntaxTreeNodeFuncDef::SyntaxTreeNodeFuncDef(SourceCodeView view, ReadOnlyString name)
+	: SyntaxTreeNode(view), _name(name), _returnType(nullptr), _body(nullptr), _symbol(nullptr)
 {
-}
-
-SyntaxTreeNodeFuncDef::~SyntaxTreeNodeFuncDef()
-{
-	for (auto n : _children)
-		delete n;
-}
-
-ISyntaxTreeNode* SyntaxTreeNodeFuncDef::GetRootNode()
-{
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
-
-void SyntaxTreeNodeFuncDef::SetParent(ISyntaxTreeNode* parent)
-{
-	_parent = parent;
-}
-
-ISyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncDef::GetBody() const
-{
-	return _body;
 }
 
 void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
+	s << GetID() << Indent(indent);
 	s << "FuncDef(name=" << _name << ")" << std::endl;
-	for (auto i : _children) {
-		i->ToString(s, indent + 1);
-	}
+	SyntaxTreeNode::ToString(s, indent);
 }
 
 void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
@@ -58,49 +34,43 @@ void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
 	}
 
 	// Compile children so that we have valid symbols for arguments and return types
-	for (auto child : _children)
+	for (auto child : GetChildren())
 		child->Compile(linker);
+	
+	// Does this function have a return type?
+	if (_returnType) {
+		// Assume that the _returnType is a SyntaxTreeNodeTypeRef if the type is null
+		auto type = _returnType->GetType();
+		if (type == nullptr)
+			throw CompileErrorUnresolvedTypeReference(static_cast<SyntaxTreeNodeTypeRef*>(_returnType));
 
-	// Attach return types
-	if (dynamic_cast<ISyntaxTreeNodeTypeRef*>(_returnType)) {
-		auto definitions =
-			static_cast<ISyntaxTreeNodeTypeRef*>(_returnType)->GetDefinitions();
-		auto definition = dynamic_cast<SyntaxTreeNodePrimitive*>(definitions[0]);
+		// TODO: Add support for other types than primitives
+		auto definition = dynamic_cast<SyntaxTreeNodePrimitive*>(type);
+		assert(definition != nullptr && "only primitives are allowed at the moment");
 		_symbol->AddReturn(definition->GetSymbol());
 	}
-	else {
-
-	}
 }
 
-ISyntaxTreeNodePackage* SyntaxTreeNodeFuncDef::GetPackage()
+SyntaxTreeNodePackage* SyntaxTreeNodeFuncDef::GetPackage()
 {
 	// TODO: Add support for functions inside another function
-	return dynamic_cast<SyntaxTreeNodePackage*>(_parent);
-}
-
-void SyntaxTreeNodeFuncDef::AddNode(ISyntaxTreeNode* node)
-{
-	_children.Add(node);
-	node->SetParent(this);
+	return dynamic_cast<SyntaxTreeNodePackage*>(GetParent());
 }
 
 void SyntaxTreeNodeFuncDef::SetBody(SyntaxTreeNodeFuncBody* body)
 {
-	assert(_body == nullptr &&
-		"A function is only allowed to have one body");
 	_body = body;
 }
 
-void SyntaxTreeNodeFuncDef::AddArgument(ISyntaxTreeNodeFuncArg* arg)
+void SyntaxTreeNodeFuncDef::AddArgument(SyntaxTreeNodeFuncArg* arg)
 {
-	AddNode(arg);
+	AddChild(arg);
 	_arguments.Add(arg);
 }
 
-void SyntaxTreeNodeFuncDef::SetReturnType(ISyntaxTreeNodeType* returnType)
+void SyntaxTreeNodeFuncDef::SetReturnType(SyntaxTreeNodeTypeDef* returnType)
 {
-	AddNode(returnType);
+	AddChild(returnType);
 	_returnType = returnType;
 }
 

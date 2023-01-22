@@ -1,18 +1,66 @@
 #pragma once
 
-#include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeOp.h"
+#include "SyntaxTreeNodeFuncBody.h"
+#include "SyntaxTreeNodeTypeDef.h"
 
 namespace WestCoastCode::Compilation
 {
 	// Binary operator node
-	class SyntaxTreeNodeOpBinop : public ISyntaxTreeNodeOpBinop
+	class SyntaxTreeNodeOpBinop : public SyntaxTreeNodeOp
 	{
 	public:
-		SyntaxTreeNodeOpBinop(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* function,
-			ISyntaxTreeNodeOp* left, ISyntaxTreeNodeOp* right, Op op)
-			: _parent(nullptr), _function(function), _children(left, right), _sourceCode(sourceCode), _op(op) {}
+		enum Op {
+			Plus,
+			Minus,
+			Mult,
+			Div,
+			Equals,
+			NotEquals,
+			LessThen,
+			LessThenEquals,
+			GreaterThen,
+			GreaterThenEquals,
+			BitAnd,
+			BitOr,
+			BitXor,
+			Unknown
+		};
 
-		~SyntaxTreeNodeOpBinop() final;
+		static Op FromTokenType(TokenType type)
+		{
+			switch (type)
+			{
+			case TokenType::OpPlus:
+				return Plus;
+			case TokenType::OpMinus:
+				return Minus;
+			case TokenType::OpMult:
+				return Mult;
+			case TokenType::OpDiv:
+				return Div;
+			case TokenType::TestEquals:
+				return Equals;
+			case TokenType::TestNotEquals:
+				return NotEquals;
+			case TokenType::TestLt:
+				return LessThen;
+			case TokenType::TestLte:
+				return	LessThenEquals;
+			case TokenType::TestGt:
+				return GreaterThen;
+			case TokenType::TestGte:
+				return GreaterThenEquals;
+			case TokenType::BitAnd:
+				return BitAnd;
+			case TokenType::BitOr:
+				return BitOr;
+			case TokenType::BitXor:
+				return BitXor;
+			default:
+				return Unknown;
+			}
+		}
 
 		// Stringify the operator
 		static const ReadOnlyString ToString(const Op op) {
@@ -31,38 +79,32 @@ namespace WestCoastCode::Compilation
 			ENUM_STRING_END();
 		}
 
-		// ISyntaxTreeNode
-		const ID& GetID() const final { return _id; }
-		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		ISyntaxTreeNodeOp* GetLeft() const final { return _children[0]; }
-		ISyntaxTreeNodeOp* GetRight() const final { return _children[1]; }
-		Op GetOperator() const final { return _op; }
+		SyntaxTreeNodeOpBinop(SourceCodeView view, SyntaxTreeNodeFuncBody* body, Op op);
+
+		/// @return The operation at the left side of this binop
+		inline SyntaxTreeNodeOp* GetLeft() const { return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0]); }
+		
+		/// @return The operation at the right side of this binop
+		inline SyntaxTreeNodeOp* GetRight() const { return static_cast<SyntaxTreeNodeOp*>(GetChildren()[1]); }
+
+		/// @return What type of operator this binop does
+		inline Op GetOperator() const { return _op; }
+
+#pragma region SyntaxTreeNodeOp
+		SyntaxTreeNodeTypeDef* GetType() final;
 		void ToString(StringStream& s, int indent) const final;
-		ISyntaxTree* GetSyntaxTree() const override;
-		ISyntaxTreeNode* GetRootNode() override;
-		void SetParent(ISyntaxTreeNode* parent) override;
-		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
-		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
-		ISyntaxTreeNodeType* GetStackType() final;
-		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
-		Vector<ISyntaxTreeNodeOp*> OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer) final;
+		void Compile(Builder::Linker* linker, Builder::Instructions& target) final;
+#pragma endregion
 
 	private:
-		const ID _id;
-		ISyntaxTreeNode* _parent;
-		ISyntaxTreeNodeFuncDef* _function;
-		Array<ISyntaxTreeNodeOp*, 2> _children;
-		SourceCodeView _sourceCode;
-		Op _op;
+		const Op _op;
 
 	public:
-		// Optimizer that merges a binop if the two children are constants
+		/// @brief Optimizer that merges a binop if the two children are constants
 		class Optimize0_Merge : public ISyntaxTreeNodeOptimizer {
 		public:
 			I32 count = 0;
-			Vector<ISyntaxTreeNodeOp*> Optimize(ISyntaxTreeNodeOp* node) final;
+			Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOp* node) final;
 		};
 	};
 }

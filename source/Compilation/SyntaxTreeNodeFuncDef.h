@@ -4,65 +4,68 @@
 
 namespace WestCoastCode::Compilation
 {
+	class SyntaxTreeNodeTypeDef;
+	class SyntaxTreeNodePackage;
 	class SyntaxTreeNodeFuncBody;
 	class SyntaxTreeNodeFuncArg;
 
-	// A function definition node
-	class SyntaxTreeNodeFuncDef : public ISyntaxTreeNodeFuncDef
+	/// @brief A function definition node
+	class SyntaxTreeNodeFuncDef : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodeFuncDef(SourceCodeView sourceCode, ReadOnlyString name);
+		SyntaxTreeNodeFuncDef(SourceCodeView view, ReadOnlyString name);
 
-		~SyntaxTreeNodeFuncDef() final;
+		/// @return The name of this function
+		inline ReadOnlyString GetName() const { return _name; }
 
-		// ISyntaxTreeNodeFuncDef
-		const ID& GetID() const final { return _id; }
-		ReadOnlyString GetName() const final { return _name; }
-		ISyntaxTree* GetSyntaxTree() const final { return _parent->GetSyntaxTree(); }
-		ISyntaxTreeNode* GetRootNode() final;
-		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		void SetParent(ISyntaxTreeNode* parent) final;
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const final { return _arguments; }
-		ISyntaxTreeNodeType* GetReturnType() const final { return _returnType; }
-		bool IsVoidReturn() const final { return _returnType == nullptr; }
-		ISyntaxTreeNodeFuncBody* GetBody() const final;
+		/// @brief Get all arguments that this function requires
+		inline ReadOnlyArray<SyntaxTreeNodeFuncArg*> GetArguments() const { return _arguments; }
+
+		/// @return The type returned after calling the function
+		inline SyntaxTreeNodeTypeDef* GetReturnType() const { return _returnType; }
+
+		/// @return true if this function doesn't return anything
+		inline bool IsVoidReturn() const { return _returnType == nullptr; }
+
+		/// @return The body that implements this function
+		inline SyntaxTreeNodeFuncBody* GetBody() const { return _body; }
+
+		/// @return The closest package this function is part of
+		SyntaxTreeNodePackage* GetPackage();
+
+		/// @return The symbol
+		inline Builder::Function* GetSymbol() const { return _symbol; }
+
+#pragma region SyntaxTreeNode
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker) final;
-		ISyntaxTreeNodePackage* GetPackage() final;
+#pragma endregion
 
-	public:
-		// add the supplied node
-		void AddNode(ISyntaxTreeNode* node);
+	private:
+		friend class SyntaxTreeNodePackage;
 
-		// Set the body for this function
+		/// @brief Set the body that implements this function
+		/// @param body 
 		void SetBody(SyntaxTreeNodeFuncBody* body);
 
-		// Add an argument
-		void AddArgument(ISyntaxTreeNodeFuncArg* arg);
+		/// @brief Add an argument
+		/// @param arg 
+		void AddArgument(SyntaxTreeNodeFuncArg* arg);
 
-		// Add a return statement
-		void SetReturnType(ISyntaxTreeNodeType* returnType);
+		/// @brief Set the return type
+		void SetReturnType(SyntaxTreeNodeTypeDef* returnType);
 
-		// Get the symbol
-		Builder::Function* GetSymbol() { return _symbol; }
-
-		// Parse source code into a function definition node. Will throw ParseError if parsing of the 
-		// source code failed
+		/// @brief Parse source code into a function definition node. Will throw ParseError if parsing of the 
+		///	       source code failed
+		/// @param state 
+		/// @return 
 		static SyntaxTreeNodeFuncDef* Parse(ParserState* state);
 
 	private:
-		const ID _id;
-		ISyntaxTreeNode* _parent;
-		Vector<ISyntaxTreeNode*> _children;
-		SourceCodeView _sourceCode;
 		ReadOnlyString _name;
-
-		Vector<ISyntaxTreeNodeFuncArg*> _arguments;
-		ISyntaxTreeNodeType* _returnType;
+		Vector<SyntaxTreeNodeFuncArg*> _arguments;
+		SyntaxTreeNodeTypeDef* _returnType;
 		SyntaxTreeNodeFuncBody* _body;
-
 		Builder::Function* _symbol;
 	};
 }

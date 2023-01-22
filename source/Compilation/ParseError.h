@@ -81,13 +81,13 @@ namespace WestCoastCode::Compilation
 		ParseErrorSyntaxError(const ParserState* state, const char* prefix);
 	};
 
-	class ISyntaxTreeNodeType;
+	class SyntaxTreeNodeTypeDef;
 
 	// Error raised if two types are incompatible with each other
 	class ParseErrorIncompatibleTypes : public ParseError
 	{
 	public:
-		ParseErrorIncompatibleTypes(const ParserState* state, const ISyntaxTreeNodeType* type1,
-			const ISyntaxTreeNodeType* type2);
+		ParseErrorIncompatibleTypes(const ParserState* state, const SyntaxTreeNodeTypeDef* type1,
+			const SyntaxTreeNodeTypeDef* type2);
 	};
 }

@@ -2,35 +2,11 @@
 #include "SyntaxTreeNodeImport.h"
 #include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodeFuncBody.h"
+#include "SyntaxTreeNodePrimitive.h"
 #include "Compiler.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
-
-SyntaxTreeNodePackage::~SyntaxTreeNodePackage()
-{
-	for (auto i : _children)
-		delete i;
-}
-
-ISyntaxTree* SyntaxTreeNodePackage::GetSyntaxTree() const
-{
-	return _parent->GetSyntaxTree();
-}
-
-ISyntaxTreeNode* SyntaxTreeNodePackage::GetRootNode()
-{
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
-
-void SyntaxTreeNodePackage::SetParent(ISyntaxTreeNode* parent)
-{
-	assert(dynamic_cast<SyntaxTreeNodePackage*>(parent) &&
-		"A package can only have another package as a parent");
-	_parent = dynamic_cast<SyntaxTreeNodePackage*>(parent);
-}
 
 VisitResult SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags)
 {
@@ -54,7 +30,7 @@ VisitResult SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor* visitor, QueryS
 	{
 		// Stop query more child nodes
 		flags &= ~(I32)QuerySearchFlag::TraverseChildren;
-		for (auto c : _children)
+		for (auto c : GetChildren())
 		{
 			const auto result = c->Query(visitor, flags);
 			if (result == VisitResult::Stop) {
@@ -68,24 +44,29 @@ VisitResult SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor* visitor, QueryS
 
 void SyntaxTreeNodePackage::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
+	s << GetID() << Indent(indent);
 	s << "Package(name=" << _name << ")" << std::endl;
-	for (auto&& i : _children) {
-		i->ToString(s, indent + 1);
-	}
+	SyntaxTreeNode::ToString(s, indent);
+}
+
+void SyntaxTreeNodePackage::OnAddedToParent(SyntaxTreeNode* parent)
+{
+	assert(dynamic_cast<SyntaxTreeNodePackage*>(parent) != nullptr &&
+		"incompatible parent");
+}
+
+void SyntaxTreeNodePackage::OnChildAdded(SyntaxTreeNode* parent)
+{
+	assert((dynamic_cast<SyntaxTreeNodePackage*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodeFuncDef*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodePrimitive*>(parent) != nullptr 
+		|| dynamic_cast<SyntaxTreeNodeImport*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodeFuncBody*>(parent) != nullptr)
+		&& "incompatible child node");
 }
 
 void SyntaxTreeNodePackage::Compile(Builder::Linker* linker)
 {
 	if (_symbol == nullptr)
 		_symbol = linker->AddPackage(new Builder::Package(_name));
-	Default::Compile(this, linker);
-}
-
-void SyntaxTreeNodePackage::AddNode(ISyntaxTreeNode* node)
-{
-	_children.Add(node);
-	node->SetParent(this);
+	SyntaxTreeNode::Compile(linker);
 }
 
 SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
@@ -100,9 +81,9 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 	public:
 		PackageVisitor(ReadOnlyString name) : name(name), package(nullptr) {}
 
-		VisitorResult Visit(ISyntaxTreeNode* node) {
+		VisitorResult Visit(SyntaxTreeNode* node) {
 			package = dynamic_cast<SyntaxTreeNodePackage*>(node);
-			if (package && package->GetName() == name) {
+			if (package && package->_name == name) {
 				return VisitorResult::Stop;
 			}
 			package = nullptr;
@@ -120,10 +101,9 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 	SyntaxTreeNodePackage* package = visitor.package;
 	if (package == NULL) {
 		package = ARLANG_NEW SyntaxTreeNodePackage(SourceCodeView(state->sourceCode, t), t->GetString());
-		auto rootNode = state->parentNode->GetRootNode();
-		package->AddNode(ARLANG_NEW SyntaxTreeNodeImport(SourceCodeView(state->sourceCode, t),
-			dynamic_cast<SyntaxTreeNodePackage*>(rootNode)));
-		state->package->AddNode(package);
+		package->AddChild(ARLANG_NEW SyntaxTreeNodeImport(SourceCodeView(state->sourceCode, t),
+			dynamic_cast<SyntaxTreeNodePackage*>(state->parentNode)));
+		state->package->AddChild(package);
 	}
 
 	// Package name delimiter
@@ -138,13 +118,13 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 		case TokenType::Func: {
 			auto childState = ParserState(state, package);
 			auto funcdef = SyntaxTreeNodeFuncDef::Parse(&childState);
-			package->AddNode(funcdef);
+			package->AddChild(funcdef);
 
 			// Parse the function body
 			auto childState2 = ParserState(&childState, funcdef);
 			auto funcbody = SyntaxTreeNodeFuncBody::Parse(&childState2);
 			funcdef->SetBody(funcbody);
-			package->AddNode(funcbody);
+			package->AddChild(funcbody);
 			break;
 		}
 		case TokenType::Package:

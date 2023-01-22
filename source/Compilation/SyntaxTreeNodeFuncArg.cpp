@@ -4,58 +4,17 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeFuncArg::SyntaxTreeNodeFuncArg(SourceCodeView sourceCode, ReadOnlyString name)
-	: _parent(nullptr), _sourceCode(sourceCode), _name(name), _variableType(nullptr)
+SyntaxTreeNodeFuncArg::SyntaxTreeNodeFuncArg(SourceCodeView view, ReadOnlyString name, SyntaxTreeNodeTypeRef* type)
+	: SyntaxTreeNode(view), _name(name), _type(type)
 {
-}
-
-SyntaxTreeNodeFuncArg::~SyntaxTreeNodeFuncArg()
-{
-	for (auto c : _children)
-		delete c;
+	AddChild(type);
 }
 
 void SyntaxTreeNodeFuncArg::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
-	s << "FuncArg(name=" << _name << ", type=";
-	if (_variableType) {
-		s << _variableType->GetID();
-	}
-	s << ")" << std::endl;
-	for (auto c : _children)
-		c->ToString(s, indent + 1);
-}
-
-ISyntaxTree* SyntaxTreeNodeFuncArg::GetSyntaxTree() const
-{
-	return _parent->GetSyntaxTree();
-}
-
-ISyntaxTreeNode* SyntaxTreeNodeFuncArg::GetRootNode()
-{
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
-
-void SyntaxTreeNodeFuncArg::SetParent(ISyntaxTreeNode* parent)
-{
-	_parent = parent;
-}
-
-void SyntaxTreeNodeFuncArg::SetVariableType(ISyntaxTreeNodeTypeRef* type)
-{
-	assert(_variableType == nullptr &&
-		"Expected a type to not bet set twice");
-	AddNode(type);
-	_variableType = type;
-}
-
-void SyntaxTreeNodeFuncArg::AddNode(ISyntaxTreeNode* node)
-{
-	_children.Add(node);
-	node->SetParent(this);
+	s << GetID() << Indent(indent);
+	s << "FuncArg(name=" << _name << ", type=" << _type->GetID() << ")" << std::endl;
+	SyntaxTreeNode::ToString(s, indent);
 }
 
 SyntaxTreeNodeFuncArg* SyntaxTreeNodeFuncArg::Parse(ParserState* state)
@@ -64,9 +23,10 @@ SyntaxTreeNodeFuncArg* SyntaxTreeNodeFuncArg::Parse(ParserState* state)
 	if (t->GetType() != TokenType::Identity)
 		throw ParseErrorExpectedIdentity(state);
 
-	auto arg = ARLANG_NEW SyntaxTreeNodeFuncArg(SourceCodeView(state->sourceCode, t), t->GetString());
-	auto guard = MemoryGuard(arg);
-	t->Next();	
-	arg->SetVariableType(SyntaxTreeNodeTypeRef::Parse(state));
-	return guard.Done();
+	// The name of the argument
+	const ReadOnlyString name = t->GetString();
+	t->Next();
+
+	auto type = SyntaxTreeNodeTypeRef::Parse(state);
+	return ARLANG_NEW SyntaxTreeNodeFuncArg(SourceCodeView(state->sourceCode, t), name, type);
 }

@@ -1,53 +1,48 @@
 #pragma once
 
-#include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeTypeDef.h"
 #include "../Primitive.h"
 
 namespace WestCoastCode::Compilation
 {
 	class SyntaxTreeNodePackage;
 
-	class SyntaxTreeNodePrimitive : public ISyntaxTreeNodePrimitive
+	/// @brief A primitive type, for example "int32"
+	class SyntaxTreeNodePrimitive : public SyntaxTreeNodeTypeDef
 	{
 	public:
-		SyntaxTreeNodePrimitive(SyntaxTreeNodePackage* package, 
-			I32 size, PrimitiveType primitiveType, ReadOnlyString name)
-			: _package(package), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(nullptr),
+		SyntaxTreeNodePrimitive(I32 size, PrimitiveType primitiveType, ReadOnlyString name)
+			: SyntaxTreeNodeTypeDef(SourceCodeView()), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(nullptr),
 			_unrefInto(nullptr), _symbol(nullptr) {}
 
-		SyntaxTreeNodePrimitive(SyntaxTreeNodePackage* package,
-			I32 size, PrimitiveType primitiveType, ReadOnlyString name,
+		SyntaxTreeNodePrimitive(I32 size, PrimitiveType primitiveType, ReadOnlyString name,
 			SyntaxTreeNodePrimitive* inheritsFrom, SyntaxTreeNodePrimitive* unrefInto)
-			: _package(package), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(inheritsFrom),
+			: SyntaxTreeNodeTypeDef(SourceCodeView()), _stackSize(size), _primitiveType(primitiveType), _name(name), _inheritsFrom(inheritsFrom),
 			_unrefInto(unrefInto), _symbol(nullptr) {}
 
-		// Inherited via ISyntaxTreeNodePrimitive
-		const ID& GetID() const final { return _id; }
-		ReadOnlyString GetName() const final { return _name; }
-		ISyntaxTree* GetSyntaxTree() const final;
-		ISyntaxTreeNode* GetParent() const final;
-		void SetParent(ISyntaxTreeNode* parent) final;
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final;
-		const SourceCodeView* GetSourceCode() const final { return nullptr; }
-		void ToString(StringStream& s, int indent) const final;
-		I32 GetSize() const final { return _stackSize; }
-		PrimitiveType GetPrimitiveType() const final { return _primitiveType; }
-		virtual ISyntaxTreeNode* GetRootNode() override;
-		void Compile(Builder::Linker* linker) final;
+		/// @return The name of this primitive
+		inline ReadOnlyString GetName() const { return _name; }
 
-		// Get the builder symbol for this primitive
-		Builder::Type* GetSymbol() const { return _symbol; }
+		/// @return The underlying language primitive type
+		inline PrimitiveType GetPrimitiveType() const { return _primitiveType; }
+
+		/// @return The memory size of this primitive
+		inline I32 GetSize() const { return _stackSize; }
+
+		/// @return The builder symbol for this primitive
+		inline Builder::Type* GetSymbol() const { return _symbol; }
+
+#pragma region SyntaxTreeNodeTypeDef
+		void Compile(Builder::Linker* linker) final;
+		void ToString(StringStream& s, int indent) const final;
+#pragma endregion
 
 	private:
-		const ID _id;
-		SyntaxTreeNodePackage* const _package;
 		const I32 _stackSize;
 		const PrimitiveType _primitiveType;
 		const ReadOnlyString _name;
 		SyntaxTreeNodePrimitive* const _inheritsFrom;
 		SyntaxTreeNodePrimitive* const _unrefInto;
-
 		Builder::Type* _symbol;
-
 	};
 }

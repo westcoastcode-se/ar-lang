@@ -225,7 +225,7 @@ struct SuiteSyntaxTree : TestUtilsCompilation
 	class TypeVisitor : public ISyntaxTreeNodeVisitor
 	{
 	public:
-		VisitorResult Visit(ISyntaxTreeNode* node) {
+		VisitorResult Visit(SyntaxTreeNode* node) {
 			if (dynamic_cast<T*>(node)) {
 				nodes.Add(static_cast<T*>(node));
 			}
@@ -239,7 +239,7 @@ struct SuiteSyntaxTree : TestUtilsCompilation
 	{
 		AddSourceCode(new SourceCode("", "main.arl"));
 
-		TypeVisitor<ISyntaxTreeNodePackage> visitor;
+		TypeVisitor<SyntaxTreeNodePackage> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);
@@ -257,7 +257,7 @@ struct SuiteSyntaxTree : TestUtilsCompilation
 package Main
 )", "main.arl"));
 
-		TypeVisitor<ISyntaxTreeNodePackage> visitor;
+		TypeVisitor<SyntaxTreeNodePackage> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 2);
@@ -268,7 +268,7 @@ package Main
 		// All packages have an import to the root package by default
 		auto children = visitor.nodes[1]->GetChildren();
 		AssertEquals(children.Size(), 1);
-		AssertType<ISyntaxTreeNodeImport>(children[0]);
+		AssertType<SyntaxTreeNodeImport>(children[0]);
 	}
 
 	void PackageInPackage()
@@ -278,7 +278,7 @@ package WestCoastCode.Game
 package WestCoastCode.Game.Stuff
 )", "main.arl"));
 
-		TypeVisitor<ISyntaxTreeNodePackage> visitor;
+		TypeVisitor<SyntaxTreeNodePackage> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 4);
@@ -299,24 +299,24 @@ func Main() int32 {
 }
 )", "main.arl"));
 
-		TypeVisitor<ISyntaxTreeNodeFuncDef> visitor;
+		TypeVisitor<SyntaxTreeNodeFuncDef> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);
 		auto func = visitor.nodes[0];
 
-		AssertType<ISyntaxTreeNodePackage>(func->GetParent());
+		AssertType<SyntaxTreeNodePackage>(func->GetParent());
 		AssertEquals(func->GetName(), ReadOnlyString("Main"));
 		AssertTrue(func->GetArguments().IsEmpty());
 
 		auto returnType = func->GetReturnType();
 		AssertNotNull(returnType);
-		AssertType<ISyntaxTreeNodeType>(returnType);
+		AssertType<SyntaxTreeNodeTypeDef>(returnType);
 
 		auto body = func->GetBody();
 		AssertNotNull(body);
 
-		AssertType<ISyntaxTreeNodeScope>(func->GetBody()->GetChildren()[0]);
+		AssertType<SyntaxTreeNodeOpScope>(func->GetBody()->GetChildren()[0]);
 	}
 
 	void FunctionWithSpecializedReturn()
@@ -329,19 +329,19 @@ func Main() Engine.Graphics.Value {
 }
 )", "main.arl"));
 
-		TypeVisitor<ISyntaxTreeNodeFuncDef> visitor;
+		TypeVisitor<SyntaxTreeNodeFuncDef> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);
 		auto func = visitor.nodes[0];
 
-		AssertType<ISyntaxTreeNodePackage>(func->GetParent());
+		AssertType<SyntaxTreeNodePackage>(func->GetParent());
 		AssertEquals(func->GetName(), ReadOnlyString("Main"));
 		AssertTrue(func->GetArguments().IsEmpty());
 
 		auto returnType = func->GetReturnType();
 		AssertNotNull(returnType);
-		AssertType<ISyntaxTreeNodeType>(returnType);
+		AssertType<SyntaxTreeNodeTypeDef>(returnType);
 	}
 
 	void FunctionWithOneArgument()
@@ -354,24 +354,24 @@ func Main(in int32) int32 {
 }
 )", "main.arl"));
 
-		TypeVisitor<ISyntaxTreeNodeFuncDef> visitor;
+		TypeVisitor<SyntaxTreeNodeFuncDef> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);
 		auto func = visitor.nodes[0];
 
-		AssertType<ISyntaxTreeNodePackage>(func->GetParent());
+		AssertType<SyntaxTreeNodePackage>(func->GetParent());
 		AssertEquals(func->GetName(), ReadOnlyString("Main"));
 		AssertEquals(func->GetArguments().Size(), 1);
 
 		auto returnType = func->GetReturnType();
 		AssertNotNull(returnType);
-		AssertType<ISyntaxTreeNodeType>(returnType);
+		AssertType<SyntaxTreeNodeTypeDef>(returnType);
 
 		auto body = func->GetBody();
 		AssertNotNull(body);
 
-		AssertType<ISyntaxTreeNodeScope>(func->GetBody()->GetChildren()[0]);
+		AssertType<SyntaxTreeNodeOpScope>(func->GetBody()->GetChildren()[0]);
 	}
 
 	void operator()()

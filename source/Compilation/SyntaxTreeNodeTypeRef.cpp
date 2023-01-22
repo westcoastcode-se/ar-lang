@@ -5,73 +5,59 @@ using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
 SyntaxTreeNodeTypeRef::SyntaxTreeNodeTypeRef(SourceCodeView sourceCode)
-	: _parent(nullptr), _sourceCode(sourceCode)
+	: SyntaxTreeNodeTypeDef(sourceCode)
 {
-}
-
-SyntaxTreeNodeTypeRef::~SyntaxTreeNodeTypeRef()
-{
-	for (auto c : _children)
-		delete c;
 }
 
 void SyntaxTreeNodeTypeRef::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
-	s << "TypeRef(name=" << _fullName << ", definitions=[";
+	s << GetID() << Indent(indent);
+	s << "TypeRef(name=" << GetName() << ", definitions=[";
 	for (int i = 0; i < _definitions.Size(); ++i) {
 		if (i != 0)
 			s << ",";
 		s << _definitions[i]->GetID();
 	}
 	s << "])" << std::endl;
-	for (int i = 0; i < _children.Size(); ++i)
-		_children[i]->ToString(s, indent + 1);
+	SyntaxTreeNodeTypeDef::ToString(s, indent);
 }
 
-ISyntaxTree* SyntaxTreeNodeTypeRef::GetSyntaxTree() const
+SyntaxTreeNodeTypeDef* SyntaxTreeNodeTypeRef::GetType()
 {
-	return _parent->GetSyntaxTree();
+	if (_definitions.IsEmpty())
+		return nullptr;
+	return _definitions[0];
 }
 
-ISyntaxTreeNode* SyntaxTreeNodeTypeRef::GetRootNode()
+void SyntaxTreeNodeTypeRef::Resolve()
 {
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
+	SyntaxTreeNodeTypeDef::Resolve();
 
-void SyntaxTreeNodeTypeRef::SetParent(ISyntaxTreeNode* parent)
-{
-	_parent = parent;
-}
-
-void SyntaxTreeNodeTypeRef::ResolveReferences()
-{
 	if (!_definitions.IsEmpty())
 		return;
+	auto children = GetChildren();
+	if (children.IsEmpty())
+		return;
 
-	Default::ResolveReferences(this);
-
-	auto definitions = dynamic_cast<SyntaxTreeNodeRef*>(_children[0])->GetDefinitions();
+	// Find all definitions that's a type
+	auto definitions = dynamic_cast<SyntaxTreeNodeRef*>(children[0])->GetDefinitions();
 	for (auto def : definitions) {
-		auto typeDef = dynamic_cast<ISyntaxTreeNodeType*>(def);
+		auto typeDef = dynamic_cast<SyntaxTreeNodeTypeDef*>(def);
 		if (typeDef)
 			_definitions.Add(typeDef);
 	}
 
+	// Did we find at least one definition? If so then cleanup afterwards since the
+	// references are no longer needed
 	if (!_definitions.IsEmpty()) {
-		// No need for references if we've found definitions
-		for (auto c : _children)
-			delete c;
-		_children.Clear();
+		DestroyChildren();
 	}
 }
 
-void SyntaxTreeNodeTypeRef::AddNode(ISyntaxTreeNode* node)
+void SyntaxTreeNodeTypeRef::OnChildAdded(SyntaxTreeNode* child)
 {
-	_children.Add(node);
-	node->SetParent(this);
+	assert(dynamic_cast<SyntaxTreeNodeRef*>(child) != nullptr &&
+		"a SyntaxTreeNodeTypeRef is onlty allowed to have SyntaxTreeNodeRef children");
 }
 
 SyntaxTreeNodeTypeRef* SyntaxTreeNodeTypeRef::Parse(const ParserState* state)
@@ -82,8 +68,8 @@ SyntaxTreeNodeTypeRef* SyntaxTreeNodeTypeRef::Parse(const ParserState* state)
 
 	auto typeref = ARLANG_NEW SyntaxTreeNodeTypeRef(SourceCodeView(state->sourceCode, t));
 	auto mem = MemoryGuard(typeref);
-	auto ref = SyntaxTreeNodeRef::Parse(state, ISyntaxTreeNodeRef::Type, ISyntaxTreeNodeRef::All);
-	typeref->AddNode(ref);
-	typeref->_fullName = ref->GetName();
+	auto ref = SyntaxTreeNodeRef::Parse(state, SyntaxTreeNodeRef::Type);
+	typeref->AddChild(ref);
+	typeref->_name = ref->GetName();
 	return mem.Done();
 }

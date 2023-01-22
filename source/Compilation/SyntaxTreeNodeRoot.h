@@ -1,37 +1,44 @@
 #pragma once
 
 #include "SyntaxTreeNodePackage.h"
+#include "SyntaxTreeNodePrimitive.h"
 
 namespace WestCoastCode::Compilation
 {
-	// A package node
+	/// @brief Represents the root package.
+	///
+	/// Everything in the root package is automatically imported when creating a new package
 	class SyntaxTreeNodeRoot : public SyntaxTreeNodePackage
 	{
 	public:
-		~SyntaxTreeNodeRoot() final;
+		SyntaxTreeNodeRoot();
 
-		// Get the supplied primitive
-		ISyntaxTreeNodePrimitive* FindPrimitive(ReadOnlyString name);
+		/// @brief Get the primitive with the supplied name
+		/// @param name The name of the primitive
+		/// @return The primitive - if found
+		SyntaxTreeNodePrimitive* FindPrimitive(ReadOnlyString name);
 
-	public:
+#pragma region SyntaxTreeNodePackage
 		ISyntaxTree* GetSyntaxTree() const final { return _syntaxTree; }
+		void Compile(Builder::Linker* linker) final;
+#pragma endregion
 
 	private:
 		friend class SyntaxTree;
 
-		// Create a new syntax tree root
+		/// @brief Create a new syntax tree root
 		static SyntaxTreeNodeRoot* Create();
 
-		// Add the supplied node
-		void AddPrimitive(ISyntaxTreeNodePrimitive* primitive);
+		/// @brief Add the supplied primitive
+		/// @param primitive
+		void AddPrimitive(SyntaxTreeNodePrimitive* primitive);
 
-		// set which syntax tree this node is part of
+		/// @param syntaxTree 
 		void SetSyntaxTree(ISyntaxTree* syntaxTree) { _syntaxTree = syntaxTree; }
 
 	private:
-		SyntaxTreeNodeRoot();
-
-		Map<ReadOnlyString, ISyntaxTreeNodePrimitive*> _primitives;
+		/// @brief All primitives part of the root node
+		Map<ReadOnlyString, SyntaxTreeNodePrimitive*> _primitives;
 		ISyntaxTree* _syntaxTree;
 	};
 }

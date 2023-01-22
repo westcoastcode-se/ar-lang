@@ -1,129 +1,79 @@
 #include "SyntaxTreeNodeOpTypeCast.h"
 #include "SyntaxTreeNodeConstant.h"
 #include "SyntaxTreeNodePrimitive.h"
+#include "SyntaxTreeNodeTypeDef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeOpTypeCast::~SyntaxTreeNodeOpTypeCast()
+SyntaxTreeNodeOpTypeCast::SyntaxTreeNodeOpTypeCast(SourceCodeView view, SyntaxTreeNodeFuncBody* body)
+	: SyntaxTreeNodeOp(view, body)
 {
-	for (auto c : _children)
-		delete c;
 }
 
 void SyntaxTreeNodeOpTypeCast::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
-	s << "OpTypeCast(to=" << _children[0]->GetID() << ")";
+	s << GetID() << Indent(indent);
+	s << "OpTypeCast(to=" << (GetChildren()[0])->GetID() << ")";
 	s << std::endl;
-	for (auto c : _children)
-		c->ToString(s, indent + 1);
+	SyntaxTreeNodeOp::ToString(s, indent);
 }
 
-ISyntaxTree* SyntaxTreeNodeOpTypeCast::GetSyntaxTree() const
-{
-	return _parent->GetSyntaxTree();
-}
-
-ISyntaxTreeNode* SyntaxTreeNodeOpTypeCast::GetRootNode()
-{
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
-
-void SyntaxTreeNodeOpTypeCast::SetParent(ISyntaxTreeNode* parent)
-{
-	_parent = parent;
-}
-
-namespace
-{
-	SyntaxTreeNodePrimitive* GetPrimitiveType(ISyntaxTreeNode* node)
-	{
-		auto ref = dynamic_cast<ISyntaxTreeNodeTypeRef*>(node);
-		if (ref) {
-			auto defs = ref->GetDefinitions();
-			for (auto def : defs) {
-				auto primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(def);
-				if (primitive != nullptr)
-					return primitive;
-			}
-		}
-
-		auto primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(node);
-		if (primitive != nullptr)
-			return primitive;
-
-		return nullptr;
-	}
-}
-
-void SyntaxTreeNodeOpTypeCast::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
+void SyntaxTreeNodeOpTypeCast::Compile(Builder::Linker* linker, Builder::Instructions& target)
 {
 	// The second child is what we want to cast
-	static_cast<ISyntaxTreeNodeOp*>(_children[1])->Compile(linker, instructions);
+	static_cast<SyntaxTreeNodeOp*>(GetChildren()[1])->Compile(linker, target);
 
-	auto fromType = GetPrimitiveType(FromType());
-	auto toType = GetPrimitiveType(GetStackType());
+	auto f1 = FromType();
+	auto g1 = GetType()->GetType();
+
+	auto fromType = dynamic_cast<SyntaxTreeNodePrimitive*>(f1);
+	auto toType = dynamic_cast<SyntaxTreeNodePrimitive*>(g1);
 
 	if (fromType == nullptr || toType == nullptr) {
 		throw CompileErrorNotImplemented(this, "TypeCast only supports casting between primitives ftm");
 	}
 
-	instructions.Conv(fromType->GetSymbol(), toType->GetSymbol());
+	target.Conv(fromType->GetSymbol(), toType->GetSymbol());
 }
 
-ISyntaxTreeNodeType* SyntaxTreeNodeOpTypeCast::GetStackType()
+SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpTypeCast::GetType()
 {
-	// The first child is the type reference
-	return static_cast<ISyntaxTreeNodeType*>(_children[0]);
+	// The first child is the type that the value will have after casting is done
+	return static_cast<SyntaxTreeNodeTypeDef*>(GetChildren()[0]);
 }
 
-ISyntaxTreeNodeType* SyntaxTreeNodeOpTypeCast::FromType()
+SyntaxTreeNodeOpTypeCast* SyntaxTreeNodeOpTypeCast::Cast(SourceCodeView view, SyntaxTreeNodeFuncBody* body,
+	SyntaxTreeNodeTypeDef* type, SyntaxTreeNodeOp* op)
 {
-	return static_cast<ISyntaxTreeNodeOp*>(_children[1])->GetStackType();
+	auto node = ARLANG_NEW SyntaxTreeNodeOpTypeCast(view, body);
+	auto guard = MemoryGuard(node);
+	node->AddChild(type);
+	node->AddChild(op);
+	return guard.Done();
 }
 
-Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpTypeCast::OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer)
+SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpTypeCast::FromType()
 {
-	auto optimized = static_cast<ISyntaxTreeNodeOp*>(_children[1])->OptimizeOp(optimizer);
-	if (!optimized.IsEmpty()) {
-		if (optimized.Size() != 1)
-			throw CompileErrorNotImplemented(this, "TypeCast optimize is not allowed expand");
-		delete _children[1];
-		_children[1] = optimized[0];
-	}
-	return optimizer->Optimize(this);
+	// Second child is what we are casting from
+	return static_cast<SyntaxTreeNodeOp*>(GetChildren()[1])->GetType();
 }
 
-void SyntaxTreeNodeOpTypeCast::SetNewType(ISyntaxTreeNodeType* type)
-{
-	_children[0] = type;
-	type->SetParent(this);
-}
-
-void SyntaxTreeNodeOpTypeCast::SetOp(ISyntaxTreeNodeOp* op)
-{
-	_children[1] = op;
-	op->SetParent(this);
-}
-
-Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpTypeCast::Optimize0_Merge::Optimize(ISyntaxTreeNodeOp* node)
+Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpTypeCast::Optimize0_Merge::Optimize(SyntaxTreeNodeOp* node)
 {
 	auto impl = dynamic_cast<SyntaxTreeNodeOpTypeCast*>(node);
 	if (impl == nullptr)
-		return Vector<ISyntaxTreeNodeOp*>();
+		return Vector<SyntaxTreeNodeOp*>();
 
 	// The child-node
-	auto child = static_cast<ISyntaxTreeNodeOp*>(impl->_children[1]);
+	auto child = static_cast<SyntaxTreeNodeOp*>(impl->GetChildren()[1]);
 
 	// Is the child a constant? If so, then try to perform the type-casting during compile time
 	// and return the constant as the merged child
 	if (dynamic_cast<SyntaxTreeNodeConstant*>(child)) {
 		count++;
 		auto constant = static_cast<SyntaxTreeNodeConstant*>(child);
-		return constant->Cast(impl->GetStackType());
+		return constant->Cast(impl->GetType());
 	}
-	return Vector<ISyntaxTreeNodeOp*>();
+	return Vector<SyntaxTreeNodeOp*>();
 }

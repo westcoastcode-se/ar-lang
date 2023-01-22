@@ -1,5 +1,7 @@
 #include "CompileError.h"
 #include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeRef.h"
+#include "SyntaxTreeNodeTypeRef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -9,16 +11,24 @@ CompileError::CompileError(SourceCodeView sourceCode, CompileErrorType type)
 {
 }
 
-CompileErrorUnresolvedReference::CompileErrorUnresolvedReference(const ISyntaxTreeNodeRef* reference)
-	: CompileError(*reference->GetSourceCode(), CompileErrorType::UnresolvedReference)
+CompileErrorUnresolvedReference::CompileErrorUnresolvedReference(const SyntaxTreeNodeRef* reference)
+	: CompileError(reference->GetSourceCode(), CompileErrorType::UnresolvedReference)
 {
 	StringStream s;
 	s << "reference '" << reference->GetName() << "' could not be resolved";
 	SetError(s.str());
 }
 
-CompileErrorNotImplemented::CompileErrorNotImplemented(const ISyntaxTreeNode* node, const Char* feature)
-	: CompileError(*node->GetSourceCode(), CompileErrorType::NotImplemented)
+CompileErrorUnresolvedTypeReference::CompileErrorUnresolvedTypeReference(const SyntaxTreeNodeTypeRef* reference)
+	: CompileError(reference->GetSourceCode(), CompileErrorType::UnresolvedTypeReference)
+{
+	StringStream s;
+	s << "reference '" << reference->GetName() << "' could not be resolved";
+	SetError(s.str());
+}
+
+CompileErrorNotImplemented::CompileErrorNotImplemented(const SyntaxTreeNode* node, const Char* feature)
+	: CompileError(node->GetSourceCode(), CompileErrorType::NotImplemented)
 {
 	StringStream s;
 	s << "feature '" << feature << "' is not implemented yet";

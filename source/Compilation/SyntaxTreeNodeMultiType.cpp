@@ -4,52 +4,16 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeMultiType::SyntaxTreeNodeMultiType(SourceCodeView sourceCode)
-	: _parent(nullptr), _sourceCode(sourceCode)
+SyntaxTreeNodeMultiType::SyntaxTreeNodeMultiType(SourceCodeView view)
+	: SyntaxTreeNodeTypeDef(view)
 {
-}
-
-SyntaxTreeNodeMultiType::~SyntaxTreeNodeMultiType()
-{
-	for (auto c : _children)
-		delete c;
 }
 
 void SyntaxTreeNodeMultiType::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
-	s << "MiltiType(count=" << _children.Size() << "])" << std::endl;
-	for (int i = 0; i < _children.Size(); ++i)
-		_children[i]->ToString(s, indent + 1);
-}
-
-ISyntaxTree* SyntaxTreeNodeMultiType::GetSyntaxTree() const
-{
-	return _parent->GetSyntaxTree();
-}
-
-ISyntaxTreeNode* SyntaxTreeNodeMultiType::GetRootNode()
-{
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
-
-void SyntaxTreeNodeMultiType::SetParent(ISyntaxTreeNode* parent)
-{
-	_parent = parent;
-}
-
-void SyntaxTreeNodeMultiType::ResolveReferences()
-{
-	// Resolve children first
-	Default::ResolveReferences(this);
-}
-
-void SyntaxTreeNodeMultiType::AddType(ISyntaxTreeNodeType* type)
-{
-	type->SetParent(this);
-	_children.Add(type);
+	s << GetID() << Indent(indent);
+	s << "MiltiType()" << std::endl;
+	SyntaxTreeNodeTypeDef::ToString(s, indent);
 }
 
 SyntaxTreeNodeMultiType* SyntaxTreeNodeMultiType::Parse(const ParserState* state)
@@ -63,7 +27,7 @@ SyntaxTreeNodeMultiType* SyntaxTreeNodeMultiType::Parse(const ParserState* state
 
 	while (t->Next() != TokenType::ParantRight)
 	{
-		types->AddType(SyntaxTreeNodeTypeRef::Parse(state));
+		types->AddChild(SyntaxTreeNodeTypeRef::Parse(state));
 		// Ignore comma
 		if (t->GetType() == TokenType::Comma) {
 			t->Next();

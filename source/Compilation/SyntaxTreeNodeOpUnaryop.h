@@ -1,18 +1,34 @@
 #pragma once
 
-#include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodeOp.h"
 
 namespace WestCoastCode::Compilation
 {
 	// Unary operator node
-	class SyntaxTreeNodeOpUnaryop : public ISyntaxTreeNodeOpUnaryop
+	class SyntaxTreeNodeOpUnaryop : public SyntaxTreeNodeOp
 	{
 	public:
-		SyntaxTreeNodeOpUnaryop(SourceCodeView sourceCode,
-			ISyntaxTreeNodeFuncDef* function,
-			ISyntaxTreeNodeOp* right, Op op);
+		enum Op {
+			Minus,
+			Plus,
+			BitNot,
+			Unknown
+		};
 
-		~SyntaxTreeNodeOpUnaryop() final;
+		static Op FromTokenType(TokenType type)
+		{
+			switch (type)
+			{
+			case TokenType::OpPlus:
+				return Plus;
+			case TokenType::OpMinus:
+				return Minus;
+			case TokenType::BitNot:
+				return BitNot;
+			default:
+				return Unknown;
+			}
+		}
 
 		// Stringify the operator
 		static const ReadOnlyString ToString(const Op op) {
@@ -23,36 +39,29 @@ namespace WestCoastCode::Compilation
 			ENUM_STRING_END();
 		}
 
-		// Inherited via ISyntaxTreeNodeOpUnaryop
-		const ID& GetID() const final { return _id; }
-		ISyntaxTreeNodeOp* GetRight() const final { return _children[0]; }
-		Op GetOperator() const final { return _op; }
-		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
+		SyntaxTreeNodeOpUnaryop(SourceCodeView view, SyntaxTreeNodeFuncBody* body, Op op);
+
+		/// @return The operation at the right side of this binop
+		inline SyntaxTreeNodeOp* GetRight() const { return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0]); }
+
+		/// @return The operator
+		inline Op GetOperator() const { return _op; }
+
+#pragma region SyntaxTreeNodeOp
 		void ToString(StringStream& s, int indent) const final;
-		virtual ISyntaxTree* GetSyntaxTree() const override;
-		virtual ISyntaxTreeNode* GetRootNode() override;
-		virtual void SetParent(ISyntaxTreeNode* parent) override;
-		ISyntaxTreeNodeFuncDef* GetFunction() final { return _function; }
-		ISyntaxTreeNodePackage* GetPackage() final { return _function->GetPackage(); }
-		void Compile(Builder::Linker* linker, Builder::Instructions& instructions) final;
-		ISyntaxTreeNodeType* GetStackType() final;
-		Vector<ISyntaxTreeNodeOp*> OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer) final;
+		void Compile(Builder::Linker* linker, Builder::Instructions& target) final;
+		SyntaxTreeNodeTypeDef* GetType() final;
+#pragma endregion
 
 	private:
-		const ID _id;
-		ISyntaxTreeNode* _parent;
-		Array<ISyntaxTreeNodeOp*, 1> _children;
-		SourceCodeView _sourceCode;
 		Op _op;
-		ISyntaxTreeNodeFuncDef* _function;
+
 	public:
-		// Optimizer that merges a unaryop
+		/// @brief Optimizer that merges a unaryop
 		class Optimize0_Merge : public ISyntaxTreeNodeOptimizer {
 		public:
 			I32 count = 0;
-			Vector<ISyntaxTreeNodeOp*> Optimize(ISyntaxTreeNodeOp* node) final;
+			Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOp* node) final;
 		};
 	};
 }

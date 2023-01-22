@@ -2,68 +2,63 @@
 
 #include "SyntaxTreeNode.h"
 #include "SourceCodeParser.h"
+#include "SyntaxTreeNodeOp.h"
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeFuncBody : public ISyntaxTreeNodeFuncBody
+	class SyntaxTreeNodeFuncDef;
+
+	/// @brief The body of a function. All children in the body must be an operation node type
+	class ARLANG_API SyntaxTreeNodeFuncBody : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodeFuncBody(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* func);
+		SyntaxTreeNodeFuncBody(SourceCodeView view, SyntaxTreeNodeFuncDef* func);
 
-		~SyntaxTreeNodeFuncBody() final;
+		/// @return The function this body is part of
+		inline SyntaxTreeNodeFuncDef* GetFunction() const { return _function; }
 
-		// Inherited via ISyntaxTreeNodeFuncBody
-		const ID& GetID() const final { return _id; }
-		virtual void ToString(StringStream& s, int indent) const override;
-		virtual ISyntaxTree* GetSyntaxTree() const override;
-		virtual ISyntaxTreeNode* GetRootNode() override;
-		ISyntaxTreeNode* GetParent() const final { return _parent; }
-		virtual void SetParent(ISyntaxTreeNode* parent) override;
-		ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const final { return _children; }
-		const SourceCodeView* GetSourceCode() const final { return &_sourceCode; }
-		ReadOnlyString GetText() const final { return _text; }
-		ISyntaxTreeNodeFuncDef* GetFunction() const final { return _function; }
+#pragma region SyntaxTreeNode
+		void ToString(StringStream& s, int indent) const final;
+		void OnChildAdded(SyntaxTreeNode* child) final;
 		void Compile(Builder::Linker* linker) final;
 		void Optimize(ISyntaxTreeNodeOptimizer* optimizer) final;
+#pragma endregion
 
 	public:
-		typedef ISyntaxTreeNodeOp* (*ParseFn)(ParserState*);
-
-		// Add a child node
-		void AddOp(ISyntaxTreeNodeOp* node);
+		typedef SyntaxTreeNodeOp* (*ParseFn)(ParserState*);
 
 		// Parse a function body using the supplied state
 		static SyntaxTreeNodeFuncBody* Parse(ParserState* state);
 
 	private:
 		//
-		static ISyntaxTreeNodeOp* ParseBody(ParserState* state);
+		static SyntaxTreeNodeOp* ParseBody(ParserState* state);
 
 		//
-		static ISyntaxTreeNodeOp* ParseReturn(ParserState* state);
+		static SyntaxTreeNodeOp* ParseReturn(ParserState* state);
 
 		//
-		static ISyntaxTreeNodeOp* ParseCompare(ParserState* state);
+		static SyntaxTreeNodeOp* ParseCompare(ParserState* state);
 
 		//
-		static ISyntaxTreeNodeOp* ParseExpr(ParserState* state);
+		static SyntaxTreeNodeOp* ParseExpr(ParserState* state);
 
 		//
-		static ISyntaxTreeNodeOp* ParseTerm(ParserState* state);
+		static SyntaxTreeNodeOp* ParseTerm(ParserState* state);
 
 		//
-		static ISyntaxTreeNodeOp* ParseFactor(ParserState* state);
+		static SyntaxTreeNodeOp* ParseFactor(ParserState* state);
 
 		//
-		static ISyntaxTreeNodeOp* ParseAtom(ParserState* state);
+		static SyntaxTreeNodeOp* ParseAtom(ParserState* state);
 
 		//
-		static ISyntaxTreeNodeOp* ParseUnaryop(ParserState* state,
+		static SyntaxTreeNodeOp* ParseUnaryop(ParserState* state,
 			TokenType tokenType,
 			ParseFn rightFunc);
 
 		//
-		static ISyntaxTreeNodeOp* ParseBinop(ParserState* state,
+		static SyntaxTreeNodeOp* ParseBinop(ParserState* state,
 			const Vector<TokenType>& types,
 			ParseFn leftFunc, ParseFn rightFunc);
 
@@ -71,11 +66,7 @@ namespace WestCoastCode::Compilation
 		static bool Contains(const Vector<TokenType>& tokens, TokenType type);
 
 	private:
-		const ID _id;
-		ISyntaxTreeNodeFuncDef* const _function;
-		ISyntaxTreeNode* _parent;
-		SourceCodeView _sourceCode;
+		SyntaxTreeNodeFuncDef* const _function;
 		ReadOnlyString _text;
-		Vector<ISyntaxTreeNodeOp*> _children;
 	};
 }

@@ -49,7 +49,7 @@ namespace WestCoastCode
 	class ARLANG_API IMemoryTracked
 	{
 	public:
-		virtual ~IMemoryTracked() {}
+		virtual ~IMemoryTracked() = default;
 
 #if defined(ARLANG_MEMORY_TRACKING)
 		friend class MemoryTracker;

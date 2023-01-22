@@ -2,6 +2,7 @@
 #include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodeFuncBody.h"
 #include "SyntaxTreeNodePrimitive.h"
+#include "SyntaxTreeNodeTypeRef.h"
 #include "Compiler.h"
 
 using namespace WestCoastCode;
@@ -70,9 +71,15 @@ namespace
     }
 }
 
+SyntaxTreeNodeConstant::SyntaxTreeNodeConstant(SourceCodeView view, SyntaxTreeNodeFuncBody* body, const PrimitiveValue& value, SyntaxTreeNodePrimitive* stackType)
+    :SyntaxTreeNodeOp(view, body), _value(value), _stackType(stackType)
+{
+    ASSERT_NOT_NULL(stackType);
+}
+
 void SyntaxTreeNodeConstant::ToString(StringStream& s, int indent) const
 {
-    s << _id << Indent(indent);
+    s << GetID() << Indent(indent);
     s << "Constant(value=";
     switch (_value.type)
     {
@@ -103,23 +110,7 @@ void SyntaxTreeNodeConstant::ToString(StringStream& s, int indent) const
     }
     s << ",type=" << _stackType->GetName();
     s << ")" << std::endl;
-}
-
-ISyntaxTree* SyntaxTreeNodeConstant::GetSyntaxTree() const
-{
-    return _parent->GetSyntaxTree();
-}
-
-ISyntaxTreeNode* SyntaxTreeNodeConstant::GetRootNode()
-{
-    if (_parent)
-        return _parent->GetRootNode();
-    return this;
-}
-
-void SyntaxTreeNodeConstant::SetParent(ISyntaxTreeNode* parent)
-{
-    _parent = parent;
+    SyntaxTreeNode::ToString(s, indent);
 }
 
 void SyntaxTreeNodeConstant::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
@@ -128,40 +119,34 @@ void SyntaxTreeNodeConstant::Compile(Builder::Linker* linker, Builder::Instructi
     instructions.Ldc(symbol, _value);
 }
 
-SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(ISyntaxTreeNodeType* newType)
+SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Cast(SyntaxTreeNodeTypeDef* newType)
 {
-    // Figure out the new constant value by compile-time evaluating the expression
-    // into a new type
-    SyntaxTreeNodePrimitive* primitive = nullptr;
-    auto ref = dynamic_cast<ISyntaxTreeNodeTypeRef*>(newType);
-    if (ref != nullptr) {
-        auto definitions = ref->GetDefinitions();
-        if (definitions.IsEmpty())
-            return nullptr;
-
-        primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(definitions[0]);
+    // If the newType returns null then we know that the supplied type is a reference
+    auto type = newType->GetType();
+    if (type == nullptr) {
+        throw CompileErrorUnresolvedTypeReference(
+            static_cast<SyntaxTreeNodeTypeRef*>(newType)
+        );
     }
 
     // Is the type a primitive type?
+    auto primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(type);
     if (primitive == nullptr) {
-        auto primitive = dynamic_cast<SyntaxTreeNodePrimitive*>(newType);
-        if (primitive == nullptr) {
-            return nullptr;
-        }
+        return nullptr;
     }
 
     // Convert the constant value
     PrimitiveValue newValue = _value;
     Convert(newValue, static_cast<SyntaxTreeNodePrimitive*>(_stackType)->GetPrimitiveType(), 
         primitive->GetPrimitiveType());
-    return ARLANG_NEW SyntaxTreeNodeConstant(_function, _sourceCode, newValue, primitive);
+    return ARLANG_NEW SyntaxTreeNodeConstant(GetSourceCode(), GetBody(), newValue, primitive);
 }
 
 SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
 {
     Token* const t = state->token;
 
-    ISyntaxTreeNodePrimitive* stackType = nullptr;
+    SyntaxTreeNodePrimitive* stackType = nullptr;
     PrimitiveValue value;
     switch (t->GetType())
     {
@@ -219,6 +204,7 @@ SyntaxTreeNodeConstant* SyntaxTreeNodeConstant::Parse(const ParserState* state)
     }
 
     t->Next();
-    return ARLANG_NEW SyntaxTreeNodeConstant(state->function, SourceCodeView(state->sourceCode, t),
+    return ARLANG_NEW SyntaxTreeNodeConstant(SourceCodeView(state->sourceCode, t),
+        state->functionBody,
         value, stackType);
 }

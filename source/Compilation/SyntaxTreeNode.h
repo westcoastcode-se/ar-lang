@@ -8,33 +8,11 @@
 #include "CompileError.h"
 #include "../Primitive.h"
 #include "../Builder/Linker.h"
+#include "ID.h"
 
 namespace WestCoastCode::Compilation
 {
-	struct ID
-	{
-		// The ID
-		const I32 value;
-
-		ID();
-
-		ID(const ID& rhs) : value(rhs.value) {}
-	};
-
-	static inline std::ostream& operator<< (std::ostream& out, ID const& t)
-	{
-		return out << "ID(" << t.value << ")";
-	}
-
 	class ISyntaxTree;
-	class ISyntaxTreeNode;
-	class ISyntaxTreeNodeOp;
-	class ISyntaxTreeNodeType;
-	class ISyntaxTreeNodePackage;
-	class ISyntaxTreeNodeFuncArg;
-	class ISyntaxTreeNodeFuncDef;
-	class ISyntaxTreeNodeTypeRef;
-	class ISyntaxTreeNodeFuncBody;
 
 	// Flags used to help configure the search algorithm when using the Query functionality
 	enum class QuerySearchFlag : int
@@ -83,393 +61,186 @@ namespace WestCoastCode::Compilation
 		Continue,
 	};
 
-	// Visitor
-	class ISyntaxTreeNodeVisitor
+	class SyntaxTreeNode;
+
+	/// Interface used for implementing the visitor pattern when you want to traverse the syntax tree
+	class ARLANG_API ISyntaxTreeNodeVisitor
 	{
 	public:
-		virtual ~ISyntaxTreeNodeVisitor() {}
+		virtual ~ISyntaxTreeNodeVisitor() = default;
 
-		// Visit the supplied node. Return true if we want to continue search for more nodes
-		virtual VisitorResult Visit(ISyntaxTreeNode* node) = 0;
+		/// @brief Method called when a node is visited
+		/// @param node The node we are visiting
+		/// @return If we should continue visit more nodes or stop querying
+		virtual VisitorResult Visit(SyntaxTreeNode* node) = 0;
 	};
 
-	// Optimizer. It is assumed that the optimization is done bottom-up
-	class ISyntaxTreeNodeOptimizer
+	class SyntaxTreeNodeOp;
+
+	/// @brief Override this to add additional optimization capabilities. The optimization is always done bottom up
+	class ARLANG_API ISyntaxTreeNodeOptimizer
 	{
 	public:
-		virtual ~ISyntaxTreeNodeOptimizer() {}
+		virtual ~ISyntaxTreeNodeOptimizer() = default;
 
-		// Optimize the supplied node and return a list of nodes that should replace the supplied node
-		virtual Vector<ISyntaxTreeNodeOp*> Optimize(ISyntaxTreeNodeOp* node) = 0;
+		/// @brief Optimize the supplied node. If optimized then a list containing the new/optimized values are returned
+		/// @param node The node we are trying to optimize
+		/// @return The new optimized nodes
+		virtual Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOp* node) = 0;
 	};
 
-	class IStringify : public IMemoryTracked
+	/// @brief Implement this interface if you want to have support for converting to a string
+	class ARLANG_API IStringify : public IMemoryTracked
 	{
 	public:
-		// Stringify this syntax tree node
+		/// @brief Stringify this object
+		/// @param s 
+		/// @param indent 
 		virtual void ToString(StringStream& s, int indent) const = 0;
 
-		// Helper function for indentations
-		static String Indent(int indent) {
+		/// @brief Helper function for indentations. Returns a string with the appropriate spaces
+		/// @param indent How many spaces should be added
+		/// @return 
+		inline static String Indent(int indent) {
 			String s;
 			for (int i = 0; i < indent; ++i)
 				s += "  ";
 			return s;
 		}
+
+		/// @brief Indent the supplied stream
+		/// @param ss 
+		/// @param indent 
+		inline static void Indent(StringStream& ss, int indent) {
+			for (int i = 0; i < indent; ++i)
+				ss << " ";
+		}
 	};
 
-	class ISyntaxTreeNode : public IStringify
+	/// @brief Implement this interface if you want something to be able to be compiled
+	///        into bytecode
+	class ARLANG_API ICompilable
 	{
 	public:
-		// Get the unique id for this node
-		virtual const ID& GetID() const = 0;
+		virtual ~ICompilable() = default;
 
-		// Get the tree that this node is part of
-		virtual ISyntaxTree* GetSyntaxTree() const = 0;
+		/// @brief Compile this package into symbols that can be linked into bytecode later on
+		/// @param linker The linker
+		virtual void Compile(Builder::Linker* linker) = 0;
+	};
 
-		// Get the root node
-		virtual ISyntaxTreeNode* GetRootNode() = 0;
+	/// @brief Implement this interface if you want to add support for resolving
+	class ARLANG_API IResolvable
+	{
+	public:
+		virtual ~IResolvable() = default;
 
-		// Get the parent node
-		virtual ISyntaxTreeNode* GetParent() const = 0;
+		/// @brief Resolves this item
+		virtual void Resolve() = 0;
+	};
 
-		// Set the parent of this node
-		virtual void SetParent(ISyntaxTreeNode* parent) = 0;
+	/// @brief Base class for a syntax tree nodes
+	class ARLANG_API SyntaxTreeNode : public IStringify, public ICompilable, public IResolvable
+	{
+	public:
+		SyntaxTreeNode(const SourceCodeView view);
 
-		// Get all root nodes in the syntax tree
-		virtual ReadOnlyArray<ISyntaxTreeNode*> GetChildren() const = 0;
+		virtual ~SyntaxTreeNode();
 
-		// Get all sibling nodes before this node
-		virtual Vector<ISyntaxTreeNode*> GetSiblingsBefore() const {
-			return Default::GetSiblingsBefore(this);
+		/// @return A runtime-unique ID
+		inline const ID& GetID() const { return _id; }
+
+		/// @return Get the source code which this node is created from
+		inline const SourceCodeView& GetSourceCode() const { return _sourceCode; }
+
+		/// @return The tree that this node is part of - if any. Returns nullptr if this node isn't part of any tree
+		virtual ISyntaxTree* GetSyntaxTree() const { 
+			if (_parent)
+				return _parent->GetSyntaxTree();
+			return nullptr; 
 		}
 
-		// Visit all children in the entire tree
-		virtual VisitResult Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) {
-			return Default::Visit(this, visitor, flags);
+		/// @return The root node
+		inline SyntaxTreeNode* GetRootNode() {
+			if (_parent)
+				return _parent->GetRootNode();
+			return this;
 		}
 
-		// Query for nodes in an upwards/revsersed manner, from this node's point of view
-		virtual VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags) {
-			return Default::Query(this, visitor, flags);
-		}
+		/// @return The parent node - if any
+		inline SyntaxTreeNode* GetParent() const { return _parent; }
 
-		// Get the source code which this node is created from
-		virtual const SourceCodeView* GetSourceCode() const = 0;
+		/// @return A list of all children under this node
+		ReadOnlyArray<SyntaxTreeNode*> GetChildren() const;
 
-		// Resolve references
-		virtual void ResolveReferences() {
-			Default::ResolveReferences(this);
-		}
+		/// @return All sibling nodes that's before this node in the parent
+		Vector<SyntaxTreeNode*> GetSiblingsBefore() const;
 
-		// Link the nodes
-		virtual void Compile(Builder::Linker* linker) {
-			Default::Compile(this, linker);
-		}
+		/// @brief Add a new child-node under this node
+		/// @param node The node
+		void AddChild(SyntaxTreeNode* node);
 
-		// Optimize this tree node's children using the supplied optimizer
-		virtual void Optimize(ISyntaxTreeNodeOptimizer* optimizer) {
-			Default::Optimize(this, optimizer);
-		}
+		/// @brief Visit all children in the entire tree. Is useful for searching for nodes
+		/// @param visitor 
+		/// @param flags 
+		/// @return 
+		virtual VisitResult Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags);
 
-	public:
-		// Default implementations
-		struct Default
-		{
-			static Vector<ISyntaxTreeNode*> GetSiblingsBefore(const ISyntaxTreeNode* node);
-			static VisitResult Visit(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, VisitFlags flags);
-			static VisitResult Query(ISyntaxTreeNode* node, ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
-			static void ResolveReferences(ISyntaxTreeNode* node);
-			static void Compile(ISyntaxTreeNode* node, Builder::Linker* linker);
-			static void Optimize(ISyntaxTreeNode* node, ISyntaxTreeNodeOptimizer* optimizer);
-		};
-	};
+		/// @brief Query for nodes in an upwards/revsersed manner, from this node's point of view
+		/// @param visitor 
+		/// @param flags 
+		/// @return 
+		virtual VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
 
-	class ISyntaxTreeNodeImport : public ISyntaxTreeNode
-	{
+#pragma region IStringify
+		void ToString(StringStream& s, int indent) const override;
+#pragma endregion
 
-	};
+#pragma region ICompilable
+		void Compile(Builder::Linker* linker) override;
+#pragma endregion
 
-	class INamedSyntaxTreeNode : public ISyntaxTreeNode
-	{
-	public:
-		// Get the name of the node
-		virtual ReadOnlyString GetName() const = 0;
-	};
+#pragma region IResolvable
+		void Resolve() override;
+#pragma endregion
 
-	// Represents a package
-	class ISyntaxTreeNodePackage : public INamedSyntaxTreeNode
-	{
-	};
+		/// @brief Optimize this node
+		/// @param optimizer
+		virtual void Optimize(ISyntaxTreeNodeOptimizer* optimizer);
 
-	// A specific type
-	class ISyntaxTreeNodeType : public INamedSyntaxTreeNode
-	{
-	public:
-		// Check to see if the supplied type is compatible
-		virtual bool IsCompatibleWith(ISyntaxTreeNodeType* otherType) const { return true; }
-	};
+	protected:
+		/// @brief Validates the parent node to see that it's compatible. This is normally
+		///        used as a way to lessen the chance of bugs being introduced
+		virtual void OnAddedToParent(SyntaxTreeNode* parent) {}
 
-	// Represents a type that contains multiple types. For example:
-	// (int32, bool) is considered a multitype of one int32 and one bool.
-	class ISyntaxTreeNodeMultiType : public ISyntaxTreeNodeType
-	{
-	public:
-		// All types that this node referrs to
-		virtual ReadOnlyArray<ISyntaxTreeNodeType*> GetTypes() const = 0;
-	};
+		/// @brief Validates the child node to see that it's compatible. This is normally
+		///        used as a way to lessen the chance of bugs being introduced
+		virtual void OnChildAdded(SyntaxTreeNode* parent) {}
 
-	// A primitive. These are normally created by the compiler outside the source code
-	// parser and put into the root package
-	class ISyntaxTreeNodePrimitive : public ISyntaxTreeNodeType
-	{
-	public:
-		// The memory size of this primitive
-		virtual I32 GetSize() const = 0;
+		/// @brief Destroy all child-nodes
+		void DestroyChildren();
 
-		// Get the interpreter primitive type
-		virtual PrimitiveType GetPrimitiveType() const = 0;
-	};
+		/// @brief Replace the child node at the supplied index with a new child node
+		/// @param index 
+		/// @param node 
+		void ReplaceChild(I32 index, SyntaxTreeNode* node);
 
-	// A reference to another syntax tree node
-	class ISyntaxTreeNodeRef : public INamedSyntaxTreeNode
-	{
-	public:
-		// Various query types that can be used when searching for specific definitions
-		enum class DefinitionQueryType : I32
-		{
-			Package = 1 << 0,
-			Class = 1 << 1,
-			Func = 1 << 2,
-			Arg = 1 << 3,
-			Local = 1 << 4,
-			Global = 1 << 5,
-			Member = 1 << 6,
-			Primitive = 1 << 7,
-		};
-		typedef int DefinitionQueryTypes;
+		/// @brief Replace all childes node at the supplied index with a new child node
+		/// @param index 
+		/// @param node 
+		I32 ReplaceChildren(I32 index, ReadOnlyArray<SyntaxTreeNode*> nodes);
 
-		// Represents all types
-		static constexpr DefinitionQueryTypes Type = (I32)DefinitionQueryType::Class | 
-			(I32)DefinitionQueryType::Primitive;
+	private:
+		void SetParent(SyntaxTreeNode* node);
 
-		// Represents all nodes
-		static constexpr DefinitionQueryTypes All = INT32_MAX;
-
-		// Get all definitions that this reference referres to. This
-		// is normally resolved during the Resolve phase but can, in specific cases,
-		// be resolved when the tree is being parsed (for example, if it points to a primitive)
-		virtual ReadOnlyArray<ISyntaxTreeNode*> GetDefinitions() const = 0;
-
-		// Get which types this reference is searching for
-		virtual DefinitionQueryTypes GetQueryTypes() const = 0;
-	};
-
-	class ISyntaxTreeNodeFuncDef : public INamedSyntaxTreeNode
-	{
-	public:
-		// Get the package this function is part of
-		virtual ISyntaxTreeNodePackage* GetPackage() = 0;
-
-		// Get all arguments 
-		virtual ReadOnlyArray<ISyntaxTreeNodeFuncArg*> GetArguments() const = 0;
-
-		// Get return type
-		virtual ISyntaxTreeNodeType* GetReturnType() const = 0;
-
-		// Is this function a void function
-		virtual bool IsVoidReturn() const = 0;
-
-		// Get the function body
-		virtual ISyntaxTreeNodeFuncBody* GetBody() const = 0;
-	};
-
-	class ISyntaxTreeNodeFuncArg : public INamedSyntaxTreeNode
-	{
-	public:
-		// Get the type which the argument variable is of
-		virtual ISyntaxTreeNodeTypeRef* GetVariableType() const = 0;
-	};
-
-	// A reference to a type
-	class ISyntaxTreeNodeTypeRef : public ISyntaxTreeNodeType
-	{
-	public:
-		// All types that this reference resolved into. The item at the top of the vector
-		// is the one closest to the reference
-		virtual ReadOnlyArray<ISyntaxTreeNodeType*> GetDefinitions() const = 0;
-	};
-
-	//
-	class ISyntaxTreeNodeFuncLocal : public INamedSyntaxTreeNode
-	{
-	public:
-	};
-
-	// A scope
-	class ISyntaxTreeNodeFuncScope : public INamedSyntaxTreeNode
-	{
-	public:
-		// Get all locals part of this scope
-		virtual ReadOnlyArray<ISyntaxTreeNodeFuncLocal*> GetLocals() const = 0;
-	};
-
-	// Base class for operations that's executed in the function body
-	class ISyntaxTreeNodeOp : public ISyntaxTreeNode
-	{
-	public:
-		// The normal compile functionality is no longer allowed. Implement the other Compile
-		// method instead.
-		void Compile(Builder::Linker* linker) final {}
-
-		// This normal optimize functionality is no longer allowed. 
-		virtual void Optimize(ISyntaxTreeNodeOptimizer* optimizer) final {}
-
-		// Compile this operation
-		virtual void Compile(Builder::Linker* linker, Builder::Instructions& instructions) = 0;
-
-		// Optimize this operator
-		virtual Vector<ISyntaxTreeNodeOp*> OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer) = 0;
-
-		// Get the function this operation is part of (if any)
-		virtual ISyntaxTreeNodeFuncDef* GetFunction() = 0;
-
-		// Get the package this operation is part of
-		virtual ISyntaxTreeNodePackage* GetPackage() = 0;
-
-		// Get the type which this operator results into onto the stack
-		virtual ISyntaxTreeNodeType* GetStackType() = 0;
-	};
-
-	// Type-cast the result of any child operations into a new type
-	class ISyntaxTreeNodeOpTypeCast : public ISyntaxTreeNodeOp
-	{
-	public:
-		// Cast from the supplied type
-		virtual ISyntaxTreeNodeType* FromType() = 0;
-	};
-
-	// A node containing the function body logic
-	class ISyntaxTreeNodeFuncBody : public ISyntaxTreeNode
-	{
-	public:
-		// Get the body content
-		virtual ReadOnlyString GetText() const = 0;
-
-		// Get the definition used when executing this body
-		virtual ISyntaxTreeNodeFuncDef* GetFunction() const = 0;
-	};
-
-	class ISyntaxTreeNodeOpBinop : public ISyntaxTreeNodeOp
-	{
-	public:
-		enum Op {
-			Plus,
-			Minus,
-			Mult,
-			Div,
-			Equals,
-			NotEquals,
-			LessThen,
-			LessThenEquals,
-			GreaterThen,
-			GreaterThenEquals,
-			BitAnd,
-			BitOr,
-			BitXor,
-			Unknown
-		};
-
-		static Op FromTokenType(TokenType type)
-		{
-			switch (type)
-			{
-			case TokenType::OpPlus:
-				return Plus;
-			case TokenType::OpMinus:
-				return Minus;
-			case TokenType::OpMult:
-				return Mult;
-			case TokenType::OpDiv:
-				return Div;
-			case TokenType::TestEquals:
-				return Equals;
-			case TokenType::TestNotEquals:
-				return NotEquals;
-			case TokenType::TestLt:
-				return LessThen;
-			case TokenType::TestLte:
-				return	LessThenEquals;
-			case TokenType::TestGt:
-				return GreaterThen;
-			case TokenType::TestGte:
-				return GreaterThenEquals;
-			case TokenType::BitAnd:
-				return BitAnd;
-			case TokenType::BitOr:
-				return BitOr;
-			case TokenType::BitXor:
-				return BitXor;
-			default:
-				return Unknown;
-			}
-		}
-
-		// Get the node on the left-hand side
-		virtual ISyntaxTreeNodeOp* GetLeft() const = 0;
-
-		// Get the node on the right-hand side
-		virtual ISyntaxTreeNodeOp* GetRight() const = 0;
-
-		// Get the operator
-		virtual Op GetOperator() const = 0;
-	};
-
-	class ISyntaxTreeNodeOpUnaryop : public ISyntaxTreeNodeOp
-	{
-	public:
-		enum Op {
-			Minus,
-			Plus,
-			BitNot,
-			Unknown
-		};
-
-		static Op FromTokenType(TokenType type)
-		{
-			switch (type)
-			{
-			case TokenType::OpPlus:
-				return Plus;
-			case TokenType::OpMinus:
-				return Minus;
-			case TokenType::BitNot:
-				return BitNot;
-			default:
-				return Unknown;
-			}
-		}
-
-		// Get the node on the right-hand side
-		virtual ISyntaxTreeNodeOp* GetRight() const = 0;
-
-		// Get the operator
-		virtual Op GetOperator() const = 0;
-	};
-
-	class ISyntaxTreeNodeScope : public ISyntaxTreeNodeOp
-	{
-	};
-
-	class ISyntaxTreeNodeOpReturn : public ISyntaxTreeNodeOp
-	{
-	};
-
-	class ISyntaxTreeNodeConstant : public ISyntaxTreeNodeOp
-	{
-	public:
-		// Get the constant value
-		virtual const PrimitiveValue& GetValue() const = 0;
-
+	private:
+		/// @brief The id
+		const ID _id;
+		/// @brief The source code this node is created from
+		const SourceCodeView _sourceCode;
+		/// @brief The parent
+		SyntaxTreeNode* _parent;
+		/// @brief The children
+		Vector<SyntaxTreeNode*, 2> _children;
 	};
 }

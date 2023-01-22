@@ -8,75 +8,34 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeOpUnaryop::SyntaxTreeNodeOpUnaryop(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* function, ISyntaxTreeNodeOp* right, Op op)
-	: _parent(nullptr), _children(right), _sourceCode(sourceCode), _op(op), _function(function)
+SyntaxTreeNodeOpUnaryop::SyntaxTreeNodeOpUnaryop(SourceCodeView view, SyntaxTreeNodeFuncBody* body, Op op)
+	: SyntaxTreeNodeOp(view, body), _op(op)
 {
-	right->SetParent(this);
-}
-
-SyntaxTreeNodeOpUnaryop::~SyntaxTreeNodeOpUnaryop()
-{
-	for (auto c : _children)
-		delete c;
 }
 
 void SyntaxTreeNodeOpUnaryop::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
+	s << GetID() << Indent(indent);
 	s << "Unaryop(op=" << ToString(_op) << ")" << std::endl;
-	for (int i = 0; i < _children.Size(); ++i)
-		_children[i]->ToString(s, indent + 1);
+	SyntaxTreeNodeOp::ToString(s, indent);
 }
 
-ISyntaxTree* SyntaxTreeNodeOpUnaryop::GetSyntaxTree() const
+void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instructions& target)
 {
-	return _parent->GetSyntaxTree();
-}
+	GetRight()->Compile(linker, target);
 
-ISyntaxTreeNode* SyntaxTreeNodeOpUnaryop::GetRootNode()
-{
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
-
-void SyntaxTreeNodeOpUnaryop::SetParent(ISyntaxTreeNode* parent)
-{
-	_parent = parent;
-}
-
-void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instructions& instructions)
-{
-	GetRight()->Compile(linker, instructions);
-
-	auto stackType = GetStackType();
-	if (stackType == nullptr)
+	auto stackType = GetType()->GetType();
+	if (stackType == nullptr || dynamic_cast<SyntaxTreeNodePrimitive*>(stackType) == nullptr)
 		throw CompileErrorNotImplemented(this, "Unaryop");
-
-	SyntaxTreeNodePrimitive* primitive = nullptr;
-	if (dynamic_cast<SyntaxTreeNodePrimitive*>(stackType) != nullptr)
-		primitive = static_cast<SyntaxTreeNodePrimitive*>(stackType);
-	if (dynamic_cast<SyntaxTreeNodeTypeRef*>(stackType) != nullptr) {
-		auto definitions = static_cast<SyntaxTreeNodeTypeRef*>(stackType)->GetDefinitions();
-		for (auto d : definitions) {
-			if (dynamic_cast<SyntaxTreeNodePrimitive*>(d)) {
-				primitive = static_cast<SyntaxTreeNodePrimitive*>(d);
-				break;
-			}
-		}
-	}
-
-	// Verify that we've found a primitive type
-	if (primitive == nullptr)
-		throw CompileErrorNotImplemented(this, "Unaryop");
+	auto primitive = static_cast<SyntaxTreeNodePrimitive*>(stackType);
 
 	switch (_op)
 	{
 	case Op::Minus:
-		instructions.Neg(primitive->GetSymbol());
+		target.Neg(primitive->GetSymbol());
 		break;
 	case Op::BitNot:
-		instructions.BitNot(primitive->GetSymbol());
+		target.BitNot(primitive->GetSymbol());
 		break;
 	case Op::Plus:
 		break;
@@ -85,48 +44,33 @@ void SyntaxTreeNodeOpUnaryop::Compile(Builder::Linker* linker, Builder::Instruct
 	}
 }
 
-ISyntaxTreeNodeType* SyntaxTreeNodeOpUnaryop::GetStackType()
+SyntaxTreeNodeTypeDef* SyntaxTreeNodeOpUnaryop::GetType()
 {
-	return _children[0]->GetStackType();
+	return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0])->GetType();
 }
 
-Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpUnaryop::OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer)
-{
-	for (int i = 0; i < _children.Size(); ++i) {
-		auto optimized = _children[i]->OptimizeOp(optimizer);
-		if (!optimized.IsEmpty()) {
-			if (optimized.Size() != 1)
-				throw CompileErrorNotImplemented(this, "Unaryop optimize is not allowed expand");
-			delete _children[i];
-			_children[i] = optimized[0];
-		}
-	}
-	return optimizer->Optimize(this);
-}
-
-Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpUnaryop::Optimize0_Merge::Optimize(ISyntaxTreeNodeOp* node)
+Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpUnaryop::Optimize0_Merge::Optimize(SyntaxTreeNodeOp* node)
 {
 	auto impl = dynamic_cast<SyntaxTreeNodeOpUnaryop*>(node);
 	if (impl == nullptr)
-		return Vector<ISyntaxTreeNodeOp*>();
+		return Vector<SyntaxTreeNodeOp*>();
 
-	auto right = static_cast<ISyntaxTreeNodeOp*>(impl->GetRight());
+	auto right = impl->GetRight();
 	
 	// Compile-time resolve negative values
 	if (dynamic_cast<SyntaxTreeNodeConstant*>(right)) {
 		auto rightConst = static_cast<SyntaxTreeNodeConstant*>(right);
-		auto stackType = static_cast<ISyntaxTreeNodePrimitive*>(rightConst->GetStackType());
+		auto stackType = static_cast<SyntaxTreeNodePrimitive*>(rightConst->GetType());
 
 		PrimitiveValue newValue = rightConst->GetValue();
 		switch (impl->_op)
 		{
 		case Op::Minus:
 			if (PrimitiveValue::Neg(&newValue)) {
-				auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->_function,
-					impl->_sourceCode, newValue,
-					stackType);
+				auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->GetSourceCode(), impl->GetBody(),
+					newValue, stackType);
 				count++;
-				return Vector<ISyntaxTreeNodeOp*>(combined);
+				return Vector<SyntaxTreeNodeOp*>(combined);
 			}
 			break;
 		case Op::Plus:
@@ -135,5 +79,5 @@ Vector<ISyntaxTreeNodeOp*> SyntaxTreeNodeOpUnaryop::Optimize0_Merge::Optimize(IS
 		}
 	}
 
-	return Vector<ISyntaxTreeNodeOp*>();
+	return Vector<SyntaxTreeNodeOp*>();
 }

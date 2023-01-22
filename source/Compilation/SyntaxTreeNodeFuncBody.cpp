@@ -4,9 +4,10 @@
 #include "SyntaxTreeNodeOpUnaryop.h"
 #include "SyntaxTreeNodeFuncDef.h"
 #include "SyntaxTreeNodeConstant.h"
-#include "SyntaxTreeNodeScope.h"
+#include "SyntaxTreeNodeOpScope.h"
 #include "SyntaxTreeNodeOpTypeCast.h"
 #include "SyntaxTreeNodeTypeRef.h"
+#include "SyntaxTreeNodeMultiType.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -24,74 +25,49 @@ static const Vector<TokenType> PARSE_TERM_TOKENS(
 	TokenType::OpMult, TokenType::OpDiv
 );
 
-SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView sourceCode, ISyntaxTreeNodeFuncDef* func)
-	: _function(func), _parent(nullptr), _sourceCode(sourceCode)
+SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView view, SyntaxTreeNodeFuncDef* func)
+	: SyntaxTreeNode(view), _function(func)
 {
-}
-
-SyntaxTreeNodeFuncBody::~SyntaxTreeNodeFuncBody()
-{
-	for (auto c : _children)
-		delete c;
 }
 
 void SyntaxTreeNodeFuncBody::ToString(StringStream& s, int indent) const
 {
-	s << _id << Indent(indent);
+	s << GetID() << Indent(indent);
 	s << "FuncBody(definition=" << _function->GetID() << ")" << std::endl;
-	for (auto c : _children)
-		c->ToString(s, indent + 1);
+	SyntaxTreeNode::ToString(s, indent);
 }
 
-ISyntaxTree* SyntaxTreeNodeFuncBody::GetSyntaxTree() const
+void SyntaxTreeNodeFuncBody::OnChildAdded(SyntaxTreeNode* child)
 {
-	return _parent->GetSyntaxTree();
-}
-
-ISyntaxTreeNode* SyntaxTreeNodeFuncBody::GetRootNode()
-{
-	if (_parent)
-		return _parent->GetRootNode();
-	return this;
-}
-
-void SyntaxTreeNodeFuncBody::SetParent(ISyntaxTreeNode* parent)
-{
-	_parent = parent;
+	assert(dynamic_cast<SyntaxTreeNodeOp*>(child) != nullptr &&
+		"children of SyntaxTreeNodeFuncBody must be an operation node");
 }
 
 void SyntaxTreeNodeFuncBody::Compile(Builder::Linker* linker)
 {
-	auto funcSymbol = static_cast<SyntaxTreeNodeFuncDef*>(_function)->GetSymbol();
-	Builder::Instructions& instructions = funcSymbol->Begin();
-	for (auto child : _children)
-		child->Compile(linker, instructions);
-	instructions.End();
+	auto funcSymbol = _function->GetSymbol();
+	Builder::Instructions& target = funcSymbol->Begin();
+	for (auto child : GetChildren())
+		static_cast<SyntaxTreeNodeOp*>(child)->Compile(linker, target);
+	target.End();
 }
 
 void SyntaxTreeNodeFuncBody::Optimize(ISyntaxTreeNodeOptimizer* optimizer)
 {
-	for (int i = 0; i < _children.Size(); ++i) {
-		auto optimized = _children[i]->OptimizeOp(optimizer);
-		if (!optimized.IsEmpty()) {
-			if (optimized.Size() == 1) {
-				delete _children[i];
-				_children[i] = static_cast<ISyntaxTreeNodeOp*>(optimized[0]);
-			}
-			else {
-				i += _children.InsertAt(optimized, i);
-				delete _children.RemoveAt(i);
-				i -= 1;
-			}
-			
+	auto children = GetChildren();
+	for (auto i = 0; i < children.Size(); ++i) {
+		auto optimized = static_cast<SyntaxTreeNodeOp*>(children[i])->OptimizeOp(optimizer);
+		if (optimized.IsEmpty())
+			continue;
+		if (optimized.Size() == 1)
+			ReplaceChild(i, optimized[0]);
+		else {
+			i = ReplaceChildren(i, optimized);
+			i--; // Because of the ++i in the for loop
+			// Fetch the children again because the underlying memory might've changed
+			children = GetChildren();
 		}
 	}
-}
-
-void SyntaxTreeNodeFuncBody::AddOp(ISyntaxTreeNodeOp* node)
-{
-	_children.Add(node);
-	node->SetParent(this);
 }
 
 SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
@@ -108,20 +84,20 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 
 	auto body = ARLANG_NEW SyntaxTreeNodeFuncBody(SourceCodeView(state->sourceCode, t), state->function);
 	auto mem = MemoryGuard(body);
-	auto scope = ARLANG_NEW SyntaxTreeNodeScope(SourceCodeView(state->sourceCode, t), state->function);
-	body->AddOp(scope);
+	auto scope = ARLANG_NEW SyntaxTreeNodeOpScope(SourceCodeView(state->sourceCode, t), state->functionBody);
+	body->AddChild(scope);
 
 	// Parse each body statement
 	while (t->Next() != TokenType::BracketRight) {
 		auto node = ParseBody(state);
-		scope->AddOp(node);
+		scope->AddChild(node);
 	}
 
 	body->_text = ReadOnlyString(first.data(), t->GetString().data());
 	return mem.Done();
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBody(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBody(ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->IsKeyword())
@@ -138,29 +114,29 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBody(ParserState* state)
 	return ParseCompare(state);
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 {
 	Token* const t = state->token;
 	t->Next();
 
-	auto op = ARLANG_NEW SyntaxTreeNodeOpReturn(SourceCodeView(state->sourceCode, t), state->function);
+	auto op = ARLANG_NEW SyntaxTreeNodeOpReturn(SourceCodeView(state->sourceCode, t), state->functionBody);
 	auto mem = MemoryGuard(op);
 
 	const SyntaxTreeNodeFuncDef* const function = state->function;
 	const auto& returns = function->GetReturnType();
 	
-	if (dynamic_cast<ISyntaxTreeNodeMultiType*>(returns))
+	if (dynamic_cast<SyntaxTreeNodeMultiType*>(returns))
 	{
-		auto multiType = static_cast<ISyntaxTreeNodeMultiType*>(returns);
+		auto multiType = static_cast<SyntaxTreeNodeMultiType*>(returns);
 		auto subtypes = multiType->GetTypes();
 
 		for (int i = 0; i < subtypes.Size(); ++i) {
-			ISyntaxTreeNodeOp* const node = ParseCompare(state);
-			auto nodeType = node->GetStackType();
+			SyntaxTreeNodeOp* const node = ParseCompare(state);
+			auto nodeType = node->GetType();
 			if (!nodeType->IsCompatibleWith(subtypes[i])) {
 				throw ParseErrorIncompatibleTypes(state, nodeType, subtypes[i]);
 			}
-			op->AddOp(node);
+			op->AddChild(node);
 
 			if (i < subtypes.Size() - 1) {
 				if (t->GetType() != TokenType::Comma)
@@ -171,17 +147,17 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	}
 	else
 	{
-		ISyntaxTreeNodeOp* const node = ParseCompare(state);
-		auto nodeType = node->GetStackType();
+		SyntaxTreeNodeOp* const node = ParseCompare(state);
+		auto nodeType = node->GetType();
 		if (!nodeType->IsCompatibleWith(returns)) {
 			throw ParseErrorIncompatibleTypes(state, nodeType, returns);
 		}
-		op->AddOp(node);
+		op->AddChild(node);
 	}
 	return mem.Done();
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->GetType() == TokenType::Not) {
@@ -192,17 +168,17 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
 	}
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseExpr(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseExpr(ParserState* state)
 {
 	return ParseBinop(state, PARSE_EXPR_TOKENS, ParseTerm, ParseTerm);
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseTerm(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseTerm(ParserState* state)
 {
 	return ParseBinop(state, PARSE_TERM_TOKENS, ParseFactor, ParseFactor);
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
 {
 	Token* const t = state->token;
 	switch (t->GetType())
@@ -216,7 +192,7 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
 	}
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 {
 	Token* const t = state->token;
 	switch (t->GetType())
@@ -241,13 +217,14 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 			Token peek(t);
 			if (peek.Next() == TokenType::ParantRight) {
 				auto newType = SyntaxTreeNodeTypeRef::Parse(state);
+				auto guard = MemoryGuard(newType);
 				t->Next();
-				auto cast = ARLANG_NEW SyntaxTreeNodeOpTypeCast(SourceCodeView(state->sourceCode, t),
-					state->function);
-				cast->SetNewType(newType);
-				auto guard = MemoryGuard(cast);
-				cast->SetOp(ParseCompare(state));
-				return guard.Done();
+				
+				auto view = SourceCodeView(state->sourceCode, t);
+				auto op = ParseCompare(state);
+				auto guard2 = MemoryGuard(op);
+				
+				return SyntaxTreeNodeOpTypeCast::Cast(view, state->functionBody, guard.Done(), guard2.Done());
 			}
 		}
 		else {
@@ -264,7 +241,7 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 	throw ParseErrorSyntaxError(state, "Unknown op");
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, TokenType tokenType,
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, TokenType tokenType,
 	ParseFn rightFunc)
 {
 	Token* const t = state->token;
@@ -274,13 +251,13 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, Toke
 	auto guard = MemoryGuard(right);
 
 	auto unaryop = ARLANG_NEW SyntaxTreeNodeOpUnaryop(SourceCodeView(state->sourceCode, t),
-		state->function, guard.Done(), SyntaxTreeNodeOpUnaryop::FromTokenType(tokenType));
+		state->functionBody, SyntaxTreeNodeOpUnaryop::FromTokenType(tokenType));
+	unaryop->AddChild(guard.Done());
 	guard = MemoryGuard(unaryop);
-
 	return guard.Done();
 }
 
-ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Vector<TokenType>& types,
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Vector<TokenType>& types,
 	ParseFn leftFunc, ParseFn rightFunc)
 {
 	Token* const t = state->token;
@@ -298,8 +275,11 @@ ISyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const 
 		t->Next();
 
 		auto right = rightFunc(state);
-		left = ARLANG_NEW SyntaxTreeNodeOpBinop(SourceCodeView(state->sourceCode, t), state->function,
-			guard.Done(), right, SyntaxTreeNodeOpBinop::FromTokenType(tokenType));
+		left = ARLANG_NEW SyntaxTreeNodeOpBinop(SourceCodeView(state->sourceCode, t), 
+			state->functionBody,
+			SyntaxTreeNodeOpBinop::FromTokenType(tokenType));
+		left->AddChild(guard.Done());
+		left->AddChild(right);
 		guard = MemoryGuard(left);
 		
 		// Retry parsing. -1 will become 0 after "++i" is done in the for loop

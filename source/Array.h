@@ -8,8 +8,12 @@ namespace WestCoastCode
 	template<typename T>
 	class ReadOnlyArray;
 
-	// Class which holds an unknown number of items in an array-like structure.
-	// This type is compatible with the ReadOnlyArray interface
+	/// @brief Class which holds an unknown number of items in an array-like structure. It essentially
+	/// solves the same problem as the standard std::vector, but it has a ReadOnly view that understands
+	/// inheritence.
+	/// 
+	/// @tparam T The type contained by this vector
+	/// @tparam Resize How much should the array be resized when capacity is reached
 	template<typename T, int Resize = 4>
 	class Vector
 	{
@@ -46,13 +50,14 @@ namespace WestCoastCode
 			}
 		}
 
-		// Get the size of the array
+		/// @return The number of items in this array
 		I32 Size() const { return _size; }
 
-		// Is this container empty
+		/// @return true if this vector is empty
 		bool IsEmpty() const { return _size == 0; }
 
-		// Add a new item to the array
+		/// @brief Add a new item to this vector
+		/// @param value The item we want to add
 		void Add(T value)
 		{
 			// Resize if neccessary
@@ -61,14 +66,18 @@ namespace WestCoastCode
 			_memory[_size++] = value;
 		}
 
-		// Put the supplied pointer at the index
+		/// @brief Put an item at a specific location in the array. The operator[] overload can be used for this as well
+		/// @param value The item we want to add
+		/// @param idx The location in which the item should be added to
 		void PutAt(T value, I32 idx)
 		{
 			assert(_capacity < idx);
 			_memory[idx] = value;
 		}
 
-		// Remove the item at the supplied index
+		/// @brief Remove the item at the specific index. This will squash the array
+		/// @param idx The location we want to remove
+		/// @return The value we just removed
 		T RemoveAt(I32 idx)
 		{
 			assert(_capacity > idx);
@@ -83,20 +92,23 @@ namespace WestCoastCode
 			return removed;
 		}
 
-		// Remove the supplied item
-		void Remove(T value)
+		/// @brief Search for the index that holds the supplied value
+		/// @param value The value we are searching for
+		/// @return An index. Returns -1 if no item was found
+		I32 FindIndex(T value)
 		{
 			for (I32 i = 0; i < _size; ++i)
-			{
-				if (_memory[i] == value) {
-					RemoveAt(i);
-					return;
-				}
-			}
+				if (value == _memory[i])
+					return i;
+			return -1;
 		}
 
-		// Insert the supplied array at the supplied index. All items after the supplied index
-		// are automatically moved forward. Returns the number of new items added to the list
+		/// @brief Insert the supplied array at the supplied index. All items after the supplied index
+		/// are automatically moved forward. Returns the number of new items added to the list
+		/// 
+		/// @param arr The array with items we want to add
+		/// @param index The index location where we start putting the first item in the supplied array
+		/// @return The number of items added to this vector
 		I32 InsertAt(ReadOnlyArray<T> arr, I32 index) {
 			assert(index >= 0);
 			if (arr.IsEmpty()) return 0;
@@ -123,17 +135,19 @@ namespace WestCoastCode
 			return arr.Size();
 		}
 
-
-
-		// All all items in the supplied array
+		/// @brief Add all items in the supplied array
+		/// @param arr The array of items we want to add
 		void Add(ReadOnlyArray<T> arr) {
 			for (auto a : arr)
 				Add(a);
 		}
 
-		// Reset the size of this vector
-		void Clear()
+		/// @brief Clear this array.
+		/// @param resize Set to true if you also want to resize the memory array
+		void Clear(bool resize = false)
 		{
+			assert(resize == false &&
+				"resize feature is not implemented yet");
 			_size = 0;
 		}
 
@@ -144,8 +158,16 @@ namespace WestCoastCode
 		T& operator[](I32 idx) { return _memory[idx]; }
 		const T& operator[](I32 idx) const { return _memory[idx]; }
 
-		// Copy operator
+		/// @brief Copy operator
+		/// @param rhs 
+		/// @return A reference to this vector
 		Vector<T, Resize>& operator=(const Vector<T, Resize>& rhs) {
+			if (_memory == rhs._memory)
+				return *this;
+			if (_memory) {
+				ARLANG_FREE(_memory);
+				_memory = nullptr;
+			}
 			_size = rhs._size;
 			_capacity = _size;
 			_memory = (T*)ARLANG_MALLOC(sizeof(T) * _capacity);
@@ -154,7 +176,9 @@ namespace WestCoastCode
 			return *this;
 		}
 
-		// Copy operator from an array or a read-only array
+		/// @brief Copy operator, but from a read-only array
+		/// @param rhs 
+		/// @return 
 		Vector<T, Resize>& operator=(const ReadOnlyArray<T>& rhs);
 
 	public:
@@ -199,7 +223,9 @@ namespace WestCoastCode
 		int _size;
 	};
 
-	// Class which holds an array of a known size. Is compatible with the ReadOnlyArray interface
+	/// @brief Class which holds an array of a fixed size. Is compatible with the ReadOnlyArray interface
+	/// @tparam T The type contained by this array
+	/// @tparam Count The number of elements
 	template<typename T, int Count>
 	class Array
 	{
@@ -257,14 +283,14 @@ namespace WestCoastCode
 	{
 	private:
 		T* _memory;
-		const I32 _size;
+		I32 _size;
 
 	public:
 		ReadOnlyArray()
 			: _memory(nullptr), _size(0) {}
 
-		template<class Class>
-		ReadOnlyArray(const Vector<Class>& v)
+		template<class Class, int Resize>
+		ReadOnlyArray(const Vector<Class, Resize>& v)
 			: _memory(GetMemory(v)), _size(GetSize(v))
 		{
 		}
@@ -275,7 +301,8 @@ namespace WestCoastCode
 		{
 		}
 
-		ReadOnlyArray(const Vector<T>& rhs)
+		template<int Resize>
+		ReadOnlyArray(const Vector<T, Resize>& rhs)
 			: _memory(GetMemory(rhs)), _size(GetSize(rhs)) {}
 
 		// Get the size of the vector
@@ -291,8 +318,8 @@ namespace WestCoastCode
 		const T* Ptr() const { return _memory; }
 
 	private:
-		template<class Class>
-		static I32 GetSize(const Vector<Class>& v)
+		template<class Class, int Resize>
+		static I32 GetSize(const Vector<Class, Resize>& v)
 		{
 			using namespace std;
 			if constexpr (is_pointer<Class>()) {
@@ -305,18 +332,18 @@ namespace WestCoastCode
 			}
 		}
 
-		template<class Class>
-		static T* GetMemory(const Vector<Class>& v)
+		template<class Class, int Resize>
+		static T* GetMemory(const Vector<Class, Resize>& v)
 		{
 			using namespace std;
 			if constexpr (is_pointer<Class>()) {
 				if constexpr (is_base_of<remove_pointer<T>::type, remove_pointer<Class>::type>()) {
-					Class* memory = const_cast<Vector<Class>&>(v).Ptr();
+					Class* memory = const_cast<Vector<Class, Resize>&>(v).Ptr();
 					return reinterpret_cast<T*>(memory);
 				}
 			}
 			else {
-				return const_cast<Vector<Class>&>(v).Ptr();
+				return const_cast<Vector<Class, Resize>&>(v).Ptr();
 			}
 		}
 
@@ -352,6 +379,14 @@ namespace WestCoastCode
 		T operator[](I32 idx) { return _memory[idx]; }
 		const T operator[](I32 idx) const { return _memory[idx]; }
 
+		/// @brief Assignment operator
+		/// @param rhs 
+		/// @return
+		ReadOnlyArray<T>& operator=(const ReadOnlyArray<T>& rhs) {
+			_memory = rhs._memory;
+			_size = rhs._size;
+			return *this;
+		}
 	public:
 		typedef T* iterator;
 		typedef const T* const_iterator;
@@ -364,6 +399,12 @@ namespace WestCoastCode
 	template<typename T, int Resize>
 	Vector<T, Resize>& Vector<T, Resize>::operator=(const ReadOnlyArray<T>& rhs)
 	{
+		if (_memory == rhs.Ptr())
+			return *this;
+		if (_memory) {
+			ARLANG_FREE(_memory);
+			_memory = nullptr;
+		}
 		_size = rhs.Size();
 		_capacity = _size;
 		_memory = (T*)ARLANG_MALLOC(sizeof(T) * _capacity);
