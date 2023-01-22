@@ -13,32 +13,6 @@
 
 namespace WestCoastCode::Compilation
 {
-	// Tree structure for where the source code is built into
-	class SyntaxTree : public ISyntaxTree
-	{
-	public:
-		SyntaxTree();
-
-		~SyntaxTree() final;
-
-		// Inherited via ISyntaxTree
-		void ToString(StringStream& s) const final;
-		void Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) final;
-		SyntaxTreeNodeRoot* GetRootNode() final;
-
-		// Resolve references
-		void ResolveReferences();
-
-		// Compile the syntaxtree and link it together into bytecode
-		void Compile(Builder::Linker* linker);
-		
-		// Optimize the syntax tree. Level 0 is only basic constant merge, while Level 3 is the highest optimization
-		void Optimize(ISyntaxTreeNodeOptimizer* optimizer);
-
-	private:
-		SyntaxTreeNodeRoot* const _root;
-	};
-
 	// The compiler used
 	class Compiler
 	{
@@ -52,7 +26,7 @@ namespace WestCoastCode::Compilation
 		SyntaxTree* AddSourceCode(SourceCode* sourceCode);
 
 		// Get the syntax tree
-		SyntaxTree* GetSyntaxTree() const { return _syntaxTree; }
+		const SyntaxTree* GetSyntaxTree() const { return &_syntaxTree; }
 
 		// Compile the added source codes and return the byte code that the interpreter
 		// can use. Please note that this moves the ownership of the bytecode the the one calling
@@ -74,6 +48,6 @@ namespace WestCoastCode::Compilation
 
 	private:
 		Vector<SourceCode*> _sourceCodes;
-		SyntaxTree* _syntaxTree;
+		SyntaxTree _syntaxTree;
 	};
 }

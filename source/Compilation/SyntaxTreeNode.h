@@ -12,7 +12,7 @@
 
 namespace WestCoastCode::Compilation
 {
-	class ISyntaxTree;
+	class SyntaxTree;
 
 	// Flags used to help configure the search algorithm when using the Query functionality
 	enum class QuerySearchFlag : int
@@ -154,7 +154,7 @@ namespace WestCoastCode::Compilation
 		inline const SourceCodeView& GetSourceCode() const { return _sourceCode; }
 
 		/// @return The tree that this node is part of - if any. Returns nullptr if this node isn't part of any tree
-		virtual ISyntaxTree* GetSyntaxTree() const { 
+		virtual SyntaxTree* GetSyntaxTree() const { 
 			if (_parent)
 				return _parent->GetSyntaxTree();
 			return nullptr; 

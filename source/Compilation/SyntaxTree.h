@@ -5,22 +5,39 @@
 
 namespace WestCoastCode::Compilation
 {
-	class ISyntaxTree;
-	class ISyntaxTreeNode;
-
-	// Interface for the syntax tree
-	class ISyntaxTree
+	/// @brief Tree structure for where the source code is converted and placed into
+	class SyntaxTree
 	{
 	public:
-		virtual ~ISyntaxTree() {}
+		SyntaxTree();
 
-		// Stringify this syntax tree node
-		virtual void ToString(StringStream& s) const = 0;
+		~SyntaxTree();
 
-		// Visit all children in the entire tree
-		virtual void Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags) = 0;
+		/// @brief Convert the syntax tree into a readable string
+		/// @param s 
+		void ToString(StringStream& s) const;
 
-		// Get the root package where primitives and built-in functions are located
-		virtual SyntaxTreeNodeRoot* GetRootNode() = 0;
+		/// @brief Visit all nodes in the syntax tree
+		/// @param visitor 
+		/// @param flags 
+		void Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags);
+
+		/// @brief Get the root node for the syntax tree
+		/// @return The root node
+		inline SyntaxTreeNodeRoot* GetRootNode() { return _root; }
+
+		/// @brief Resolve all unresolved references
+		void Resolve();
+
+		/// @brief Compile the syntaxtree and link it together into bytecode
+		/// @param linker 
+		void Compile(Builder::Linker* linker);
+
+		/// @brief Optimize the syntax tree using the supplied optimizer
+		/// @param optimizer 
+		void Optimize(ISyntaxTreeNodeOptimizer* optimizer);
+
+	private:
+		SyntaxTreeNodeRoot* const _root;
 	};
 }

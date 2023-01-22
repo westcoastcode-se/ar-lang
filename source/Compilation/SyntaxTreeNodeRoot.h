@@ -19,7 +19,7 @@ namespace WestCoastCode::Compilation
 		SyntaxTreeNodePrimitive* FindPrimitive(ReadOnlyString name);
 
 #pragma region SyntaxTreeNodePackage
-		ISyntaxTree* GetSyntaxTree() const final { return _syntaxTree; }
+		SyntaxTree* GetSyntaxTree() const final { return _syntaxTree; }
 		void Compile(Builder::Linker* linker) final;
 #pragma endregion
 
@@ -34,11 +34,12 @@ namespace WestCoastCode::Compilation
 		void AddPrimitive(SyntaxTreeNodePrimitive* primitive);
 
 		/// @param syntaxTree 
-		void SetSyntaxTree(ISyntaxTree* syntaxTree) { _syntaxTree = syntaxTree; }
+		void SetSyntaxTree(SyntaxTree* syntaxTree) { _syntaxTree = syntaxTree; }
 
 	private:
 		/// @brief All primitives part of the root node
 		Map<ReadOnlyString, SyntaxTreeNodePrimitive*> _primitives;
-		ISyntaxTree* _syntaxTree;
+		/// @brief The syntax tree
+		SyntaxTree* _syntaxTree;
 	};
 }

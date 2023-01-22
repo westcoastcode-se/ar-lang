@@ -8,56 +8,12 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTree::SyntaxTree()
-	: _root(SyntaxTreeNodeRoot::Create())
-{
-	_root->SetSyntaxTree(this);
-}
-
-SyntaxTree::~SyntaxTree()
-{
-	delete _root;
-}
-
-void SyntaxTree::ToString(StringStream& s) const
-{
-	if (_root)
-		_root->ToString(s, 1);
-}
-
-void SyntaxTree::Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags)
-{
-	_root->Visit(visitor, flags);
-}
-
-SyntaxTreeNodeRoot* SyntaxTree::GetRootNode()
-{
-	return _root;
-}
-
-void SyntaxTree::ResolveReferences()
-{
-	_root->Resolve();
-}
-
-void SyntaxTree::Compile(Builder::Linker* linker)
-{
-	_root->Compile(linker);
-}
-
-void SyntaxTree::Optimize(ISyntaxTreeNodeOptimizer* optimizer)
-{
-	_root->Optimize(optimizer);
-}
-
 Compiler::Compiler()
-	: _syntaxTree(new SyntaxTree())
 {
 }
 
 Compiler::~Compiler()
 {
-	delete _syntaxTree;
 	for (auto& s : _sourceCodes)
 		delete s;
 }
@@ -69,19 +25,19 @@ SyntaxTree* Compiler::AddSourceCode(SourceCode* sourceCode)
 	const Lexer lexer(sourceCode->GetText());
 	Token token(&lexer);
 	ParseTokens(sourceCode, &token);
-	return _syntaxTree;
+	return &_syntaxTree;
 }
 
 Byte* Compiler::Compile(int optimizationLevel)
 {
 	// Start by resolving all references
-	_syntaxTree->ResolveReferences();
+	_syntaxTree.Resolve();
 	Optimize(optimizationLevel);
 
 	// Link the bytecode together and return the bytecode
 	auto linker = new Builder::Linker();
 	try {
-		_syntaxTree->Compile(linker);
+		_syntaxTree.Compile(linker);
 		auto bytecode = linker->Link();
 		delete linker;
 		return bytecode;
@@ -104,9 +60,9 @@ void Compiler::Optimize(int level)
 			SyntaxTreeNodeOpBinop::Optimize0_Merge optimizer0_0;
 			SyntaxTreeNodeOpUnaryop::Optimize0_Merge optimizer0_1;
 			SyntaxTreeNodeOpTypeCast::Optimize0_Merge optimizer0_2;
-			_syntaxTree->Optimize(&optimizer0_0);
-			_syntaxTree->Optimize(&optimizer0_1);
-			_syntaxTree->Optimize(&optimizer0_2);
+			_syntaxTree.Optimize(&optimizer0_0);
+			_syntaxTree.Optimize(&optimizer0_1);
+			_syntaxTree.Optimize(&optimizer0_2);
 
 			// We can't optimize the tree any more
 			if (optimizer0_0.count == 0 && optimizer0_1.count == 0 && optimizer0_2.count == 0)
@@ -131,12 +87,12 @@ void Compiler::Optimize(int level)
 
 SyntaxTreeNodePrimitive* Compiler::FindPrimitive(ReadOnlyString name)
 {
-	return _syntaxTree->GetRootNode()->FindPrimitive(name);
+	return _syntaxTree.GetRootNode()->FindPrimitive(name);
 }
 
 void Compiler::ParseTokens(SourceCode* sourceCode, Token* t)
 {
-	const ParserState state(this, t, sourceCode, (SyntaxTreeNodePackage*)_syntaxTree->GetRootNode());
+	const ParserState state(this, t, sourceCode, (SyntaxTreeNodePackage*)_syntaxTree.GetRootNode());
 
 	while (true)
 	{
