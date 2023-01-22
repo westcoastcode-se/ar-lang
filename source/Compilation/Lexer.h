@@ -200,6 +200,10 @@ namespace WestCoastCode::Compilation
 		// Convert into 64-bit real value
 		F64 ToF64() const;
 
+		/// @brief Move this token to the location of the supplied other token
+		/// @param rhs 
+		void MoveTo(Token* rhs);
+
 	private:
 		// Get the next token
 		void Next0();

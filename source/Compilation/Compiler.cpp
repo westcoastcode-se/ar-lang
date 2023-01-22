@@ -93,6 +93,7 @@ SyntaxTreeNodePrimitive* Compiler::FindPrimitive(ReadOnlyString name)
 void Compiler::ParseTokens(SourceCode* sourceCode, Token* t)
 {
 	const ParserState state(this, t, sourceCode, (SyntaxTreeNodePackage*)_syntaxTree.GetRootNode());
+	t->Next();
 
 	while (true)
 	{
@@ -100,12 +101,15 @@ void Compiler::ParseTokens(SourceCode* sourceCode, Token* t)
 		{
 		case TokenType::Package: {
 			SyntaxTreeNodePackage::Parse(&state);
-			break;
+			continue;
 		}
+		case TokenType::Newline:
+			break;
 		case TokenType::Eof:
 			return;
 		default:
-			t->Next();
+			throw ParseErrorExpectedPackage(&state);
 		}
+		t->Next();
 	}
 }

@@ -224,6 +224,17 @@ F64 Token::ToF64() const
 		return 0.0;
 }
 
+void Token::MoveTo(Token* rhs)
+{
+	_pos = rhs->_pos;
+	_type = rhs->_type;
+	_modifier = rhs->_modifier;
+	_stringStart = rhs->_stringStart;
+	_stringEnd = rhs->_stringEnd;
+	_line = rhs->_line;
+	_lineOffset = rhs->_lineOffset;
+}
+
 void Token::Next0()
 {
 	Char c = *_pos;

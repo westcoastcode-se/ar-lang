@@ -37,6 +37,8 @@ namespace WestCoastCode::Compilation
 
 		ParserState(Compiler* c, Token* t, SourceCode* sc, SyntaxTreeNodePackage* root);
 
+		ParserState(const ParserState* state, Token *t);
+
 		ParserState(const ParserState* state, SyntaxTreeNodePackage* package);
 
 		ParserState(const ParserState* state, SyntaxTreeNodeFuncDef* function);

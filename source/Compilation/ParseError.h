@@ -7,6 +7,7 @@ namespace WestCoastCode::Compilation
 {
 	enum class ParseErrorType : int
 	{
+		ExpectedPackage,
 		ExpectedIdentity,
 		ExpectedConstant,
 		NotImplemented,
@@ -53,28 +54,35 @@ namespace WestCoastCode::Compilation
 		const int _offset;
 	};
 
-	// Error raised if we expected an identity
+	/// @brief Error raised if we expected a package
+	class ParseErrorExpectedPackage : public ParseError
+	{
+	public:
+		ParseErrorExpectedPackage(const ParserState* state);
+	};
+
+	/// @brief Error raised if we expected an identity
 	class ParseErrorExpectedIdentity : public ParseError
 	{
 	public:
 		ParseErrorExpectedIdentity(const ParserState* state);
 	};
 
-	// Error raised if we expected constant
+	/// @brief Error raised if we expected constant
 	class ParseErrorExpectedConstant : public ParseError
 	{
 	public:
 		ParseErrorExpectedConstant(const ParserState* state);
 	};
 
-	// Error raised if we've reached functionality that's not implemented yet
+	/// @brief Error raised if we've reached functionality that's not implemented yet
 	class ParseErrorNotImplemented : public ParseError
 	{
 	public:
 		ParseErrorNotImplemented(const ParserState* state);
 	};
 
-	// Error raised if we've reached functionality that's not implemented yet
+	/// @brief Error raised if the source contains basic syntax errors
 	class ParseErrorSyntaxError : public ParseError
 	{
 	public:
@@ -83,7 +91,7 @@ namespace WestCoastCode::Compilation
 
 	class SyntaxTreeNodeTypeDef;
 
-	// Error raised if two types are incompatible with each other
+	/// @brief Error raised if two types are incompatible with each other
 	class ParseErrorIncompatibleTypes : public ParseError
 	{
 	public:

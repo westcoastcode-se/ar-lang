@@ -43,6 +43,14 @@ void ParseError::PrintToStderr() const
 	}
 }
 
+ParseErrorExpectedPackage::ParseErrorExpectedPackage(const ParserState* state)
+	: ParseError(state->sourceCode, state->token, ParseErrorType::ExpectedPackage)
+{
+	StringStream s;
+	s << "expected package but was '" << state->token->GetString() << "'";
+	SetError(s.str());
+}
+
 ParseErrorExpectedIdentity::ParseErrorExpectedIdentity(const ParserState* state)
 	: ParseError(state->sourceCode, state->token, ParseErrorType::ExpectedIdentity)
 {

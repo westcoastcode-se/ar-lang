@@ -211,6 +211,27 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 	case TokenType::ParantLeft: {
 		t->Next();
 
+		// Is the inner content not an identity, then handle it
+		// as a normal ordering operator
+		if (t->GetType() != TokenType::Identity) {
+			auto node = ParseCompare(state);
+			auto guard = MemoryGuard(node);
+			if (t->GetType() != TokenType::ParantRight)
+				throw ParseErrorSyntaxError(state, "expected ')'");
+			t->Next();
+			return guard.Done();
+		}
+
+		// Handle special case for if the first content of the parantheses is an identity.
+		// For example:
+		// 1. (Type) = casting
+		// 2. (Variable) = variable
+		// 3. (Variable + 10) = variable + 10
+		// 4. (Type)-10 = casting -10
+		// 5. (Variable)-10 = Variable - 10
+
+
+
 		// It might be a type-cast
 		// It might also be a (local1 + 10), so the
 		if (t->GetType() == TokenType::Identity) {
@@ -226,14 +247,6 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 				
 				return SyntaxTreeNodeOpTypeCast::Cast(view, state->functionBody, guard.Done(), guard2.Done());
 			}
-		}
-		else {
-			auto node = ParseCompare(state);
-			auto guard = MemoryGuard(node);
-			if (t->GetType() != TokenType::ParantRight)
-				throw ParseErrorSyntaxError(state, "expected ')'");
-			t->Next();
-			return guard.Done();
 		}
 	}
 	}

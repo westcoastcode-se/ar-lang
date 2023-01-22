@@ -26,7 +26,8 @@ namespace WestCoastCode
 	template<typename Key, typename Val>
 	using Map = std::unordered_map<Key, Val>;
 
-	// A memory guard that will ensure that memory is cleared if exceptions are thrown
+	/// @brief A memory guard that will ensure that memory is cleared if exceptions are thrown
+	/// @tparam T The type we are guarding
 	template<class T>
 	struct MemoryGuard
 	{
@@ -42,10 +43,12 @@ namespace WestCoastCode
 				delete ptr;
 		}
 
-		// Guard is now considered done and should not delete any memory
+		/// @brief Guard is now considered done and should not delete any memory
+		/// @return The memory we are guarding
 		T* Done() { T* tmp = ptr; ptr = nullptr; return tmp; }
 
-		// Switch the guarded value with a new one
+		/// @brief Switch the guarded value with a new one
+		/// @param newValue The new value
 		void SwitchWith(T* newValue) { ptr = newValue; }
 		
 		MemoryGuard<T>& operator=(MemoryGuard<T>& rhs) { ptr = rhs.Done(); }
