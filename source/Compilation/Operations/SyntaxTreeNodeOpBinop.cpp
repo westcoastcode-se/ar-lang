@@ -52,14 +52,10 @@ void SyntaxTreeNodeOpBinop::Compile(Builder::Linker* linker, Builder::Instructio
 	}
 }
 
-Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(SyntaxTreeNodeOp* node)
+Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(SyntaxTreeNodeOpBinop* node)
 {
-	auto impl = dynamic_cast<SyntaxTreeNodeOpBinop*>(node);
-	if (impl == nullptr)
-		return Vector<SyntaxTreeNodeOp*>();
-
-	auto left = impl->GetLeft();
-	auto right = impl->GetRight();
+	auto left = node->GetLeft();
+	auto right = node->GetRight();
 
 	// Compile-time combin ethe two constants using this operator
 	if (dynamic_cast<SyntaxTreeNodeConstant*>(left) && dynamic_cast<SyntaxTreeNodeConstant*>(right)) {
@@ -68,7 +64,7 @@ Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(Synta
 
 		PrimitiveValue newValue = leftConst->GetValue();
 		PrimitiveValue::OpFn fn;
-		switch (impl->_op)
+		switch (node->_op)
 		{
 		case Op::Plus:
 			fn = PrimitiveValue::Add;
@@ -93,7 +89,7 @@ Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpBinop::Optimize0_Merge::Optimize(Synta
 			auto newType = rightType;
 			if (newValue.type != newType->GetPrimitiveType())
 				newType = leftType;
-			auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->GetSourceCode(), impl->GetBody(),
+			auto combined = ARLANG_NEW SyntaxTreeNodeConstant(node->GetSourceCode(), node->GetBody(),
 				newValue, newType);
 			count++;
 			return Vector<SyntaxTreeNodeOp*>(combined);

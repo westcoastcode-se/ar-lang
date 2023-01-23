@@ -42,7 +42,11 @@ Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOp::OptimizeOp(ISyntaxTreeNodeOptimizer*
 			children[i]->Optimize(optimizer);
 		}
 	}
-	return optimizer->Optimize(this);
+
+	if (optimizer->Accept(this))
+		return optimizer->Optimize(this);
+	else
+		return Vector<SyntaxTreeNodeOp*>();
 }
 
 void SyntaxTreeNodeOp::OnChildAdded(SyntaxTreeNode* child)

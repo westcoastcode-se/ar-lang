@@ -83,10 +83,30 @@ namespace WestCoastCode::Compilation
 	public:
 		virtual ~ISyntaxTreeNodeOptimizer() = default;
 
+		/// @brief Check to see if the supplied node is accepted by this optimizer
+		/// @param node 
+		/// @return 
+		virtual bool Accept(SyntaxTreeNodeOp* node) = 0;
+
 		/// @brief Optimize the supplied node. If optimized then a list containing the new/optimized values are returned
 		/// @param node The node we are trying to optimize
 		/// @return The new optimized nodes
 		virtual Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOp* node) = 0;
+	};
+
+	/// @brief 
+	/// @tparam T 
+	template<class T>
+	class ARLANG_API TSyntaxTreeNodeOptimizer : public ISyntaxTreeNodeOptimizer
+	{
+	public:
+		bool Accept(SyntaxTreeNodeOp* node) final { return dynamic_cast<T*>(node) != nullptr; }
+		Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOp* node) final { return Optimize(static_cast<T*>(node)); }
+		
+		/// @brief Specialized optimize method
+		/// @param node 
+		/// @return 
+		virtual Vector<SyntaxTreeNodeOp*> Optimize(T* node) = 0;
 	};
 
 	/// @brief Implement this interface if you want to have support for converting to a string
@@ -226,8 +246,10 @@ namespace WestCoastCode::Compilation
 		void ReplaceChild(I32 index, SyntaxTreeNode* node);
 
 		/// @brief Replace all childes node at the supplied index with a new child node
-		/// @param index 
-		/// @param node 
+		/// @param index The index we are replacing
+		/// @param node The nodes we are putting in the node's place
+		/// @return The next index, if we are calling this method at the
+		///         same time as we are iterating over all child-nodes
 		I32 ReplaceChildren(I32 index, ReadOnlyArray<SyntaxTreeNode*> nodes);
 
 	private:

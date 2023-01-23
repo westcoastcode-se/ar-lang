@@ -25,10 +25,10 @@ namespace WestCoastCode::Compilation
 
 	public:
 		// Optimizer that merges this type-cast with the underlying node
-		class Optimize0_Merge : public ISyntaxTreeNodeOptimizer {
+		class Optimize0_Merge : public TSyntaxTreeNodeOptimizer<SyntaxTreeNodeOpTypeCast> {
 		public:
 			I32 count = 0;
-			Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOp* node) final;
+			Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOpTypeCast* node) final;
 		};
 	};
 }

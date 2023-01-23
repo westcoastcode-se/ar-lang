@@ -26,7 +26,10 @@ namespace WestCoastCode::Compilation
 		typedef int DefinitionQueryTypes;
 
 		/// @brief Represents all types
-		static constexpr DefinitionQueryTypes Type = (I32)Class | (I32)Primitive;
+		static constexpr DefinitionQueryTypes Type = Class | Primitive;
+
+		/// @brief Represents all variables that we can read- and write from
+		static constexpr DefinitionQueryTypes Variables = Arg | Local | Global;
 
 		/// @brief Represents every node
 		static constexpr DefinitionQueryTypes All = INT32_MAX;
@@ -52,9 +55,6 @@ namespace WestCoastCode::Compilation
 #pragma endregion
 
 	public:
-		// Add a new section node
-		void SetSectionNode(SyntaxTreeNodeRefSection* section);
-
 		/// @brief Parse the source code and convert the content into a reference
 		/// @param state 
 		/// @param queryType The type of nodes we are looking for

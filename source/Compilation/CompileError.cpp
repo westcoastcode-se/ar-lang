@@ -66,9 +66,10 @@ CompileErrorNotImplemented::CompileErrorNotImplemented(const SyntaxTreeNode* nod
 CompileErrorIncompatibleTypes::CompileErrorIncompatibleTypes(const SyntaxTreeNode* node, 
 	const SyntaxTreeNodeType* type1,
 	const SyntaxTreeNodeType* type2)
-	: CompileError(node->GetSourceCode(), CompileErrorType::NotImplemented)
+	: CompileError(node->GetSourceCode(), CompileErrorType::IncompatibleTypes)
 {
 	StringStream s;
 	s << type1->GetName() << " is not compatible with " << type2->GetName();
 	SetError(s.str());
 }
+	

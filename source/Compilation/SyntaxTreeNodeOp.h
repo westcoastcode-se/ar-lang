@@ -21,8 +21,8 @@ namespace WestCoastCode::Compilation
 		inline SyntaxTreeNodeFuncBody* GetBody() const { return _body; }
 
 		/// @brief Compile this operation and put the bytecode into the supplied instructions target
-		/// @param linker 
-		/// @param target 
+		/// @param linker Linker
+		/// @param target Where all the byte-code operations are put into
 		virtual void Compile(Builder::Linker* linker, Builder::Instructions& target);
 
 		/// @brief Optimize and return zero or more operations that should replace this node
@@ -35,7 +35,7 @@ namespace WestCoastCode::Compilation
 
 #pragma region SyntaxTreeNode
 		void Compile(Builder::Linker* linker) final {
-			assert(false && "You should call the Compile(linker, instructions) method instead");
+			assert(false && "You should call the Compile(linker, target) method instead");
 		}
 		void Optimize(ISyntaxTreeNodeOptimizer* optimizer) final {
 			assert(false && "You should call the OptimizeOp(optimizer) method instead");

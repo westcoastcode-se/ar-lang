@@ -5,8 +5,7 @@
 
 namespace WestCoastCode::Compilation
 {
-
-	// A view inside the supplied source code
+	/// @brief A read-only view of the supplied source code
 	class SourceCodeView
 	{
 	public:

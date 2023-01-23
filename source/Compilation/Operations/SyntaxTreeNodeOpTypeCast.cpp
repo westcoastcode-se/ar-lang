@@ -59,21 +59,17 @@ SyntaxTreeNodeType* SyntaxTreeNodeOpTypeCast::FromType()
 	return static_cast<SyntaxTreeNodeOp*>(GetChildren()[1])->GetType();
 }
 
-Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpTypeCast::Optimize0_Merge::Optimize(SyntaxTreeNodeOp* node)
+Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpTypeCast::Optimize0_Merge::Optimize(SyntaxTreeNodeOpTypeCast* node)
 {
-	auto impl = dynamic_cast<SyntaxTreeNodeOpTypeCast*>(node);
-	if (impl == nullptr)
-		return Vector<SyntaxTreeNodeOp*>();
-
 	// The child-node
-	auto child = static_cast<SyntaxTreeNodeOp*>(impl->GetChildren()[1]);
+	auto child = static_cast<SyntaxTreeNodeOp*>(node->GetChildren()[1]);
 
 	// Is the child a constant? If so, then try to perform the type-casting during compile time
 	// and return the constant as the merged child
 	if (dynamic_cast<SyntaxTreeNodeConstant*>(child)) {
 		count++;
 		auto constant = static_cast<SyntaxTreeNodeConstant*>(child);
-		return constant->Cast(impl->GetType());
+		return constant->Cast(node->GetType());
 	}
 	return Vector<SyntaxTreeNodeOp*>();
 }

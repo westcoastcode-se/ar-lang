@@ -101,10 +101,10 @@ namespace WestCoastCode::Compilation
 
 	public:
 		/// @brief Optimizer that merges a binop if the two children are constants
-		class Optimize0_Merge : public ISyntaxTreeNodeOptimizer {
+		class Optimize0_Merge : public TSyntaxTreeNodeOptimizer<SyntaxTreeNodeOpBinop>{
 		public:
 			I32 count = 0;
-			Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOp* node) final;
+			Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOpBinop* node) final;
 		};
 	};
 }

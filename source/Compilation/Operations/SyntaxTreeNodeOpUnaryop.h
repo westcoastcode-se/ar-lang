@@ -58,10 +58,10 @@ namespace WestCoastCode::Compilation
 
 	public:
 		/// @brief Optimizer that merges a unaryop
-		class Optimize0_Merge : public ISyntaxTreeNodeOptimizer {
+		class Optimize0_Merge : public TSyntaxTreeNodeOptimizer<SyntaxTreeNodeOpUnaryop> {
 		public:
 			I32 count = 0;
-			Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOp* node) final;
+			Vector<SyntaxTreeNodeOp*> Optimize(SyntaxTreeNodeOpUnaryop* node) final;
 		};
 	};
 }

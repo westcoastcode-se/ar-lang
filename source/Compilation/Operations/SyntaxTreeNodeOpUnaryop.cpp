@@ -47,13 +47,9 @@ SyntaxTreeNodeType* SyntaxTreeNodeOpUnaryop::GetType()
 	return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0])->GetType();
 }
 
-Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpUnaryop::Optimize0_Merge::Optimize(SyntaxTreeNodeOp* node)
+Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpUnaryop::Optimize0_Merge::Optimize(SyntaxTreeNodeOpUnaryop* node)
 {
-	auto impl = dynamic_cast<SyntaxTreeNodeOpUnaryop*>(node);
-	if (impl == nullptr)
-		return Vector<SyntaxTreeNodeOp*>();
-
-	auto right = impl->GetRight();
+	auto right = node->GetRight();
 	
 	// Compile-time resolve negative values
 	if (dynamic_cast<SyntaxTreeNodeConstant*>(right)) {
@@ -61,11 +57,11 @@ Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOpUnaryop::Optimize0_Merge::Optimize(Syn
 		auto stackType = static_cast<SyntaxTreeNodePrimitive*>(rightConst->GetType());
 
 		PrimitiveValue newValue = rightConst->GetValue();
-		switch (impl->_op)
+		switch (node->_op)
 		{
 		case Op::Minus:
 			if (PrimitiveValue::Neg(&newValue)) {
-				auto combined = ARLANG_NEW SyntaxTreeNodeConstant(impl->GetSourceCode(), impl->GetBody(),
+				auto combined = ARLANG_NEW SyntaxTreeNodeConstant(node->GetSourceCode(), node->GetBody(),
 					newValue, stackType);
 				count++;
 				return Vector<SyntaxTreeNodeOp*>(combined);
