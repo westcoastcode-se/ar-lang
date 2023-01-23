@@ -217,6 +217,45 @@ struct Constants : UtilsBuilderWithInterpreter
 	}
 };
 
+struct ConvertingPrimitives : UtilsBuilderWithInterpreter
+{
+	template<typename To, typename From>
+	void Conv_T(From value)
+	{
+		auto fromType = GetPrimitiveType<From>();
+		auto toType = GetPrimitiveType<To>();
+
+		auto main = linker->AddPackage(new Builder::Package("Main"));
+		auto add = main->Add(new Builder::Function("Get"));
+		add->AddReturn(toType);
+
+		// ldc_s <T> $value
+		// ret
+
+		auto& instr = add->Begin();
+		instr.Ldc(fromType, Const((From)value));
+		instr.Conv(fromType, toType);
+		instr.Ret();
+		instr.End();
+
+		CompileAndInvoke("Get()");
+		VerifyStackSize(sizeof(To));
+		const To result = Pop<To>();
+		AssertEquals(result, (To)value);
+	}
+
+	void operator()()
+	{
+		TEST(Conv_T<I8>((I32)123));
+		TEST(Conv_T<I16>((I32)1234));
+		TEST(Conv_T<I64>((I32)123456));
+		TEST(Conv_T<F32>((I32)-1));
+		TEST(Conv_T<F64>((I32)23));
+
+		// TODO: Add more convertion tests
+	}
+};
+
 struct Errors : UtilsBuilderWithInterpreter
 {
 	void HaltOnPushingTooMuchBeforeReturn()
@@ -278,5 +317,6 @@ struct Errors : UtilsBuilderWithInterpreter
 void SuiteBuilder()
 {
 	SUITE(Constants);
+	SUITE(ConvertingPrimitives);
 	SUITE(Errors)
 }
