@@ -10,7 +10,7 @@ namespace WestCoastCode::Compilation
 	class SyntaxTreeNodeTypeRef : public SyntaxTreeNodeType
 	{
 	public:
-		SyntaxTreeNodeTypeRef(SourceCodeView sourceCode);
+		SyntaxTreeNodeTypeRef(SourceCodeView sourceCode, ReadOnlyString name);
 
 		/// @brief Parse the source code and extract a type reference 
 		/// @param state 
@@ -18,6 +18,7 @@ namespace WestCoastCode::Compilation
 		static SyntaxTreeNodeTypeRef* Parse(const ParserState* state);
 
 #pragma region SyntaxTreeNodeType
+		inline ReadOnlyString GetName() const final { return _name; }
 		void ToString(StringStream& s, int indent) const final;
 		SyntaxTreeNodeType* GetType() final;
 		ReadOnlyArray<SyntaxTreeNodeType*> GetTypes() final { return _definitions; }
@@ -26,6 +27,8 @@ namespace WestCoastCode::Compilation
 #pragma endregion
 
 	private:
+		/// @brief The name of this reference
+		const ReadOnlyString _name;
 		/// @brief Definitions that's resolved by this type-ref
 		Vector<SyntaxTreeNodeType*> _definitions;
 	};

@@ -12,8 +12,8 @@ namespace WestCoastCode::Compilation
 		SyntaxTreeNodeType(SourceCodeView view)
 			: SyntaxTreeNode(view) {}
 
-		/// @return The name of this type
-		inline ReadOnlyString GetName() const { return _name; }
+		/// @return The name of the type
+		virtual ReadOnlyString GetName() const { return ReadOnlyString(); }
 
 		/// @brief Fetches the most likely type definition
 		/// @return The type definition
@@ -29,8 +29,5 @@ namespace WestCoastCode::Compilation
 		/// @return 
 		/// 
 		virtual bool IsCompatibleWith(SyntaxTreeNodeType* def) { return false; }
-
-	protected:
-		ReadOnlyString _name;
 	};
 }

@@ -4,15 +4,15 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeTypeRef::SyntaxTreeNodeTypeRef(SourceCodeView sourceCode)
-	: SyntaxTreeNodeType(sourceCode)
+SyntaxTreeNodeTypeRef::SyntaxTreeNodeTypeRef(SourceCodeView sourceCode, ReadOnlyString name)
+	: SyntaxTreeNodeType(sourceCode), _name(name)
 {
 }
 
 void SyntaxTreeNodeTypeRef::ToString(StringStream& s, int indent) const
 {
 	s << GetID() << Indent(indent);
-	s << "TypeRef(name=" << GetName() << ", definitions=[";
+	s << "TypeRef(name=" << _name << ", definitions=[";
 	for (int i = 0; i < _definitions.Size(); ++i) {
 		if (i != 0)
 			s << ",";
@@ -66,10 +66,10 @@ SyntaxTreeNodeTypeRef* SyntaxTreeNodeTypeRef::Parse(const ParserState* state)
 	if (t->GetType() != TokenType::Identity)
 		throw ParseErrorExpectedIdentity(state);
 
-	auto typeref = ARLANG_NEW SyntaxTreeNodeTypeRef(SourceCodeView(state->sourceCode, t));
-	auto mem = MemoryGuard(typeref);
 	auto ref = SyntaxTreeNodeRef::Parse(state, SyntaxTreeNodeRef::Type);
+
+	auto typeref = ARLANG_NEW SyntaxTreeNodeTypeRef(SourceCodeView(state->sourceCode, t), ref->GetName());
+	auto mem = MemoryGuard(typeref);
 	typeref->AddChild(ref);
-	typeref->_name = ref->GetName();
 	return mem.Done();
 }
