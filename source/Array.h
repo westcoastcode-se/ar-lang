@@ -277,7 +277,8 @@ namespace WestCoastCode
 		T _memory[Count];
 	};
 
-	// A view of the Array object but exposes the implementations as interfaces
+	/// @brief A view of the Array object but exposes the implementations as interfaces
+	/// @tparam T The type
 	template<typename T>
 	class ReadOnlyArray
 	{
@@ -305,16 +306,16 @@ namespace WestCoastCode
 		ReadOnlyArray(const Vector<T, Resize>& rhs)
 			: _memory(GetMemory(rhs)), _size(GetSize(rhs)) {}
 
-		// Get the size of the vector
+		/// @return number of items available in the array
 		I32 Size() const { return _size; }
 
-		// Is this array empty?
+		/// @return a boolean indicating if this array is empty or not 
 		bool IsEmpty() const { return _size == 0; }
 
-		// Get a pointer to the memory
+		/// @return the underlying memory
 		T* Ptr() { return _memory; }
 
-		// Get a pointer to the memory
+		/// @return the underlying memory
 		const T* Ptr() const { return _memory; }
 
 	private:
