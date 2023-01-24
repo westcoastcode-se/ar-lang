@@ -4,7 +4,7 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeFuncArg::SyntaxTreeNodeFuncArg(SourceCodeView view, ReadOnlyString name, SyntaxTreeNodeTypeRef* type)
+SyntaxTreeNodeFuncArg::SyntaxTreeNodeFuncArg(SourceCodeView view, ReadOnlyString name, SyntaxTreeNodeType* type)
 	: SyntaxTreeNode(view), _name(name), _type(type)
 {
 	AddChild(type);

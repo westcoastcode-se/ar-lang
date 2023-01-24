@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SyntaxTreeNode.h"
-#include "Types/SyntaxTreeNodeTypeRef.h"
+#include "SyntaxTreeNodeType.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -12,13 +12,13 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		SyntaxTreeNodeFuncArg(SourceCodeView view, ReadOnlyString name,
-			SyntaxTreeNodeTypeRef* type);
+			SyntaxTreeNodeType* type);
 
 		/// @return The name of this argument
 		inline ReadOnlyString GetName() const { return _name; }
 
 		/// @return A reference for the type of this argument
-		inline SyntaxTreeNodeTypeRef* GetType() const { return _type; }
+		inline SyntaxTreeNodeType* GetType() const { return _type; }
 
 #pragma region SyntaxTreeNode
 		void ToString(StringStream& s, int indent) const final;
@@ -31,6 +31,6 @@ namespace WestCoastCode::Compilation
 
 	private:
 		ReadOnlyString _name;
-		SyntaxTreeNodeTypeRef* const _type;
+		SyntaxTreeNodeType* const _type;
 	};
 }
