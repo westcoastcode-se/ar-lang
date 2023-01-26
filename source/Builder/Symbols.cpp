@@ -310,6 +310,11 @@ InstrLdc* Instructions::Ldc(Type* stackType, PrimitiveValue value)
 	return static_cast<InstrLdc*>(Add(new InstrLdc(stackType, value)));
 }
 
+InstrCall* Instructions::Call(Function* func)
+{
+	return static_cast<InstrCall*>(Add(new InstrCall(_function)));
+}
+
 InstrRet* Instructions::Ret()
 {
 	return static_cast<InstrRet*>(Add(new InstrRet(_function)));

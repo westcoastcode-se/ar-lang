@@ -93,6 +93,13 @@ void InstrRet::Write(MemoryStream& s)
 	s.Write(&data);
 }
 
+void InstrCall::Write(MemoryStream& s)
+{
+	data.icode = Interpreter::Incode::Call;
+	data.expectedStackSize = function->GetArgumentsSize();
+	s.Write(&data);
+}
+
 void InstrNeg::Write(MemoryStream& s)
 {
 	data.icode = Interpreter::Incode::Neg;

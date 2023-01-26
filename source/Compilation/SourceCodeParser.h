@@ -1,7 +1,6 @@
 #pragma once
 
-#include "SourceCode.h"
-#include "Lexer.h"
+#include "SourceCodeView.h"
 
 namespace WestCoastCode::Compilation
 {
@@ -44,5 +43,7 @@ namespace WestCoastCode::Compilation
 		ParserState(const ParserState* state, SyntaxTreeNodeFuncDef* function);
 
 		ParserState(const ParserState* state, SyntaxTreeNodeFuncDefBody* body);
+
+		SourceCodeView GetView() const { return SourceCodeView(sourceCode, token); }
 	};
 }

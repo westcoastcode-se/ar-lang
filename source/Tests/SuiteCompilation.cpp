@@ -619,6 +619,27 @@ func Get() int32 {
 		AssertEquals(Pop<I32>(), 1 + ((2 + 3) * 4 + 5 * (6 - (10 - 20) + 2 * 6)) / 2);
 	}
 
+	void CallDeclaredBefore()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Calc(lhs int32, rhs int32) int32 {
+	return lhs + rhs
+}
+
+func Get() int32 {
+	return Calc(10, 20)
+}
+)", "main.arl"));
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(I32));
+		AssertEquals(Pop<I32>(), 10 + 20);
+	}
+
 	void operator()(int level)
 	{
 		// Set the optimization level
@@ -661,6 +682,8 @@ func Get() int32 {
 		TEST(Parantheses1());
 		TEST(Parantheses2());
 		TEST(Parantheses3());
+
+		TEST(CallDeclaredBefore());
 	}
 };
 

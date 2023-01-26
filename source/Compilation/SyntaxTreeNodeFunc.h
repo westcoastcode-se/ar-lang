@@ -13,6 +13,8 @@ namespace WestCoastCode::Compilation
 	class ARLANG_API SyntaxTreeNodeFunc : public SyntaxTreeNode
 	{
 	public:
+		SyntaxTreeNodeFunc(SourceCodeView view, ReadOnlyString name);
+
 		/// @return The name of this function
 		inline ReadOnlyString GetName() const { return _name; }
 
@@ -24,11 +26,6 @@ namespace WestCoastCode::Compilation
 
 		/// @return true if this function doesn't return anything
 		inline bool IsVoidReturn() const { return _returnType == nullptr; }
-
-	protected:
-		friend class SyntaxTreeNodePackage;
-
-		SyntaxTreeNodeFunc(SourceCodeView view, ReadOnlyString name);
 
 		/// @brief Add an argument
 		/// @param arg 

@@ -114,6 +114,16 @@ namespace WestCoastCode::Builder
 		const IFunction* const function;
 	};
 
+	class ARLANG_API InstrCall : public TInstr<Interpreter::InstrCall>
+	{
+	public:
+		InstrCall(const IFunction* f) : function(f) {}
+
+		void Write(MemoryStream& s) final;
+
+		const IFunction* const function;
+	};
+
 	class ARLANG_API InstrConv : public InstrWithType<Interpreter::InstrConv>
 	{
 	public:

@@ -35,6 +35,7 @@ namespace WestCoastCode::Interpreter
 
 		ScopeIn,
 		ScopeOut,
+		Call,
 		Ret,
 
 		Eoe
@@ -171,6 +172,25 @@ union { \
 	};
 #pragma pack(pop)
 	static_assert(sizeof(InstrLdc_l) == sizeof(OpcodeHeader) + sizeof(I64));
+
+	// A call instruction
+	struct InstrCall
+	{
+		union
+		{
+			OpcodeHeader header;
+			Opcode opcode;
+			struct
+			{
+				Incode icode;
+				IncodeProps props1;
+				// The expected (incoming) stack size that's required by the function - such as the arguments and the 
+				// return values.
+				I16 expectedStackSize;
+			};
+		};
+		const Char* addr;
+	};
 
 	enum class Opcodes : I32
 	{

@@ -270,6 +270,8 @@ namespace WestCoastCode::Builder
 
 		InstrLdc* Ldc(Type* stackType, PrimitiveValue value);
 
+		InstrCall* Call(Function* func);
+
 		InstrRet* Ret();
 
 	private:

@@ -9,6 +9,7 @@ namespace WestCoastCode::Compilation
 	{
 		UnresolvedReference,
 		UnresolvedTypeReference,
+		UnresolvedFuncReference,
 		IncompatibleTypes,
 		NotImplemented,
 	};
@@ -59,6 +60,15 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		CompileErrorUnresolvedTypeReference(const SyntaxTreeNodeTypeRef* reference);
+	};
+
+	class SyntaxTreeNodeFuncRef;
+
+	// Error raised if we couldn't resolve a specific function reference
+	class CompileErrorUnresolvedFuncReference : public CompileError
+	{
+	public:
+		CompileErrorUnresolvedFuncReference(const SyntaxTreeNodeFuncRef* reference);
 	};
 
 	class SyntaxTreeNode;

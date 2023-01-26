@@ -5,8 +5,10 @@
 #include "../Operations/SyntaxTreeNodeConstant.h"
 #include "../Operations/SyntaxTreeNodeOpScope.h"
 #include "../Operations/SyntaxTreeNodeOpTypeCast.h"
+#include "../Operations/SyntaxTreeNodeOpCallFunc.h"
 #include "../Types/SyntaxTreeNodeTypeRef.h"
 #include "../Types/SyntaxTreeNodeMultiType.h"
+#include "../Functions/SyntaxTreeNodeFuncRef.h"
 #include "SyntaxTreeNodeFuncDef.h"
 
 using namespace WestCoastCode;
@@ -194,7 +196,34 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseAtom(ParserState* state)
 	case TokenType::Int:
 	case TokenType::Decimal:
 		return SyntaxTreeNodeConstant::Parse(state);
-	case TokenType::Identity:
+	case TokenType::Identity: {
+		Token peek(t);
+		
+		// Is this identity(
+		if (peek.Next() == TokenType::ParantLeft) {
+			auto funcRef = SyntaxTreeNodeFuncRef::Parse(state);
+			if (t->GetType() != TokenType::ParantRight)
+				throw ParseErrorSyntaxError(state, "expected ')");
+			auto funcGuard = MemoryGuard(funcRef);
+			auto call = ARLANG_NEW SyntaxTreeNodeOpCallFunc(state->GetView(), state->functionBody);
+			auto guard = MemoryGuard(call);
+			// Extract each argument
+			while (t->Next() != TokenType::ParantRight) {
+				auto node = ParseCompare(state);
+				call->AddChild(node);
+				// Is there a comma? Then this means that one more parameter is supplied
+				if (t->GetType() == TokenType::Comma) {
+					t->Next();
+				}
+			}
+			call->SetFunction(funcGuard.Done());
+			return guard.Done();
+		}
+		else {
+			// Read variable
+		}
+		break;
+	}
 		// Identity might be:
 		// 1. Variable (local, argument, global, constant)
 		// 2. Type (type, primitive, class, package)

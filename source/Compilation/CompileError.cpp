@@ -2,6 +2,7 @@
 #include "SyntaxTreeNode.h"
 #include "SyntaxTreeNodeRef.h"
 #include "Types/SyntaxTreeNodeTypeRef.h"
+#include "Functions/SyntaxTreeNodeFuncRef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -52,6 +53,14 @@ CompileErrorUnresolvedTypeReference::CompileErrorUnresolvedTypeReference(const S
 {
 	StringStream s;
 	s << "reference '" << reference->GetName() << "' could not be resolved";
+	SetError(s.str());
+}
+
+CompileErrorUnresolvedFuncReference::CompileErrorUnresolvedFuncReference(const SyntaxTreeNodeFuncRef* reference)
+	: CompileError(reference->GetSourceCode(), CompileErrorType::UnresolvedFuncReference)
+{
+	StringStream s;
+	s << "function '" << reference->GetName() << "' could not be resolved";
 	SetError(s.str());
 }
 
