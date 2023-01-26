@@ -8,7 +8,7 @@ namespace WestCoastCode::Compilation
 	class SyntaxTreeNodeOpReturn : public SyntaxTreeNodeOp
 	{
 	public:
-		SyntaxTreeNodeOpReturn(SourceCodeView view, SyntaxTreeNodeFuncBody* body);
+		SyntaxTreeNodeOpReturn(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body);
 
 #pragma region SyntaxTreeNodeOp
 		virtual void ToString(StringStream& s, int indent) const override;

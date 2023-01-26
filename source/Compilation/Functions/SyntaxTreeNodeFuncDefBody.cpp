@@ -1,13 +1,13 @@
-#include "SyntaxTreeNodeFuncBody.h"
-#include "Operations/SyntaxTreeNodeOpReturn.h"
-#include "Operations/SyntaxTreeNodeOpBinop.h"
-#include "Operations/SyntaxTreeNodeOpUnaryop.h"
-#include "SyntaxTreeNodeFunc.h"
-#include "Operations/SyntaxTreeNodeConstant.h"
-#include "Operations/SyntaxTreeNodeOpScope.h"
-#include "Operations/SyntaxTreeNodeOpTypeCast.h"
-#include "Types/SyntaxTreeNodeTypeRef.h"
-#include "Types/SyntaxTreeNodeMultiType.h"
+#include "SyntaxTreeNodeFuncDefBody.h"
+#include "../Operations/SyntaxTreeNodeOpReturn.h"
+#include "../Operations/SyntaxTreeNodeOpBinop.h"
+#include "../Operations/SyntaxTreeNodeOpUnaryop.h"
+#include "../Operations/SyntaxTreeNodeConstant.h"
+#include "../Operations/SyntaxTreeNodeOpScope.h"
+#include "../Operations/SyntaxTreeNodeOpTypeCast.h"
+#include "../Types/SyntaxTreeNodeTypeRef.h"
+#include "../Types/SyntaxTreeNodeMultiType.h"
+#include "SyntaxTreeNodeFuncDef.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -25,25 +25,25 @@ static const Vector<TokenType> PARSE_TERM_TOKENS(
 	TokenType::OpMult, TokenType::OpDiv
 );
 
-SyntaxTreeNodeFuncBody::SyntaxTreeNodeFuncBody(SourceCodeView view, SyntaxTreeNodeFunc* func)
+SyntaxTreeNodeFuncDefBody::SyntaxTreeNodeFuncDefBody(SourceCodeView view, SyntaxTreeNodeFuncDef* func)
 	: SyntaxTreeNode(view), _function(func)
 {
 }
 
-void SyntaxTreeNodeFuncBody::ToString(StringStream& s, int indent) const
+void SyntaxTreeNodeFuncDefBody::ToString(StringStream& s, int indent) const
 {
 	s << GetID() << Indent(indent);
-	s << "FuncBody(definition=" << _function->GetID() << ")" << std::endl;
+	s << "FuncDefBody(definition=" << _function->GetID() << ")" << std::endl;
 	SyntaxTreeNode::ToString(s, indent);
 }
 
-void SyntaxTreeNodeFuncBody::OnChildAdded(SyntaxTreeNode* child)
+void SyntaxTreeNodeFuncDefBody::OnChildAdded(SyntaxTreeNode* child)
 {
 	assert(dynamic_cast<SyntaxTreeNodeOp*>(child) != nullptr &&
-		"children of SyntaxTreeNodeFuncBody must be an operation node");
+		"children of SyntaxTreeNodeFuncDefBody must be an operation node");
 }
 
-void SyntaxTreeNodeFuncBody::Compile(Builder::Linker* linker)
+void SyntaxTreeNodeFuncDefBody::Compile(Builder::Linker* linker)
 {
 	auto funcSymbol = _function->GetSymbol();
 	Builder::Instructions& target = funcSymbol->Begin();
@@ -52,7 +52,7 @@ void SyntaxTreeNodeFuncBody::Compile(Builder::Linker* linker)
 	target.End();
 }
 
-void SyntaxTreeNodeFuncBody::Optimize(ISyntaxTreeNodeOptimizer* optimizer)
+void SyntaxTreeNodeFuncDefBody::Optimize(ISyntaxTreeNodeOptimizer* optimizer)
 {
 	auto children = GetChildren();
 	for (auto i = 0; i < children.Size(); ++i) {
@@ -70,7 +70,7 @@ void SyntaxTreeNodeFuncBody::Optimize(ISyntaxTreeNodeOptimizer* optimizer)
 	}
 }
 
-SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
+SyntaxTreeNodeFuncDefBody* SyntaxTreeNodeFuncDefBody::Parse(ParserState* state)
 {
 	Token* const t = state->token;
 
@@ -82,7 +82,7 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 	// Get the start of the string that represents the type we are trying to resolve
 	const ReadOnlyString first = t->GetString();
 
-	auto body = ARLANG_NEW SyntaxTreeNodeFuncBody(SourceCodeView(state->sourceCode, t), state->function);
+	auto body = ARLANG_NEW SyntaxTreeNodeFuncDefBody(SourceCodeView(state->sourceCode, t), state->function);
 	auto mem = MemoryGuard(body);
 	auto scope = ARLANG_NEW SyntaxTreeNodeOpScope(SourceCodeView(state->sourceCode, t), state->functionBody);
 	body->AddChild(scope);
@@ -98,7 +98,7 @@ SyntaxTreeNodeFuncBody* SyntaxTreeNodeFuncBody::Parse(ParserState* state)
 	return mem.Done();
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBody(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseBody(ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->IsKeyword())
@@ -115,7 +115,7 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBody(ParserState* state)
 	return ParseCompare(state);
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseReturn(ParserState* state)
 {
 	Token* const t = state->token;
 	t->Next();
@@ -150,7 +150,7 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseReturn(ParserState* state)
 	return mem.Done();
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseCompare(ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->GetType() == TokenType::Not) {
@@ -161,17 +161,17 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseCompare(ParserState* state)
 	}
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseExpr(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseExpr(ParserState* state)
 {
 	return ParseBinop(state, PARSE_EXPR_TOKENS, ParseTerm, ParseTerm);
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseTerm(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseTerm(ParserState* state)
 {
 	return ParseBinop(state, PARSE_TERM_TOKENS, ParseFactor, ParseFactor);
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseFactor(ParserState* state)
 {
 	Token* const t = state->token;
 	switch (t->GetType())
@@ -185,7 +185,7 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseFactor(ParserState* state)
 	}
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseAtom(ParserState* state)
 {
 	Token* const t = state->token;
 	switch (t->GetType())
@@ -248,7 +248,7 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseAtom(ParserState* state)
 	throw ParseErrorSyntaxError(state, "Unknown op");
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, TokenType tokenType,
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseUnaryop(ParserState* state, TokenType tokenType,
 	ParseFn rightFunc)
 {
 	Token* const t = state->token;
@@ -264,7 +264,7 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseUnaryop(ParserState* state, Token
 	return guard.Done();
 }
 
-SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const Vector<TokenType>& types,
+SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseBinop(ParserState* state, const Vector<TokenType>& types,
 	ParseFn leftFunc, ParseFn rightFunc)
 {
 	Token* const t = state->token;
@@ -296,7 +296,7 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncBody::ParseBinop(ParserState* state, const V
 	return guard.Done();
 }
 
-bool SyntaxTreeNodeFuncBody::Contains(const Vector<TokenType>& tokens, TokenType type)
+bool SyntaxTreeNodeFuncDefBody::Contains(const Vector<TokenType>& tokens, TokenType type)
 {
 	const auto size = tokens.Size();
 	for (auto i = 0; i < size; ++i) {

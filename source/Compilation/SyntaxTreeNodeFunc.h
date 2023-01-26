@@ -13,8 +13,6 @@ namespace WestCoastCode::Compilation
 	class ARLANG_API SyntaxTreeNodeFunc : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodeFunc(SourceCodeView view, ReadOnlyString name);
-
 		/// @return The name of this function
 		inline ReadOnlyString GetName() const { return _name; }
 
@@ -27,26 +25,10 @@ namespace WestCoastCode::Compilation
 		/// @return true if this function doesn't return anything
 		inline bool IsVoidReturn() const { return _returnType == nullptr; }
 
-		/// @return The body that implements this function
-		inline SyntaxTreeNodeFuncBody* GetBody() const { return _body; }
-
-		/// @return The closest package this function is part of
-		SyntaxTreeNodePackage* GetPackage();
-
-		/// @return The symbol
-		inline Builder::Function* GetSymbol() const { return _symbol; }
-
-#pragma region SyntaxTreeNode
-		void ToString(StringStream& s, int indent) const final;
-		void Compile(Builder::Linker* linker) final;
-#pragma endregion
-
-	private:
+	protected:
 		friend class SyntaxTreeNodePackage;
 
-		/// @brief Set the body that implements this function
-		/// @param body 
-		void SetBody(SyntaxTreeNodeFuncBody* body);
+		SyntaxTreeNodeFunc(SourceCodeView view, ReadOnlyString name);
 
 		/// @brief Add an argument
 		/// @param arg 
@@ -55,17 +37,9 @@ namespace WestCoastCode::Compilation
 		/// @brief Set the return type
 		void SetReturnType(SyntaxTreeNodeType* returnType);
 
-		/// @brief Parse source code into a function definition node. Will throw ParseError if parsing of the 
-		///	       source code failed
-		/// @param state 
-		/// @return 
-		static SyntaxTreeNodeFunc* Parse(ParserState* state);
-
 	private:
 		ReadOnlyString _name;
 		Vector<SyntaxTreeNodeFuncArg*> _arguments;
 		SyntaxTreeNodeType* _returnType;
-		SyntaxTreeNodeFuncBody* _body;
-		Builder::Function* _symbol;
 	};
 }

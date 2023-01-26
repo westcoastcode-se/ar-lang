@@ -1,7 +1,7 @@
 #include "SyntaxTreeNodePackage.h"
 #include "SyntaxTreeNodeImport.h"
-#include "SyntaxTreeNodeFunc.h"
-#include "SyntaxTreeNodeFuncBody.h"
+#include "Functions/SyntaxTreeNodeFuncDef.h"
+#include "Functions/SyntaxTreeNodeFuncDefBody.h"
 #include "Types/SyntaxTreeNodePrimitive.h"
 #include "Compiler.h"
 
@@ -57,9 +57,13 @@ void SyntaxTreeNodePackage::OnAddedToParent(SyntaxTreeNode* parent)
 
 void SyntaxTreeNodePackage::OnChildAdded(SyntaxTreeNode* parent)
 {
-	assert((dynamic_cast<SyntaxTreeNodePackage*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodeFunc*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodePrimitive*>(parent) != nullptr
-		|| dynamic_cast<SyntaxTreeNodeImport*>(parent) != nullptr || dynamic_cast<SyntaxTreeNodeFuncBody*>(parent) != nullptr)
-		&& "incompatible child node");
+	assert((
+		dynamic_cast<SyntaxTreeNodePackage*>(parent) != nullptr ||
+		dynamic_cast<SyntaxTreeNodeFunc*>(parent) != nullptr ||
+		dynamic_cast<SyntaxTreeNodePrimitive*>(parent) != nullptr ||
+		dynamic_cast<SyntaxTreeNodeImport*>(parent) != nullptr ||
+		dynamic_cast<SyntaxTreeNodeFuncDefBody*>(parent) != nullptr
+		) && "incompatible child node");
 }
 
 void SyntaxTreeNodePackage::Compile(Builder::Linker* linker)
@@ -117,12 +121,12 @@ SyntaxTreeNodePackage* SyntaxTreeNodePackage::Parse(const ParserState* state)
 		switch (t->GetType()) {
 		case TokenType::Func: {
 			auto childState = ParserState(state, package);
-			auto funcdef = SyntaxTreeNodeFunc::Parse(&childState);
+			auto funcdef = SyntaxTreeNodeFuncDef::Parse(&childState);
 			package->AddChild(funcdef);
 
 			// Parse the function body
 			auto childState2 = ParserState(&childState, funcdef);
-			auto funcbody = SyntaxTreeNodeFuncBody::Parse(&childState2);
+			auto funcbody = SyntaxTreeNodeFuncDefBody::Parse(&childState2);
 			funcdef->SetBody(funcbody);
 			package->AddChild(funcbody);
 			break;

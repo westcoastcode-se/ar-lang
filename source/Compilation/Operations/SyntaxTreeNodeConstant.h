@@ -9,7 +9,7 @@ namespace WestCoastCode::Compilation
 	class ARLANG_API SyntaxTreeNodeConstant : public SyntaxTreeNodeOp
 	{
 	public:
-		SyntaxTreeNodeConstant(SourceCodeView view, SyntaxTreeNodeFuncBody* body,
+		SyntaxTreeNodeConstant(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body,
 			const PrimitiveValue& value, SyntaxTreeNodePrimitive* stackType);
 
 		/// @return The constant value

@@ -1,22 +1,22 @@
 #pragma once
 
-#include "SyntaxTreeNode.h"
-#include "SourceCodeParser.h"
-#include "SyntaxTreeNodeOp.h"
+#include "../SyntaxTreeNode.h"
+#include "../SourceCodeParser.h"
+#include "../SyntaxTreeNodeOp.h"
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeFunc;
+	class SyntaxTreeNodeFuncDef;
 
 	/// @brief The body of a function. Children in the body is generally of the operation node type
 	///        with some rare exceptions
-	class ARLANG_API SyntaxTreeNodeFuncBody : public SyntaxTreeNode
+	class ARLANG_API SyntaxTreeNodeFuncDefBody : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodeFuncBody(SourceCodeView view, SyntaxTreeNodeFunc* func);
+		SyntaxTreeNodeFuncDefBody(SourceCodeView view, SyntaxTreeNodeFuncDef* func);
 
 		/// @return The function this body is part of
-		inline SyntaxTreeNodeFunc* GetFunction() const { return _function; }
+		inline SyntaxTreeNodeFuncDef* GetFunction() const { return _function; }
 
 #pragma region SyntaxTreeNode
 		void ToString(StringStream& s, int indent) const final;
@@ -29,7 +29,7 @@ namespace WestCoastCode::Compilation
 		typedef SyntaxTreeNodeOp* (*ParseFn)(ParserState*);
 
 		// Parse a function body using the supplied state
-		static SyntaxTreeNodeFuncBody* Parse(ParserState* state);
+		static SyntaxTreeNodeFuncDefBody* Parse(ParserState* state);
 
 	private:
 		//
@@ -67,7 +67,7 @@ namespace WestCoastCode::Compilation
 		static bool Contains(const Vector<TokenType>& tokens, TokenType type);
 
 	private:
-		SyntaxTreeNodeFunc* const _function;
+		SyntaxTreeNodeFuncDef* const _function;
 		ReadOnlyString _text;
 	};
 }

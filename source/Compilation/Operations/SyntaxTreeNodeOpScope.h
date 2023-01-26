@@ -8,7 +8,7 @@ namespace WestCoastCode::Compilation
 	class SyntaxTreeNodeOpScope : public SyntaxTreeNodeOp
 	{
 	public:
-		SyntaxTreeNodeOpScope(SourceCodeView view, SyntaxTreeNodeFuncBody* body)
+		SyntaxTreeNodeOpScope(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body)
 			: SyntaxTreeNodeOp(view, body) {}
 
 #pragma region SyntaxTreeNodeOp

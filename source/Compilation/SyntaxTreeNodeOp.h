@@ -5,20 +5,20 @@
 
 namespace WestCoastCode::Compilation
 {
-	class SyntaxTreeNodeFunc;
-	class SyntaxTreeNodeFuncBody;
+	class SyntaxTreeNodeFuncDef;
+	class SyntaxTreeNodeFuncDefBody;
 
 	/// @brief Represents an operation executed inside a function
 	class ARLANG_API SyntaxTreeNodeOp : public SyntaxTreeNode
 	{
 	public:
-		SyntaxTreeNodeOp(SourceCodeView view, SyntaxTreeNodeFuncBody* body);
+		SyntaxTreeNodeOp(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body);
 
 		/// @return The function definition where this operation is part of
-		SyntaxTreeNodeFunc* GetFunction() const;
+		SyntaxTreeNodeFuncDef* GetFunction() const;
 
 		/// @return The function body this operation is part of
-		inline SyntaxTreeNodeFuncBody* GetBody() const { return _body; }
+		inline SyntaxTreeNodeFuncDefBody* GetBody() const { return _body; }
 
 		/// @brief Compile this operation and put the bytecode into the supplied instructions target
 		/// @param linker Linker
@@ -40,11 +40,10 @@ namespace WestCoastCode::Compilation
 		void Optimize(ISyntaxTreeNodeOptimizer* optimizer) final {
 			assert(false && "You should call the OptimizeOp(optimizer) method instead");
 		}
-		void OnChildAdded(SyntaxTreeNode* child) override;
 #pragma endregion
 
 	private:
 		/// @brief The function body this operation is part of
-		SyntaxTreeNodeFuncBody* const _body;
+		SyntaxTreeNodeFuncDefBody* const _body;
 	};
 }

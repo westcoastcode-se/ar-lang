@@ -7,7 +7,7 @@ namespace WestCoastCode::Compilation
 	/// @brief Cast one type into another
 	class SyntaxTreeNodeOpTypeCast : public SyntaxTreeNodeOp
 	{
-		SyntaxTreeNodeOpTypeCast(SourceCodeView view, SyntaxTreeNodeFuncBody* body);
+		SyntaxTreeNodeOpTypeCast(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body);
 
 	public:
 		/// @return From which type are we casting
@@ -20,7 +20,7 @@ namespace WestCoastCode::Compilation
 #pragma endregion
 
 		/// @brief Create a node which casts the supplied operator with the supplied type
-		static SyntaxTreeNodeOpTypeCast* Cast(SourceCodeView view, SyntaxTreeNodeFuncBody* body, 
+		static SyntaxTreeNodeOpTypeCast* Cast(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body,
 			SyntaxTreeNodeType* type, SyntaxTreeNodeOp* op);
 
 	public:

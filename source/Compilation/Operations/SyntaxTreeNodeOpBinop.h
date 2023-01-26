@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../SyntaxTreeNodeOp.h"
-#include "../SyntaxTreeNodeFuncBody.h"
+#include "../Functions/SyntaxTreeNodeFuncDefBody.h"
 #include "../SyntaxTreeNodeType.h"
 
 namespace WestCoastCode::Compilation
@@ -79,7 +79,7 @@ namespace WestCoastCode::Compilation
 			ENUM_STRING_END();
 		}
 
-		SyntaxTreeNodeOpBinop(SourceCodeView view, SyntaxTreeNodeFuncBody* body, Op op);
+		SyntaxTreeNodeOpBinop(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body, Op op);
 
 		/// @return The operation at the left side of this binop
 		inline SyntaxTreeNodeOp* GetLeft() const { return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0]); }

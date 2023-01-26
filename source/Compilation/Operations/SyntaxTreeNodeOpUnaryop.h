@@ -39,7 +39,7 @@ namespace WestCoastCode::Compilation
 			ENUM_STRING_END();
 		}
 
-		SyntaxTreeNodeOpUnaryop(SourceCodeView view, SyntaxTreeNodeFuncBody* body, Op op);
+		SyntaxTreeNodeOpUnaryop(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body, Op op);
 
 		/// @return The operation at the right side of this binop
 		inline SyntaxTreeNodeOp* GetRight() const { return static_cast<SyntaxTreeNodeOp*>(GetChildren()[0]); }

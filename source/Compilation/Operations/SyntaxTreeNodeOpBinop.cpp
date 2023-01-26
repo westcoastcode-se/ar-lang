@@ -6,7 +6,7 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeOpBinop::SyntaxTreeNodeOpBinop(SourceCodeView view, SyntaxTreeNodeFuncBody* body, Op op)
+SyntaxTreeNodeOpBinop::SyntaxTreeNodeOpBinop(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body, Op op)
 	:SyntaxTreeNodeOp(view, body), _op(op)
 {
 }

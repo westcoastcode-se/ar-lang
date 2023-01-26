@@ -1,7 +1,7 @@
 #include "SourceCodeParser.h"
 #include "SyntaxTreeNodePackage.h"
-#include "SyntaxTreeNodeFunc.h"
-#include "SyntaxTreeNodeFuncBody.h"
+#include "Functions/SyntaxTreeNodeFuncDef.h"
+#include "Functions/SyntaxTreeNodeFuncDefBody.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
@@ -21,12 +21,12 @@ ParserState::ParserState(const ParserState* state, SyntaxTreeNodePackage* packag
 	parentNode(package), package(package), function(state->function), functionBody(state->functionBody) {
 }
 
-ParserState::ParserState(const ParserState* state, SyntaxTreeNodeFunc* function)
+ParserState::ParserState(const ParserState* state, SyntaxTreeNodeFuncDef* function)
 	: compiler(state->compiler), token(state->token), sourceCode(state->sourceCode),
 	parentNode(function), package(state->package), function(function), functionBody(state->functionBody) {
 }
 
-ParserState::ParserState(const ParserState* state, SyntaxTreeNodeFuncBody* body)
+ParserState::ParserState(const ParserState* state, SyntaxTreeNodeFuncDefBody* body)
 	: compiler(state->compiler), token(state->token), sourceCode(state->sourceCode),
 	parentNode(body), package(state->package), function(state->function), functionBody(body) {
 }

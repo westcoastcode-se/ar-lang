@@ -300,7 +300,7 @@ func Main() int32 {
 }
 )", "main.arl"));
 
-		TypeVisitor<SyntaxTreeNodeFunc> visitor;
+		TypeVisitor<SyntaxTreeNodeFuncDef> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);
@@ -330,7 +330,7 @@ func Main() Engine.Graphics.Value {
 }
 )", "main.arl"));
 
-		TypeVisitor<SyntaxTreeNodeFunc> visitor;
+		TypeVisitor<SyntaxTreeNodeFuncDef> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);
@@ -355,7 +355,7 @@ func Main(in int32) int32 {
 }
 )", "main.arl"));
 
-		TypeVisitor<SyntaxTreeNodeFunc> visitor;
+		TypeVisitor<SyntaxTreeNodeFuncDef> visitor;
 		syntaxTree->Visit(&visitor, (I32)VisitFlag::IncludeChildren);
 
 		AssertEquals(visitor.nodes.Size(), 1);

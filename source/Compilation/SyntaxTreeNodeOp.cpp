@@ -1,15 +1,15 @@
 #include "SyntaxTreeNodeOp.h"
-#include "SyntaxTreeNodeFuncBody.h"
+#include "Functions/SyntaxTreeNodeFuncDefBody.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeOp::SyntaxTreeNodeOp(SourceCodeView view, SyntaxTreeNodeFuncBody* body)
+SyntaxTreeNodeOp::SyntaxTreeNodeOp(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body)
 	: SyntaxTreeNode(view), _body(body)
 {
 }
 
-SyntaxTreeNodeFunc* SyntaxTreeNodeOp::GetFunction() const
+SyntaxTreeNodeFuncDef* SyntaxTreeNodeOp::GetFunction() const
 {
 	return _body->GetFunction();
 }
@@ -47,8 +47,4 @@ Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOp::OptimizeOp(ISyntaxTreeNodeOptimizer*
 		return optimizer->Optimize(this);
 	else
 		return Vector<SyntaxTreeNodeOp*>();
-}
-
-void SyntaxTreeNodeOp::OnChildAdded(SyntaxTreeNode* child)
-{
 }

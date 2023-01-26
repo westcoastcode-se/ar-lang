@@ -8,8 +8,8 @@ namespace WestCoastCode::Compilation
 	class Compiler;
 	class SyntaxTreeNode;
 	class SyntaxTreeNodePackage;
-	class SyntaxTreeNodeFunc;
-	class SyntaxTreeNodeFuncBody;
+	class SyntaxTreeNodeFuncDef;
+	class SyntaxTreeNodeFuncDefBody;
 
 	// State used when parsing the source code
 	struct ParserState
@@ -30,10 +30,10 @@ namespace WestCoastCode::Compilation
 		SyntaxTreeNodePackage* package;
 
 		// The closest function definition
-		SyntaxTreeNodeFunc* function;
+		SyntaxTreeNodeFuncDef* function;
 
 		// The closest function body definition
-		SyntaxTreeNodeFuncBody* functionBody;
+		SyntaxTreeNodeFuncDefBody* functionBody;
 
 		ParserState(Compiler* c, Token* t, SourceCode* sc, SyntaxTreeNodePackage* root);
 
@@ -41,8 +41,8 @@ namespace WestCoastCode::Compilation
 
 		ParserState(const ParserState* state, SyntaxTreeNodePackage* package);
 
-		ParserState(const ParserState* state, SyntaxTreeNodeFunc* function);
+		ParserState(const ParserState* state, SyntaxTreeNodeFuncDef* function);
 
-		ParserState(const ParserState* state, SyntaxTreeNodeFuncBody* body);
+		ParserState(const ParserState* state, SyntaxTreeNodeFuncDefBody* body);
 	};
 }

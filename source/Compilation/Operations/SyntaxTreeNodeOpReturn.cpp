@@ -1,11 +1,12 @@
 #include "SyntaxTreeNodeOpReturn.h"
-#include "../SyntaxTreeNodeFuncBody.h"
+#include "../Functions/SyntaxTreeNodeFuncDef.h"
+#include "../Functions/SyntaxTreeNodeFuncDefBody.h"
 #include "../SyntaxTreeNodeFunc.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeOpReturn::SyntaxTreeNodeOpReturn(SourceCodeView view, SyntaxTreeNodeFuncBody* body)
+SyntaxTreeNodeOpReturn::SyntaxTreeNodeOpReturn(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body)
 	: SyntaxTreeNodeOp(view, body)
 {
 }

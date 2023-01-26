@@ -6,7 +6,7 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNodeOpTypeCast::SyntaxTreeNodeOpTypeCast(SourceCodeView view, SyntaxTreeNodeFuncBody* body)
+SyntaxTreeNodeOpTypeCast::SyntaxTreeNodeOpTypeCast(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body)
 	: SyntaxTreeNodeOp(view, body)
 {
 }
@@ -43,7 +43,7 @@ SyntaxTreeNodeType* SyntaxTreeNodeOpTypeCast::GetType()
 	return static_cast<SyntaxTreeNodeType*>(GetChildren()[0])->GetType();
 }
 
-SyntaxTreeNodeOpTypeCast* SyntaxTreeNodeOpTypeCast::Cast(SourceCodeView view, SyntaxTreeNodeFuncBody* body,
+SyntaxTreeNodeOpTypeCast* SyntaxTreeNodeOpTypeCast::Cast(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body,
 	SyntaxTreeNodeType* type, SyntaxTreeNodeOp* op)
 {
 	auto node = ARLANG_NEW SyntaxTreeNodeOpTypeCast(view, body);

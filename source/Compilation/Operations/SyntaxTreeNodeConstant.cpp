@@ -1,5 +1,5 @@
 #include "SyntaxTreeNodeConstant.h"
-#include "../SyntaxTreeNodeFuncBody.h"
+#include "../Functions/SyntaxTreeNodeFuncDefBody.h"
 #include "../Types/SyntaxTreeNodePrimitive.h"
 #include "../Types/SyntaxTreeNodeTypeRef.h"
 #include "../Compiler.h"
@@ -70,7 +70,8 @@ namespace
     }
 }
 
-SyntaxTreeNodeConstant::SyntaxTreeNodeConstant(SourceCodeView view, SyntaxTreeNodeFuncBody* body, const PrimitiveValue& value, SyntaxTreeNodePrimitive* stackType)
+SyntaxTreeNodeConstant::SyntaxTreeNodeConstant(SourceCodeView view, SyntaxTreeNodeFuncDefBody* body, 
+    const PrimitiveValue& value, SyntaxTreeNodePrimitive* stackType)
     :SyntaxTreeNodeOp(view, body), _value(value), _stackType(stackType)
 {
     ASSERT_NOT_NULL(stackType);

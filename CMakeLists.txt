@@ -112,7 +112,7 @@ add_library(ArlangCompilation
     "source/Compilation/ParseError.cpp" 
     "source/Compilation/SourceCodeParser.cpp" 
     "source/Compilation/SyntaxTreeNodeImport.cpp"
-    "source/Compilation/SyntaxTreeNodeFuncBody.cpp" 
+    "source/Compilation/Functions/SyntaxTreeNodeFuncDefBody.cpp" 
     "source/Compilation/SyntaxTreeNodeFuncArg.cpp"
     "source/Compilation/Types/SyntaxTreeNodeTypeRef.cpp"
     "source/Compilation/Operations/SyntaxTreeNodeOpReturn.cpp"
@@ -126,7 +126,7 @@ add_library(ArlangCompilation
     "source/Compilation/Operations/SyntaxTreeNodeOpTypeCast.cpp"
     "source/Compilation/ID.cpp"
     "source/Compilation/SyntaxTreeNode.cpp"
-    "source/Compilation/SyntaxTreeNodeOp.cpp")
+    "source/Compilation/SyntaxTreeNodeOp.cpp" "source/Compilation/Functions/SyntaxTreeNodeFuncDef.cpp")
 
 add_library(ArlangInterpreter
     "source/Interpreter/Thread.cpp" 
