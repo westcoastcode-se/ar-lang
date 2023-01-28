@@ -16,8 +16,9 @@ SyntaxTreeNodeFuncDef* SyntaxTreeNodeOp::GetFunction() const
 
 void SyntaxTreeNodeOp::Compile(Builder::Linker* linker, Builder::Instructions& target)
 {
-	for (auto child : GetChildren())
+	for (auto child : GetChildren()) {
 		static_cast<SyntaxTreeNodeOp*>(child)->Compile(linker, target);
+	}
 }
 
 Vector<SyntaxTreeNodeOp*> SyntaxTreeNodeOp::OptimizeOp(ISyntaxTreeNodeOptimizer* optimizer)

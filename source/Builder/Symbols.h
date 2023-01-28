@@ -61,6 +61,9 @@ namespace WestCoastCode::Builder
 
 		// Get the amount of bytes the return values require
 		virtual I32 GetReturnsSize() const = 0;
+
+		/// @return 
+		virtual I32 GetEntrypointOffset() const = 0;
 	};
 
 	enum class ARLANG_API TypeFlag
@@ -298,6 +301,9 @@ namespace WestCoastCode::Builder
 
 		// Begin creating instructions
 		Instructions& Begin() { return _instructions; }
+
+		/// @return Offset from the start of the bytecode where the function-body is located
+		inline I32 GetEntrypointOffset() const { return _entrypointOffset; }
 
 		// Resolve header memory size
 		I32 ResolveHeaderMemory(I32 offset);

@@ -19,6 +19,7 @@ namespace WestCoastCode::Compilation
 		static SyntaxTreeNodeFuncRef* Parse(const ParserState* state);
 
 #pragma region SyntaxTreeNodeFunc
+		void ToString(StringStream& s, int indent) const final;
 		void Resolve() final;
 #pragma endregion
 

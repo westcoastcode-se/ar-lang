@@ -31,9 +31,9 @@ void Thread::ExecEntrypoint(const Function* entrypoint)
 	}
 
 	// Prepare callframe information
-	_cf = _callFrames;
-	_cf->ret = (Byte*)&eoe;
-	_cf->ebp = _stack.Top(-entrypoint->GetStackSize());
+	_sf = _stackFrames;
+	_sf->ret = (Byte*)&eoe;
+	_sf->ebp = _stack.Top(-entrypoint->GetStackSize());
 	return Exec(_ip);
 }
 
@@ -606,6 +606,9 @@ void Thread::Exec0(const Byte* ip) noexcept
 		case Incode::Ldc_l:
 			ip = Ldc_l(this, ip);
 			continue;
+		case Incode::Call:
+			ip = Call(ip);
+			continue;
 		case Incode::Ret:
 			ip = Ret(this, ip);
 			continue;
@@ -667,13 +670,46 @@ const Byte* Thread::Haltf(const Byte* address, ThreadFlag flags, const char* for
 
 const Byte* Thread::ReturnToCaller() noexcept
 {
-	const Byte* nextIP = _cf->ret;
-	_cf--;
+	const Byte* nextIP = _sf->ret;
+	_sf--;
 #ifdef ARLANG_INSTRUCTION_DEBUG
 	if (nextIP == (const Byte*)&eoe)
-		printf("EOE");
+		printf("Eoe");
 	else
 		printf("%p", nextIP);
 #endif
 	return nextIP;
+}
+
+const Byte* Thread::Call(const Byte* ip) noexcept
+{
+	const InstrCall* const instr = (const InstrCall*)ip;
+#ifdef ARLANG_INSTRUCTION_DEBUG
+	printf("Call to=[%p] return=[%p] expectedStackSize=%d", instr->addr, ip + sizeof(InstrCall), instr->expectedStackSize);
+#endif
+	return BeginCall(ip, ip + sizeof(InstrCall), instr->addr, instr->expectedStackSize);
+}
+
+const Byte* Thread::BeginCall(const Byte* ip, const Byte* returnIp, const Byte* nextIp, 
+	I32 expectedStackSize) noexcept
+{
+	// Where the first argument is expected to be located
+	Byte* expected = _stack.Top(-expectedStackSize);
+
+#if defined(VM_STACK_DEBUG)
+	// Verify that we've pushed the bare-minimum data on the stack for the function to work
+	// 
+	// We must've pushed at least "expected_stack_size" in bytes (we also ignore the required function call stack values)
+	if (_sf->ebp > expected) {
+		const I32 stackSize = _stack.Top(0) - _sf->ebp;
+		return Haltf(ip, ThreadFlag::StackMismanaged, 
+			"the stack is mismanaged. you are expected to push %d bytes to the stack but was %d",
+			stackSize);
+	}
+#endif
+	// Prepare the next stack frame
+	_sf++;
+	_sf->ebp = expected;
+	_sf->ret = returnIp;
+	return nextIp;
 }

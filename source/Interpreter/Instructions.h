@@ -35,7 +35,15 @@ namespace WestCoastCode::Interpreter
 
 		ScopeIn,
 		ScopeOut,
+
+		Lda,
+		Lda_a,
+		Ldl,
+		Ldl_a,
+		Stl,
+		
 		Call,
+		
 		Ret,
 
 		Eoe
@@ -69,7 +77,7 @@ union { \
 	OpcodeHeader header; \
 	Opcode opcode; \
 	struct { \
-		Incode icode; \
+		Incode incode; \
 		IncodeProps props1; \
 		IncodeProps props2; \
 		IncodeProps props3; \
@@ -94,9 +102,20 @@ union { \
 	// Return statement
 	struct InstrRet
 	{
-		OPCODE_HEADER;
+		union
+		{
+			OpcodeHeader header;
+			Opcode opcode;
+			struct
+			{
+				Incode incode;
+				IncodeProps size;
+				IncodeProps offset;
+				IncodeProps props3;
+			};
+		};
 #if defined(VM_STACK_DEBUG)
-		I32 expected_ebp_offset;
+		I32 expectedEbpOffset;
 #endif
 	};
 #if defined(VM_STACK_DEBUG)
@@ -114,13 +133,13 @@ union { \
 			Opcode opcode;
 			struct
 			{
-				Incode icode;
+				Incode incode;
 				IncodeProps props1;
 				I16 i16;
 			};
 			struct
 			{
-				Incode icode;
+				Incode incode;
 				IncodeProps props1;
 				I8 i8;
 				I8 i8_0;
@@ -173,6 +192,25 @@ union { \
 #pragma pack(pop)
 	static_assert(sizeof(InstrLdc_l) == sizeof(OpcodeHeader) + sizeof(I64));
 
+	// An instruction that has an 8 bit size and offset
+	struct InstrSizeOffset8
+	{
+		union
+		{
+			OpcodeHeader header;
+			Opcode opcode;
+			struct
+			{
+				Incode incode;
+				I8 size;
+				I8 offset;
+				I8 padding0;
+			};
+		};
+	};
+	typedef InstrSizeOffset8 InstrLda;
+	static_assert(sizeof(InstrSizeOffset8) == sizeof(OpcodeHeader));
+
 	// A call instruction
 	struct InstrCall
 	{
@@ -182,14 +220,14 @@ union { \
 			Opcode opcode;
 			struct
 			{
-				Incode icode;
+				Incode incode;
 				IncodeProps props1;
-				// The expected (incoming) stack size that's required by the function - such as the arguments and the 
-				// return values.
+				// The expected (incoming) stack size that's required by the function
+				// TODO: Add support for if stack size is larger than INT16_MAX
 				I16 expectedStackSize;
 			};
 		};
-		const Char* addr;
+		const Byte* addr;
 	};
 
 	enum class Opcodes : I32

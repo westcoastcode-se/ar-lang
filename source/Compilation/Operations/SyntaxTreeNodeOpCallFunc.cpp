@@ -24,7 +24,10 @@ void SyntaxTreeNodeOpCallFunc::ToString(StringStream& s, int indent) const
 
 void SyntaxTreeNodeOpCallFunc::Compile(Builder::Linker* linker, Builder::Instructions& target)
 {
-	SyntaxTreeNodeOp::Compile(linker, target);
+	// Compile all children except the function reference, since that's not an operation
+	auto children = GetChildren();
+	for(I8 i = 0; i < children.Size() - 1; ++i)
+		static_cast<SyntaxTreeNodeOp*>(children[i])->Compile(linker, target);
 
 	SyntaxTreeNodeFuncDef* def = nullptr;
 	if (_function != nullptr) {
@@ -40,7 +43,9 @@ void SyntaxTreeNodeOpCallFunc::Compile(Builder::Linker* linker, Builder::Instruc
 
 SyntaxTreeNodeType* SyntaxTreeNodeOpCallFunc::GetType()
 {
-	return _function->GetReturnType();
+	auto funcDef = _function->GetDefinitions()[0];
+	auto type = funcDef->GetReturnType();
+	return type->GetType();
 }
 
 void SyntaxTreeNodeOpCallFunc::Resolve()
@@ -69,7 +74,7 @@ void SyntaxTreeNodeOpCallFunc::Resolve()
 
 void SyntaxTreeNodeOpCallFunc::SetFunction(SyntaxTreeNodeFuncRef* func)
 {
-	assert(_function != nullptr &&
+	assert(_function == nullptr &&
 		"a function is already set");
 	AddChild(func);
 	_function = func;

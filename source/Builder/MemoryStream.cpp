@@ -41,6 +41,6 @@ void MemoryStream::Eoe()
 {
 	Interpreter::InstrEoe eoe;
 	eoe.opcode = 0;
-	eoe.icode = Interpreter::Incode::Eoe;
+	eoe.incode = Interpreter::Incode::Eoe;
 	Write(&eoe);
 }

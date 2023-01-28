@@ -11,13 +11,22 @@ SyntaxTreeNodeFuncRef::SyntaxTreeNodeFuncRef(SourceCodeView sourceCode, ReadOnly
 {
 }
 
+void SyntaxTreeNodeFuncRef::ToString(StringStream& s, int indent) const
+{
+	s << GetID() << Indent(indent);
+	s << "FuncRef(name=" << GetName() << ")" << std::endl;
+	SyntaxTreeNode::ToString(s, indent);
+}
+
 SyntaxTreeNodeFuncRef* SyntaxTreeNodeFuncRef::Parse(const ParserState* state)
 {
 	Token* const t = state->token;
 	if (t->GetType() != TokenType::Identity)
 		throw ParseErrorExpectedIdentity(state);
 	auto ref = SyntaxTreeNodeRef::Parse(state, SyntaxTreeNodeRef::Func);
-	return ARLANG_NEW SyntaxTreeNodeFuncRef(state->GetView(), ref->GetName());
+	auto funcRef = ARLANG_NEW SyntaxTreeNodeFuncRef(state->GetView(), ref->GetName());
+	funcRef->AddChild(ref);
+	return funcRef;
 }
 
 void SyntaxTreeNodeFuncRef::Resolve()
@@ -40,6 +49,8 @@ void SyntaxTreeNodeFuncRef::Resolve()
 			auto found = typeDef->GetArguments();
 			if (expected.Size() != found.Size())
 				continue;
+			if (expected.Size() == 0)
+				_definitions.Add(typeDef);
 			for (auto i = 0; i < expected.Size(); ++i) {
 				auto foundType = found[i]->GetType();
 				auto expectedType = expected[i]->GetType();

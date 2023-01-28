@@ -624,12 +624,12 @@ func Get() int32 {
 		AddSourceCode(new SourceCode(R"(
 package Main
 
-func Calc(lhs int32, rhs int32) int32 {
-	return lhs + rhs
+func Calc() int32 {
+	return 10 + 20
 }
 
 func Get() int32 {
-	return Calc(10, 20)
+	return Calc()
 }
 )", "main.arl"));
 

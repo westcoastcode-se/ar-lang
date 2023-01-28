@@ -8,8 +8,7 @@ namespace WestCoastCode::Interpreter
 	class Process;
 	class Function;
 
-
-	// Helper struct managing range validation
+	/// @brief Helper struct managing range validation
 	struct Range
 	{
 		const Byte* start;
@@ -18,7 +17,9 @@ namespace WestCoastCode::Interpreter
 		Range(const Byte* start, const Byte* end) : start(start), end(end) {}
 		Range(const Range& rhs) : start(rhs.start), end(rhs.end) {}
 
-		// Check to see if the supplied value is inside range
+		/// @brief Check to see if the supplied value is inside range
+		/// @param val 
+		/// @return true if the supplied address is within the memory range
 		bool Inside(const Byte* val) const noexcept {
 			return (size_t)val >= (size_t)start &&
 				(size_t)val <= (size_t)end;
@@ -39,7 +40,7 @@ namespace WestCoastCode::Interpreter
 	typedef I32 ThreadFlags;
 
 	// Call frame
-	struct ThreadCallFrame
+	struct ThreadStackFrame
 	{
 		// Where arguments can be found
 		Byte* ebp;
@@ -75,10 +76,10 @@ namespace WestCoastCode::Interpreter
 		void Exec0(const Byte* ip) noexcept;
 
 		// Get the current callframe
-		const ThreadCallFrame* GetCallFrame() const noexcept { return _cf; }
+		const ThreadStackFrame* GetCallFrame() const noexcept { return _sf; }
 
 		// Get the current callframe
-		ThreadCallFrame* GetCallFrame() noexcept { return _cf; }
+		ThreadStackFrame* GetCallFrame() noexcept { return _sf; }
 
 		// Halt using the supplied message
 		const Byte* Halt(const Byte* address, ThreadFlags flags, const char* message) noexcept;
@@ -96,6 +97,18 @@ namespace WestCoastCode::Interpreter
 		const Byte* ReturnToCaller() noexcept;
 
 	private:
+		/// @brief 
+		/// @param ip 
+		/// @return 
+		const Byte* Call(const Byte* ip) noexcept;
+
+		/// @brief Prepare a call statement
+		/// @param ip 
+		/// @param expectedStackSize 
+		/// @return 
+		const Byte* BeginCall(const Byte* ip, const Byte* returnIp, const Byte* nextIp, I32 expectedStackSize) noexcept;
+
+	private:
 		Process* const _process;		
 		Byte* const _bytecode;
 		ThreadStack _stack;
@@ -104,10 +117,9 @@ namespace WestCoastCode::Interpreter
 		const Byte* _ip;
 
 		// Available callframes
-		ThreadCallFrame _callFrames[VM_RECURSIVE_FN_CALLFRAMES];
-
+		ThreadStackFrame _stackFrames[VM_RECURSIVE_FN_CALLFRAMES];
 		// The current call frame
-		ThreadCallFrame* _cf;
+		ThreadStackFrame* _sf;
 
 		// Error management
 		ThreadFlags _haltFlags;

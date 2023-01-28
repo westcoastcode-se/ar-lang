@@ -202,11 +202,12 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseAtom(ParserState* state)
 		// Is this identity(
 		if (peek.Next() == TokenType::ParantLeft) {
 			auto funcRef = SyntaxTreeNodeFuncRef::Parse(state);
-			if (t->GetType() != TokenType::ParantRight)
-				throw ParseErrorSyntaxError(state, "expected ')");
+			if (t->GetType() != TokenType::ParantLeft)
+				throw ParseErrorSyntaxError(state, "expected '(");
 			auto funcGuard = MemoryGuard(funcRef);
 			auto call = ARLANG_NEW SyntaxTreeNodeOpCallFunc(state->GetView(), state->functionBody);
 			auto guard = MemoryGuard(call);
+
 			// Extract each argument
 			while (t->Next() != TokenType::ParantRight) {
 				auto node = ParseCompare(state);
@@ -216,6 +217,7 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseAtom(ParserState* state)
 					t->Next();
 				}
 			}
+			t->Next();
 			call->SetFunction(funcGuard.Done());
 			return guard.Done();
 		}
