@@ -3,6 +3,29 @@
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
+SyntaxTreeNode* RecursiveDetector::Find(SyntaxTreeNode* node) const
+{
+	// Search upwards in the syntax tree to see if we found the supplied tree node. If so, then
+	// return the first child item that caused the recusion in the first place.
+	//
+	// Minimal recursion is: A -> B -> A
+
+	// No parent? Then no recursion is possible
+	if (parent == nullptr)
+		return NULL;
+
+	const RecursiveDetector* prev = this;
+	RecursiveDetector* rt = parent;
+	while (rt != nullptr) {
+		if (rt->node == node) {
+			return prev->node;
+		}
+		prev = rt;
+		rt = rt->parent;
+	}
+	return nullptr;
+}
+
 SyntaxTreeNode::SyntaxTreeNode(SourceCodeView view)
 	: _parent(nullptr), _children(), _sourceCode(view)
 {

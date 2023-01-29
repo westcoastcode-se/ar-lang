@@ -13,6 +13,7 @@
 namespace WestCoastCode::Compilation
 {
 	class SyntaxTree;
+	class SyntaxTreeNode;
 
 	// Flags used to help configure the search algorithm when using the Query functionality
 	enum class QuerySearchFlag : int
@@ -147,6 +148,25 @@ namespace WestCoastCode::Compilation
 		/// @brief Compile this package into symbols that can be linked into bytecode later on
 		/// @param linker The linker
 		virtual void Compile(Builder::Linker* linker) = 0;
+	};
+
+	/// @brief Type that helps with detecting when recursion between two nodes happens
+	struct ARLANG_API RecursiveDetector
+	{
+		RecursiveDetector* root;
+		RecursiveDetector* parent;
+		SyntaxTreeNode* node;
+
+		RecursiveDetector(SyntaxTreeNode* node)
+			: root(nullptr), parent(nullptr), node(node) {}
+
+		RecursiveDetector(RecursiveDetector* parent, SyntaxTreeNode* node)
+			: root(parent->root), parent(parent), node(node) {}
+
+		/// @brief Search for the supplied node
+		/// @param node 
+		/// @return true if recursion is detected
+		SyntaxTreeNode* Find(SyntaxTreeNode* node) const;
 	};
 
 	/// @brief Base class for a syntax tree nodes
