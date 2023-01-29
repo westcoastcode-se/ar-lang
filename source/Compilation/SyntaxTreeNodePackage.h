@@ -14,9 +14,8 @@ namespace WestCoastCode::Compilation
 		/// @return The name of the package
 		inline ReadOnlyString GetName() { return _name; }
 
-
 		/// @return The builder symbol for this package
-		inline Builder::Package* GetSymbol() const { return _symbol; }
+		Builder::Package* GetSymbol();
 
 		/// @brief Parse source code into a package node. Will throw ParseError 
 		///        if the source code is invalid

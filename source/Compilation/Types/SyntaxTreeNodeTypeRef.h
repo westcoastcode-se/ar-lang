@@ -22,7 +22,7 @@ namespace WestCoastCode::Compilation
 		void ToString(StringStream& s, int indent) const final;
 		SyntaxTreeNodeType* GetType() final;
 		ReadOnlyArray<SyntaxTreeNodeType*> GetTypes() final { return _definitions; }
-		void Resolve() final;
+		bool Resolve(RecursiveDetector* detector) final;
 		void OnChildAdded(SyntaxTreeNode* child) final;
 #pragma endregion
 

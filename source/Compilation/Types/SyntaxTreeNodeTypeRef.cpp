@@ -29,22 +29,24 @@ SyntaxTreeNodeType* SyntaxTreeNodeTypeRef::GetType()
 	return _definitions[0];
 }
 
-void SyntaxTreeNodeTypeRef::Resolve()
+bool SyntaxTreeNodeTypeRef::Resolve(RecursiveDetector* detector)
 {
-	SyntaxTreeNodeType::Resolve();
+	if (!SyntaxTreeNodeType::Resolve(detector))
+		return false;
 
-	if (!_definitions.IsEmpty())
-		return;
 	auto children = GetChildren();
 	if (children.IsEmpty())
-		return;
+		return true;
 
 	// Find all definitions that's a type
 	auto definitions = dynamic_cast<SyntaxTreeNodeRef*>(children[0])->GetDefinitions();
 	for (auto def : definitions) {
 		auto typeDef = dynamic_cast<SyntaxTreeNodeType*>(def);
-		if (typeDef)
+		if (typeDef) {
+			// Resolve this definition
+			typeDef->Resolve(detector);
 			_definitions.Add(typeDef);
+		}
 	}
 
 	// Did we find at least one definition? If so then cleanup afterwards since the
@@ -52,6 +54,8 @@ void SyntaxTreeNodeTypeRef::Resolve()
 	if (!_definitions.IsEmpty()) {
 		DestroyChildren();
 	}
+
+	return true;
 }
 
 void SyntaxTreeNodeTypeRef::OnChildAdded(SyntaxTreeNode* child)

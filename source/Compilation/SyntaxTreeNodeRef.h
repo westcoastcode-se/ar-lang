@@ -51,7 +51,7 @@ namespace WestCoastCode::Compilation
 
 #pragma region SyntaxTreeNode
 		void ToString(StringStream& s, int indent) const final;
-		void Resolve() final;
+		bool Resolve(RecursiveDetector* detector) final;
 #pragma endregion
 
 	public:

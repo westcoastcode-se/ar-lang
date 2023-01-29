@@ -16,7 +16,7 @@ namespace WestCoastCode::Compilation
 		inline SyntaxTreeNodeFuncDefBody* GetBody() const { return _body; }
 
 		/// @return The symbol
-		inline Builder::Function* GetSymbol() const { return _symbol; }
+		Builder::Function* GetSymbol();
 
 		/// @brief Set the body that implements this function
 		/// @param body 

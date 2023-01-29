@@ -48,8 +48,10 @@ SyntaxTreeNodeType* SyntaxTreeNodeOpCallFunc::GetType()
 	return type->GetType();
 }
 
-void SyntaxTreeNodeOpCallFunc::Resolve()
+bool SyntaxTreeNodeOpCallFunc::Resolve(RecursiveDetector* detector)
 {
+	detector->RaiseErrorIfRecursion(this);
+
 	if (_function == nullptr) {
 		throw CompileErrorNotImplemented(this, "Missing function reference");
 	}
@@ -60,7 +62,7 @@ void SyntaxTreeNodeOpCallFunc::Resolve()
 		auto count = children.Size();
 		for (auto i = 0; i < count - 1; ++i) {
 			auto op = dynamic_cast<SyntaxTreeNodeOp*>(children[i]);
-			op->Resolve();
+			op->Resolve(detector);
 
 			_function->AddArgument(ARLANG_NEW SyntaxTreeNodeFuncArg(GetSourceCode(),
 				ReadOnlyString(), op->GetType()));
@@ -69,7 +71,8 @@ void SyntaxTreeNodeOpCallFunc::Resolve()
 
 	// Now when all children are resolved, let's resolve the function since
 	// we now know the types for all children
-	_function->Resolve();
+	_function->Resolve(detector);
+	return true;
 }
 
 void SyntaxTreeNodeOpCallFunc::SetFunction(SyntaxTreeNodeFuncRef* func)

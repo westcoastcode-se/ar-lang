@@ -70,10 +70,10 @@ void SyntaxTreeNodeRef::ToString(StringStream& s, int indent) const
 	SyntaxTreeNode::ToString(s, indent);
 }
 
-void SyntaxTreeNodeRef::Resolve()
+bool SyntaxTreeNodeRef::Resolve(RecursiveDetector* detector)
 {
 	if (!_definitions.IsEmpty())
-		return;
+		return true;
 
 	// Start resolving all references
 	ResolveFromParent(GetParent());
@@ -97,8 +97,9 @@ void SyntaxTreeNodeRef::Resolve()
 
 	// Take ownership of the definitions
 	if (leaf == this)
-		return;
+		return true;
 	_definitions = leaf->_definitions;
+	return true;
 }
 
 SyntaxTreeNodeRef* SyntaxTreeNodeRef::Parse(const ParserState* state, DefinitionQueryTypes queryType,
@@ -180,17 +181,27 @@ void SyntaxTreeNodeRef::ResolveFromParent(SyntaxTreeNode* parent)
 
 	} visitor(this, _queryTypes, _name);
 
+	SyntaxTreeNodeRef* const parentRef = dynamic_cast<SyntaxTreeNodeRef*>(parent);
+
 	// If the first reference in the reference chain aren't a child of another reference
-	// then perform a standard "upwards/backwards" query
-	if (dynamic_cast<SyntaxTreeNodeRef*>(GetParent()) == nullptr) {
+	// then perform a standard "upwards/backwards" query, otherwise search from the 
+	if (parentRef) {
+		const QuerySearchFlags flags = (QuerySearchFlags)QuerySearchFlag::TraverseChildren;
+		parent->Query(&visitor, flags);
+	}
+	else {
 		const QuerySearchFlags flags = (QuerySearchFlags)QuerySearchFlag::TraverseChildren
 			| (QuerySearchFlags)QuerySearchFlag::TraverseParent
 			| (QuerySearchFlags)QuerySearchFlag::Backwards
 			| (QuerySearchFlags)QuerySearchFlag::TraverseImports;
 		parent->Query(&visitor, flags);
 	}
-	else {
-		const QuerySearchFlags flags = (QuerySearchFlags)QuerySearchFlag::TraverseChildren;
-		parent->Query(&visitor, flags);
+
+	// Resolve all children as well
+	for (auto child : GetChildren()) {
+		auto childRef = static_cast<SyntaxTreeNodeRef*>(child);
+		for (auto def : _definitions) {
+			childRef->ResolveFromParent(def);
+		}
 	}
 }

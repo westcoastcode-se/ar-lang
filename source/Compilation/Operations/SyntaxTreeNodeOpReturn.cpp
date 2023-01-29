@@ -33,9 +33,10 @@ SyntaxTreeNodeType* SyntaxTreeNodeOpReturn::GetType()
 	throw CompileErrorNotImplemented(this, "MultiReturn");
 }
 
-void SyntaxTreeNodeOpReturn::Resolve()
+bool SyntaxTreeNodeOpReturn::Resolve(RecursiveDetector* detector)
 {
-	SyntaxTreeNodeOp::Resolve();
+	if (!SyntaxTreeNodeOp::Resolve(detector))
+		return false;
 
 	auto function = GetBody()->GetFunction();
 	auto expectedType = function->GetReturnType()->GetType();
@@ -44,4 +45,6 @@ void SyntaxTreeNodeOpReturn::Resolve()
 	if (!expectedType->IsCompatibleWith(returnedType)) {
 		throw CompileErrorIncompatibleTypes(this, expectedType, returnedType);
 	}
+
+	return true;
 }

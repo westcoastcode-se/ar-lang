@@ -11,6 +11,7 @@ namespace WestCoastCode::Compilation
 		UnresolvedTypeReference,
 		UnresolvedFuncReference,
 		IncompatibleTypes,
+		RecursionDetected,
 		NotImplemented,
 	};
 
@@ -89,4 +90,12 @@ namespace WestCoastCode::Compilation
 		CompileErrorIncompatibleTypes(const SyntaxTreeNode* node, const SyntaxTreeNodeType* type1,
 			const SyntaxTreeNodeType* type2);
 	};
+
+	/// @brief Error raised if invalid recursion is detected during compilation
+	class CompileErrorRecursionDetected : public CompileError
+	{
+	public:
+		CompileErrorRecursionDetected(const SyntaxTreeNode* node);
+	};
+
 }

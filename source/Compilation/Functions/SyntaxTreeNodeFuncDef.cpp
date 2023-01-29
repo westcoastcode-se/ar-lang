@@ -13,6 +13,13 @@ SyntaxTreeNodeFuncDef::SyntaxTreeNodeFuncDef(SourceCodeView view, ReadOnlyString
 	: SyntaxTreeNodeFunc(view, name), _body(nullptr), _symbol(nullptr)
 {}
 
+Builder::Function* SyntaxTreeNodeFuncDef::GetSymbol()
+{
+	if (_symbol == nullptr)
+		_symbol = new Builder::Function(GetName());
+	return _symbol;
+}
+
 void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
 {
 	s << GetID() << Indent(indent);
@@ -22,18 +29,13 @@ void SyntaxTreeNodeFuncDef::ToString(StringStream& s, int indent) const
 
 void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
 {
-	if (_symbol == nullptr) {
-		_symbol = new Builder::Function(GetName());
-
-		// TODO: Add support for functions inside another function
-		auto package = dynamic_cast<SyntaxTreeNodePackage*>(GetParent());
-		auto symbol = package->GetSymbol();
-		symbol->Add(_symbol);
-	}
-
 	// Compile children so that we have valid symbols for arguments and return types
 	for (auto child : GetChildren())
 		child->Compile(linker);
+
+	// TODO: Add support for functions inside another function
+	auto package = dynamic_cast<SyntaxTreeNodePackage*>(GetParent());
+	package->GetSymbol()->Add(GetSymbol());
 
 	// Does this function have a return type?
 	if (GetReturnType()) {
@@ -45,7 +47,7 @@ void SyntaxTreeNodeFuncDef::Compile(Builder::Linker* linker)
 		// TODO: Add support for other types than primitives
 		auto definition = dynamic_cast<SyntaxTreeNodePrimitive*>(type);
 		assert(definition != nullptr && "only primitives are allowed at the moment");
-		_symbol->AddReturn(definition->GetSymbol());
+		GetSymbol()->AddReturn(definition->GetSymbol());
 	}
 }
 

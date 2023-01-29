@@ -81,4 +81,11 @@ CompileErrorIncompatibleTypes::CompileErrorIncompatibleTypes(const SyntaxTreeNod
 	s << type1->GetName() << " is not compatible with " << type2->GetName();
 	SetError(s.str());
 }
-	
+
+CompileErrorRecursionDetected::CompileErrorRecursionDetected(const SyntaxTreeNode* node)
+	: CompileError(node->GetSourceCode(), CompileErrorType::RecursionDetected)
+{
+	StringStream s;
+	s << "recursion is detected at node '" << node->GetID() << "'";
+	SetError(s.str());
+}

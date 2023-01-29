@@ -16,17 +16,24 @@ void SyntaxTreeNodePrimitive::ToString(StringStream& s, int indent) const
 	SyntaxTreeNode::ToString(s, indent);
 }
 
+Builder::Type* SyntaxTreeNodePrimitive::GetSymbol()
+{
+	if (_symbol == nullptr) {
+		Builder::TypeFlags flags = (Builder::TypeFlags)Builder::TypeFlag::Primitive;
+		if (_primitiveType == PrimitiveType::Ptr)
+			flags |= (Builder::TypeFlags)Builder::TypeFlag::Ptr;
+		_symbol = new Builder::Type(_name, _stackSize, flags, _primitiveType);
+	}
+	return _symbol;
+}
+
 void SyntaxTreeNodePrimitive::Compile(Builder::Linker* linker)
 {
 	if (_symbol != nullptr)
 		return;
 
-	Builder::Package* package = static_cast<SyntaxTreeNodePackage*>(GetParent())->GetSymbol();
-	Builder::TypeFlags flags = (Builder::TypeFlags)Builder::TypeFlag::Primitive;
-	if (_primitiveType == PrimitiveType::Ptr)
-		flags |= (Builder::TypeFlags)Builder::TypeFlag::Ptr;
-	_symbol = new Builder::Type(_name, _stackSize, flags, _primitiveType);
-	package->Add(_symbol);
+	auto package = static_cast<SyntaxTreeNodePackage*>(GetParent())->GetSymbol();	
+	package->Add(GetSymbol());
 }
 
 bool SyntaxTreeNodePrimitive::IsCompatibleWith(SyntaxTreeNodeType* def)

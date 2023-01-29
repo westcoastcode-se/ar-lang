@@ -28,8 +28,9 @@ VisitResult SyntaxTreeNodePackage::Query(ISyntaxTreeNodeVisitor* visitor, QueryS
 	// Search among children
 	if (flags & (I32)QuerySearchFlag::TraverseChildren)
 	{
-		// Stop query more child nodes
+		// Stop query more child nodes or parents
 		flags &= ~(I32)QuerySearchFlag::TraverseChildren;
+		flags &= ~(I32)QuerySearchFlag::TraverseParent;
 		for (auto c : GetChildren())
 		{
 			const auto result = c->Query(visitor, flags);
@@ -66,10 +67,17 @@ void SyntaxTreeNodePackage::OnChildAdded(SyntaxTreeNode* parent)
 		) && "incompatible child node");
 }
 
+Builder::Package* SyntaxTreeNodePackage::GetSymbol()
+{
+	if (_symbol == nullptr)
+		_symbol = new Builder::Package(_name);
+	return _symbol;
+}
+
 void SyntaxTreeNodePackage::Compile(Builder::Linker* linker)
 {
 	if (_symbol == nullptr)
-		_symbol = linker->AddPackage(new Builder::Package(_name));
+		_symbol = linker->AddPackage(GetSymbol());
 	SyntaxTreeNode::Compile(linker);
 }
 

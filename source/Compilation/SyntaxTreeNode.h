@@ -166,7 +166,11 @@ namespace WestCoastCode::Compilation
 		/// @brief Search for the supplied node
 		/// @param node 
 		/// @return true if recursion is detected
-		SyntaxTreeNode* Find(SyntaxTreeNode* node) const;
+		SyntaxTreeNode* Find(const SyntaxTreeNode* node) const;
+
+		/// @brief Raise an error if recursion is detected
+		/// @param node 
+		void RaiseErrorIfRecursion(const SyntaxTreeNode* node) const;
 	};
 
 	/// @brief Base class for a syntax tree nodes
@@ -222,8 +226,9 @@ namespace WestCoastCode::Compilation
 		/// @return 
 		virtual VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
 
-		/// @brief Resolves this node and all it's children
-		virtual void Resolve();
+		/// @brief Resolves this node and all it's children.
+		/// @return true if we should continue resolve this node
+		virtual bool Resolve(RecursiveDetector* detector);
 
 #pragma region IStringify
 		void ToString(StringStream& s, int indent) const override;

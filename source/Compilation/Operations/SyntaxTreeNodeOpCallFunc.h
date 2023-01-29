@@ -17,7 +17,7 @@ namespace WestCoastCode::Compilation
 		void ToString(StringStream& s, int indent) const final;
 		void Compile(Builder::Linker* linker, Builder::Instructions& target) final;
 		SyntaxTreeNodeType* GetType() final;
-		void Resolve() final;
+		bool Resolve(RecursiveDetector* detector) final;
 #pragma endregion
 
 		/// @brief Set which function to call

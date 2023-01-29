@@ -27,12 +27,14 @@ namespace WestCoastCode::Compilation
 		// Get the syntax tree
 		const SyntaxTree* GetSyntaxTree() const { return &_syntaxTree; }
 
-		// Compile the added source codes and return the byte code that the interpreter
-		// can use. Please note that this moves the ownership of the bytecode the the one calling
-		// this method.
-		//
-		// You can also specify which optimization level you wish to perform on the compiled source code. Please
-		// note that the higher level the longer time it will take to compile it
+		/// @brief Compile the added source codes and return byte code
+		/// 
+		/// Please note that this moves the ownership of the bytecode the the one calling this method.
+		/// 
+		/// You can also specify which optimization level you wish to perform on the compiled source code. Please
+		/// note that the higher level the longer time it will take to compile it
+		/// 
+		/// @throws WestCoastCode::Compilation::CompileError
 		Byte* Compile(int optimizationLevel = 0);
 
 		// Find the primitive with the supplied name

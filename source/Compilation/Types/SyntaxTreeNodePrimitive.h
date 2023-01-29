@@ -27,7 +27,7 @@ namespace WestCoastCode::Compilation
 		inline I32 GetSize() const { return _stackSize; }
 
 		/// @return The builder symbol for this primitive
-		inline Builder::Type* GetSymbol() const { return _symbol; }
+		Builder::Type* GetSymbol();
 
 #pragma region SyntaxTreeNodeType
 		inline ReadOnlyString GetName() const final { return _name; }

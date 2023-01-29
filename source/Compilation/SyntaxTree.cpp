@@ -27,7 +27,8 @@ void SyntaxTree::Visit(ISyntaxTreeNodeVisitor* visitor, VisitFlags flags)
 
 void SyntaxTree::Resolve()
 {
-	_root->Resolve();
+	RecursiveDetector detector(_root);
+	_root->Resolve(&detector);
 }
 
 void SyntaxTree::Compile(Builder::Linker* linker)

@@ -29,35 +29,45 @@ SyntaxTreeNodeFuncRef* SyntaxTreeNodeFuncRef::Parse(const ParserState* state)
 	return funcRef;
 }
 
-void SyntaxTreeNodeFuncRef::Resolve()
+bool SyntaxTreeNodeFuncRef::Resolve(RecursiveDetector* detector)
 {
-	SyntaxTreeNodeFunc::Resolve();
+	if (!SyntaxTreeNodeFunc::Resolve(detector))
+		return false;
 
-	if (!_definitions.IsEmpty())
-		return;
 	auto children = GetChildren();
 	if (children.IsEmpty())
-		return;
+		return true;
 
 	// Find all definitions that's a type
 	auto definitions = dynamic_cast<SyntaxTreeNodeRef*>(children[0])->GetDefinitions();
 	for (auto def : definitions) {
-		auto typeDef = dynamic_cast<SyntaxTreeNodeFuncDef*>(def);
-		if (typeDef) {
-			// Verify argument types
+		auto funcDef = dynamic_cast<SyntaxTreeNodeFuncDef*>(def);
+		if (funcDef) {
 			auto expected = GetArguments();
-			auto found = typeDef->GetArguments();
+			auto found = funcDef->GetArguments();
+			// Verify argument count
 			if (expected.Size() != found.Size())
 				continue;
-			if (expected.Size() == 0)
-				_definitions.Add(typeDef);
-			for (auto i = 0; i < expected.Size(); ++i) {
-				auto foundType = found[i]->GetType();
-				auto expectedType = expected[i]->GetType();
-				if (foundType->IsCompatibleWith(expectedType)) {
-					_definitions.Add(typeDef);
+
+			// Resolve this definition
+			funcDef->Resolve(detector);
+
+			// Verify that the arguments are compatible
+			if (expected.Size() > 0)
+			{
+				for (auto i = 0; i < expected.Size(); ++i) {
+					auto foundType = found[i]->GetType();
+					auto expectedType = expected[i]->GetType();
+					if (foundType->IsCompatibleWith(expectedType)) {
+						_definitions.Add(funcDef);
+					}
 				}
 			}
+			else
+			{
+				_definitions.Add(funcDef);
+			}
+
 		}
 	}
 
@@ -66,4 +76,6 @@ void SyntaxTreeNodeFuncRef::Resolve()
 	if (!_definitions.IsEmpty()) {
 		DestroyChildren();
 	}
+
+	return true;
 }

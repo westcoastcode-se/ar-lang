@@ -1,9 +1,10 @@
 #include "SyntaxTreeNode.h"
+#include "SyntaxTreeNodePackage.h"
 
 using namespace WestCoastCode;
 using namespace WestCoastCode::Compilation;
 
-SyntaxTreeNode* RecursiveDetector::Find(SyntaxTreeNode* node) const
+SyntaxTreeNode* RecursiveDetector::Find(const SyntaxTreeNode* node) const
 {
 	// Search upwards in the syntax tree to see if we found the supplied tree node. If so, then
 	// return the first child item that caused the recusion in the first place.
@@ -24,6 +25,13 @@ SyntaxTreeNode* RecursiveDetector::Find(SyntaxTreeNode* node) const
 		rt = rt->parent;
 	}
 	return nullptr;
+}
+
+void RecursiveDetector::RaiseErrorIfRecursion(const SyntaxTreeNode* node) const
+{
+	if (Find(node)) {
+		throw CompileErrorRecursionDetected(node);
+	}
 }
 
 SyntaxTreeNode::SyntaxTreeNode(SourceCodeView view)
@@ -114,18 +122,27 @@ VisitResult SyntaxTreeNode::Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFl
 	if (result == VisitorResult::Stop)
 		return VisitResult::Stop;
 
+	// Query backwards. Do not query siblings if parent is a package and we are allowed to query it
 	if (BIT_ISSET(flags, QuerySearchFlag::Backwards))
 	{
-		// Visit siblings
-		auto siblings = GetSiblingsBefore();
-		for (auto sibling : siblings)
-		{
-			switch (sibling->Query(visitor, 0))
+		bool querySiblings = true;
+		if (BIT_ISSET(flags, QuerySearchFlag::TraverseParent)) {
+			if (dynamic_cast<SyntaxTreeNodePackage*>(GetParent())) {
+				querySiblings = false;
+			}
+		}
+
+		if (querySiblings) {
+			auto siblings = GetSiblingsBefore();
+			for (auto sibling : siblings)
 			{
-			case VisitResult::Stop:
-				return VisitResult::Stop;
-			default:
-				break;
+				switch (sibling->Query(visitor, 0))
+				{
+				case VisitResult::Stop:
+					return VisitResult::Stop;
+				default:
+					break;
+				}
 			}
 		}
 	}
@@ -135,7 +152,7 @@ VisitResult SyntaxTreeNode::Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFl
 		auto parent = _parent;
 		if (parent)
 		{
-			flags &= ~(QuerySearchFlags)QuerySearchFlag::TraverseChildren;
+			//flags &= ~(QuerySearchFlags)QuerySearchFlag::TraverseChildren;
 			switch (parent->Query(visitor, flags))
 			{
 			case VisitResult::Stop:
@@ -175,10 +192,13 @@ void SyntaxTreeNode::Compile(Builder::Linker* linker)
 		c->Compile(linker);
 }
 
-void SyntaxTreeNode::Resolve()
+bool SyntaxTreeNode::Resolve(RecursiveDetector* detector)
 {
+	detector->RaiseErrorIfRecursion(this);
+	RecursiveDetector childDetector(detector, this);
 	for (auto c : _children)
-		c->Resolve();
+		c->Resolve(&childDetector);
+	return true;
 }
 
 void SyntaxTreeNode::ReplaceChild(I32 index, SyntaxTreeNode* node)
