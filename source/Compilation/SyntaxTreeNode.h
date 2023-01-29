@@ -149,18 +149,8 @@ namespace WestCoastCode::Compilation
 		virtual void Compile(Builder::Linker* linker) = 0;
 	};
 
-	/// @brief Implement this interface if you want to add support for resolving
-	class ARLANG_API IResolvable
-	{
-	public:
-		virtual ~IResolvable() = default;
-
-		/// @brief Resolves this item
-		virtual void Resolve() = 0;
-	};
-
 	/// @brief Base class for a syntax tree nodes
-	class ARLANG_API SyntaxTreeNode : public IStringify, public ICompilable, public IResolvable
+	class ARLANG_API SyntaxTreeNode : public IStringify, public ICompilable
 	{
 	public:
 		SyntaxTreeNode(const SourceCodeView view);
@@ -212,16 +202,15 @@ namespace WestCoastCode::Compilation
 		/// @return 
 		virtual VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags);
 
+		/// @brief Resolves this node and all it's children
+		virtual void Resolve();
+
 #pragma region IStringify
 		void ToString(StringStream& s, int indent) const override;
 #pragma endregion
 
 #pragma region ICompilable
 		void Compile(Builder::Linker* linker) override;
-#pragma endregion
-
-#pragma region IResolvable
-		void Resolve() override;
 #pragma endregion
 
 		/// @brief Optimize this node
