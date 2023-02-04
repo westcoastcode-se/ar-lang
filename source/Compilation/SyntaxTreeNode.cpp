@@ -75,6 +75,15 @@ void SyntaxTreeNode::DestroyChildren()
 	_children.Clear();
 }
 
+void SyntaxTreeNode::DestroyChild(SyntaxTreeNode* child)
+{
+	auto idx = _children.FindIndex(child);
+	if (idx != -1) {
+		_children.RemoveAt(idx);
+		delete child;
+	}
+}
+
 Vector<SyntaxTreeNode*> SyntaxTreeNode::GetSiblingsBefore() const
 {
 	if (_parent == nullptr)
@@ -205,6 +214,17 @@ void SyntaxTreeNode::ReplaceChild(I32 index, SyntaxTreeNode* node)
 {
 	delete _children[index];
 	_children[index] = node;
+	OnChildAdded(node);
+	node->SetParent(this);
+}
+
+void SyntaxTreeNode::ReplaceChild(SyntaxTreeNode* old, SyntaxTreeNode* node)
+{
+	auto idx = _children.FindIndex(old);
+	if (idx == -1)
+		return;
+	_children[idx] = node;
+	delete old;
 	OnChildAdded(node);
 	node->SetParent(this);
 }

@@ -661,6 +661,28 @@ func Calc() int32 {
 		AssertEquals(Pop<I32>(), 10 + 20);
 	}
 
+	void CallWithArgs1()
+	{
+		AddSourceCode(new SourceCode(R"(
+package Main
+
+func Add(lhs int32, rhs int32) int32 {
+	return lhs + rhs
+}
+
+func Get() int32 {
+	return Add(10, 20)
+}
+)", "main.arl"));
+		DebugSyntaxTree();
+
+		// Compile the source code
+		CompileAndInvoke("Get()");
+
+		VerifyStackSize(sizeof(I32));
+		AssertEquals(Pop<I32>(), 10 + 20);
+	}
+
 	void operator()(int level)
 	{
 		// Set the optimization level
@@ -706,6 +728,8 @@ func Calc() int32 {
 
 		TEST(CallDeclaredBefore());
 		TEST(CallDeclaredAfter());
+
+		TEST(CallWithArgs1());
 	}
 };
 

@@ -254,10 +254,19 @@ namespace WestCoastCode::Compilation
 		/// @brief Destroy all child-nodes
 		void DestroyChildren();
 
+		/// @brief Destroy child-node
+		/// @param child the child we want to destroy
+		void DestroyChild(SyntaxTreeNode* child);
+
 		/// @brief Replace the child node at the supplied index with a new child node
 		/// @param index 
 		/// @param node 
 		void ReplaceChild(I32 index, SyntaxTreeNode* node);
+
+		/// @brief Replace the supplied old child node with a new node
+		/// @param old
+		/// @param node 
+		void ReplaceChild(SyntaxTreeNode* old, SyntaxTreeNode* node);
 
 		/// @brief Replace all childes node at the supplied index with a new child node
 		/// @param index The index we are replacing

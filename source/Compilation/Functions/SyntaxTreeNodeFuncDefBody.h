@@ -19,6 +19,7 @@ namespace WestCoastCode::Compilation
 		inline SyntaxTreeNodeFuncDef* GetFunction() const { return _function; }
 
 #pragma region SyntaxTreeNode
+		VisitResult Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags) final;
 		void ToString(StringStream& s, int indent) const final;
 		void OnChildAdded(SyntaxTreeNode* child) final;
 		void Compile(Builder::Linker* linker) final;

@@ -6,9 +6,11 @@
 #include "../Operations/SyntaxTreeNodeOpScope.h"
 #include "../Operations/SyntaxTreeNodeOpTypeCast.h"
 #include "../Operations/SyntaxTreeNodeOpCallFunc.h"
+#include "../Operations/SyntaxTreeNodeOpReadVar.h"
 #include "../Types/SyntaxTreeNodeTypeRef.h"
 #include "../Types/SyntaxTreeNodeMultiType.h"
 #include "../Functions/SyntaxTreeNodeFuncRef.h"
+#include "../Variables/SyntaxTreeNodeVarRef.h"
 #include "SyntaxTreeNodeFuncDef.h"
 
 using namespace WestCoastCode;
@@ -30,6 +32,16 @@ static const Vector<TokenType> PARSE_TERM_TOKENS(
 SyntaxTreeNodeFuncDefBody::SyntaxTreeNodeFuncDefBody(SourceCodeView view, SyntaxTreeNodeFuncDef* func)
 	: SyntaxTreeNode(view), _function(func)
 {
+}
+
+VisitResult SyntaxTreeNodeFuncDefBody::Query(ISyntaxTreeNodeVisitor* visitor, QuerySearchFlags flags)
+{
+	// The function definition is part of the search query
+	if (_function->Query(visitor, flags) == VisitResult::Stop) {
+		return VisitResult::Stop;
+	}
+
+	return SyntaxTreeNode::Query(visitor, flags);
 }
 
 void SyntaxTreeNodeFuncDefBody::ToString(StringStream& s, int indent) const
@@ -199,8 +211,12 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseAtom(ParserState* state)
 	case TokenType::Identity: {
 		Token peek(t);
 		
-		// Is this identity(
-		if (peek.Next() == TokenType::ParantLeft) {
+		// This can be either:
+		// 1. function = identity(
+		// 2. template function = identity<
+		// 3. variable
+		peek.Next();
+		if (peek.GetType() == TokenType::ParantLeft) {
 			auto funcRef = SyntaxTreeNodeFuncRef::Parse(state);
 			if (t->GetType() != TokenType::ParantLeft)
 				throw ParseErrorSyntaxError(state, "expected '(");
@@ -221,17 +237,25 @@ SyntaxTreeNodeOp* SyntaxTreeNodeFuncDefBody::ParseAtom(ParserState* state)
 			call->SetFunction(funcGuard.Done());
 			return guard.Done();
 		}
+		else if (peek.GetType() == TokenType::TestLt) {
+			throw ParseErrorNotImplemented(state);
+		}
+		else if (peek.GetType() == TokenType::Assign) {
+			throw ParseErrorNotImplemented(state);
+		}
+		else if (peek.GetType() == TokenType::DeclAndAssign) {
+			throw ParseErrorNotImplemented(state);
+		}
 		else {
-			// Read variable
+			auto varRef = SyntaxTreeNodeVarRef::Parse(state);
+			auto guard = MemoryGuard(varRef);
+
+			auto read = ARLANG_NEW SyntaxTreeNodeOpReadVar(state->GetView(), state->functionBody);
+			read->AddChild(guard.Done());
+			return read;
 		}
 		break;
 	}
-		// Identity might be:
-		// 1. Variable (local, argument, global, constant)
-		// 2. Type (type, primitive, class, package)
-		// 3. Function
-		// 4. Method
-		break;
 	case TokenType::ParantLeft: {
 		t->Next();
 

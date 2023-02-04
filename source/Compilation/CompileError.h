@@ -8,6 +8,7 @@ namespace WestCoastCode::Compilation
 	enum class CompileErrorType : int
 	{
 		UnresolvedReference,
+		UnresolvedVarReference,
 		UnresolvedTypeReference,
 		UnresolvedFuncReference,
 		IncompatibleTypes,
@@ -52,6 +53,17 @@ namespace WestCoastCode::Compilation
 	{
 	public:
 		CompileErrorUnresolvedReference(const SyntaxTreeNodeRef* reference);
+	};
+
+	class SyntaxTreeNodeVarRef;
+	class SyntaxTreeNodeVarTypeRef;
+
+	// Error raised if we couldn't resolve a specific variable reference
+	class CompileErrorUnresolvedVarReference : public CompileError
+	{
+	public:
+		CompileErrorUnresolvedVarReference(const SyntaxTreeNodeVarTypeRef* reference);
+		CompileErrorUnresolvedVarReference(const SyntaxTreeNodeVarRef* reference);
 	};
 
 	class SyntaxTreeNodeTypeRef;

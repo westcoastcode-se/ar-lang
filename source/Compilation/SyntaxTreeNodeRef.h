@@ -29,7 +29,7 @@ namespace WestCoastCode::Compilation
 		static constexpr DefinitionQueryTypes Type = Class | Primitive;
 
 		/// @brief Represents all variables that we can read- and write from
-		static constexpr DefinitionQueryTypes Variables = Arg | Local | Global;
+		static constexpr DefinitionQueryTypes Variables = Arg | Local | Global | Func;
 
 		/// @brief Represents every node
 		static constexpr DefinitionQueryTypes All = INT32_MAX;
